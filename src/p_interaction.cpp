@@ -362,6 +362,10 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 		message = GStrings("OB_DEFAULT");
 	}
 
+	// [CK] Don't display empty strings
+	if (message == NULL || strlen(message) <= 0)
+		return;
+		
 	// [BC] Stop the color codes after we display a name in the obituary string.
 	if ( attacker && attacker->player )
 		sprintf( szAttacker, "%s\\c-", attacker->player->userinfo.GetName() );
