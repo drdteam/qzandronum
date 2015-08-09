@@ -38,6 +38,7 @@
 #include "doomdef.h"
 #include "sc_man.h"
 #include "s_sound.h"
+#include "textures/textures.h"
 //[BL] New Includes
 #include "sectinfo.h"
 
@@ -280,12 +281,12 @@ struct level_info_t
 	char		pname[9];
 	char		nextmap[11];
 	char		secretmap[11];
-	char		skypic1[9];
-	char		skypic2[9];
-	char		fadetable[9];
-	char		f1[9];
-	char		bordertexture[9];
-	char		mapbg[9];
+	FString		SkyPic1;
+	FString		SkyPic2;
+	FString		FadeTable;
+	FString		F1Pic;
+	FString		BorderTexture;
+	FString		MapBackground;
 
 	int			cluster;
 	int			partime;
@@ -422,8 +423,8 @@ struct FLevelLocals
 	int			cdtrack;
 	unsigned int cdid;
 	int			nextmusic;				// For MUSINFO purposes
-	char		skypic1[9];
-	char		skypic2[9];
+	FTextureID	skytexture1;
+	FTextureID	skytexture2;
 
 	float		skyspeed1;				// Scrolling speed of sky textures, in pixels per ms
 	float		skyspeed2;

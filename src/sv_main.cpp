@@ -2705,8 +2705,8 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 
 	// [BB] If the sky differs from the standard sky, let the client know about it.
 	if ( level.info 
-	     && ( ( stricmp( level.skypic1, level.info->skypic1 ) != 0 )
-	          || ( stricmp( level.skypic2, level.info->skypic2 ) != 0 ) )
+	     && ( ( stricmp( TexMan( level.skytexture1 )->Name, level.info->SkyPic1 ) != 0 )
+	          || ( stricmp( TexMan( level.skytexture2 )->Name, level.info->SkyPic2 ) != 0 ) )
 	   )
 	{
 		SERVERCOMMANDS_SetMapSky( ulClient, SVCF_ONLYTHISCLIENT );

@@ -3711,8 +3711,8 @@ void SERVERCOMMANDS_SetMapMusic( const char *pszMusic, int track, ULONG ulPlayer
 void SERVERCOMMANDS_SetMapSky( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SETMAPSKY );
-	command.addString ( level.skypic1 );
-	command.addString ( level.skypic2 );
+	command.addString ( TexMan( level.skytexture1 )->Name );
+	command.addString ( TexMan( level.skytexture2 )->Name );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

@@ -10359,8 +10359,7 @@ static void client_SetMapSky( BYTESTREAM_s *pByteStream )
 
 	if ( pszSky1 != NULL )
 	{
-		strncpy( level.skypic1, pszSky1, 8 );
-		sky1texture = TexMan.GetTexture( pszSky1, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
+		sky1texture = level.skytexture1 = TexMan.GetTexture( pszSky1, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
 	}
 
 	// Read in the texture name of the second sky.
@@ -10368,8 +10367,7 @@ static void client_SetMapSky( BYTESTREAM_s *pByteStream )
 
 	if ( pszSky2 != NULL )
 	{
-		strncpy( level.skypic2, pszSky2, 8 );
-		sky2texture = TexMan.GetTexture( pszSky2, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
+		sky2texture = level.skytexture2 = TexMan.GetTexture( pszSky2, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
 	}
 
 	// Set some other sky properties.

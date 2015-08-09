@@ -3626,19 +3626,14 @@ void GAME_ResetMap( bool bRunEnterScripts )
 	if ( pLevelInfo )
 	{
 		bSendSkyUpdate = false;
-		if (( stricmp( level.skypic1, pLevelInfo->skypic1 ) != 0 ) ||
-			( stricmp( level.skypic2, pLevelInfo->skypic2 ) != 0 ))
+		if (( stricmp( TexMan( level.skytexture1 )->Name, pLevelInfo->SkyPic1 ) != 0 ) ||
+			( stricmp( TexMan( level.skytexture2 )->Name, pLevelInfo->SkyPic2 ) != 0 ))
 		{
 			bSendSkyUpdate = true;
 		}
 
-		strncpy( level.skypic1, pLevelInfo->skypic1, 8 );
-		strncpy( level.skypic2, pLevelInfo->skypic2, 8 );
-		if ( level.skypic2[0] == 0 )
-			strncpy( level.skypic2, level.skypic1, 8 );
-
-		sky1texture = TexMan.GetTexture( level.skypic1, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
-		sky2texture = TexMan.GetTexture( level.skypic2, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
+		sky1texture = level.skytexture1 = TexMan.GetTexture( pLevelInfo->SkyPic1, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
+		sky2texture = level.skytexture2 = TexMan.GetTexture( pLevelInfo->SkyPic2.IsEmpty() ? pLevelInfo->SkyPic1 : pLevelInfo->SkyPic2, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
 
 		R_InitSkyMap( );
 

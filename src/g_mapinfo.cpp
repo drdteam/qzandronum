@@ -94,8 +94,7 @@ level_info_t *FindLevelInfo (const char *mapname, bool allowdefault)
 	{
 		if (TheDefaultLevelInfo.LevelName.IsEmpty())
 		{
-			uppercopy(TheDefaultLevelInfo.skypic1, "SKY1");
-			uppercopy(TheDefaultLevelInfo.skypic2, "SKY1");
+			TheDefaultLevelInfo.SkyPic2 = TheDefaultLevelInfo.SkyPic1 = "SKY1";
 			TheDefaultLevelInfo.LevelName = "Unnamed";
 		}
 		return &TheDefaultLevelInfo;
@@ -241,13 +240,12 @@ void P_RemoveDefereds (void)
 void level_info_t::Reset()
 {
 	mapname[0] = 0;
-	mapbg[0] = 0;
+	MapBackground = "";
 	levelnum = 0;
 	pname[0] = 0;
 	nextmap[0] = 0;
 	secretmap[0] = 0;
-	strcpy (skypic1, "-NOFLAT-");
-	strcpy (skypic2, "-NOFLAT-");
+	SkyPic1 = SkyPic2 = "-NOFLAT-";
 	cluster = 0;
 	partime = 0;
 	sucktime = 0;
@@ -260,10 +258,10 @@ void level_info_t::Reset()
 	flagsZA = 0;
 	Music = "";
 	LevelName = "";
-	strcpy (fadetable, "COLORMAP");
+	FadeTable = "COLORMAP";
 	WallHorizLight = -8;
 	WallVertLight = +8;
-	f1[0] = 0;
+	F1Pic = "";
 	musicorder = 0;
 	snapshot = NULL;
 	snapshotVer = 0;
@@ -288,7 +286,7 @@ void level_info_t::Reset()
 	intermusicorder = 0;
 	SoundInfo = "";
 	SndSeq = "";
-	bordertexture[0] = 0;
+	BorderTexture = "";
 	teamdamage = 0.f;
 	specialactions.Clear();
 	DefaultEnvironment = 0;
@@ -887,7 +885,7 @@ DEFINE_MAP_OPTION(cluster, true)
 DEFINE_MAP_OPTION(sky1, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->skypic1);
+	parse.ParseLumpOrTextureName(info->SkyPic1);
 	if (parse.CheckFloat())
 	{
 		if (parse.HexenHack)
@@ -901,7 +899,7 @@ DEFINE_MAP_OPTION(sky1, true)
 DEFINE_MAP_OPTION(sky2, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->skypic2);
+	parse.ParseLumpOrTextureName(info->SkyPic2);
 	if (parse.CheckFloat())
 	{
 		if (parse.HexenHack)
@@ -916,7 +914,7 @@ DEFINE_MAP_OPTION(sky2, true)
 DEFINE_MAP_OPTION(skybox, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->skypic1);
+	parse.ParseLumpOrTextureName(info->SkyPic1);
 	info->skyspeed1 = 0;
 }
 
@@ -976,7 +974,7 @@ DEFINE_MAP_OPTION(intermusic, true)
 DEFINE_MAP_OPTION(fadetable, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->fadetable);
+	parse.ParseLumpOrTextureName(info->FadeTable);
 }
 
 DEFINE_MAP_OPTION(evenlighting, true)
@@ -1159,13 +1157,13 @@ DEFINE_MAP_OPTION(slideshow, false)
 DEFINE_MAP_OPTION(bordertexture, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->bordertexture);
+	parse.ParseLumpOrTextureName(info->BorderTexture);
 }
 
 DEFINE_MAP_OPTION(f1, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->f1);
+	parse.ParseLumpOrTextureName(info->F1Pic);
 }
 
 DEFINE_MAP_OPTION(teamdamage, true)
@@ -1178,7 +1176,7 @@ DEFINE_MAP_OPTION(teamdamage, true)
 DEFINE_MAP_OPTION(mapbackground, true)
 {
 	parse.ParseAssign();
-	parse.ParseLumpOrTextureName(info->mapbg);
+	parse.ParseLumpOrTextureName(info->MapBackground);
 }
 
 DEFINE_MAP_OPTION(defaultenvironment, false)
@@ -1872,9 +1870,9 @@ void FMapInfoParser::ParseMapInfo (int lump, level_info_t &gamedefaults, level_i
 			ParseMapDefinition(*levelinfo);
 
 			// When the second sky is -NOFLAT-, make it a copy of the first sky
-			if (strcmp (levelinfo->skypic2, "-NOFLAT-") == 0)
+			if (!levelinfo->SkyPic2.CompareNoCase("-NOFLAT-"))
 			{
-				strcpy (levelinfo->skypic2, levelinfo->skypic1);
+				levelinfo->SkyPic2 = levelinfo->SkyPic1;
 			}
 			SetLevelNum (levelinfo, levelinfo->levelnum);	// Wipe out matching levelnums from other maps.
 		}

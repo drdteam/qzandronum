@@ -1006,7 +1006,7 @@ void FTextureManager::Init()
 	{
 		if (wadlevelinfos[i].flags & LEVEL_DOUBLESKY)
 		{
-			FTextureID picnum = CheckForTexture (wadlevelinfos[i].skypic1, FTexture::TEX_Wall, false);
+			FTextureID picnum = CheckForTexture (wadlevelinfos[i].SkyPic1, FTexture::TEX_Wall, false);
 			if (picnum.isValid())
 			{
 				Textures[picnum.GetIndex()].Texture->SetFrontSkyLayer ();
