@@ -385,7 +385,7 @@ void settings_Dialog_SaveSettings( )
 		if ( MessageBox( g_hDlg_Dialog, fsRestartMessage.GetChars( ), SERVERCONSOLE_TITLESTRING, MB_YESNO|MB_ICONQUESTION ) == IDYES )
 		{
 			FString String;
-			String.Format( "map %s", level.mapname );	
+			String.Format( "map %s", level.MapName.GetChars() );	
 			SERVER_AddCommand( String.GetChars( ));
 		}
 	}

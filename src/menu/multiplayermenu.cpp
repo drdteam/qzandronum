@@ -297,7 +297,7 @@ static void M_StartSkirmishGame()
 	// for example when going from D2IG03 to D2IG04 (both started from the skirmish menu).
 	// Since G_InitNew calls BOTSPAWN_ClearTable() we have to call BOTSPAWN_BlockClearTable()
 	// to protect the table. Not very elegant, but seems to work.
-	G_DeferedInitNew( wadlevelinfos[menu_skirmishlevel].mapname );
+	G_DeferedInitNew( wadlevelinfos[menu_skirmishlevel].MapName );
 	BOTSPAWN_ClearTable();
 	BOTSPAWN_BlockClearTable();
 	gamestate = gamestate == GS_FULLCONSOLE ? GS_HIDECONSOLE : gamestate;
@@ -515,7 +515,7 @@ static void M_CallMapVote()
 		FString command;
 		command.Format( "callvote %s \"%s\" \"%s\"",
 			menu_callvoteintermission ? "changemap" : "map",
-			wadlevelinfos[menu_callvotemap].mapname,
+			wadlevelinfos[menu_callvotemap].MapName.GetChars(),
 			*menu_callvotereason );
 		C_DoCommand( command );
 		M_ClearMenus();

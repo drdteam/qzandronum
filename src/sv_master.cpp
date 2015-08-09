@@ -416,7 +416,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 	}
 
 	if ( ulBits & SQF_MAPNAME )
-		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, level.mapname );
+		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, level.MapName );
 
 	if ( ulBits & SQF_MAXCLIENTS )
 		NETWORK_WriteByte( &g_MasterServerBuffer.ByteStream, sv_maxclients );

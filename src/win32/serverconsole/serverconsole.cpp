@@ -789,7 +789,7 @@ void serverconsole_FillListWithAvailableMaps( HWND hDlg, int iComboBoxID )
 	for ( unsigned int i = 0; i < wadlevelinfos.Size( ); ++i )
 	{
 		FString map;
-		map.Format( "%s - %s", wadlevelinfos[i].mapname, wadlevelinfos[i].LookupLevelName( ).GetChars( ));
+		map.Format( "%s - %s", wadlevelinfos[i].MapName.GetChars(), wadlevelinfos[i].LookupLevelName( ).GetChars( ));
 		SendDlgItemMessage( hDlg, iComboBoxID, CB_INSERTSTRING, -1, (WPARAM)(LPSTR) map.GetChars( ) );
 	}
 }
@@ -898,7 +898,7 @@ BOOL CALLBACK SERVERCONSOLE_MapRotationCallback( HWND hDlg, UINT Message, WPARAM
 			for ( ULONG ulIdx = 0; ulIdx < MAPROTATION_GetNumEntries( ); ulIdx++ )
 			{				
 				FString map;
-				map.Format( "%s - %s", MAPROTATION_GetMap( ulIdx )->mapname, MAPROTATION_GetMap( ulIdx )->LookupLevelName( ).GetChars( ));
+				map.Format( "%s - %s", MAPROTATION_GetMap( ulIdx )->MapName.GetChars(), MAPROTATION_GetMap( ulIdx )->LookupLevelName( ).GetChars( ));
 				SendDlgItemMessage( hDlg, IDC_MAPLISTBOX, LB_INSERTSTRING, -1, (WPARAM)(LPSTR) map.GetChars( ) );
 			}
 		}
@@ -974,7 +974,7 @@ BOOL CALLBACK SERVERCONSOLE_MapRotationCallback( HWND hDlg, UINT Message, WPARAM
 							break;
 
 						FString map;
-						map.Format( "%s - %s", pMap->mapname, pMap->LookupLevelName( ).GetChars( ));
+						map.Format( "%s - %s", pMap->MapName.GetChars(), pMap->LookupLevelName( ).GetChars( ));
 						SendDlgItemMessage( hDlg, IDC_MAPLISTBOX, LB_INSERTSTRING, -1, (LPARAM)map.GetChars( ) );
 					}
 

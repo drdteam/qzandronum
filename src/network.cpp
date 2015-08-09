@@ -465,7 +465,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		// "'THINGS' not found in'. I don't think this is the case in recent ZDoom versions?
 		try
 		{
-			if (( mdata = P_OpenMapData( info.mapname, false )) != NULL )
+			if (( mdata = P_OpenMapData( info.MapName, false )) != NULL )
 			{
 				// [TP] The wad that had this map is no longer optional.
 				Wads.LumpIsMandatory( mdata->lumpnum );
@@ -475,7 +475,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		{
 			// [TP] Might as well warn the user now that we're here.
 			Printf( "NETWORK_Construct: \\cGWARNING: Cannot open map %s: %s\n",
-				info.mapname, e.GetMessage() );
+				info.MapName.GetChars(), e.GetMessage() );
 		}
 
 		delete mdata;
@@ -1063,7 +1063,7 @@ FString NETWORK_MapCollectionChecksum( )
 	FString longSum, fullSum;
 	for( unsigned i = 0; i < wadlevelinfos.Size( ); i++ )
 	{
-		char* mname = wadlevelinfos[i].mapname;
+		const char* mname = wadlevelinfos[i].MapName;
 		FString sum;
 
 		// [BB] P_OpenMapData may throw an exception, so make sure that mname is a valid map.

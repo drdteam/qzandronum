@@ -318,7 +318,7 @@ static void server_WriteUpdateInfo( BYTESTREAM_s *pByteStream, int iUpdateType )
 	// Update the current map.
 	case SVRCU_MAP:
 
-		NETWORK_WriteString( pByteStream, level.mapname );
+		NETWORK_WriteString( pByteStream, level.MapName );
 		break;
 	// Update the number of other admins.
 	case SVRCU_ADMINCOUNT:

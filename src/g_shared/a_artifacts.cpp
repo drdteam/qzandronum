@@ -642,7 +642,13 @@ void APowerInvisibility::DoEffect ()
 	case (NAME_Stencil):
 		Owner->RenderStyle = STYLE_Stencil;
 		break;
-	case (NAME_None):
+	case (NAME_AddStencil) :
+		Owner->RenderStyle = STYLE_AddStencil;
+		break;
+	case (NAME_TranslucentStencil) :
+		Owner->RenderStyle = STYLE_TranslucentStencil;
+		break;
+	case (NAME_None) :
 	case (NAME_Cumulative):
 	case (NAME_Translucent):
 		Owner->RenderStyle = STYLE_Translucent;
@@ -726,7 +732,13 @@ int APowerInvisibility::AlterWeaponSprite (visstyle_t *vis)
 		case (NAME_Stencil):
 			vis->RenderStyle = STYLE_Stencil;
 			break;
-		case (NAME_None):
+		case (NAME_TranslucentStencil) :
+			vis->RenderStyle = STYLE_TranslucentStencil;
+			break;
+		case (NAME_AddStencil) :
+			vis->RenderStyle = STYLE_AddStencil;
+			break;
+		case (NAME_None) :
 		case (NAME_Cumulative):
 		case (NAME_Translucent):
 		default:

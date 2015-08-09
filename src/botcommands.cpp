@@ -771,8 +771,8 @@ void BOTCMD_DoChatStringSubstitutions( CSkullBot *pBot, const char *pszInString,
 			}
 			else if ( strnicmp( pszInString + 1, "map_name", strlen( "map_name" )) == 0 )
 			{				
-				sprintf( pszOutString, "%s\\c-", level.mapname );
-				pszOutString += strlen( level.mapname );
+				sprintf( pszOutString, "%s\\c-", level.MapName.GetChars() );
+				pszOutString += strlen( level.MapName );
 				pszOutString += strlen( "\\c-" );
 
 				pszInString += strlen( "map_name" );
@@ -2609,9 +2609,9 @@ static void botcmd_ACS_Execute( CSkullBot *pBot )
 
 	int arg[3] = { lArg1, lArg2, lArg3 };
 	if (( lMap == 0 ) || (( pLevelInfo = FindLevelByNum( lMap )) == false ))
-		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, level.mapname, arg, 3, 0 );
+		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, level.MapName, arg, 3, 0 );
 	else
-		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, pLevelInfo->mapname, arg, 3, 0 );
+		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, pLevelInfo->MapName, arg, 3, 0 );
 }
 
 //*****************************************************************************

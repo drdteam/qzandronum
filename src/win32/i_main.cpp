@@ -1095,11 +1095,7 @@ void DoomSpecificInfo (char *buffer, size_t bufflen)
 	}
 	else
 	{
-		char name[9];
-
-		strncpy (name, level.mapname, 8);
-		name[8] = 0;
-		buffer += mysnprintf (buffer, buffend - buffer, "\r\n\r\nCurrent map: %s", name);
+		buffer += mysnprintf (buffer, buffend - buffer, "\r\n\r\nCurrent map: %s", level.MapName.GetChars());
 
 		// [BC] Also display the network state.
 		char	szNetState[16];

@@ -561,10 +561,7 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 	}
 	*/
 
-	if (mapname != level.mapname)
-	{
-		strcpy (level.mapname, mapname);
-	}
+	level.MapName = mapname;
 	if (bTitleLevel)
 	{
 		gamestate = GS_TITLELEVEL;
@@ -611,9 +608,9 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 	{
 		// end the game
 		levelname = NULL;
-		if (!strncmp(level.nextmap, "enDSeQ",6))
+		if (!level.NextMap.Compare("enDSeQ",6))
 		{
-			levelname = level.nextmap;	// If there is already an end sequence please leave it alone!
+			nextlevel = level.NextMap;	// If there is already an end sequence please leave it alone!
 		}
 		else 
 		{
@@ -629,12 +626,14 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 			if (nextredir != NULL)
 			{
 				nextinfo = nextredir;
-				levelname = nextinfo->mapname;
 			}
 		}
+		nextlevel = nextinfo->MapName;
 	}
-
-	if (levelname != NULL) nextlevel = levelname;
+	else
+	{
+		nextlevel = levelname;
+	}
 
 	if (nextSkill != -1)
 		NextSkill = nextSkill;
@@ -680,7 +679,7 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 		// in the rotation, e.g. exiting to a secret map allows to leave the rotation.
 		// In this case, we may not advance to the next map in the rotation.
 		if ( ( MAPROTATION_GetNextMap( ) != NULL )
-			&& ( stricmp ( MAPROTATION_GetNextMap( )->mapname, nextlevel.GetChars() ) == 0 ) )
+			&& ( stricmp ( MAPROTATION_GetNextMap( )->MapName, nextlevel.GetChars() ) == 0 ) )
 			MAPROTATION_AdvanceMap();
 	}
 
@@ -741,9 +740,9 @@ const char *G_GetExitMap()
 	{
 		// [BB] We need to update the maprotation if the changemap cheat is used.
 		if ( sv_maprotation )
-			MAPROTATION_SetPositionToMap( level.nextmap );
+			MAPROTATION_SetPositionToMap( level.NextMap );
 
-		return ( level.nextmap );
+		return ( level.NextMap );
 	}
 
 	// If we failed a campaign, just stay on the current map.
@@ -751,13 +750,13 @@ const char *G_GetExitMap()
 		( invasion == false ) &&
 		( CAMPAIGN_DidPlayerBeatMap( ) == false ))
 	{
-		return ( level.mapname );
+		return ( level.MapName );
 	}
 	// If using the same level dmflag, just stay on the current map.
 	else if (( dmflags & DF_SAME_LEVEL ) &&
 		( deathmatch || teamgame ))
 	{
-		return ( level.mapname );
+		return ( level.MapName );
 	}
 	// If we're using the lobby cvar and we're not in the lobby already, the lobby is the next map.
 	else if ( GAMEMODE_IsNextMapCvarLobby( ) )
@@ -771,10 +770,10 @@ const char *G_GetExitMap()
 	{
 		// [BB] It's possible that G_GetExitMap() is called multiple times before a map change.
 		// Therefore we may not advance the map, but just peek at it.
-		return ( MAPROTATION_GetNextMap( )->mapname );
+		return ( MAPROTATION_GetNextMap( )->MapName );
 	}
 
-	return level.nextmap;
+	return level.NextMap;
 }
 
 const char *G_GetSecretExitMap()
@@ -782,11 +781,11 @@ const char *G_GetSecretExitMap()
 	// [TL] No need to fetch a reference to level.nextmap anymore.
 	const char *nextmap = NULL;
 
-	if (level.secretmap[0] != 0)
+	if (level.NextSecretMap.Len() > 0)
 	{
-		if (P_CheckMapData(level.secretmap))
+		if (P_CheckMapData(level.NextSecretMap))
 		{
-			nextmap = level.secretmap;
+			nextmap = level.NextSecretMap;
 		}
 	}
 	
@@ -841,7 +840,7 @@ void G_DoCompleted (void)
 
 	if (gamestate == GS_TITLELEVEL)
 	{
-		strncpy (level.mapname, nextlevel, 255);
+		level.MapName = nextlevel;
 		G_DoLoadLevel (startpos, false);
 		startpos = 0;
 		viewactive = true;
@@ -850,20 +849,20 @@ void G_DoCompleted (void)
 
 	// [RH] Mark this level as having been visited
 	if (!(level.flags & LEVEL_CHANGEMAPCHEAT))
-		FindLevelInfo (level.mapname)->flags |= LEVEL_VISITED;
+		FindLevelInfo (level.MapName)->flags |= LEVEL_VISITED;
 
 	if (automapactive)
 		AM_Stop ();
 
 	wminfo.finished_ep = level.cluster - 1;
-	wminfo.LName0 = TexMan[TexMan.CheckForTexture(level.info->pname, FTexture::TEX_MiscPatch)];
-	wminfo.current = level.mapname;
+	wminfo.LName0 = TexMan[TexMan.CheckForTexture(level.info->PName, FTexture::TEX_MiscPatch)];
+	wminfo.current = level.MapName;
 
 	if (deathmatch &&
 		(dmflags & DF_SAME_LEVEL) &&
 		!(level.flags & LEVEL_CHANGEMAPCHEAT))
 	{
-		wminfo.next = level.mapname;
+		wminfo.next = level.MapName;
 		wminfo.LName1 = wminfo.LName0;
 	}
 	else
@@ -876,8 +875,8 @@ void G_DoCompleted (void)
 		}
 		else
 		{
-			wminfo.next = nextinfo->mapname;
-			wminfo.LName1 = TexMan[TexMan.CheckForTexture(nextinfo->pname, FTexture::TEX_MiscPatch)];
+			wminfo.next = nextinfo->MapName;
+			wminfo.LName1 = TexMan[TexMan.CheckForTexture(nextinfo->PName, FTexture::TEX_MiscPatch)];
 		}
 	}
 
@@ -1072,7 +1071,7 @@ void G_DoLoadLevel (int position, bool autosave)
 	if ( NETWORK_InClientMode() == false )
 	{
 		// [BB] We clear the teams if either ZADF_YES_KEEP_TEAMS is not on or if the new level is a lobby.
-		const bool bClearTeams = ( !(zadmflags & ZADF_YES_KEEP_TEAMS) || GAMEMODE_IsLobbyMap( level.mapname ) );
+		const bool bClearTeams = ( !(zadmflags & ZADF_YES_KEEP_TEAMS) || GAMEMODE_IsLobbyMap( level.MapName ) );
 
 		if ( bClearTeams )
 		{
@@ -1134,7 +1133,7 @@ void G_DoLoadLevel (int position, bool autosave)
 	// If a campaign is allowed, see if there is one for this map.
 	if ( CAMPAIGN_AllowCampaign( ) && ( savegamerestore == false ))
 	{
-		pInfo = CAMPAIGN_GetCampaignInfo( level.mapname );
+		pInfo = CAMPAIGN_GetCampaignInfo( level.MapName );
 		if ( pInfo )
 		{
 			Val.Int = pInfo->lFragLimit;
@@ -1325,7 +1324,7 @@ void G_DoLoadLevel (int position, bool autosave)
 	// [BC] In server mode, display the level name slightly differently.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
-		Printf( "\n*** %s: %s ***\n\n", level.mapname, level.LevelName.GetChars() );
+		Printf( "\n*** %s: %s ***\n\n", level.MapName.GetChars(), level.LevelName.GetChars() );
 
 		// [RC] Update clients using the RCON utility.
 		SERVER_RCON_UpdateInfo( SVRCU_MAP );
@@ -1337,10 +1336,10 @@ void G_DoLoadLevel (int position, bool autosave)
 				"\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36"
 				"\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n"
 				TEXTCOLOR_BOLD "%s - %s\n\n",
-				level.mapname, level.LevelName.GetChars());
+				level.MapName.GetChars(), level.LevelName.GetChars());
 		
 		// [RC] Update the G15 display.
-		G15_NextLevel( level.mapname, level.LevelName.GetChars() );
+		G15_NextLevel( level.MapName, level.LevelName.GetChars() );
 	}
 
 	if (wipegamestate == GS_LEVEL)
@@ -1450,7 +1449,7 @@ void G_DoLoadLevel (int position, bool autosave)
 			g_NetIDList.clear( );
 	}
 
-	P_SetupLevel (level.mapname, position);
+	P_SetupLevel (level.MapName, position);
 
 	AM_LevelInit();
 
@@ -1551,7 +1550,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		if (( invasion ) &&
 			( sv_usemapsettingswavelimit ))
 		{
-			pInfo = CAMPAIGN_GetCampaignInfo( level.mapname );
+			pInfo = CAMPAIGN_GetCampaignInfo( level.MapName );
 			if ( pInfo )
 			{
 				Val.Int = pInfo->lWaveLimit;
@@ -1562,7 +1561,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		if (( possession || teampossession ) &&
 			( sv_usemapsettingspossessionholdtime ))
 		{
-			pInfo = CAMPAIGN_GetCampaignInfo( level.mapname );
+			pInfo = CAMPAIGN_GetCampaignInfo( level.MapName );
 			if (( pInfo ) && ( pInfo->lPossessionHoldTime > 0 ))
 			{
 				Val.Int = pInfo->lPossessionHoldTime;
@@ -1582,7 +1581,7 @@ void G_DoLoadLevel (int position, bool autosave)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		// Now that we're in a new level, update the mapname/scoreboard.
-		sprintf( szString, "%s: %s", level.mapname, level.LevelName.GetChars() );
+		sprintf( szString, "%s: %s", level.MapName.GetChars(), level.LevelName.GetChars() );
 		SERVERCONSOLE_SetCurrentMapname( szString );
 		SERVERCONSOLE_UpdateScoreboard( );
 
@@ -1590,7 +1589,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		SERVERCONSOLE_SetupColumns( );
 
 		// Also, update the level for all clients.
-		SERVER_LoadNewLevel( level.mapname );
+		SERVER_LoadNewLevel( level.MapName );
 
 	}
 }
@@ -1692,7 +1691,7 @@ void G_DoWorldDone (void)
 	}
 	else
 	{
-		strncpy (level.mapname, nextlevel, 255);
+		level.MapName = nextlevel;
 	}
 	G_StartTravel ();
 	G_DoLoadLevel (startpos, true);
@@ -1924,7 +1923,7 @@ void G_InitLevelLocals ()
 	// [BB]
 	level.flagsZA = 0;
 
-	info = FindLevelInfo (level.mapname);
+	info = FindLevelInfo (level.MapName);
 
 	level.info = info;
 	level.skyspeed1 = info->skyspeed1;
@@ -1983,10 +1982,8 @@ void G_InitLevelLocals ()
 	level.musicorder = info->musicorder;
 
 	level.LevelName = level.info->LookupLevelName();
-	strncpy (level.nextmap, info->nextmap, 10);
-	level.nextmap[10] = 0;
-	strncpy (level.secretmap, info->secretmap, 10);
-	level.secretmap[10] = 0;
+	level.NextMap = info->NextMap;
+	level.NextSecretMap = info->NextSecretMap;
 
 	// [BC] Why do we need to do this? For now, just don't do it in server mode.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
@@ -2345,7 +2342,7 @@ static void writeMapName (FArchive &arc, const char *name)
 static void writeSnapShot (FArchive &arc, level_info_t *i)
 {
 	arc << i->snapshotVer;
-	writeMapName (arc, i->mapname);
+	writeMapName (arc, i->MapName);
 	i->snapshot->Serialize (arc);
 }
 
@@ -2383,7 +2380,7 @@ void G_WriteSnapshots (FILE *file)
 			{
 				arc = new FPNGChunkArchive (file, VIST_ID);
 			}
-			writeMapName (*arc, wadlevelinfos[i].mapname);
+			writeMapName (*arc, wadlevelinfos[i].MapName);
 		}
 	}
 
@@ -2522,7 +2519,7 @@ CCMD(listsnapshots)
 		{
 			unsigned int comp, uncomp;
 			snapshot->GetSizes(comp, uncomp);
-			Printf("%s (%u -> %u bytes)\n", wadlevelinfos[i].mapname, comp, uncomp);
+			Printf("%s (%u -> %u bytes)\n", wadlevelinfos[i].MapName.GetChars(), comp, uncomp);
 		}
 	}
 }
@@ -2534,7 +2531,7 @@ CCMD(listsnapshots)
 
 static void writeDefereds (FArchive &arc, level_info_t *i)
 {
-	writeMapName (arc, i->mapname);
+	writeMapName (arc, i->MapName);
 	arc << i->defered;
 }
 
@@ -2646,11 +2643,11 @@ CCMD(listmaps)
 	for(unsigned i = 0; i < wadlevelinfos.Size(); i++)
 	{
 		level_info_t *info = &wadlevelinfos[i];
-		MapData *map = P_OpenMapData(info->mapname, true);
+		MapData *map = P_OpenMapData(info->MapName, true);
 
 		if (map != NULL)
 		{
-			Printf("%s: '%s' (%s)\n", info->mapname, info->LookupLevelName().GetChars(),
+			Printf("%s: '%s' (%s)\n", info->MapName.GetChars(), info->LookupLevelName().GetChars(),
 				Wads.GetWadName(Wads.GetLumpFile(map->lumpnum)));
 			delete map;
 		}

@@ -3590,7 +3590,7 @@ void SERVERCOMMANDS_VoteEnded( bool bVotePassed, ULONG ulPlayerExtra, ServerComm
 void SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_MAPLOAD );
-	command.addString ( level.mapname );
+	command.addString ( level.MapName );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

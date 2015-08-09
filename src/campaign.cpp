@@ -144,7 +144,7 @@ void CAMPAIGN_ParseCampaignInfo( void )
 
 //*****************************************************************************
 //
-CAMPAIGNINFO_s *CAMPAIGN_GetCampaignInfo( char *pszMapName )
+CAMPAIGNINFO_s *CAMPAIGN_GetCampaignInfo( const char *pszMapName )
 {
 	CAMPAIGNINFO_s	*pInfo;
 	CAMPAIGNINFO_s	*pBestInfo;

@@ -130,7 +130,7 @@ typedef struct CAMPAIGNINFO_s
 void				CAMPAIGN_Construct( void );
 void				CAMPAIGN_Destruct( void );
 void				CAMPAIGN_ParseCampaignInfo( void );
-CAMPAIGNINFO_s		*CAMPAIGN_GetCampaignInfo( char *pszMapName );
+CAMPAIGNINFO_s		*CAMPAIGN_GetCampaignInfo( const char *pszMapName );
 void				CAMPAIGN_EnableCampaign( void );
 void				CAMPAIGN_DisableCampaign( void );
 bool				CAMPAIGN_AllowCampaign( void );

@@ -316,7 +316,7 @@ class CommandDrawImage : public SBarInfoCommandFlowControl
 			
 			if (flags & DI_ALTERNATEONFAIL)
 			{
-				SetTruth(texture == NULL || !(texture->GetID().isValid()), block, statusBar);
+				SetTruth(texture == NULL || texture->UseType == FTexture::TEX_Null, block, statusBar);
 			}
 		}
 	protected:
@@ -848,7 +848,7 @@ class CommandDrawString : public SBarInfoCommand
 					if(level.lumpnum != cache)
 					{
 						cache = level.lumpnum;
-						str = level.mapname;
+						str = level.MapName;
 						str.ToUpper();
 						RealignString();
 					}

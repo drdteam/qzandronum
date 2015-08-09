@@ -1376,11 +1376,11 @@ static void InitLevelsList()
 		// block here as well.
 		try
 		{
-			if (( mdata = P_OpenMapData( wadlevelinfos[i].mapname, false )) != NULL )
+			if (( mdata = P_OpenMapData( wadlevelinfos[i].MapName, false )) != NULL )
 			{
 				level_info_t& info = wadlevelinfos[i];
 				pair.Value = i;
-				pair.Text.Format( "%s - %s", info.mapname, info.LookupLevelName().GetChars() );
+				pair.Text.Format( "%s - %s", info.MapName.GetChars(), info.LookupLevelName().GetChars() );
 				( *opt )->mValues.Push( pair );
 			}
 		}

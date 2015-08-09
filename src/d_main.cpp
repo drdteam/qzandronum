@@ -1565,7 +1565,7 @@ void D_DoAdvanceDemo (void)
 	static char demoname[8] = "DEMO1";
 	static int democount = 0;
 	static int pagecount;
-	const char *pagename = NULL;
+	FString pagename;
 
 	advancedemo = false;
 
@@ -1630,7 +1630,7 @@ void D_DoAdvanceDemo (void)
 	default:
 	case 0:
 		gamestate = GS_DEMOSCREEN;
-		pagename = gameinfo.titlePage;
+		pagename = gameinfo.TitlePage;
 		pagetic = (int)(gameinfo.titleTime * TICRATE);
 		S_ChangeMusic (gameinfo.titleMusic, gameinfo.titleOrder, false);
 		demosequence = 3;
@@ -3136,7 +3136,7 @@ void D_DoomMain (void)
 						// G_InitNew should be fixed.
 						char levelname[10];
 						// [K6] Start with a random map if we are using sv_randommaprotation.
-						sprintf( levelname, "%s", MAPROTATION_GetMap( sv_randommaprotation ? M_Random.Random( ) % MAPROTATION_GetNumEntries( ) : 0 )->mapname );
+						sprintf( levelname, "%s", MAPROTATION_GetMap( sv_randommaprotation ? M_Random.Random( ) % MAPROTATION_GetNumEntries( ) : 0 )->MapName.GetChars() );
 						MAPROTATION_SetPositionToMap( levelname );
 						G_InitNew( levelname, false );
 						//G_InitNew( MAPROTATION_GetMapName( 0 ), false );

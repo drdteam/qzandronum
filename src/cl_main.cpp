@@ -9921,11 +9921,11 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	// [TP] Make a name out of the levelnum
 	if ( levelnum == 0 )
 	{
-		mapname = level.mapname;
+		mapname = level.MapName;
 	}
 	else if (( levelinfo = FindLevelByNum ( levelnum )))
 	{
-		mapname = levelinfo->mapname;
+		mapname = levelinfo->MapName;
 	}
 	else
 	{

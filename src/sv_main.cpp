@@ -638,7 +638,7 @@ void SERVER_Tick( void )
 				}
 				else
 				{
-					sprintf(szString, "map %s", level.mapname);
+					sprintf(szString, "map %s", level.MapName.GetChars());
 				}
 
 				AddCommandString( szString );
@@ -683,7 +683,7 @@ void SERVER_Tick( void )
 			// [BB] If the client didn't authenticate the new map by now, likely his authentication packet was lost.
 			// Ask him to authenticate again.
 			if ( ( SERVER_GetClient( ulIdx )->State == CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) && ( ( level.maptime % ( 2 * TICRATE ) ) == 0 ) )
-				SERVERCOMMANDS_MapAuthenticate ( level.mapname, ulIdx, SVCF_ONLYTHISCLIENT );
+				SERVERCOMMANDS_MapAuthenticate ( level.MapName, ulIdx, SVCF_ONLYTHISCLIENT );
 		}
 
 		gametic++;
@@ -1184,7 +1184,7 @@ void SERVER_RequestClientToAuthenticate( ULONG ulClient )
 {
 	NETWORK_ClearBuffer( &g_aClients[ulClient].PacketBuffer );
 	NETWORK_WriteByte( &g_aClients[ulClient].PacketBuffer.ByteStream, SVCC_AUTHENTICATE );
-	NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, level.mapname );
+	NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, level.MapName );
 	// [CK] This lets the client start off with a reasonable gametic. In case
 	// the client would like to do any kind of prediction from gametics in the
 	// future, we can use the current gametic as the base. This also prevents
@@ -1240,7 +1240,7 @@ bool SERVER_PerformAuthenticationChecksum( BYTESTREAM_s *pByteStream )
 	FString		clientTextmapString;
 
 	// [BB] Open the map. Since we are already using the map, we won't get a NULL pointer.
-	pMap = P_OpenMapData( level.mapname, false );
+	pMap = P_OpenMapData( level.MapName, false );
 
 	// Generate checksums for the map lumps.
 	// [Dusk] Only if not UDMF. In UDMF, make the TEXTMAP checksum instead.
@@ -1315,7 +1315,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	// Just ask the client to authenticate again in this case.
 	if ( g_aClients[g_lCurrentClient].State == CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION )
 	{
-		SERVERCOMMANDS_MapAuthenticate ( level.mapname, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+		SERVERCOMMANDS_MapAuthenticate ( level.MapName, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 		return;
 	}
 
@@ -4026,7 +4026,7 @@ void SERVER_ErrorCleanup( void )
 	BOTS_RemoveAllBots( false );
 
 	// Reload the map.
-	sprintf( szString, "map %s", level.mapname );
+	sprintf( szString, "map %s", level.MapName );
 	AddCommandString( szString );
 }
 
@@ -5936,7 +5936,7 @@ static bool server_AuthenticateLevel( BYTESTREAM_s *pByteStream )
 	// This can happen if the map changes too quickly twice in a row: In that case
 	// we get the authentication data for the first level from the client when
 	// the server already loaded the second level.
-	if ( stricmp ( mapnameString.GetChars(), level.mapname ) != 0 )
+	if ( stricmp ( mapnameString.GetChars(), level.MapName ) != 0 )
 	{
 		// [BB] This eats the authentication strings the client is sending, necessary
 		// because we need to parse the packet completely.
@@ -5948,7 +5948,7 @@ static bool server_AuthenticateLevel( BYTESTREAM_s *pByteStream )
 			return ( true );
 
 		// [BB] Tell the client authenticate again.
-		SERVERCOMMANDS_MapAuthenticate ( level.mapname, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+		SERVERCOMMANDS_MapAuthenticate ( level.MapName, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 		return ( false );
 	}
 
@@ -6349,7 +6349,7 @@ static bool server_Puke( BYTESTREAM_s *pByteStream )
 	}
 
 	// [BB] Execute the script as if it was invoked by the puke command.
-	P_StartScript (players[g_lCurrentClient].mo, NULL, ulScript, level.mapname,
+	P_StartScript (players[g_lCurrentClient].mo, NULL, ulScript, level.MapName,
 		arg, 4, ( bAlways ? ACS_ALWAYS : 0 ) | ACS_NET );
 
 	return ( false );

@@ -164,7 +164,7 @@ void MAPROTATION_SetPositionToMap( const char *pszMapName )
 {
 	for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
 	{
-		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->mapname, pszMapName ) == 0 )
+		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->MapName, pszMapName ) == 0 )
 		{
 			g_ulCurMapInList = ulIdx;
 			g_MapRotationEntries[g_ulCurMapInList].bUsed = true;
@@ -180,7 +180,7 @@ bool MAPROTATION_IsMapInRotation( const char *pszMapName )
 {
 	for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
 	{
-		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->mapname, pszMapName ) == 0 )
+		if ( stricmp( g_MapRotationEntries[ulIdx].pMap->MapName, pszMapName ) == 0 )
 			return true;
 	}
 	return false;
@@ -222,9 +222,9 @@ void MAPROTATION_AddMap( char *pszMapName, bool bSilent, int iPosition )
 		g_MapRotationEntries.insert( itPosition, 1, newEntry );
 	}
 
-	MAPROTATION_SetPositionToMap( level.mapname );
+	MAPROTATION_SetPositionToMap( level.MapName );
 	if ( !bSilent )
-		Printf( "%s (%s) added to map rotation list at position %d.\n", pMap->mapname, pMap->LookupLevelName( ).GetChars( ), iPosition);
+		Printf( "%s (%s) added to map rotation list at position %d.\n", pMap->MapName.GetChars(), pMap->LookupLevelName( ).GetChars( ), iPosition);
 }
 
 //*****************************************************************************
@@ -246,7 +246,7 @@ void MAPROTATION_DelMap (char *pszMapName, bool bSilent)
 	for (iterator = g_MapRotationEntries.begin (); iterator < g_MapRotationEntries.end (); iterator++)
 	{
 		entry = *iterator->pMap;
-		if (!stricmp(entry.mapname, pszMapName)) {
+		if (!stricmp(entry.MapName, pszMapName)) {
 			g_MapRotationEntries.erase (iterator);
 			gotcha = true;
 			break;
@@ -256,7 +256,7 @@ void MAPROTATION_DelMap (char *pszMapName, bool bSilent)
 	if (gotcha && !bSilent)
 	{
 		Printf ("%s (%s) has been removed from map rotation list.\n",
-			pMap->mapname, pMap->LookupLevelName().GetChars());
+			pMap->MapName.GetChars(), pMap->LookupLevelName().GetChars());
 	}
 	else if (!gotcha)
 		Printf ("Map %s is not in rotation.\n", pszMapName);
@@ -291,7 +291,7 @@ CCMD( maplist )
 	{
 		Printf( "Map rotation list: \n" );
 		for ( ULONG ulIdx = 0; ulIdx < g_MapRotationEntries.size( ); ulIdx++ )
-			Printf( "%lu. %s - %s\n", ulIdx + 1, g_MapRotationEntries[ulIdx].pMap->mapname, g_MapRotationEntries[ulIdx].pMap->LookupLevelName( ).GetChars( ));
+			Printf( "%lu. %s - %s\n", ulIdx + 1, g_MapRotationEntries[ulIdx].pMap->MapName.GetChars(), g_MapRotationEntries[ulIdx].pMap->LookupLevelName( ).GetChars( ));
 	}
 }
 
@@ -334,7 +334,7 @@ CCMD (delmap_idx) {
 		return;
 	}
 
-	Printf ("%s (%s) has been removed from map rotation list.\n",	g_MapRotationEntries[idx].pMap->mapname, g_MapRotationEntries[idx].pMap->LookupLevelName().GetChars());
+	Printf ("%s (%s) has been removed from map rotation list.\n",	g_MapRotationEntries[idx].pMap->MapName.GetChars(), g_MapRotationEntries[idx].pMap->LookupLevelName().GetChars());
 	g_MapRotationEntries.erase (g_MapRotationEntries.begin()+idx);
 }
 

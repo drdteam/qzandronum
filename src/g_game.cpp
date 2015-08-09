@@ -1699,7 +1699,7 @@ void G_Ticker ()
 				if ( duel )
 				{
 					// If the player must win all duels, and lost this one, then he's DONE!
-					if (( DUEL_GetLoser( ) == static_cast<unsigned> (consoleplayer) ) && ( CAMPAIGN_InCampaign( )) && ( CAMPAIGN_GetCampaignInfo( level.mapname )->bMustWinAllDuels ))
+					if (( DUEL_GetLoser( ) == static_cast<unsigned> (consoleplayer) ) && ( CAMPAIGN_InCampaign( )) && ( CAMPAIGN_GetCampaignInfo( level.MapName )->bMustWinAllDuels ))
 					{
 						// Tell the player he loses!
 						Printf( "You lose!\n" );
@@ -2670,7 +2670,7 @@ void G_DoReborn (int playernum, bool freshbot)
 		{ // Reload the level from scratch
 			bool indemo = demoplayback;
 			BackupSaveName = "";
-			G_InitNew (level.mapname, false);
+			G_InitNew (level.MapName, false);
 			demoplayback = indemo;
 //			gameaction = ga_loadlevel;
 		}
@@ -3196,9 +3196,9 @@ void GAME_ResetScripts ( )
 	}
 
 	// Open the current map and load its BEHAVIOR lump.
-	MapData *pMap = P_OpenMapData( level.mapname, false );
+	MapData *pMap = P_OpenMapData( level.MapName, false );
 	if ( pMap == NULL )
-		I_Error( "GAME_ResetMap: Unable to open map '%s'\n", level.mapname );
+		I_Error( "GAME_ResetMap: Unable to open map '%s'\n", level.MapName.GetChars() );
 	else if ( pMap->HasBehavior )
 		P_LoadBehavior( pMap );
 
@@ -4549,7 +4549,7 @@ static void PutSaveComment (FILE *file)
 
 	// Get level name
 	//strcpy (comment, level.level_name);
-	mysnprintf(comment, countof(comment), "%s - %s", level.mapname, level.LevelName.GetChars());
+	mysnprintf(comment, countof(comment), "%s - %s", level.MapName.GetChars(), level.LevelName.GetChars());
 	len = (WORD)strlen (comment);
 	comment[len] = '\n';
 
@@ -4610,7 +4610,7 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 	M_AppendPNGText (stdfile, "Engine", GAMESIG);
 	M_AppendPNGText (stdfile, "ZDoom Save Version", SAVESIG);
 	M_AppendPNGText (stdfile, "Title", description);
-	M_AppendPNGText (stdfile, "Current Map", level.mapname);
+	M_AppendPNGText (stdfile, "Current Map", level.MapName);
 	PutSaveWads (stdfile);
 	PutSaveComment (stdfile);
 
@@ -4826,7 +4826,7 @@ void G_BeginRecording (const char *startmap)
 
 	if (startmap == NULL)
 	{
-		startmap = level.mapname;
+		startmap = level.MapName;
 	}
 	demo_p = demobuffer;
 
