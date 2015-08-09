@@ -81,5 +81,8 @@ public:
 	}
 	int GetFormattedLineCount() { return mTextLines; }
 	FBrokenLines **GetLines() { return &mBrokenLines[0]; }
+
+	// [BB]
+	static void LogLine ( FILE *LogFile, const char *outline );
 };
 

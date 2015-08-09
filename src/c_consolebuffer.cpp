@@ -151,13 +151,15 @@ void FConsoleBuffer::AddText(int printlevel, const char *text, FILE *logfile)
 
 //==========================================================================
 //
-//
+// [BB]
 //
 //==========================================================================
 
-void FConsoleBuffer::WriteLineToLog(FILE *LogFile, const char *outline)
+void FConsoleBuffer::LogLine ( FILE *LogFile, const char *outline )
 {
-	// [BB] Zandronum's version of the logging code.
+	if ( ( LogFile == NULL ) || ( outline == NULL ) )
+		return;
+
 	char * copy = new char[strlen(outline)+1];
 	strcpy (copy,outline);
 	V_ColorizeString( copy );
@@ -177,6 +179,20 @@ void FConsoleBuffer::WriteLineToLog(FILE *LogFile, const char *outline)
 			sprintf( time, "[%02d:%02d:%02d] ", lt->tm_hour, lt->tm_min, lt->tm_sec);
 		fputs (time, LogFile);
 	}
+	fputs (copy, LogFile);
+	delete [] copy;
+	fflush (LogFile);
+}
+//==========================================================================
+//
+//
+//
+//==========================================================================
+
+void FConsoleBuffer::WriteLineToLog(FILE *LogFile, const char *outline)
+{
+	// [BB] For now, Zandronum uses its old logging code.
+	FConsoleBuffer::LogLine ( LogFile, outline );
 /*
 	// Strip out any color escape sequences before writing to the log file
 	char * copy = new char[strlen(outline)+1];
@@ -221,10 +237,11 @@ void FConsoleBuffer::WriteLineToLog(FILE *LogFile, const char *outline)
 		}
 	}
 	*dstp=0;
-*/
+
 	fputs (copy, LogFile);
 	delete [] copy;
 	fflush (LogFile);
+*/
 }
 
 //==========================================================================

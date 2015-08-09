@@ -668,6 +668,8 @@ int PrintString (int printlevel, const char *outline)
 	// [BB] If we are coming from I_Quit, Args is possibly already invalid.
 	if ( Args && Args->CheckParm( "-host" ))
 	{
+		// [BB] Since the server doesn't have a console buffer, it logs the output immediately.
+		FConsoleBuffer::LogLine ( Logfile, outlinecopy );
 		if ( printlevel != PRINT_LOW )
 		{			
 			// [RC] Send this to any connected RCON clients.
