@@ -605,7 +605,7 @@ bool FTexture::ProcessData(unsigned char * buffer, int w, int h, bool ispatch)
 
 FBrightmapTexture::FBrightmapTexture (FTexture *source)
 {
-	memset(Name, 0, sizeof(Name));
+	Name = "";
 	SourcePic = source;
 	CopySize(source);
 	bNoDecals = source->bNoDecals;
@@ -652,7 +652,7 @@ int FBrightmapTexture::CopyTrueColorPixels(FBitmap *bmp, int x, int y, int rotat
 
 FCloneTexture::FCloneTexture (FTexture *source, int usetype)
 {
-	memset(Name, 0, sizeof(Name));
+	Name = "";
 	SourcePic = source;
 	CopySize(source);
 	bNoDecals = source->bNoDecals;
