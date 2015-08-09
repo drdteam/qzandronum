@@ -358,6 +358,10 @@ void AActor::Serialize (FArchive &arc)
 		arc << PoisonDamageType << PoisonDamageTypeReceived;
 	}
 	arc << ConversationRoot << Conversation;
+	if (SaveVersion >= 4509)
+	{
+		arc << FriendPlayer;
+	}
 	
 	// [BB] Zandronum additions.
 	arc << ulLimitedToTeam // [BB]
