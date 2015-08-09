@@ -250,15 +250,38 @@ void FGLRenderer::SetCameraPos(fixed_t viewx, fixed_t viewy, fixed_t viewz, angl
 //
 //-----------------------------------------------------------------------------
 
+static void setPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
+{
+	GLdouble m[4][4];
+	double sine, cotangent, deltaZ;
+	double radians = fovy / 2 * M_PI / 180;
+
+	deltaZ = zFar - zNear;
+	sine = sin(radians);
+	if ((deltaZ == 0) || (sine == 0) || (aspect == 0)) {
+		return;
+	}
+	cotangent = cos(radians) / sine;
+
+	memset(m, 0, sizeof(m));
+	m[0][0] = cotangent / aspect;
+	m[1][1] = cotangent;
+	m[2][2] = -(zFar + zNear) / deltaZ;
+	m[2][3] = -1;
+	m[3][2] = -2 * zNear * zFar / deltaZ;
+	m[3][3] = 0;
+	glLoadMatrixd(&m[0][0]);
+}
+
+
 void FGLRenderer::SetProjection(float fov, float ratio, float fovratio, float eyeShift) // [BB] Added eyeShift from GZ3Doom.
 {
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 
 	float fovy = 2 * RAD2DEG(atan(tan(DEG2RAD(fov) / 2) / fovratio));
 	// [BB] Added eyeShift from GZ3Doom.
 	if ( eyeShift == 0 )
-		gluPerspective(fovy, ratio, 5.f, 65536.f);
+		setPerspective(fovy, ratio, 5.f, 65536.f);
 	else
 	{
 		const float zNear = 5.0f;
