@@ -1,9 +1,10 @@
 /*
-** a_secrettrigger.cpp
-** A thing that counts toward the secret count when activated
+** consolebuffer.h
+**
+** manages the text for the console
 **
 **---------------------------------------------------------------------------
-** Copyright 1998-2006 Randy Heit
+** Copyright 2014 Christoph Oelckers
 ** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -32,35 +33,53 @@
 **
 */
 
-#include "actor.h"
-#include "g_level.h"
-#include "c_console.h"
-#include "info.h"
-#include "s_sound.h"
-#include "d_player.h"
-#include "doomstat.h"
-#include "v_font.h"
-#include "p_spec.h"
+#include <limits.h>
+#include <stdio.h>
+#include "zstring.h"
+#include "tarray.h"
+#include "v_text.h"
 
-class ASecretTrigger : public AActor
+enum EAddType
 {
-	DECLARE_CLASS (ASecretTrigger, AActor)
-public:
-	void PostBeginPlay ();
-	void Activate (AActor *activator);
+	NEWLINE,
+	APPENDLINE,
+	REPLACELINE
 };
 
-IMPLEMENT_CLASS (ASecretTrigger)
-
-void ASecretTrigger::PostBeginPlay ()
+class FConsoleBuffer
 {
-	Super::PostBeginPlay ();
-	level.total_secrets++;
-}
+	TArray<FString> mConsoleText;
+	TArray<FBrokenLines *> mBrokenConsoleText;	// This holds the structures returned by V_BreakLines and is used for memory management.
+	TArray<unsigned int> mBrokenStart;		
+	TArray<FBrokenLines *> mBrokenLines;		// This holds the single lines, indexed by mBrokenStart and is used for printing.
+	FILE * mLogFile;
+	EAddType mAddType;
+	int mTextLines;
+	bool mBufferWasCleared;
+	
+	FFont *mLastFont;
+	int mLastDisplayWidth;
+	bool mLastLineNeedsUpdate;
 
-void ASecretTrigger::Activate (AActor *activator)
-{
-	P_GiveSecret(activator, args[0] <= 1, (args[0] == 0 || args[0] == 2), -1);
-	Destroy ();
-}
+	void WriteLineToLog(FILE *LogFile, const char *outline);
+	void FreeBrokenText(unsigned int start = 0, unsigned int end = INT_MAX);
+
+	void Linefeed(FILE *Logfile);
+	
+public:
+	FConsoleBuffer();
+	~FConsoleBuffer();
+	void AddText(int printlevel, const char *string, FILE *logfile = NULL);
+	void AddMidText(const char *string, bool bold, FILE *logfile);
+	void FormatText(FFont *formatfont, int displaywidth);
+	void ResizeBuffer(unsigned newsize);
+	void WriteContentToLog(FILE *logfile);
+	void Clear()
+	{
+		mBufferWasCleared = true;
+		mConsoleText.Clear();
+	}
+	int GetFormattedLineCount() { return mTextLines; }
+	FBrokenLines **GetLines() { return &mBrokenLines[0]; }
+};
 

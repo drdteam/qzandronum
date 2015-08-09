@@ -49,6 +49,10 @@ typedef enum cstate_t
 } 
 constate_e;
 
+// [BC] Add a new print level for OpenGL messages.
+#define PRINTLEVELS 6
+extern int PrintColors[PRINTLEVELS + 2];
+
 extern constate_e ConsoleState;
 extern int ConBottom;
 

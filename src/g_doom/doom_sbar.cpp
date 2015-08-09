@@ -1440,7 +1440,7 @@ DDoomStatusBar::FDoomStatusBarTexture::FDoomStatusBarTexture ()
 		I_Error("Fatal error: STBAR not found");
 	}
 	UseType = FTexture::TEX_MiscPatch;
-	Name[0]=0;	// doesn't need a name
+	Name = "";	// doesn't need a name
 
 	// now copy all the properties from the base texture
 	CopySize(BaseTexture);

@@ -66,6 +66,7 @@
 #include "g_level.h"
 #include "d_event.h"
 #include "d_player.h"
+#include "c_consolebuffer.h"
 // [BC] New #includes.
 #include "chat.h"
 #include "cl_demo.h"
@@ -77,19 +78,25 @@
 #include "gi.h"
 #include "sv_rcon.h"
 
-#define CONSOLESIZE	16384	// Number of characters to store in console
-#define CONSOLELINES 256	// Max number of lines of console text
-#define LINEMASK (CONSOLELINES-1)
-
 #define LEFTMARGIN 8
 #define RIGHTMARGIN 8
 #define BOTTOMARGIN 12
+
+
+CUSTOM_CVAR(Int, con_buffersize, -1, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+{
+	// ensure a minimum size
+	if (self >= 0 && self < 128) self = 128;
+}
+
+FConsoleBuffer *conbuffer;
 
 static void C_TabComplete (bool goForward);
 static bool C_TabCompleteList ();
 static bool TabbedLast;		// True if last key pressed was tab
 static bool TabbedList;		// True if tab list was shown
-CVAR (Bool, con_notablist, false, CVAR_ARCHIVE)
+CVAR(Bool, con_notablist, false, CVAR_ARCHIVE)
+
 
 static FTextureID conback;
 static DWORD conshade;
@@ -103,6 +110,7 @@ extern FBaseCVar *CVars;
 extern FConsoleCommand *Commands[FConsoleCommand::HASH_SIZE];
 
 int			ConCols, PhysRows;
+int			ConWidth;
 bool		vidactive = false;
 bool		cursoron = false;
 int			ConBottom, ConScroll, RowAdjust;
@@ -115,12 +123,8 @@ constate_e	ConsoleState = c_up;
 static bool g_IsCapturing = false;
 static FString g_CaptureBuffer;
 
-static char ConsoleBuffer[CONSOLESIZE];
-static char *Lines[CONSOLELINES];
-static bool LineJoins[CONSOLELINES];
 
 static int TopLine, InsertLine;
-static char *BufferRover = ConsoleBuffer;
 
 static void ClearConsole ();
 static void C_PasteText(FString clip, BYTE *buffer, int len);
@@ -201,12 +205,6 @@ CUSTOM_CVAR( Int, con_virtualheight, 0, CVAR_ARCHIVE )
 // [RC] Now a three-level setting. No/Yes/Not in chat.
 CVAR( Int, con_colorinmessages, 1, CVAR_ARCHIVE )
 
-// [BB] Add a timestamp to every string printed to the logfile.
-CVAR (Bool, sv_logfiletimestamp, true, CVAR_ARCHIVE)
-
-// [BB] Prepend the current date to the per-line timestamp.
-CVAR (Bool, sv_logfiletimestamp_usedate, false, CVAR_ARCHIVE)
-
 // [Dusk] This now refers to con_notifylines instead of hardcoded 4.
 #define NUMNOTIFIES ( static_cast<signed>( NotifyStrings.Size() )) // 4
 #define NOTIFYFADETIME 6
@@ -244,8 +242,6 @@ static	bool	g_bAllowColorCodes = true;
 // are printed in the console as a result of his actions to him as well.
 static	ULONG	g_ulRCONPlayer = MAXPLAYERS;
 
-// [BC] Add a new print level for OpenGL messages.
-#define PRINTLEVELS 6
 int PrintColors[PRINTLEVELS+2] = { CR_RED, CR_GOLD, CR_GRAY, CR_GREEN, CR_BRICK, CR_GOLD, CR_ORANGE };
 
 static void setmsgcolor (int index, int color);
@@ -405,78 +401,11 @@ void C_InitConsole (int width, int height, bool ingame)
 	{
 		cwidth = cheight = 8;
 	}
-	ConCols = (width - LEFTMARGIN - RIGHTMARGIN) / cwidth;
+	ConWidth = (width - LEFTMARGIN - RIGHTMARGIN);
+	ConCols = ConWidth / cwidth;
 	PhysRows = height / cheight;
 
-	// If there is some text in the console buffer, reformat it
-	// for the new resolution.
-	if (TopLine != InsertLine)
-	{
-		// Note: Don't use new here, because we attach a handler to new in
-		// i_main.cpp that calls I_FatalError if the allocation fails,
-		// but we can gracefully handle such a condition here by just
-		// clearing the console buffer. (OTOH, what are the chances that
-		// any other memory allocations would succeed if we can't get
-		// these mallocs here?)
-
-		char *fmtBuff = (char *)malloc (CONSOLESIZE);
-		char **fmtLines = (char **)malloc (CONSOLELINES*sizeof(char*)*4);
-		int out = 0;
-
-		if (fmtBuff && fmtLines)
-		{
-			int in;
-			char *fmtpos;
-			bool newline = true;
-
-			fmtpos = fmtBuff;
-			memset (fmtBuff, 0, CONSOLESIZE);
-
-			for (in = TopLine; in != InsertLine; in = (in + 1) & LINEMASK)
-			{
-				size_t len = strlen (Lines[in]);
-
-				if (fmtpos + len + 2 - fmtBuff > CONSOLESIZE)
-				{
-					break;
-				}
-				if (newline)
-				{
-					newline = false;
-					fmtLines[out++] = fmtpos;
-				}
-				strcpy (fmtpos, Lines[in]);
-				fmtpos += len;
-				if (!LineJoins[in])
-				{
-					*fmtpos++ = '\n';
-					fmtpos++;
-					if (out == CONSOLELINES*4)
-					{
-						break;
-					}
-					newline = true;
-				}
-			}
-		}
-
-		ClearConsole ();
-
-		if (fmtBuff && fmtLines)
-		{
-			int i;
-
-			for (i = 0; i < out; i++)
-			{
-				AddToConsole (-1, fmtLines[i]);
-			}
-		}
-
-		if (fmtBuff)
-			free (fmtBuff);
-		if (fmtLines)
-			free (fmtLines);
-	}
+	if (conbuffer == NULL) conbuffer = new FConsoleBuffer;
 
 	// [Dusk] Initialize NotifyStrings
 	NotifyStrings.Resize( con_notifylines );
@@ -587,6 +516,12 @@ void C_DeinitConsole ()
 		work = NULL;
 		worklen = 0;
 	}
+
+	if (conbuffer != NULL)
+	{
+		delete conbuffer;
+		conbuffer = NULL;
+	}
 }
 
 static void ClearConsole ()
@@ -595,12 +530,11 @@ static void ClearConsole ()
 	if ( Args->CheckParm( "-host" ))
 		return;
 
-	RowAdjust = 0;
+	if (conbuffer != NULL)
+	{
+		conbuffer->Clear();
+	}
 	TopLine = InsertLine = 0;
-	BufferRover = ConsoleBuffer;
-	memset (ConsoleBuffer, 0, CONSOLESIZE);
-	memset (Lines, 0, sizeof(Lines));
-	memset (LineJoins, 0, sizeof(LineJoins));
 }
 
 static void setmsgcolor (int index, int color)
@@ -702,227 +636,9 @@ void CONSOLE_SetRCONPlayer( ULONG ulPlayer )
 	g_ulRCONPlayer = ulPlayer;
 }
 
-static int FlushLines (const char *start, const char *stop)
-{
-	int i;
-
-	for (i = TopLine; i != InsertLine; i = (i + 1) & LINEMASK)
-	{
-		if (Lines[i] < stop && Lines[i] + strlen (Lines[i]) > start)
-		{
-			Lines[i] = NULL;
-		}
-		else
-		{
-			break;
-		}
-	}
-	return i;
-}
-
-static void AddLine (const char *text, bool more, size_t len)
-{
-	if (BufferRover + len + 1 - ConsoleBuffer > CONSOLESIZE)
-	{
-		TopLine = FlushLines (BufferRover, ConsoleBuffer + CONSOLESIZE);
-		BufferRover = ConsoleBuffer;
-	}
-	if (len >= CONSOLESIZE - 1)
-	{
-		text = text + len - CONSOLESIZE + 1;
-		len = CONSOLESIZE - 1;
-	}
-	TopLine = FlushLines (BufferRover, BufferRover + len + 1);
-	memcpy (BufferRover, text, len);
-	BufferRover[len] = 0;
-	Lines[InsertLine] = BufferRover;
-	BufferRover += len + 1;
-	LineJoins[InsertLine] = more;
-	InsertLine = (InsertLine + 1) & LINEMASK;
-	if (InsertLine == TopLine)
-	{
-		TopLine = (TopLine + 1) & LINEMASK;
-	}
-}
-
 void AddToConsole (int printlevel, const char *text)
 {
-	static enum
-	{
-		NEWLINE,
-		APPENDLINE,
-		REPLACELINE
-	} addtype = NEWLINE;
-
-	char *work_p;
-	char *linestart;
-	FString cc('A' + char(CR_TAN));
-	int size, len;
-	int x;
-	int maxwidth;
-
-	if (ConsoleDrawing)
-	{
-		EnqueueConsoleText (false, printlevel, text);
-		return;
-	}
-
-	len = (int)strlen (text);
-	size = len + 20;
-
-	if (addtype != NEWLINE)
-	{
-		InsertLine = (InsertLine - 1) & LINEMASK;
-		if (Lines[InsertLine] == NULL)
-		{
-			InsertLine = (InsertLine + 1) & LINEMASK;
-			addtype = NEWLINE;
-		}
-		else
-		{
-			BufferRover = Lines[InsertLine];
-		}
-	}
-	if (addtype == APPENDLINE)
-	{
-		size += (int)strlen (Lines[InsertLine]);
-	}
-	if (size > worklen)
-	{
-		work = (char *)M_Realloc (work, size);
-		worklen = size;
-	}
-	if (work == NULL)
-	{
-		static char oom[] = TEXTCOLOR_RED "*** OUT OF MEMORY ***";
-		work = oom;
-		worklen = 0;
-	}
-	else
-	{
-		if (addtype == APPENDLINE)
-		{
-			strcpy (work, Lines[InsertLine]);
-			strcat (work, text);
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				cc = CR_TAN;
-		}
-		else if (printlevel >= 0)
-		{
-			work[0] = TEXTCOLOR_ESCAPE;
-			work[1] = 'A' + (printlevel == PRINT_HIGH ? CR_TAN :
-						printlevel == 200 ? CR_GREEN :
-						printlevel < PRINTLEVELS ? PrintColors[printlevel] :
-						CR_TAN);
-			cc = work[1];
-			strcpy (work + 2, text);
-		}
-		else
-		{
-			strcpy (work, text);
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				cc = CR_TAN;
-		}
-	}
-
-	work_p = linestart = work;
-
-	if (ConFont != NULL && screen != NULL)
-	{
-		x = 0;
-		maxwidth = screen->GetWidth() - LEFTMARGIN - RIGHTMARGIN;
-
-		while (*work_p)
-		{
-			if (*work_p == TEXTCOLOR_ESCAPE)
-			{
-				work_p++;
-				if (*work_p == '[')
-				{
-					char *start = work_p;
-					while (*work_p != ']' && *work_p != '\0')
-					{
-						work_p++;
-					}
-					if (*work_p != '\0')
-					{
-						work_p++;
-					}
-					cc = FString(start, work_p - start);
-				}
-				else if (*work_p != '\0')
-				{
-					cc = *work_p++;
-				}
-				continue;
-			}
-			int w = ConFont->GetCharWidth (*work_p);
-			if (*work_p == '\n' || x + w > maxwidth)
-			{
-				AddLine (linestart, *work_p != '\n', work_p - linestart);
-				if (*work_p == '\n')
-				{
-					x = 0;
-					work_p++;
-				}
-				else
-				{
-					x = w;
-				}
-				if (*work_p)
-				{
-					linestart = work_p - 1 - cc.Len();
-					if (linestart < work)
-					{
-						// The line start is outside the buffer. 
-						// Make space for the newly inserted stuff.
-						size_t movesize = work-linestart;
-						memmove(work + movesize, work, strlen(work)+1);
-						work_p += movesize;
-						linestart = work;
-					}
-					linestart[0] = TEXTCOLOR_ESCAPE;
-					strncpy (linestart + 1, cc, cc.Len());
-				}
-				else
-				{
-					linestart = work_p;
-				}
-			}
-			else
-			{
-				x += w;
-				work_p++;
-			}
-		}
-
-		if (*linestart)
-		{
-			AddLine (linestart, true, work_p - linestart);
-		}
-	}
-	else
-	{
-		while (*work_p)
-		{
-			if (*work_p++ == '\n')
-			{
-				AddLine (linestart, false, work_p - linestart - 1);
-				linestart = work_p;
-			}
-		}
-		if (*linestart)
-		{
-			AddLine (linestart, true, work_p - linestart);
-		}
-	}
-
-	switch (text[len-1])
-	{
-	case '\r':	addtype = REPLACELINE;	break;
-	case '\n':	addtype = NEWLINE;		break;
-	default:	addtype = APPENDLINE;	break;
-	}
+	conbuffer->AddText(printlevel, text, Logfile);
 }
 
 void	SERVERCONSOLE_Print( char *pszString );
@@ -948,54 +664,6 @@ int PrintString (int printlevel, const char *outline)
 	char *outlinecopy = new char[strlen(outline)+1];
 	strcpy (outlinecopy,outline);
 
-	if (Logfile)
-	{
-		// Strip out any color escape sequences before writing to the log file
-		char * copy = new char[strlen(outlinecopy)+1];
-/* [BB] ST handles color codes a little differently (not all of them are converted to TEXTCOLOR_ESCAPE yet), so we strip them differently.
-		const char * srcp = outlinecopy;
-		char * dstp = copy;
-
-		while (*srcp != 0)
-		{
-			if (*srcp!=0x1c)
-			{
-				*dstp++=*srcp++;
-			}
-			else
-			{
-				if (srcp[1]!=0) srcp+=2;
-				else break;
-			}
-		}
-		*dstp=0;
-*/
-		strcpy (copy,outlinecopy);
-		V_ColorizeString( copy );
-		V_RemoveColorCodes( copy );
-
-		if( sv_logfiletimestamp )
-		{
-			// [BB] Generate time string "[YY:MM:DD;HH:MM:SS] " or "[HH:MM:SS] " and write it to the logfile.
-			time_t clock;
-			struct tm *lt;
-			time (&clock);
-			lt = localtime (&clock);
-			char time[26];
-			if ( sv_logfiletimestamp_usedate )
-				sprintf( time, "[%02d:%02d:%02d;%02d:%02d:%02d] ", lt->tm_year - 100, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-			else
-				sprintf( time, "[%02d:%02d:%02d] ", lt->tm_hour, lt->tm_min, lt->tm_sec);
-			fputs (time, Logfile);
-		}
-
-		fputs (copy, Logfile);
-		delete [] copy;
-//#ifdef _DEBUG
-		fflush (Logfile);
-//#endif
-	}
-
 	// For servers, dump message to console window.
 	// [BB] If we are coming from I_Quit, Args is possibly already invalid.
 	if ( Args && Args->CheckParm( "-host" ))
@@ -1014,7 +682,7 @@ int PrintString (int printlevel, const char *outline)
 		delete [] outlinecopy;
 		return length;
 	}
-	
+
 	// [RC] Send this to the G15 LCD, if enabled.
 	if ( G15_IsReady() )
 		G15_Printf( outlinecopy );
@@ -1139,6 +807,11 @@ void C_Ticker ()
 
 	if (lasttic == 0)
 		lasttic = gametic - 1;
+
+	if (con_buffersize > 0)
+	{
+		conbuffer->ResizeBuffer(con_buffersize);
+	}
 
 	if (ConsoleState != c_up)
 	{
@@ -1438,38 +1111,22 @@ void C_DrawConsole (bool hw2d)
 
 	if (lines > 0)
 	{
+		// No more enqueuing because adding new text to the console won't touch the actual print data.
+		conbuffer->FormatText(ConFont, ConWidth);
+		unsigned int consolelines = conbuffer->GetFormattedLineCount();
+		FBrokenLines **blines = conbuffer->GetLines();
+		FBrokenLines **printline = blines + consolelines - 1 - RowAdjust;
+
 		int bottomline = ConBottom - ConFont->GetHeight()*2 - 4;
-		int pos = (InsertLine - 1) & LINEMASK;
-		int i;
 
 		ConsoleDrawing = true;
 
-		for (i = RowAdjust; i; i--)
+		for(FBrokenLines **p = printline; p >= blines && lines > 0; p--, lines--)
 		{
-			if (pos == TopLine)
-			{
-				RowAdjust = RowAdjust - i;
-				break;
-			}
-			else
-			{
-				pos = (pos - 1) & LINEMASK;
-			}
+			screen->DrawText(ConFont, CR_TAN, LEFTMARGIN, offset + lines * ConFont->GetHeight(), (*p)->Text, TAG_DONE);
 		}
-		pos++;
-		do
-		{
-			pos = (pos - 1) & LINEMASK;
-			if (Lines[pos] != NULL)
-			{
-				screen->DrawText (ConFont, CR_TAN, LEFTMARGIN, offset + lines * ConFont->GetHeight(),
-					Lines[pos], TAG_DONE);
-			}
-			lines--;
-		} while (pos != TopLine && lines > 0);
 
 		ConsoleDrawing = false;
-		DequeueConsoleText ();
 
 		if (ConBottom >= 20)
 		{
@@ -1495,7 +1152,7 @@ void C_DrawConsole (bool hw2d)
 			{
 				// Indicate that the view has been scrolled up (10)
 				// and if we can scroll no further (12)
-				screen->DrawChar (ConFont, CR_GREEN, 0, bottomline, pos == TopLine ? 12 : 10, TAG_DONE);
+				screen->DrawChar (ConFont, CR_GREEN, 0, bottomline, RowAdjust == conbuffer->GetFormattedLineCount() ? 12 : 10, TAG_DONE);
 			}
 		}
 	}
@@ -1696,7 +1353,7 @@ static bool C_HandleKey (event_t *ev, BYTE *buffer, int len)
 				RowAdjust += (SCREENHEIGHT-4) /
 					((gamestate == GS_FULLCONSOLE || gamestate == GS_STARTUP) ? ConFont->GetHeight() : ConFont->GetHeight()*2) - 3;
 			}
-			else if (RowAdjust < CONSOLELINES)
+			else if (RowAdjust < conbuffer->GetFormattedLineCount())
 			{ // Scroll console buffer up
 				if (ev->subtype == EV_GUI_WheelUp)
 				{
@@ -1705,6 +1362,10 @@ static bool C_HandleKey (event_t *ev, BYTE *buffer, int len)
 				else
 				{
 					RowAdjust++;
+				}
+				if (RowAdjust > conbuffer->GetFormattedLineCount())
+				{
+					RowAdjust = conbuffer->GetFormattedLineCount();
 				}
 			}
 			break;
@@ -1739,7 +1400,7 @@ static bool C_HandleKey (event_t *ev, BYTE *buffer, int len)
 		case GK_HOME:
 			if (ev->data3 & GKM_CTRL)
 			{ // Move to top of console buffer
-				RowAdjust = CONSOLELINES;
+				RowAdjust = conbuffer->GetFormattedLineCount();
 			}
 			else
 			{ // Move cursor to start of line

@@ -517,6 +517,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\c_consolebuffer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\c_cvars.cpp"
 				>
 			</File>
@@ -1283,6 +1287,10 @@
 			</File>
 			<File
 				RelativePath=".\src\c_console.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\c_consolebuffer.h"
 				>
 			</File>
 			<File

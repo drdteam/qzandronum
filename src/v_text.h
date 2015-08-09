@@ -97,9 +97,9 @@ bool	v_IsCharacterWhitespace ( char c );
 void	V_CleanPlayerName( char *pszString );
 void	V_CleanPlayerName( FString &String );
 
-FBrokenLines *V_BreakLines (FFont *font, int maxwidth, const BYTE *str);
+FBrokenLines *V_BreakLines (FFont *font, int maxwidth, const BYTE *str, bool preservecolor = false);
 void V_FreeBrokenLines (FBrokenLines *lines);
-inline FBrokenLines *V_BreakLines (FFont *font, int maxwidth, const char *str)
- { return V_BreakLines (font, maxwidth, (const BYTE *)str); }
+inline FBrokenLines *V_BreakLines (FFont *font, int maxwidth, const char *str, bool preservecolor = false)
+ { return V_BreakLines (font, maxwidth, (const BYTE *)str, preservecolor); }
 
 #endif //__V_TEXT_H__

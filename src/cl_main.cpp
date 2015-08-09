@@ -3326,9 +3326,6 @@ bool CLIENT_CanClipMovement( AActor *pActor )
 
 //*****************************************************************************
 //
-// :(. This is needed so that the MOTD can be printed in the color the user wishes to print
-// mid-screen messages in.
-extern	int PrintColors[7];
 void CLIENT_DisplayMOTD( void )
 {
 	FString	ConsoleString;

@@ -4698,7 +4698,7 @@ void SERVERCOMMANDS_GenericCheat( ULONG ulPlayer, ULONG ulCheat, ULONG ulPlayerE
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetCameraToTexture( AActor *pCamera, char *pszTexture, LONG lFOV, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetCameraToTexture( AActor *pCamera, const char *pszTexture, LONG lFOV, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ((!EnsureActorHasNetID (pCamera) ) ||
 		( pszTexture == NULL ))
