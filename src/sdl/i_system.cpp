@@ -360,9 +360,12 @@ void I_Quit (void)
 
 	if (demorecording)
 		G_CheckDemoStatus();
+
 	// [BC] Support for client-side demos.
 	if ( CLIENTDEMO_IsRecording( ))
 		CLIENTDEMO_FinishRecording( );
+
+	C_DeinitConsole();
 }
 
 

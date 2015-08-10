@@ -853,6 +853,8 @@ void I_Quit()
 	// [BC] Support for client-side demos.
 	if ( CLIENTDEMO_IsRecording( ))
 		CLIENTDEMO_FinishRecording( );
+
+	C_DeinitConsole();
 }
 
 
