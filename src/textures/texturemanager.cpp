@@ -966,6 +966,7 @@ void FTextureManager::SortTexturesByType(int start, int end)
 void FTextureManager::Init()
 {
 	DeleteAll();
+	SpriteFrames.Clear();
 	// Init Build Tile data if it hasn't been done already
 	if (BuildTileFiles.Size() == 0) CountBuildTiles ();
 	FTexture::InitGrayMap();
