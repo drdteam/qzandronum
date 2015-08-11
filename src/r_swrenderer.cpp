@@ -40,7 +40,6 @@
 #include "r_bsp.h"
 #include "r_swrenderer.h"
 #include "r_3dfloors.h"
-#include "r_polymost.h"
 #include "textures/textures.h"
 #include "r_data/voxels.h"
 
@@ -53,7 +52,6 @@ class FArchive;
 void R_SWRSetWindow(int windowSize, int fullWidth, int fullHeight, int stHeight, int trueratio);
 void R_SetupColormap(player_t *);
 void R_SetupFreelook();
-void R_SetupPolymost();
 void R_InitRenderer();
 
 extern float LastFOV;
@@ -250,7 +248,6 @@ void FSoftwareRenderer::SetupFrame(player_t *player)
 {
 	R_SetupColormap(player);
 	R_SetupFreelook();
-	R_SetupPolymost();
 }
 
 //==========================================================================

@@ -102,6 +102,14 @@ static	bool		botpath_CheckLine( line_t *pLine );
 //
 //==========================================================================
 
+enum slopetype_t
+{
+	ST_HORIZONTAL,
+	ST_VERTICAL,
+	ST_POSITIVE,
+	ST_NEGATIVE
+};
+
 int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 {
 	// [BB] tmbox == NULL will result in a crash if we don't bail out here.
@@ -110,8 +118,17 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 
 	int p1;
 	int p2;
+
+	int slopetype;
 		
-	switch (ld->slopetype)
+	if (ld->dx == 0)
+		slopetype = ST_VERTICAL;
+	else if (ld->dy == 0)
+		slopetype = ST_HORIZONTAL;
+	else
+		slopetype = ((ld->dy ^ ld->dx) >= 0) ? ST_POSITIVE : ST_NEGATIVE;
+
+	switch (slopetype)
 	{
 	case ST_HORIZONTAL:
 		p1 = tmbox[BOXTOP] > ld->v1->y;

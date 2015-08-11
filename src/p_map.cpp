@@ -2548,30 +2548,8 @@ void FSlide::HitSlideLine (line_t* ld)
 		slidemo->z <= slidemo->floorz &&
 		P_GetFriction (slidemo, NULL) > ORIG_FRICTION;
 
-	if (ld->slopetype == ST_HORIZONTAL)
-	{
-		if (icyfloor && (abs(tmymove) > abs(tmxmove)))
-		{
-			tmxmove /= 2; // absorb half the velocity
-			tmymove = -tmymove/2;
-			// [BB] Adapted to Skulltag's prediction.
-			if (slidemo->player && ( slidemo->player->bSpectating == false ) && slidemo->health > 0 && ( CLIENT_PREDICT_IsPredicting( ) == false ) )// && !(slidemo->player->cheats & CF_PREDICTING))
-			{
-				S_Sound (slidemo, CHAN_VOICE, "*grunt", 1, ATTN_IDLE); // oooff!
-
-				// [BC] Tell clients of the "oof" sound.
-				// [BB] Skip the player who made the sound, he plays it himself while predicting.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SoundActor( slidemo, CHAN_VOICE, "*grunt", 1, ATTN_IDLE, static_cast<ULONG> ( slidemo->player - players ), SVCF_SKIPTHISCLIENT );
-			}
-		}
-		else
-			tmymove = 0; // no more movement in the Y direction
-		return;
-	}
-
-	if (ld->slopetype == ST_VERTICAL)
-	{
+	if (ld->dx == 0)
+	{ // ST_VERTICAL
 		if (icyfloor && (abs(tmxmove) > abs(tmymove)))
 		{
 			tmxmove = -tmxmove/2; // absorb half the velocity
@@ -2589,6 +2567,28 @@ void FSlide::HitSlideLine (line_t* ld)
 		}																		//   |
 		else																	// phares
 			tmxmove = 0; // no more movement in the X direction
+		return;
+	}
+
+	if (ld->dy == 0)
+	{ // ST_HORIZONTAL
+		if (icyfloor && (abs(tmymove) > abs(tmxmove)))
+		{
+			tmxmove /= 2; // absorb half the velocity
+			tmymove = -tmymove/2;
+			// [BB] Adapted to Skulltag's prediction.
+			if (slidemo->player && ( slidemo->player->bSpectating == false ) && slidemo->health > 0 && ( CLIENT_PREDICT_IsPredicting( ) == false ) )// && !(slidemo->player->cheats & CF_PREDICTING))
+			{
+				S_Sound (slidemo, CHAN_VOICE, "*grunt", 1, ATTN_IDLE); // oooff!
+
+				// [BC] Tell clients of the "oof" sound.
+				// [BB] Skip the player who made the sound, he plays it himself while predicting.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SoundActor( slidemo, CHAN_VOICE, "*grunt", 1, ATTN_IDLE, static_cast<ULONG> ( slidemo->player - players ), SVCF_SKIPTHISCLIENT );
+			}
+		}
+		else
+			tmymove = 0; // no more movement in the Y direction
 		return;
 	}
 
@@ -2705,8 +2705,8 @@ void FSlide::OldHitSlideLine(line_t *ld)
 				 slidemo->z <= slidemo->floorz &&
 				 P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
 				 */
-	if (ld->slopetype == ST_HORIZONTAL)
-	{
+	if (ld->dy == 0)
+	{ // ST_HORIZONTAL
 		if (icyfloor && (abs(tmymove) > abs(tmxmove)))
 		{
 			tmxmove /= 2; // absorb half the momentum
@@ -2718,8 +2718,8 @@ void FSlide::OldHitSlideLine(line_t *ld)
 		return;
 	}
 
-	if (ld->slopetype == ST_VERTICAL)
-	{
+	if (ld->dx == 0)
+	{ // ST_VERTICAL
 		if (icyfloor && (abs(tmxmove) > abs(tmymove)))
 		{
 			tmxmove = -tmxmove/2; // absorb half the momentum

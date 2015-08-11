@@ -2588,10 +2588,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\r_polymost.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\src\r_segs.cpp"
 					>
 				</File>
@@ -2629,10 +2625,6 @@
 				</File>
 				<File
 					RelativePath=".\src\r_plane.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\r_polymost.h"
 					>
 				</File>
 				<File
