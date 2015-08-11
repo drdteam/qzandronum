@@ -83,6 +83,7 @@ enum ClientDemoLocalCommand
 	CLD_LCMD_CENTERVIEW,
 	CLD_LCMD_TAUNT,
 	CLD_LCMD_NOCLIP,
+	CLD_LCMD_FLY,
 };
 
 //*****************************************************************************

@@ -2773,6 +2773,9 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 
 	APlayerPawn *mo = player->mo;
 
+	// [Leo] cl_spectatormove is now applied here to avoid code duplication.
+	fixed_t spectatormove = FLOAT2FIXED(cl_spectatormove);
+
 	// [RH] 180-degree turn overrides all other yaws
 	if (player->turnticks)
 	{
@@ -2877,17 +2880,26 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 	}
 
 	// [RH] check for jump
-	if ( cmd->ucmd.buttons & BT_JUMP && ( player->bSpectating == false ))
+	if ( cmd->ucmd.buttons & BT_JUMP )
 	{
 		if (player->mo->waterlevel >= 2)
 		{
 			player->mo->velz = FixedMul(4*FRACUNIT, player->mo->Speed);
+
+			// [Leo] Apply cl_spectatormove here.
+			if ( player->bSpectating )
+				player->mo->velz = FixedMul(player->mo->velz, spectatormove);
 		}
 		else if (player->mo->flags2 & MF2_FLY)
 		{
 			player->mo->velz = 3*FRACUNIT;
+
+			// [Leo] Apply cl_spectatormove here.
+			if ( player->bSpectating )
+				player->mo->velz = FixedMul(player->mo->velz, spectatormove);
 		}
-		else if (level.IsJumpingAllowed() && player->onground && player->jumpTics == 0)
+		// [Leo] Spectators shouldn't be limited by the server settings.
+		else if ((player->bSpectating || level.IsJumpingAllowed()) && player->onground && player->jumpTics == 0)
 		{
 			fixed_t	JumpMomz;
 			ULONG	ulJumpTicks;
@@ -3398,105 +3410,6 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		}
 	}
 
-	// Allow the spectator to do a few things, then break out.
-	if ( player->bSpectating )
-	{
-		int	look;
-
-		// Lower the weapon completely.
-		P_SetPsprite( player, ps_weapon, NULL );
-
-		// [RH] Look up/down stuff
-		cmd = &player->cmd;
-		look = cmd->ucmd.pitch << 16;
-
-		// Allow the player to fly around when a spectator.
-		player->mo->flags |= MF_NOGRAVITY;
-		player->mo->flags2 |= MF2_FLY;
-
-		// No-clip cheat
-		if (player->cheats & CF_NOCLIP)
-			player->mo->flags |= MF_NOCLIP;
-		else
-			player->mo->flags &= ~MF_NOCLIP;
-
-		// The player's view pitch is clamped between -32 and +56 degrees,
-		// which translates to about half a screen height up and (more than)
-		// one full screen height down from straight ahead when view panning
-		// is used.
-		if (look)
-		{
-			if (look == -32768 << 16)
-			{ // center view
-				player->centering = true;
-			}
-			else if (!player->centering)
-			{
-				fixed_t oldpitch = player->mo->pitch;
-				player->mo->pitch -= look;
-				if (look > 0)
-				{ // look up
-					// [BB] Zandronum handles pitch differently.
-					const fixed_t pitchLimit = - ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(false) : 32 ) * ANGLE_1;
-					player->mo->pitch = MAX(player->mo->pitch, pitchLimit );
-					if (player->mo->pitch > oldpitch)
-					{
-						player->mo->pitch = pitchLimit;
-					}
-				}
-				else
-				{ // look down
-					// [BB] Zandronum handles pitch differently.
-					const fixed_t pitchLimit = ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(true) : 56 ) * ANGLE_1;
-					player->mo->pitch = MIN(player->mo->pitch, pitchLimit );
-					if (player->mo->pitch < oldpitch)
-					{
-						player->mo->pitch = pitchLimit;
-					}
-				}
-			}
-		}
-
-		// Update player's velocity by input.
-		if ( player->mo->reactiontime )
-			player->mo->reactiontime--;
-		else
-			P_MovePlayer( player, &player->cmd );
-
-		// [RH] check for jump
-		// [Dusk] Apply cl_spectatormove
-		if ( cmd->ucmd.buttons & BT_JUMP )
-			player->mo->velz = FixedMul(3 * FRACUNIT, FLOAT2FIXED(cl_spectatormove));
-
-		if ( cmd->ucmd.upmove == -32768 )
-		{ // Only land if in the air
-			if ((player->mo->flags2 & MF2_FLY) && player->mo->waterlevel < 2)
-			{
-				player->mo->flags2 &= ~MF2_FLY;
-				player->mo->flags &= ~MF_NOGRAVITY;
-			}
-		}
-		// [Dusk] Apply cl_spectatormove here
-		else if ( cmd->ucmd.upmove != 0 )
-			player->mo->velz = FixedMul(cmd->ucmd.upmove << 9, FLOAT2FIXED(cl_spectatormove));
-
-		// Calculate player's viewheight.
-		P_CalcHeight( player );
-
-		// If this is a bot, run its logic.
-		if ( player->pSkullBot )
-			player->pSkullBot->Tick( );
-
-		// [RH] Check for fast turn around
-		if (cmd->ucmd.buttons & BT_TURN180 && !(player->oldbuttons & BT_TURN180))
-		{
-			player->turnticks = TURN180_TICKS;
-		}
-
-		// Done with spectator specific logic.
-		return;
-	}
-
 	if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
 		if (player->inventorytics)
@@ -3512,7 +3425,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	{ // No noclip2 without noclip
 		player->cheats &= ~CF_NOCLIP2;
 	}
-	if (player->cheats & (CF_NOCLIP | CF_NOCLIP2) || (player->mo->GetDefault()->flags & MF_NOCLIP))
+	// [Leo] Spectators have the noclip cheat off by default.
+	if (player->cheats & (CF_NOCLIP | CF_NOCLIP2) || ((player->mo->GetDefault()->flags & MF_NOCLIP) && (player->bSpectating == false)))
 	{
 		player->mo->flags |= MF_NOCLIP;
 	}
@@ -3585,8 +3499,9 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		player->pSkullBot->Tick( );
 
 	// [BB] Since the game is currently suspended, prevent the player from doing anything.
+	// [Leo] Except if this player is a spectator.
 	// Note: This needs to be done after ticking the bot, otherwise the bot could still act.
-	if ( GAME_GetEndLevelDelay( ) )
+	if ( GAME_GetEndLevelDelay( ) && player->bSpectating == false )
 		memset( cmd, 0, sizeof( ticcmd_t ));
 
 	// Handle crouching
@@ -3654,8 +3569,9 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		player->mo->MorphPlayerThink ();
 	}
 
+	// [Leo] Spectators shouldn't be limited by the server settings.
 	// [RH] Look up/down stuff
-	if (!level.IsFreelookAllowed())
+	if (!level.IsFreelookAllowed() && player->bSpectating == false)
 	{
 		player->mo->pitch = 0;
 	}
@@ -3755,6 +3671,11 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 			if (player->mo->waterlevel >= 2 || (player->mo->flags2 & MF2_FLY) || (player->cheats & CF_NOCLIP2))
 			{
 				player->mo->velz = FixedMul(player->mo->Speed, cmd->ucmd.upmove << 9);
+
+				// [Leo] Apply cl_spectatormove here.
+				if ( player->bSpectating )
+					player->mo->velz = FixedMul(player->mo->velz, FLOAT2FIXED(cl_spectatormove));
+
 				if (player->mo->waterlevel < 2 && !(player->mo->flags & MF_NOGRAVITY))
 				{
 					player->mo->flags2 |= MF2_FLY;
@@ -3779,6 +3700,13 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	}
 
 	P_CalcHeight (player);
+
+	// [Leo] Done with spectator specific logic.
+	if (player->bSpectating)
+	{
+		P_SetPsprite( player, ps_weapon, NULL );
+		return;
+	}
 
 	if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
@@ -4348,10 +4276,11 @@ void P_EnumPlayerColorSets(FName classname, TArray<int> *out)
 	}
 }
 
+// [Leo] Added spectator check.
 bool P_IsPlayerTotallyFrozen(const player_t *player)
 {
 	return
 		gamestate == GS_TITLELEVEL ||
 		player->cheats & CF_TOTALLYFROZEN ||
-		((level.flags2 & LEVEL2_FROZEN) && player->timefreezer == 0);
+		((level.flags2 & LEVEL2_FROZEN) && player->timefreezer == 0 && (player->bSpectating == false));
 }

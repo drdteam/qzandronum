@@ -295,11 +295,26 @@ CCMD (notarget)
 
 CCMD (fly)
 {
-	if (CheckCheatmode ())
+	// [Leo] Allow spectators to use the fly command.
+	if ( ( CLIENTDEMO_IsInFreeSpectateMode( ) == false ) && ( players[consoleplayer].bSpectating == false ) && CheckCheatmode( ) )
 		return;
 
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		// [Leo] Don't bother sending a request to the server when we're spectating.
+		if ( players[consoleplayer].bSpectating )
+		{
+			cht_DoCheat( &players[consoleplayer], CHT_FLY );
+
+			if ( CLIENTDEMO_IsRecording( ))
+				CLIENTDEMO_WriteLocalCommand( CLD_LCMD_FLY, NULL );
+			return;
+		}
+
 		CLIENTCOMMANDS_GenericCheat( CHT_FLY );
+	}
+	else if ( CLIENTDEMO_IsInFreeSpectateMode( ) )
+		cht_DoCheat( CLIENTDEMO_GetFreeSpectatorPlayer( ), CHT_FLY );
 	else
 	{
 		Net_WriteByte (DEM_GENERICCHEAT);

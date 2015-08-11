@@ -2704,9 +2704,10 @@ void PLAYER_SetDefaultSpectatorValues( player_t *pPlayer )
 		return;
 
 	// Make the player unshootable, etc.
-	pPlayer->mo->flags2 |= (MF2_CANNOTPUSH|MF2_SLIDE|MF2_THRUACTORS);
 	pPlayer->mo->flags &= ~(MF_CORPSE|MF_SOLID|MF_SHOOTABLE|MF_PICKUP);
+	pPlayer->mo->flags |= MF_NOGRAVITY;
 	pPlayer->mo->flags2 &= ~(MF2_PASSMOBJ|MF2_FLOATBOB);
+	pPlayer->mo->flags2 |= (MF2_CANNOTPUSH|MF2_SLIDE|MF2_THRUACTORS|MF2_FLY);
 	pPlayer->mo->flags3 = MF3_NOBLOCKMONST;
 	pPlayer->mo->flags4 = 0;
 	pPlayer->mo->flags5 = 0;
@@ -2727,7 +2728,8 @@ void PLAYER_SetDefaultSpectatorValues( player_t *pPlayer )
 	pPlayer->mo->DamageType = NAME_None;
 
 	// Make monsters unable to "see" this player.
-	pPlayer->cheats |= CF_NOTARGET;
+	// Turn the fly cheat on.
+	pPlayer->cheats |= (CF_NOTARGET|CF_FLY);
 
 	// Reset a bunch of other stuff.
 	pPlayer->extralight = 0;
@@ -2789,9 +2791,10 @@ void PLAYER_SpectatorJoinsGame( player_t *pPlayer )
 
 	// [BB] If the spectator used the chasecam or noclip cheat (which is always allowed for spectators)
 	// remove it now that he joins the game.
-	if ( pPlayer->cheats & ( CF_CHASECAM|CF_NOCLIP ))
+	// [Leo] The fly cheat is set by default in PLAYER_SetDefaultSpectatorValues.
+	if ( pPlayer->cheats & ( CF_CHASECAM|CF_NOCLIP|CF_FLY ))
 	{
-		pPlayer->cheats &= ~(CF_CHASECAM|CF_NOCLIP);
+		pPlayer->cheats &= ~(CF_CHASECAM|CF_NOCLIP|CF_FLY);
 		if ( NETWORK_GetState() == NETSTATE_SERVER  )
 			SERVERCOMMANDS_SetPlayerCheats( static_cast<ULONG>( pPlayer - players ), static_cast<ULONG>( pPlayer - players ), SVCF_ONLYTHISCLIENT );
 	}

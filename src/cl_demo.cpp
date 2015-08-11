@@ -525,6 +525,10 @@ void CLIENTDEMO_ReadPacket( void )
 
 				cht_DoCheat( &players[consoleplayer], CHT_NOCLIP );
 				break;
+			case CLD_LCMD_FLY:
+
+				cht_DoCheat( &players[consoleplayer], CHT_FLY );
+				break;
 			}
 			break;
 		case CLD_DEMOEND:
