@@ -134,7 +134,7 @@ static	FLAGMAPPING_t	g_Flags[NUMBER_OF_FLAGS] =
 	{ DF_ITEMS_RESPAWN,					IDC_ITEMS_RESPAWN,				&g_ulDMFlags, },
 	{ DF_FAST_MONSTERS,					IDC_FAST_MONSTERS,				&g_ulDMFlags, },	
 	{ DF_NO_FREELOOK,					IDC_NO_FREELOOK,				&g_ulDMFlags, },
-	{ DF_RESPAWN_SUPER,					IDC_RESPAWN_SUPER,				&g_ulDMFlags, },
+	{ DF2_RESPAWN_SUPER,				IDC_RESPAWN_SUPER,				&g_ulDMFlags2, },
 	{ DF_NO_FOV,						IDC_NO_FOV,						&g_ulDMFlags, },
 	{ DF_NO_COOP_WEAPON_SPAWN,			IDC_NO_COOP_MP_WEAPON_SPAWN,	&g_ulDMFlags, },
 	{ DF_COOP_LOSE_INVENTORY,			IDC_COOP_LOSE_INVENTORY,		&g_ulDMFlags, },
