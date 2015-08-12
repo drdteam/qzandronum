@@ -241,7 +241,11 @@ void GLWall::RenderFogBoundary()
 		gl_SetFog(lightlevel, rel, &Colormap, false);
 		gl_RenderState.SetEffect(EFF_FOGBOUNDARY);
 		gl_RenderState.AlphaFunc(GL_GEQUAL, 0.f);
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(-1.0f, -128.0f);
 		RenderWall(RWF_BLANK);
+		glPolygonOffset(0.0f, 0.0f);
+		glDisable(GL_POLYGON_OFFSET_FILL);
 		gl_RenderState.SetEffect(EFF_NONE);
 	}
 }
@@ -371,12 +375,6 @@ void GLWall::Draw(int pass)
 #endif
 
 
-	if (type == RENDERWALL_COLORLAYER && pass != GLPASS_LIGHTSONLY)
-	{
-		glEnable(GL_POLYGON_OFFSET_FILL);
-		glPolygonOffset(-1.0f, -128.0f);
-	}
-
 	switch (pass)
 	{
 	case GLPASS_LIGHTSONLY:
@@ -399,6 +397,8 @@ void GLWall::Draw(int pass)
 		break;
 
 	case GLPASS_TRANSLUCENT:
+
+
 		switch (type)
 		{
 		case RENDERWALL_MIRRORSURFACE:
@@ -409,15 +409,16 @@ void GLWall::Draw(int pass)
 			RenderFogBoundary();
 			break;
 
+		case RENDERWALL_COLORLAYER:
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(-1.0f, -128.0f);
+			RenderTranslucentWall();
+			glDisable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(0, 0);
+
 		default:
 			RenderTranslucentWall();
 			break;
 		}
-	}
-
-	if (type == RENDERWALL_COLORLAYER && pass != GLPASS_LIGHTSONLY)
-	{
-		glDisable(GL_POLYGON_OFFSET_FILL);
-		glPolygonOffset(0, 0);
 	}
 }
