@@ -199,7 +199,6 @@ void GLWall::PutWall(bool translucent)
 	// portals don't go into the draw list.
 	// Instead they are added to the portal manager
 	case RENDERWALL_HORIZON:
-		//@sync-portal
 		horizon=UniqueHorizons.Get(horizon);
 		portal=GLPortal::FindPortal(horizon);
 		if (!portal) portal=new GLHorizonPortal(horizon);
@@ -207,14 +206,12 @@ void GLWall::PutWall(bool translucent)
 		break;
 
 	case RENDERWALL_SKYBOX:
-		//@sync-portal
 		portal=GLPortal::FindPortal(skybox);
 		if (!portal) portal=new GLSkyboxPortal(skybox);
 		portal->AddLine(this);
 		break;
 
 	case RENDERWALL_SECTORSTACK:
-		//@sync-portal
 		portal = this->portal->GetGLPortal();
 		portal->AddLine(this);
 		break;
@@ -231,7 +228,6 @@ void GLWall::PutWall(bool translucent)
 		break;
 
 	case RENDERWALL_MIRROR:
-		//@sync-portal
 		portal=GLPortal::FindPortal(seg->linedef);
 		if (!portal) portal=new GLMirrorPortal(seg->linedef);
 		portal->AddLine(this);
@@ -244,7 +240,6 @@ void GLWall::PutWall(bool translucent)
 		break;
 
 	case RENDERWALL_SKY:
-		//@sync-portal
 		portal=GLPortal::FindPortal(sky);
 		if (!portal) portal=new GLSkyPortal(sky);
 		portal->AddLine(this);
@@ -1446,7 +1441,7 @@ void GLWall::Process(seg_t *seg, sector_t * frontsector, sector_t * backsector)
 	sector_t * realback;
 
 #ifdef _DEBUG
-	if (seg->linedef-lines==636)
+	if (seg->linedef-lines==1276)
 	{
 		int a = 0;
 	}
@@ -1662,7 +1657,11 @@ void GLWall::Process(seg_t *seg, sector_t * frontsector, sector_t * backsector)
 				}
 				else if (!(seg->sidedef->Flags & WALLF_POLYOBJ))
 				{
-					gl_drawinfo->AddUpperMissingTexture(seg->sidedef, sub, bch1a);
+					// skip processing if the back is a malformed subsector
+					if (!(seg->PartnerSeg->Subsector->hacked & 4))
+					{
+						gl_drawinfo->AddUpperMissingTexture(seg->sidedef, sub, bch1a);
+					}
 				}
 			}
 		}
@@ -1731,7 +1730,11 @@ void GLWall::Process(seg_t *seg, sector_t * frontsector, sector_t * backsector)
 			else if (backsector->GetTexture(sector_t::floor)!=skyflatnum && 
 				!(seg->sidedef->Flags & WALLF_POLYOBJ))
 			{
-				gl_drawinfo->AddLowerMissingTexture(seg->sidedef, sub, bfh1);
+				// skip processing if the back is a malformed subsector
+				if (!(seg->PartnerSeg->Subsector->hacked & 4))
+				{
+					gl_drawinfo->AddLowerMissingTexture(seg->sidedef, sub, bfh1);
+				}
 			}
 		}
 	}
