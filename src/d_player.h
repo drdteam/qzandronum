@@ -82,10 +82,8 @@ FPlayerColorSet *P_GetPlayerColorSet(FName classname, int setnum);
 void P_EnumPlayerColorSets(FName classname, TArray<int> *out);
 const char *GetPrintableDisplayName(const PClass *cls);
 
-class player_t;
 class	CSkullBot;
 class	AFloatyIcon;
-
 class APlayerPawn : public AActor
 {
 	DECLARE_CLASS (APlayerPawn, AActor)
@@ -200,6 +198,7 @@ typedef enum
 	PST_ENTER,	// [BC] Entered the game
 	PST_REBORNNOINVENTORY,	// [BC] Player should respawn, without triggering enter scripts, and without keeping his/her inventory.
 	PST_ENTERNOINVENTORY,	// [BC] Player should respawn and trigger enter scripts, without keeping his/her inventory.
+	PST_GONE	// Player has left the game
 } playerstate_t;
 
 
@@ -510,8 +509,7 @@ public:
 
 	int			inventorytics;
 	BYTE		CurrentPlayerClass;		// class # for this player instance
-	bool		backpack;
-	
+
 	int			fragcount;				// [RH] Cumulative frags for this player
 	BYTE		WeaponState;
 

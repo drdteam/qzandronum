@@ -3538,7 +3538,6 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->health = 0;
 	pPlayer->inventorytics = 0;
 	pPlayer->CurrentPlayerClass = 0;
-	pPlayer->backpack = 0;
 	pPlayer->fragcount = 0;
 	pPlayer->ReadyWeapon = 0;
 	pPlayer->PendingWeapon = 0;
@@ -3996,7 +3995,6 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 			( lPlayerState == PST_ENTERNOINVENTORY ))
 		{
 			pOldActor->player = NULL;
-			pOldActor->id = -1;
 			// [BB] This will eventually free the player's body's network ID.
 			G_QueueBody (pOldActor);
 		}
@@ -4106,9 +4104,6 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	pActor->pitch = pActor->roll = 0;
 	pActor->health = pPlayer->health;
 	pActor->lFixedColormap = NOFIXEDCOLORMAP;
-
-	//Added by MC: Identification (number in the players[MAXPLAYERS] array)
-	pActor->id = ulPlayer;
 
 	// [RH] Set player sprite based on skin
 	// [BC] Handle cl_skins here.
