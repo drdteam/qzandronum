@@ -99,6 +99,9 @@ void P_SpawnTeleportFog(fixed_t x, fixed_t y, fixed_t z, int spawnid)
 bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 				 bool useFog, bool sourceFog, bool keepOrientation, bool bHaltVelocity, bool keepHeight)
 {
+	// [BB] Zandronum handles prediction differently.
+	bool predicting = false;// (thing->player && (thing->player->cheats & CF_PREDICTING));
+
 	fixed_t oldx;
 	fixed_t oldy;
 	fixed_t oldz;
@@ -192,7 +195,7 @@ bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 	}
 
 	// Spawn teleport fog at source and destination
-	if (sourceFog)
+	if (sourceFog && !predicting)
 	{
 		fixed_t fogDelta = thing->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
 		AActor *fog = Spawn<ATeleportFog> (oldx, oldy, oldz + fogDelta, ALLOW_REPLACE);
@@ -200,11 +203,14 @@ bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 	}
 	if (useFog)
 	{
-		fixed_t fogDelta = thing->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
-		an = angle >> ANGLETOFINESHIFT;
-		AActor *fog = Spawn<ATeleportFog> (x + 20*finecosine[an],
-			y + 20*finesine[an], thing->z + fogDelta, ALLOW_REPLACE);
-		fog->target = thing;
+		if (!predicting)
+		{
+			fixed_t fogDelta = thing->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
+			an = angle >> ANGLETOFINESHIFT;
+			AActor *fog = Spawn<ATeleportFog>(x + 20 * finecosine[an],
+				y + 20 * finesine[an], thing->z + fogDelta, ALLOW_REPLACE);
+			fog->target = thing;
+		}
 		if (thing->player)
 		{
 			// [RH] Zoom player's field of vision
@@ -248,7 +254,7 @@ bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 	return true;
 }
 
-static AActor *SelectTeleDest (int tid, int tag)
+static AActor *SelectTeleDest (int tid, int tag, bool norandom)
 {
 	AActor *searcher;
 
@@ -298,7 +304,7 @@ static AActor *SelectTeleDest (int tid, int tag)
 		}
 		else
 		{
-			if (count != 1)
+			if (count != 1 && !norandom)
 			{
 				count = 1 + (pr_teleport() % count);
 			}
@@ -345,6 +351,9 @@ static AActor *SelectTeleDest (int tid, int tag)
 bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, bool fog,
 				  bool sourceFog, bool keepOrientation, bool haltVelocity, bool keepHeight)
 {
+	// [BB] Zandronum handles prediction differently.
+	bool predicting = false;// (thing->player && (thing->player->cheats & CF_PREDICTING));
+
 	AActor *searcher;
 	fixed_t z;
 	angle_t angle = 0;
@@ -365,7 +374,7 @@ bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, bool 
 	{ // Don't teleport if hit back of line, so you can get out of teleporter.
 		return 0;
 	}
-	searcher = SelectTeleDest (tid, tag);
+	searcher = SelectTeleDest(tid, tag, predicting);
 	if (searcher == NULL)
 	{
 		return false;
@@ -417,7 +426,7 @@ bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, bool 
 			thing->velx = FixedMul(velx, c) - FixedMul(vely, s);
 			thing->vely = FixedMul(vely, c) + FixedMul(velx, s);
 		}
-		if ((velx | vely) == 0 && thing->player != NULL && thing->player->mo == thing)
+		if ((velx | vely) == 0 && thing->player != NULL && thing->player->mo == thing && !predicting)
 		{
 			thing->player->mo->PlayIdle ();
 		}

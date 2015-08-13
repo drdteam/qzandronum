@@ -421,6 +421,9 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 		// ... and some items can never be telefragged while others will be telefragged by everything that teleports upon them.
 		if ((StompAlwaysFrags && !(th->flags6 & MF6_NOTELEFRAG)) || (th->flags7 & MF7_ALWAYSTELEFRAG))
 		{
+			// Don't actually damage if predicting a teleport
+			// [BB] Zandronum handles prediction differently.
+			//if (thing->player == NULL || !(thing->player->cheats & CF_PREDICTING))
 			// [BC] Damage is never done client-side.
 			if ( NETWORK_InClientMode() == false )
 				P_DamageMobj(th, thing, thing, TELEFRAG_DAMAGE, NAME_Telefrag, DMG_THRUSTLESS);
@@ -2131,14 +2134,7 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 	{
 		thing->AdjustFloorClip();
 	}
-/*
-	// [RH] Don't activate anything if just predicting
-	if (thing->player && (thing->player->cheats & CF_PREDICTING))
-	{
-		thing->flags6 &= ~MF6_INTRYMOVE;
-		return true;
-	}
-*/
+
 	// if any special lines were hit, do the effect
 	if (!(thing->flags & (MF_TELEPORT | MF_NOCLIP)))
 	{
@@ -2149,7 +2145,12 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 			oldside = P_PointOnLineSide(oldx, oldy, ld);
 			if (side != oldside && ld->special && !(thing->flags6 & MF6_NOTRIGGER))
 			{
-				if (thing->player)
+				/* [BB] Zandronum handles prediction differently.
+				if (thing->player && (thing->player->cheats & CF_PREDICTING))
+				{
+					P_PredictLine(ld, thing, oldside, SPAC_Cross);
+				}
+				else*/ if (thing->player)
 				{
 					P_ActivateLine(ld, thing, oldside, SPAC_Cross);
 				}
@@ -2174,6 +2175,15 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 			}
 		}
 	}
+
+	// [RH] Don't activate anything if just predicting
+	/* [BB] Zandronum handles prediction differently.
+	if (thing->player && (thing->player->cheats & CF_PREDICTING))
+	{
+		thing->flags6 &= ~MF6_INTRYMOVE;
+		return true;
+	}
+	*/
 
 	// [RH] Check for crossing fake floor/ceiling
 	newsec = thing->Sector;
@@ -4497,6 +4507,52 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 	{
 		return P_LineAttack(t1, angle, distance, pitch, damage, damageType, type, flags, victim, actualdamage);
 	}
+	return NULL;
+}
+
+//==========================================================================
+//
+// P_LinePickActor
+//
+//==========================================================================
+
+AActor *P_LinePickActor(AActor *t1, angle_t angle, fixed_t distance, int pitch,
+						DWORD actorMask, DWORD wallMask)
+{
+	fixed_t vx, vy, vz, shootz;
+	
+	angle >>= ANGLETOFINESHIFT;
+	pitch = (angle_t)(pitch) >> ANGLETOFINESHIFT;
+
+	vx = FixedMul(finecosine[pitch], finecosine[angle]);
+	vy = FixedMul(finecosine[pitch], finesine[angle]);
+	vz = -finesine[pitch];
+
+	shootz = t1->z - t1->floorclip + (t1->height >> 1);
+	if (t1->player != NULL)
+	{
+		shootz += FixedMul(t1->player->mo->AttackZOffset, t1->player->crouchfactor);
+	}
+	else
+	{
+		shootz += 8 * FRACUNIT;
+	}
+
+	FTraceResults trace;
+	Origin TData;
+	
+	TData.Caller = t1;
+	TData.hitGhosts = true;
+	
+	if (Trace(t1->x, t1->y, shootz, t1->Sector, vx, vy, vz, distance,
+		actorMask, wallMask, t1, trace, TRACE_NoSky, CheckForActor, &TData))
+	{
+		if (trace.HitType == TRACE_HitActor)
+		{
+			return trace.Actor;
+		}
+	}
+
 	return NULL;
 }
 
