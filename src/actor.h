@@ -1123,6 +1123,8 @@ public:
 
 	FNameNoInit PainType;
 	FNameNoInit DeathType;
+	const PClass *TeleFogSourceType;
+	const PClass *TeleFogDestType;
 
 	FState *SpawnState;
 	FState *SeeState;

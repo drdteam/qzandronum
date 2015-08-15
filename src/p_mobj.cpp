@@ -377,6 +377,11 @@ void AActor::Serialize (FArchive &arc)
 	{
 		arc << FriendPlayer;
 	}
+	if (SaveVersion >= 4517)
+	{
+		arc << TeleFogSourceType
+			<< TeleFogDestType;
+	}
 	
 	// [BB] Zandronum additions.
 	arc << ulLimitedToTeam // [BB]
@@ -3554,26 +3559,18 @@ void P_NightmareRespawn (AActor *mobj)
 	}
 
 	// spawn a teleport fog at old spot because of removal of the body?
-	mo = Spawn ("TeleportFog", mobj->x, mobj->y, mobj->z, ALLOW_REPLACE);
-	if (mo != NULL)
-	{
-		mo->z += TELEFOGHEIGHT;
+	P_SpawnTeleportFog(mobj, mobj->x, mobj->y, mobj->z + TELEFOGHEIGHT, true);
 
 		// [BC] If we're the server, tell clients to spawn the thing.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnThing( mo );
-	}
 
 	// spawn a teleport fog at the new spot
-	mo = Spawn ("TeleportFog", x, y, z, ALLOW_REPLACE);
-	if (mo != NULL)
-	{
-		mo->z += TELEFOGHEIGHT;
+	P_SpawnTeleportFog(mobj, x, y, z + TELEFOGHEIGHT, false);
 
 		// [BC] If we're the server, tell clients to spawn the thing.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnThing( mo );
-	}
 
 	// [BC] Tell clients to destroy the old monster.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
