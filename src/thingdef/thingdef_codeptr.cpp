@@ -1826,6 +1826,7 @@ enum
 	CPF_DAGGER = 2,
 	CPF_PULLIN = 4,
 	CPF_NORANDOMPUFFZ = 8,
+	CPF_NOTURN = 16,
 };
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
@@ -1882,7 +1883,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 
 	P_LineAttack (self, angle, Range, pitch, Damage, NAME_Melee, PuffType, puffFlags, &linetarget, &actualdamage);
 
-	// turn to face target
 	if (linetarget)
 	{
 
@@ -1897,10 +1897,14 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 			S_Sound (self, CHAN_WEAPON, weapon->AttackSound, 1, ATTN_NORM);
 		}
 
-		self->angle = R_PointToAngle2 (self->x,
-										self->y,
-										linetarget->x,
-										linetarget->y);
+		if (!(flags & CPF_NOTURN))
+		{
+			// turn to face target
+			self->angle = R_PointToAngle2 (self->x,
+											self->y,
+											linetarget->x,
+											linetarget->y);
+		}
 
 		if (flags & CPF_PULLIN) self->flags |= MF_JUSTATTACKED;
 		if (flags & CPF_DAGGER) P_DaggerAlert (self, linetarget);

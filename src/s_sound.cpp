@@ -1900,21 +1900,12 @@ void S_SetSoundPaused (int state)
 {
 	if (state)
 	{
-		if (paused <= 0)
+		if (paused == 0)
 		{
 			S_ResumeSound(true);
 			if (GSnd != NULL)
 			{
 				GSnd->SetInactive(SoundRenderer::INACTIVE_Active);
-			}
-			// [BB] !netgame -> (NETWORK_GetState( ) == NETSTATE_SINGLE)
-			if ((NETWORK_GetState( ) == NETSTATE_SINGLE)
-#ifdef _DEBUG
-				&& !demoplayback
-#endif
-				)
-			{
-				paused = 0;
 			}
 		}
 	}
@@ -1929,16 +1920,16 @@ void S_SetSoundPaused (int state)
 					SoundRenderer::INACTIVE_Complete :
 					SoundRenderer::INACTIVE_Mute);
 			}
-			// [BB] !netgame -> (NETWORK_GetState( ) == NETSTATE_SINGLE)
-			if ((NETWORK_GetState( ) == NETSTATE_SINGLE)
-#ifdef _DEBUG
-				&& !demoplayback
-#endif
-				)
-			{
-				paused = -1;
-			}
 		}
+	}
+	// [BB] !netgame -> (NETWORK_GetState( ) == NETSTATE_SINGLE)
+	if ((NETWORK_GetState( ) == NETSTATE_SINGLE)
+#ifdef _DEBUG
+		&& !demoplayback
+#endif
+		)
+	{
+		pauseext = !state;
 	}
 }
 

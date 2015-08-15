@@ -1243,13 +1243,13 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		}
 		return -1;
 	}
-	if ((target->flags2 & MF2_INVULNERABLE) && damage < TELEFRAG_DAMAGE && !(flags & DMG_FORCED))
+	if ((target->flags2 & MF2_INVULNERABLE) && (damage < TELEFRAG_DAMAGE) && (!(flags & DMG_FORCED)))
 	{ // actor is invulnerable
 		if (target->player == NULL)
 		{
 			if (inflictor == NULL || (!(inflictor->flags3 & MF3_FOILINVUL) && !(flags & DMG_FOILINVUL)))
 			{
-				if (target->flags7 & MF7_ALLOWPAIN)
+				if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 				{
 					invulpain = true; //This returns -1 later.
 					fakeDamage = damage; 
@@ -1264,7 +1264,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			// Players are optionally excluded from getting thrust by damage.
 			if (static_cast<APlayerPawn *>(target)->PlayerFlags & PPF_NOTHRUSTWHENINVUL)
 			{
-				if (target->flags7 & MF7_ALLOWPAIN)
+				if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 					plrDontThrust = 1;
 				else
 					return -1;
@@ -1272,7 +1272,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		}
 		
 	}
-	if ((target->flags7 & MF7_ALLOWPAIN) && (damage < TELEFRAG_DAMAGE))
+	if (((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN))) && (damage < TELEFRAG_DAMAGE))
 	{
 		//Intentionally do not jump to fakepain because the damage hasn't been dished out yet.
 		//Once it's dished out, THEN we can disregard damage factors affecting pain chances.
@@ -1338,7 +1338,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 
 			if (damage == -1)
 			{
-				if (target->flags7 & MF7_ALLOWPAIN) //Hold off ending the function before we can deal the pain chances.
+				if ((target->flags7 & MF7_ALLOWPAIN) || (inflictor->flags7 & MF7_CAUSEPAIN)) //Hold off ending the function before we can deal the pain chances.
 					goto fakepain;
 				return -1;
 			}
@@ -1368,7 +1368,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				{
 					goto dopain;
 				}
-				else if (target->flags7 & MF7_ALLOWPAIN)
+				else if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 					goto fakepain;
 
 				return -1;
@@ -1391,7 +1391,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		if (!(flags & DMG_NO_FACTOR))
 		{
 			damage = FixedMul(damage, target->DamageFactor);
-			if (damage >= 0)
+			if (damage > 0)
 			{
 				damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, mod, target->GetClass()->ActorInfo->DamageFactors);
 			}
@@ -1401,7 +1401,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				{
 					goto dopain;
 				}
-				else if (target->flags7 & MF7_ALLOWPAIN)
+				else if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 					goto fakepain;
 
 				return -1;
@@ -1412,7 +1412,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	}
 	if (damage == -1)
 	{
-		if (target->flags7 & MF7_ALLOWPAIN)
+		if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 			goto fakepain;
 
 		return -1;
@@ -1583,12 +1583,16 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		{
 			// check the real player, not a voodoo doll here for invulnerability effects
 			if ((damage < TELEFRAG_DAMAGE && ((player->mo->flags2 & MF2_INVULNERABLE) ||
-				(player->cheats & CF_GODMODE))) || 
-				(player->cheats & CF_GODMODE2) || (player->mo->flags5 & MF5_NODAMAGE)) 
+				(player->cheats & CF_GODMODE))) ||
+				(player->cheats & CF_GODMODE2) || (player->mo->flags5 & MF5_NODAMAGE))
 				//Absolutely no hurting if NODAMAGE is involved. Same for GODMODE2.
 			{ // player is invulnerable, so don't hurt him
-				if (player->mo->flags7 & MF7_ALLOWPAIN)
-				{
+
+				if (((!(player->cheats & CF_GODMODE)) && (!(player->cheats & CF_GODMODE2)) && (!(player->mo->flags5 & MF5_NOPAIN))) &&
+					(((player->mo->flags7 & MF7_ALLOWPAIN) || (player->mo->flags5 & MF5_NODAMAGE)) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN))))
+				//Make sure no godmodes and NOPAIN flags are found first.
+				//Then, check to see if the player has NODAMAGE or ALLOWPAIN, or inflictor has CAUSEPAIN.
+				{	
 					invulpain = true;
 					fakeDamage = damage;
 					goto fakepain;
@@ -1615,8 +1619,8 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 
 					// If MF6_FORCEPAIN is set, make the player enter the pain state.
 					if (!(target->flags5 & MF5_NOPAIN) && inflictor != NULL &&
-						(inflictor->flags6 & MF6_FORCEPAIN) && !(inflictor->flags5 & MF5_PAINLESS) && 
-						(!(player->mo->flags2 & MF2_INVULNERABLE)))
+						(inflictor->flags6 & MF6_FORCEPAIN) && !(inflictor->flags5 & MF5_PAINLESS) 
+						&& (!(player->mo->flags2 & MF2_INVULNERABLE)) && (!(player->cheats & CF_GODMODE)) && (!(player->cheats & CF_GODMODE2)))
 					{
 						goto dopain;
 					}
@@ -1647,7 +1651,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			// telefrag him right? ;) (Unfortunately the damage is "absorbed" by armor,
 			// but telefragging should still do enough damage to kill the player)
 			// Ignore players that are already dead.
-			if (((player->cheats & CF_BUDDHA2) || ((player->cheats & CF_BUDDHA) || (player->mo->flags7 & MF7_BUDDHA) && damage < TELEFRAG_DAMAGE)) && player->playerstate != PST_DEAD)
+			if ((player->cheats & CF_BUDDHA2) || (((player->cheats & CF_BUDDHA) || (player->mo->flags7 & MF7_BUDDHA)) && (damage < TELEFRAG_DAMAGE)) && (player->playerstate != PST_DEAD))
 			{
 				// If this is a voodoo doll we need to handle the real player as well.
 				player->mo->health = target->health = player->health = 1;
@@ -1693,7 +1697,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			damage = newdam;
 			if (damage <= 0)
 			{
-				if (target->flags7 & MF7_ALLOWPAIN)
+				if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 					goto fakepain;
 				else
 					return damage;
@@ -1754,7 +1758,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 
 	if (target->health <= 0)
 	{ 
-		if ((target->flags7 & MF7_BUDDHA) && (damage < TELEFRAG_DAMAGE) && (!(inflictor->flags3 & MF7_FOILBUDDHA) && !(flags & DMG_FOILBUDDHA)))
+		if ((target->flags7 & MF7_BUDDHA) && (damage < TELEFRAG_DAMAGE) && ((inflictor == NULL || !(inflictor->flags3 & MF7_FOILBUDDHA)) && !(flags & DMG_FOILBUDDHA)))
 		{ //FOILBUDDHA or Telefrag damage must kill it.
 			target->health = 1;
 		}
@@ -1830,10 +1834,14 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	}
 
 fakepain: //Needed so we can skip the rest of the above, but still obey the original rules.
-	if (target->flags7 & MF7_ALLOWPAIN && (fakeDamage != damage))
+
+	//CAUSEPAIN can always attempt to trigger the chances of pain.
+	//ALLOWPAIN can do the same, only if the (unfiltered aka fake) damage is greater than 0. 
+	if ((((target->flags7 & MF7_ALLOWPAIN) && (fakeDamage > 0))
+		|| ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN))) && (fakeDamage != damage))
 	{
-		holdDamage = damage;
-		damage = fakeDamage;
+		holdDamage = damage;	//Store the modified damage away after factors are taken into account.
+		damage = fakeDamage;	//Retrieve the original damage.
 	}
 	
 	if (!(target->flags5 & MF5_NOPAIN) && (inflictor == NULL || !(inflictor->flags5 & MF5_PAINLESS)) &&
@@ -1850,8 +1858,9 @@ fakepain: //Needed so we can skip the rest of the above, but still obey the orig
 			}
 		}
 
-		if (((damage >= target->PainThreshold && pr_damagemobj() < painchance) ||
-			(inflictor != NULL && (inflictor->flags6 & MF6_FORCEPAIN))) &&
+		// [BB] Clients may not do this.
+		if ((((damage >= target->PainThreshold)) && (pr_damagemobj() < painchance)) 
+			|| (inflictor != NULL && (inflictor->flags6 & MF6_FORCEPAIN)) &&
 			( NETWORK_InClientMode() == false ))
 		{
 dopain:	
@@ -1901,6 +1910,7 @@ dopain:
 			}
 		}
 	}
+	//ALLOWPAIN and CAUSEPAIN can still trigger infighting, even if no pain state is worked out.
 
 	// Nothing more to do!
 	if ( NETWORK_InClientMode() )
@@ -1956,9 +1966,9 @@ dopain:
 	{
 		return -1; //NOW we return -1!
 	}
-	else if (target->flags7 & MF7_ALLOWPAIN)
+	else if ((target->flags7 & MF7_ALLOWPAIN) || ((inflictor != NULL) && (inflictor->flags7 & MF7_CAUSEPAIN)))
 	{
-		return holdDamage;
+		return holdDamage;	//This is the calculated damage after all is said and done. 
 	}
 	return damage;
 }
