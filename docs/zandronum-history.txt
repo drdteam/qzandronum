@@ -28,6 +28,9 @@
 -	- Fixed: The effects of the terminator sphere and the hellstone on a player were not properly stored in save games. [Torr Samaho]
 -	- Fixed: SetPlayerProperty could still change certain flags on a spectator. [Leonard]
 -	- Fixed: Changing the CVAR 'fullscreen' crashed the server. [Torr Samaho]
+-	- Fixed: sv_sharekeys did not use actor tags properly anymore after the ZDoom update in 2.0. [Dusk]
+-	- Fixed: Free spectate mode would crash the game. [Dusk]
+-	- Fixed: The game could tick too fast after getting kicked. [Leonard]
 
 
 2.1.2

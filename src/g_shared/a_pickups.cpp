@@ -1287,7 +1287,7 @@ void AInventory::Touch (AActor *toucher)
 			{
 				// [Dusk] Announcement message
 				SERVER_Printf( PRINT_HIGH, TEXTCOLOR_GREEN "%s" TEXTCOLOR_NORMAL " has found the " TEXTCOLOR_GOLD "%s!\n",
-					toucher->player->userinfo.GetName(), GetClass()->GetPrettyName().GetChars() );
+					toucher->player->userinfo.GetName(), GetTag() );
 
 				// [Dusk] Audio cue - skip the player picking the key because he
 				// hears the pickup sound from the original key. The little *bloop*

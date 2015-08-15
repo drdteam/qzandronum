@@ -937,6 +937,10 @@ static FSoundChan *S_StartSound(AActor *actor, const sector_t *sec, const FPolyO
 		}
 	}
 
+	// [TP] Spectating players shouldn't make any noise.
+	if ( actor && actor->player && actor->player->bSpectating )
+		return NULL;
+
 	sfx = &S_sfx[sound_id];
 
 	// Scale volume according to SNDINFO data.

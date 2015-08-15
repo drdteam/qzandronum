@@ -82,8 +82,7 @@ enum ClientDemoLocalCommand
 	CLD_LCMD_INVUSE,
 	CLD_LCMD_CENTERVIEW,
 	CLD_LCMD_TAUNT,
-	CLD_LCMD_NOCLIP,
-	CLD_LCMD_FLY,
+	CLD_LCMD_CHEAT,
 };
 
 //*****************************************************************************
@@ -104,6 +103,7 @@ void		CLIENTDEMO_DoPlayDemo( const char *pszDemoName );
 void		CLIENTDEMO_FinishPlaying( void );
 LONG		CLIENTDEMO_GetGameticOffset( void );
 void		CLIENTDEMO_WriteLocalCommand( ClientDemoLocalCommand command, const char *pszArg );
+void		CLIENTDEMO_WriteCheat( ECheatCommand cheat );
 void		CLIENTDEMO_ReadDemoWads( void );
 BYTESTREAM_s *CLIENTDEMO_GetDemoStream( void );
 

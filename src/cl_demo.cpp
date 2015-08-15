@@ -521,13 +521,9 @@ void CLIENTDEMO_ReadPacket( void )
 
 				PLAYER_Taunt( &players[consoleplayer] );
 				break;
-			case CLD_LCMD_NOCLIP:
+			case CLD_LCMD_CHEAT:
 
-				cht_DoCheat( &players[consoleplayer], CHT_NOCLIP );
-				break;
-			case CLD_LCMD_FLY:
-
-				cht_DoCheat( &players[consoleplayer], CHT_FLY );
+				cht_DoCheat( &players[consoleplayer], NETWORK_ReadByte( &g_ByteStream ));
 				break;
 			}
 			break;
@@ -691,6 +687,17 @@ void CLIENTDEMO_WriteLocalCommand( ClientDemoLocalCommand command, const char* p
 }
 
 //*****************************************************************************
+//
+// [TP] Writes a cheat into the demo
+//
+void CLIENTDEMO_WriteCheat ( ECheatCommand cheat )
+{
+	clientdemo_CheckDemoBuffer( 3 );
+	NETWORK_WriteByte( &g_ByteStream, CLD_LOCALCOMMAND );
+	NETWORK_WriteByte( &g_ByteStream, CLD_LCMD_CHEAT );
+	NETWORK_WriteByte( &g_ByteStream, cheat );
+}
+
 //*****************************************************************************
 //
 bool CLIENTDEMO_IsRecording( void )

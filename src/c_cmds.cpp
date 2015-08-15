@@ -293,33 +293,65 @@ CCMD (notarget)
 	}
 }
 
-CCMD (fly)
+//
+// [TP] CheckOnlineCheat
+//
+// Online handling code common for noclip, noclip2 and fly.
+// Returns true if the cheat command was handled.
+//
+static bool CheckOnlineCheat ( ECheatCommand cheat )
 {
-	// [Leo] Allow spectators to use the fly command.
-	if ( ( CLIENTDEMO_IsInFreeSpectateMode( ) == false ) && ( players[consoleplayer].bSpectating == false ) && CheckCheatmode( ) )
-		return;
+	if (( cheat != CHT_NOCLIP ) && ( cheat != CHT_NOCLIP2 ) && ( cheat != CHT_FLY ))
+		return false;
 
+	// [BB] Allow spectators to use noclip.
+	// [Leo] Allow spectators to use the fly command.
+	if ( ( CLIENTDEMO_IsInFreeSpectateMode( ) == false )
+		&& ( players[consoleplayer].bSpectating == false )
+		&& CheckCheatmode( ) )
+	{
+		return true;
+	}
+
+	// [BB] Clients need to request the cheat from the server.
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 	{
-		// [Leo] Don't bother sending a request to the server when we're spectating.
+		// [TP] Don't bother sending a request to the server when we're spectating.
+		// Spectator movement is entirely clientside and thus we can run this cheat on our own.
 		if ( players[consoleplayer].bSpectating )
 		{
-			cht_DoCheat( &players[consoleplayer], CHT_FLY );
+			cht_DoCheat( &players[consoleplayer], cheat );
 
+			// [TP] If we are recording a demo, we need to write this noclip use down
+			// so that it can be re-enacted correctly
 			if ( CLIENTDEMO_IsRecording( ))
-				CLIENTDEMO_WriteLocalCommand( CLD_LCMD_FLY, NULL );
-			return;
+				CLIENTDEMO_WriteCheat( cheat );
 		}
+		else
+			CLIENTCOMMANDS_GenericCheat( cheat );
 
-		CLIENTCOMMANDS_GenericCheat( CHT_FLY );
+		return true;
 	}
 	else if ( CLIENTDEMO_IsInFreeSpectateMode( ) )
-		cht_DoCheat( CLIENTDEMO_GetFreeSpectatorPlayer( ), CHT_FLY );
-	else
 	{
-		Net_WriteByte (DEM_GENERICCHEAT);
-		Net_WriteByte (CHT_FLY);
+		cht_DoCheat( CLIENTDEMO_GetFreeSpectatorPlayer( ), cheat );
+		return true;
 	}
+
+	return false;
+}
+
+CCMD (fly)
+{
+	// [TP] Check if this noclip needs to be handled some other way
+	if ( CheckOnlineCheat( CHT_FLY ))
+		return;
+
+	if (CheckCheatmode ())
+		return;
+
+	Net_WriteByte (DEM_GENERICCHEAT);
+	Net_WriteByte (CHT_FLY);
 }
 
 /*
@@ -331,47 +363,25 @@ argv(0) noclip
 */
 CCMD (noclip)
 {
-	// [BB] Allow spectators to use noclip.
-	if ( ( CLIENTDEMO_IsInFreeSpectateMode( ) == false ) && ( players[consoleplayer].bSpectating == false ) && CheckCheatmode( ) )
+	// [TP] Check if this noclip needs to be handled some other way
+	if ( CheckOnlineCheat( CHT_NOCLIP ))
 		return;
 
-	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-	{
-		// [Dusk] Don't bother sending a request to the server when we're spectating.
-		// Spectator movement is entirely client-side and thus we can noclip on our own.
-		if ( players[consoleplayer].bSpectating )
-		{
-			cht_DoCheat( &players[consoleplayer], CHT_NOCLIP );
+	if (CheckCheatmode ())
+		return;
 
-			// [Dusk] If we are recording a demo, we need to write this noclip use down
-			// so that it can be re-enacted correctly
-			if ( CLIENTDEMO_IsRecording( ))
-				CLIENTDEMO_WriteLocalCommand( CLD_LCMD_NOCLIP, NULL );
-			return;
-		}
-
-		CLIENTCOMMANDS_GenericCheat( CHT_NOCLIP );
-	}
-	else if ( CLIENTDEMO_IsInFreeSpectateMode( ) )
-		cht_DoCheat( CLIENTDEMO_GetFreeSpectatorPlayer( ), CHT_NOCLIP );
-	else
-	{
-		Net_WriteByte (DEM_GENERICCHEAT);
-		Net_WriteByte (CHT_NOCLIP);
-	}
+	Net_WriteByte (DEM_GENERICCHEAT);
+	Net_WriteByte (CHT_NOCLIP);
 }
 
 CCMD (noclip2)
 {
-	if (CheckCheatmode())
+	// [TP] Check if this noclip needs to be handled some other way
+	if ( CheckOnlineCheat( CHT_NOCLIP2 ))
 		return;
 
-	// [BB] Clients need to request the cheat from the server.
-	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-	{
-		CLIENTCOMMANDS_GenericCheat( CHT_NOCLIP2 );
+	if (CheckCheatmode ())
 		return;
-	}
 
 	Net_WriteByte (DEM_GENERICCHEAT);
 	Net_WriteByte (CHT_NOCLIP2);

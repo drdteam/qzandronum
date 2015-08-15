@@ -4058,7 +4058,12 @@ void SERVER_SyncSharedKeys( int playerToSync, bool withmessage )
 			if ( keylist.IsNotEmpty() )
 				keylist += ", ";
 
-			keylist += keyclass->GetPrettyName();
+			// [TP] The actor class name needs to be provided as the default parameter. Otherwise,
+			// GetTag will use GetClass(), which returns NULL for the default actor, to get the
+			// type name. Providing the type name manually keeps this from happening.
+			// (I think that the Class member of the default actor should be set when it is
+			// initialized so that this hack isn't necessary, but this is not the case.)
+			keylist += GetDefaultByType( keyclass )->GetTag( keyclass->TypeName );
 		}
 
 		for ( int player = 0; player < MAXPLAYERS; ++player )
