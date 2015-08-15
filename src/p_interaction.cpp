@@ -133,6 +133,15 @@ void P_TouchSpecialThing (AActor *special, AActor *toucher)
 	if ( toucher->player->bSpectating )
 		return;
 
+	/* [BB]
+	//Added by MC: Finished with this destination.
+	if (toucher->player != NULL && toucher->player->Bot != NULL && special == toucher->player->Bot->dest)
+	{
+		toucher->player->Bot->prev = toucher->player->Bot->dest;
+		toucher->player->Bot->dest = NULL;
+	}
+	*/
+	
 	special->Touch (toucher);
 }
 
@@ -1524,7 +1533,6 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	lOldTargetHealth = target->health;
 	if (player)
 	{
-		
 		// [TIHan/Spleen] Apply factor for damage dealt to players by monsters.
 		ApplyCoopDamagefactor(damage, source);
 
@@ -2156,7 +2164,6 @@ void P_PoisonDamage (player_t *player, AActor *source, int damage,
 		P_SetMobjState(target, target->info->painstate);
 	}
 */
-	return;
 }
 
 

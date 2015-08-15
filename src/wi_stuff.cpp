@@ -1858,7 +1858,7 @@ void WI_updateDeathmatchStats ()
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			// If the player is in the game and not ready, stop checking
-			if (playeringame[i] && !players[i].isbot && !playerready[i])
+			if (playeringame[i] && players[i].Bot == NULL && !playerready[i])
 				break;
 		}
 
@@ -1962,7 +1962,7 @@ void WI_drawDeathmatchStats ()
 			clamp(int(g*255.f), 0, 255), 
 			clamp(int(b*255.f), 0, 255)), 0.8f, x, y - ypadding, (deaths_x - x) + (8 * CleanXfac), lineheight);
 
-		if (playerready[pnum] || player->isbot) // Bots are automatically assumed ready, to prevent confusion
+		if (playerready[pnum] || player->Bot != NULL) // Bots are automatically assumed ready, to prevent confusion
 			screen->DrawTexture(readyico, x - (readyico->GetWidth() * CleanXfac), y, DTA_CleanNoMove, true, TAG_DONE);
 
 		color = (EColorRange)HU_GetRowColor(player, pnum == consoleplayer);
@@ -2178,7 +2178,7 @@ void WI_updateNetgameStats ()
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			// If the player is in the game and not ready, stop checking
-			if (playeringame[i] && !players[i].isbot && !playerready[i])
+			if (playeringame[i] && players[i].Bot == NULL && !playerready[i])
 				break;
 		}
 
@@ -2282,7 +2282,7 @@ void WI_drawNetgameStats ()
 			clamp(int(g*255.f), 0, 255),
 			clamp(int(b*255.f), 0, 255)), 0.8f, x, y - ypadding, (secret_x - x) + (8 * CleanXfac), lineheight);
 
-		if (playerready[i] || player->isbot) // Bots are automatically assumed ready, to prevent confusion
+		if (playerready[i] || player->Bot != NULL) // Bots are automatically assumed ready, to prevent confusion
 			screen->DrawTexture(readyico, x - (readyico->GetWidth() * CleanXfac), y, DTA_CleanNoMove, true, TAG_DONE);
 
 		color = (EColorRange)HU_GetRowColor(player, i == consoleplayer);
@@ -2596,7 +2596,7 @@ void WI_checkForAccelerate(void)
 		{
 			if ((player->cmd.ucmd.buttons ^ player->oldbuttons) &&
 				((players[i].cmd.ucmd.buttons & players[i].oldbuttons)
-					== players[i].oldbuttons) && !player->bIsBot)
+					== players[i].oldbuttons) && !player->bIsBot) // [BB]
 			{
 				acceleratestage = 1;
 				playerready[i] = true;

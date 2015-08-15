@@ -704,7 +704,7 @@ void PlayerIsGone (int netnode, int netconsole)
 		// Pick a new network arbitrator
 		for (int i = 0; i < MAXPLAYERS; i++)
 		{
-			if (i != netconsole && playeringame[i] )// [BB] && !players[i].isbot)
+			if (i != netconsole && playeringame[i] )// [BB] && players[i].Bot == NULL)
 			{
 				Net_Arbitrator = i;
 				players[i].settings_controller = true;
@@ -909,7 +909,7 @@ void GetPackets (void)
 
 			for (i = 0; i < numplayers; ++i)
 			{
-				int node = !players[playerbytes[i]].bIsBot ?
+				int node = !players[playerbytes[i]].bIsBot ? // [BB]
 					nodeforplayer[playerbytes[i]] : netnode;
 
 				SkipTicCmd (&start, nettics[node] - realstart);
@@ -925,7 +925,7 @@ void GetPackets (void)
 			// packet.
 			for (i = 0; i < numplayers; ++i)
 			{
-//				if (!players[playerbytes[i]].isbot)
+//				if (players[playerbytes[i]].Bot == NULL)
 				{
 					nettics[nodeforplayer[playerbytes[i]]] = realend;
 				}
@@ -943,10 +943,10 @@ void AdjustBots (int gameticdiv)
 	// be in even when gametic lags behind maketic.
 	for (int i = 0; i < MAXPLAYERS; i++)
 	{
-		if (playeringame[i] && players[i].isbot && players[i].mo)
+		if (playeringame[i] && players[i].Bot != NULL && players[i].mo)
 		{
-			players[i].savedyaw = players[i].mo->angle;
-			players[i].savedpitch = players[i].mo->pitch;
+			players[i].Bot->savedyaw = players[i].mo->angle;
+			players[i].Bot->savedpitch = players[i].mo->pitch;
 			for (int j = gameticdiv; j < maketic/ticdup; j++)
 			{
 				players[i].mo->angle += (netcmds[i][j%BACKUPTICS].ucmd.yaw << 16) * ticdup;
@@ -962,10 +962,10 @@ void UnadjustBots ()
 /*
 	for (int i = 0; i < MAXPLAYERS; i++)
 	{
-		if (playeringame[i] && players[i].isbot && players[i].mo)
+		if (playeringame[i] && players[i].Bot != NULL && players[i].mo)
 		{
-			players[i].mo->angle = players[i].savedyaw;
-			players[i].mo->pitch = players[i].savedpitch;
+			players[i].mo->angle = players[i].Bot->savedyaw;
+			players[i].mo->pitch = players[i].Bot->savedpitch;
 		}
 	}
 */
@@ -1144,7 +1144,7 @@ void NetUpdate (void)
 		{
 			if (playeringame[j])
 			{
-				if (players[j].isbot || NetMode == NET_PacketServer)
+				if (players[j].Bot != NULL || NetMode == NET_PacketServer)
 				{
 					count++;
 				}
@@ -1287,7 +1287,7 @@ void NetUpdate (void)
 					if (playeringame[j] && j != playerfornode[i] && j != consoleplayer)
 					{
 /*
-						if (players[j].isbot || NetMode == NET_PacketServer)
+						if (players[j].Bot != NULL || NetMode == NET_PacketServer)
 						{
 							playerbytes[l++] = j;
 							netbuffer[k++] = j;
@@ -1327,10 +1327,9 @@ void NetUpdate (void)
 					}
 					else if (i != 0)
 					{
-//						if (players[playerbytes[l]].isbot)
+						//if (players[playerbytes[l]].Bot != NULL)
 						if (0)
 						{
-
 							WriteWord (0, &cmddata);	// fake consistancy word
 						}
 						else
@@ -2266,8 +2265,8 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 		break;
 
 	case DEM_ADDBOT:
-		{
-		}
+		// [BB]
+		//bglobal.DoAddBot (stream);
 		break;
 
 	case DEM_KILLBOTS:
@@ -2740,8 +2739,11 @@ void Net_SkipCommand (int type, BYTE **stream)
 	switch (type)
 	{
 		case DEM_SAY:
-		case DEM_ADDBOT:
 			skip = strlen ((char *)(*stream + 1)) + 2;
+			break;
+
+		case DEM_ADDBOT:
+			skip = strlen ((char *)(*stream + 1)) + 6;
 			break;
 
 		case DEM_GIVECHEAT:
@@ -2905,7 +2907,7 @@ static void Network_Controller (int playernum, bool add)
 		return;
 	}
 
-	if (players[playernum].isbot)
+	if (players[playernum].Bot != NULL)
 	{
 		Printf ("Bots cannot be added to the controller list.\n");
 		return;

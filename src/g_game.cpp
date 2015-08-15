@@ -2039,11 +2039,11 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	int			chasecam;
 	BYTE		currclass;
 	userinfo_t  userinfo;	// [RH] Save userinfo
-	// [BB]
-	//botskill_t  b_skill;	//Added by MC:
 	APlayerPawn *actor;
 	const PClass *cls;
 	FString		log;
+	// [BB]
+	//DBot		*Bot;		//Added by MC:
 	bool		bOnTeam;
 	bool		bSpectating;
 	bool		bDeadSpectator;
@@ -2078,6 +2078,8 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	cls = p->cls;
 	log = p->LogText;
 	chasecam = p->cheats & CF_CHASECAM;
+	// [BB]
+	//Bot = p->Bot;			//Added by MC:
 
 	bOnTeam = p->bOnTeam;
 	const bool bChatting = p->bChatting;
@@ -2118,7 +2120,8 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->cls = cls;
 	p->LogText = log;
 	p->cheats |= chasecam;
-
+	// [BB]
+	//p->Bot = Bot;			//Added by MC:
 	p->oldbuttons = ~0, p->attackdown = true; p->usedown = true;	// don't do anything immediately
 	p->original_oldbuttons = ~0;
 
@@ -2164,6 +2167,15 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 
 		p->ReadyWeapon = p->PendingWeapon;
 	}
+	/* [BB]
+	//Added by MC: Init bot structure.
+	if (p->Bot != NULL)
+	{
+		botskill_t skill = p->Bot->skill;
+		p->Bot->Clear ();
+		p->Bot->skill = skill;
+	}
+	*/
 }
 
 //

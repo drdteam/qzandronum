@@ -7,6 +7,7 @@ endif( COMMAND cmake_policy )
 include( CheckCXXSourceCompiles )
 include( CheckFunctionExists )
 include( CheckCXXCompilerFlag )
+include( CheckLibraryExists )
 include( FindPkgConfig )
 include( FindOpenGL )
 # [BL] I can't seem to find where ZDoom gets this

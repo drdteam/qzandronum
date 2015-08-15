@@ -323,6 +323,8 @@ player_t::player_t()
   respawn_time(0),
   camera(0),
   air_finished(0),
+  // [BB]
+  //Bot(0),
   BlendR(0),
   BlendG(0),
   BlendB(0),
@@ -457,34 +459,10 @@ player_t &player_t::operator=(const player_t &p)
 	camera = p.camera;
 	air_finished = p.air_finished;
 	LastDamageType = p.LastDamageType;
-	/* [BB] Zandronum doesn't have these.
-	savedyaw = p.savedyaw;
-	savedpitch = p.savedpitch;
-	angle = p.angle;
-	dest = p.dest;
-	prev = p.prev;
-	enemy = p.enemy;
-	missile = p.missile;
-	mate = p.mate;
-	last_mate = p.last_mate;
+	/* [BB] Zandronum doesn't have this.
+	Bot = p.Bot;
 	*/
 	settings_controller = p.settings_controller;
-	/* [BB] Zandronum doesn't have these.
-	skill = p.skill;
-	t_active = p.t_active;
-	t_respawn = p.t_respawn;
-	t_strafe = p.t_strafe;
-	t_react = p.t_react;
-	t_fight = p.t_fight;
-	t_roam = p.t_roam;
-	t_rocket = p.t_rocket;
-	isbot = p.isbot;
-	first_shot = p.first_shot;
-	sleft = p.sleft;
-	allround = p.allround;
-	oldx = p.oldx;
-	oldy = p.oldy;
-	*/
 	BlendR = p.BlendR;
 	BlendG = p.BlendG;
 	BlendB = p.BlendB;
@@ -580,13 +558,8 @@ size_t player_t::FixPointers (const DObject *old, DObject *rep)
 	if (*&poisoner == old)			poisoner = replacement, changed++;
 	if (*&attacker == old)			attacker = replacement, changed++;
 	if (*&camera == old)			camera = replacement, changed++;
-	/* [BB] ST doesn't have these.
-	if (*&dest == old)				dest = replacement, changed++;
-	if (*&prev == old)				prev = replacement, changed++;
-	if (*&enemy == old)				enemy = replacement, changed++;
-	if (*&missile == old)			missile = replacement, changed++;
-	if (*&mate == old)				mate = replacement, changed++;
-	if (*&last_mate == old)			last_mate = replacement, changed++;
+	/* [BB] ST doesn't have this.
+	if (*&Bot == old)				Bot = static_cast<DBot *>(rep), changed++;
 	*/
 	if (ReadyWeapon == old)			ReadyWeapon = static_cast<AWeapon *>(rep), changed++;
 	if (PendingWeapon == old)		PendingWeapon = static_cast<AWeapon *>(rep), changed++;
@@ -606,13 +579,8 @@ size_t player_t::PropagateMark()
 	GC::Mark(poisoner);
 	GC::Mark(attacker);
 	GC::Mark(camera);
-	/* [BB] ST doesn't have these.
-	GC::Mark(dest);
-	GC::Mark(prev);
-	GC::Mark(enemy);
-	GC::Mark(missile);
-	GC::Mark(mate);
-	GC::Mark(last_mate);
+	/* [BB] ST doesn't have this.
+	GC::Mark(Bot);
 	*/
 	GC::Mark(ReadyWeapon);
 	GC::Mark(ConversationNPC);
@@ -891,7 +859,7 @@ void APlayerPawn::SetupWeaponSlots()
 		{
 			FWeaponSlots local_slots(player->weapons);
 			/*  [BB] Zandronum treats bots differently.
-			if (player->isbot)
+			if (player->Bot != NULL)
 			{ // Bots only need weapons from KEYCONF, not INI modifications.
 				P_PlaybackKeyConfWeapons(&local_slots);
 			}
@@ -3230,7 +3198,7 @@ void P_DeathThink (player_t *player)
 	if ((player->cmd.ucmd.buttons & BT_USE ||
 		((multiplayer || alwaysapplydmflags) && (dmflags & DF_FORCE_RESPAWN))) && !(dmflags2 & DF2_NO_RESPAWN))
 	{
-		if (level.time >= player->respawn_time || ((player->cmd.ucmd.buttons & BT_USE) && !player->isbot))
+		if (level.time >= player->respawn_time || ((player->cmd.ucmd.buttons & BT_USE) && player->Bot == NULL))
 		{
 			player->cls = NULL;		// Force a new class if the player is using a random class
 			player->playerstate = (multiplayer || (level.flags2 & LEVEL2_ALLOWRESPAWN)) ? PST_REBORN : PST_ENTER;
@@ -4218,8 +4186,19 @@ void player_t::Serialize (FArchive &arc)
 		<< respawn_time
 		<< air_finished
 		<< turnticks
-		<< oldbuttons
-		<< BlendR
+		<< oldbuttons;
+	/* [BB]
+	bool IsBot;
+	if (SaveVersion >= 4514)
+	{
+		arc << Bot;
+	}
+	else
+	{
+		arc << IsBot;
+	}
+	*/
+	arc << BlendR
 		<< BlendG
 		<< BlendB
 		<< BlendA
@@ -4316,6 +4295,34 @@ void player_t::Serialize (FArchive &arc)
 		onground = (mo->z <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (cheats & CF_NOCLIP2);
 	}
 
+	/* [BB]
+	if (SaveVersion < 4514 && IsBot)
+	{
+		Bot = new DBot;
+		GC::WriteBarrier (Bot);
+
+		arc	<< Bot->angle
+			<< Bot->dest
+			<< Bot->prev
+			<< Bot->enemy
+			<< Bot->missile
+			<< Bot->mate
+			<< Bot->last_mate
+			<< Bot->skill
+			<< Bot->t_active
+			<< Bot->t_respawn
+			<< Bot->t_strafe
+			<< Bot->t_react
+			<< Bot->t_fight
+			<< Bot->t_roam
+			<< Bot->t_rocket
+			<< Bot->first_shot
+			<< Bot->sleft
+			<< Bot->allround
+			<< Bot->oldx
+			<< Bot->oldy;
+	}
+	*/
 	if (arc.IsLoading ())
 	{
 		// If the player reloaded because they pressed +use after dying, we

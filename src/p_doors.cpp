@@ -642,7 +642,7 @@ bool EV_DoDoor (DDoor::EVlDoor type, line_t *line, AActor *thing,
 					{
 						// [BC] Added !thing, because sometimes thing can be NULL when this function
 						// is called by client_DoDoor.
-						if (!thing || !thing->player)
+						if (!thing || !thing->player) // [BB] thing->player->Bot != NULL)
 							return false;	// JDC: bad guys never close doors
 
 						door->m_Direction = -1;	// start going down immediately
