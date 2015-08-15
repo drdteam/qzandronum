@@ -1550,6 +1550,9 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 	// As workaround we check if the target is a player.
 	if (target != NULL && ((target->flags & (MF_SHOOTABLE|MF_CORPSE)) || (target->flags6 & MF6_KILLED) || target->player ) )
 	{
+		if (mo->flags7 & MF7_HITTARGET)	mo->target = target;
+		if (mo->flags7 & MF7_HITMASTER)	mo->master = target;
+		if (mo->flags7 & MF7_HITTRACER)	mo->tracer = target;
 		if (target->flags & MF_NOBLOOD) nextstate = mo->FindState(NAME_Crash);
 		if (nextstate == NULL) nextstate = mo->FindState(NAME_Death, NAME_Extreme);
 	}
@@ -2066,6 +2069,7 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 	int steps, step, totalsteps;
 	fixed_t startx, starty;
 	fixed_t oldfloorz = mo->floorz;
+	fixed_t oldz = mo->z;
 
 	fixed_t maxmove = (mo->waterlevel < 1) || (mo->flags & MF_MISSILE) || 
 					  (mo->player && mo->player->crouchoffset<-10*FRACUNIT) ? MAXMOVE : MAXMOVE/4;
@@ -2398,20 +2402,53 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 				}
 				if (BlockingMobj && (BlockingMobj->flags2 & MF2_REFLECTIVE))
 				{
-					angle = R_PointToAngle2(BlockingMobj->x, BlockingMobj->y, mo->x, mo->y);
-
-					// Change angle for deflection/reflection
-					if (mo->AdjustReflectionAngle (BlockingMobj, angle))
+					bool seeker = (mo->flags2 & MF2_SEEKERMISSILE) ? true : false;
+					// Don't change the angle if there's THRUREFLECT on the monster.
+					if (!(BlockingMobj->flags7 & MF7_THRUREFLECT))
 					{
-						goto explode;
-					}
+						int dir;
+						angle_t delta;
+						
+						if (BlockingMobj->flags7 & MF7_MIRRORREFLECT)
+							angle = mo->angle + ANG180;
+						else
+							angle = R_PointToAngle2(BlockingMobj->x, BlockingMobj->y, mo->x, mo->y);
 
-					// Reflect the missile along angle
-					mo->angle = angle;
-					angle >>= ANGLETOFINESHIFT;
-					mo->velx = FixedMul (mo->Speed>>1, finecosine[angle]);
-					mo->vely = FixedMul (mo->Speed>>1, finesine[angle]);
-					mo->velz = -mo->velz/2;
+						// Change angle for deflection/reflection
+						// AIMREFLECT calls precedence so make sure not to bother with adjusting here if declared.
+						if (!(BlockingMobj->flags7 & MF7_AIMREFLECT) && (mo->AdjustReflectionAngle(BlockingMobj, angle)))
+						{
+							goto explode;
+						}
+
+						// Reflect the missile along angle
+						if (BlockingMobj->flags7 & MF7_AIMREFLECT)
+						{
+							dir = P_FaceMobj(mo, mo->target, &delta);
+							if (dir)
+							{ // Turn clockwise
+								mo->angle += delta;
+							}
+							else
+							{ // Turn counter clockwise
+								mo->angle -= delta;
+							}
+							angle = mo->angle >> ANGLETOFINESHIFT;
+							mo->velx = FixedMul(mo->Speed, finecosine[angle]);
+							mo->vely = FixedMul(mo->Speed, finesine[angle]);
+							mo->velz = -mo->velz;
+						}
+						else
+						{
+							mo->angle = angle;
+							angle >>= ANGLETOFINESHIFT;
+							mo->velx = FixedMul(mo->Speed >> 1, finecosine[angle]);
+							mo->vely = FixedMul(mo->Speed >> 1, finesine[angle]);
+							mo->velz = -mo->velz / 2;
+						}
+						
+						
+					}
 					if (mo->flags2 & MF2_SEEKERMISSILE)
 					{
 						mo->tracer = mo->target;
@@ -3805,6 +3842,7 @@ int AActor::SpecialMissileHit (AActor *victim)
 bool AActor::AdjustReflectionAngle (AActor *thing, angle_t &angle)
 {
 	if (flags2 & MF2_DONTREFLECT) return true;
+	if (thing->flags7 & MF7_THRUREFLECT) return false;
 
 	// Change angle for reflection
 	if (thing->flags4&MF4_SHIELDREFLECT)
@@ -5432,12 +5470,15 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	{
 		spawn_x = p->mo->x;
 		spawn_y = p->mo->y;
+		spawn_z = p->mo->z;
+
 		spawn_angle = p->mo->angle;
 	}
 	else
 	{
 		spawn_x = mthing->x;
 		spawn_y = mthing->y;
+
 		// Allow full angular precision but avoid roundoff errors for multiples of 45 degrees.
 		if (mthing->angle % 45 != 0)
 		{
@@ -5451,14 +5492,14 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 		{
 			spawn_angle += 1 << ANGLETOFINESHIFT;
 		}
-	}
 
-	if (GetDefaultByType(p->cls)->flags & MF_SPAWNCEILING)
-		spawn_z = ONCEILINGZ;
-	else if (GetDefaultByType(p->cls)->flags2 & MF2_SPAWNFLOAT)
-		spawn_z = FLOATRANDZ;
-	else
-		spawn_z = ONFLOORZ;
+		if (GetDefaultByType(p->cls)->flags & MF_SPAWNCEILING)
+			spawn_z = ONCEILINGZ;
+		else if (GetDefaultByType(p->cls)->flags2 & MF2_SPAWNFLOAT)
+			spawn_z = FLOATRANDZ;
+		else
+			spawn_z = ONFLOORZ;
+	}
 
 	mobj = static_cast<APlayerPawn *>
 		(Spawn (p->cls, spawn_x, spawn_y, spawn_z, NO_REPLACE));
@@ -5668,7 +5709,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 		if ( invul != NULL )
 		{
 			invul->EffectTics = 3*TICRATE;
-			invul->BlendColor = 0;				// don't mess with the view
+			invul->BlendColor = 0;			// don't mess with the view
+			invul->ItemFlags |= IF_UNDROPPABLE;	// Don't drop this
 			// [BB] The clients are informed about the powerup and these adjustments later.
 
 			// Apply respawn invulnerability effect.

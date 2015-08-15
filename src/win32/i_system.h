@@ -154,7 +154,7 @@ void I_SetWndProc();
 
 // [RH] Checks the registry for Steam's install path, so we can scan its
 // directories for IWADs if the user purchased any through Steam.
-FString I_GetSteamPath();
+TArray<FString> I_GetSteamPath();
 
 // [RC] Lunches the path given. This was encapsulated to make wragling with #includes easier.
 void I_RunProgram( const char *szPath );

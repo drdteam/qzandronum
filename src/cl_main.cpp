@@ -6403,7 +6403,7 @@ static void client_SetThingState( BYTESTREAM_s *pByteStream )
 	case STATE_RAISE:
 
 		// When an actor raises, we need to do a whole bunch of other stuff.
-		P_Thing_Raise( pActor, true );
+		P_Thing_Raise( pActor, NULL, true );
 		return;
 	case STATE_HEAL:
 

@@ -1604,7 +1604,7 @@ FUNC(LS_Thing_Raise)
 
 	if (arg0==0)
 	{
-		ok = P_Thing_Raise (it);
+		ok = P_Thing_Raise (it,NULL);
 	}
 	else
 	{
@@ -1612,7 +1612,7 @@ FUNC(LS_Thing_Raise)
 
 		while ( (target = iterator.Next ()) )
 		{
-			ok |= P_Thing_Raise(target);
+			ok |= P_Thing_Raise(target,NULL);
 		}
 	}
 	return ok;

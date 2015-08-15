@@ -542,7 +542,7 @@ void P_RemoveThing(AActor * actor)
 // a thing with SERVERCOMMANDS_SetThingState, the client has to ignore the
 // P_CheckPosition check. For example this is relevant if an Archvile raised
 // the thing.
-bool P_Thing_Raise(AActor *thing, bool bIgnorePositionCheck)
+bool P_Thing_Raise(AActor *thing, AActor *raiser, bool bIgnorePositionCheck)
 {
 	FState * RaiseState = thing->GetRaiseState();
 	if (RaiseState == NULL)
@@ -574,6 +574,12 @@ bool P_Thing_Raise(AActor *thing, bool bIgnorePositionCheck)
 	S_Sound (thing, CHAN_BODY, "vile/raise", 1, ATTN_IDLE);
 
 	thing->Revive();
+
+	if (raiser != NULL)
+	{
+		// Let's copy the friendliness of the one who raised it.
+		thing->CopyFriendliness(raiser, false);
+	}
 
 	// [BC] If we're the server, tell clients to put the thing into its raise state.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

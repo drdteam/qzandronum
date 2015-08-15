@@ -147,6 +147,7 @@ CVAR (Bool, chasedemo, false, 0);
 CVAR (Bool, storesavepic, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR (Bool, longsavemessages, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR (String, save_dir, "", CVAR_ARCHIVE|CVAR_GLOBALCONFIG);
+CVAR (Bool, cl_waitforsave, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 EXTERN_CVAR (Float, con_midtime);
 
 //==========================================================================
@@ -4680,6 +4681,9 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 		filename = G_BuildSaveName ("demosave.zds", -1);
 	}
 
+	if (cl_waitforsave)
+		I_FreezeTime(true);
+
 	insave = true;
 	G_SnapshotLevel ();
 
@@ -4689,6 +4693,7 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 	{
 		Printf ("Could not create savegame '%s'\n", filename.GetChars());
 		insave = false;
+		I_FreezeTime(false);
 		return;
 	}
 
@@ -4776,6 +4781,7 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 	}
 		
 	insave = false;
+	I_FreezeTime(false);
 }
 
 
@@ -5220,7 +5226,7 @@ void G_DoPlayDemo (void)
 		}
 
 		DefaultExtension (defdemoname, ".lmp");
-		M_ReadFile (defdemoname, &demobuffer);
+		M_ReadFileMalloc (defdemoname, &demobuffer);
 	}
 	demo_p = demobuffer;
 
