@@ -38,6 +38,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+// [BC] New #includes.
 #include <time.h>
 
 #include "version.h"
@@ -67,6 +68,7 @@
 #include "d_event.h"
 #include "d_player.h"
 #include "c_consolebuffer.h"
+#include "gi.h"
 // [BC] New #includes.
 #include "chat.h"
 #include "cl_demo.h"
@@ -75,7 +77,6 @@
 #include "deathmatch.h"
 #include "network.h"
 #include "win32/g15/g15.h"
-#include "gi.h"
 #include "sv_rcon.h"
 
 #define LEFTMARGIN 8
@@ -710,9 +711,15 @@ int PrintString (int printlevel, const char *outline)
 			}
 		}
 	}
+	else if (Logfile != NULL)
+	{
+		fputs (outlinecopy, Logfile);
+		fflush (Logfile);
+	}
 	const int length = static_cast<int>(strlen (outlinecopy));
 	delete [] outlinecopy;
 	return length;
+
 }
 
 extern bool gameisdead;

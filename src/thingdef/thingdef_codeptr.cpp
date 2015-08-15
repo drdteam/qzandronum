@@ -4575,7 +4575,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_RaiseSiblings)
 
 //===========================================================================
 // 
-// [Dusk] A_FaceConsolePlayer
+// [TP] A_FaceConsolePlayer
 //
 //===========================================================================
 DEFINE_ACTION_FUNCTION_PARAMS (AActor, A_FaceConsolePlayer) {
@@ -5516,7 +5516,7 @@ enum RadiusGiveFlags
 	RGF_OBJECTS		=   1 << 3,
 	RGF_VOODOO		=	1 << 4,
 	RGF_CORPSES		=	1 << 5,
-	RGF_MASK		=	63,
+	RGF_MASK		=	2111,
 	RGF_NOTARGET	=	1 << 6,
 	RGF_NOTRACER	=	1 << 7,
 	RGF_NOMASTER	=	1 << 8,
