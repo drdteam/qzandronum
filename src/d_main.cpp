@@ -1673,6 +1673,7 @@ CCMD (endgame)
 	{
 		gameaction = ga_fullconsole;
 		demosequence = -1;
+		G_CheckDemoStatus();
 	}
 }
 

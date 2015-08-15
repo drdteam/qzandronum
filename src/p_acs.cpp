@@ -8110,7 +8110,7 @@ scriptwait:
 				while (min <= max)
 				{
 					int mid = (min + max) / 2;
-					SDWORD caseval = pc[mid*2];
+					SDWORD caseval = LittleLong(pc[mid*2]);
 					if (caseval == STACK(1))
 					{
 						pc = activeBehavior->Ofs2PC (LittleLong(pc[mid*2+1]));

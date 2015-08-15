@@ -1512,7 +1512,7 @@ bool AActor::Massacre ()
 			P_DamageMobj (this, NULL, NULL, TELEFRAG_DAMAGE, NAME_Massacre);
 		}
 		while (health != prevhealth && health > 0);	//abort if the actor wasn't hurt.
-		return true;
+		return health <= 0;
 	}
 	return false;
 }
@@ -7622,7 +7622,7 @@ bool AActor::IsHostile (AActor *other)
 int AActor::DoSpecialDamage (AActor *target, int damage, FName damagetype)
 {
 	if (target->player && target->player->mo == target && damage < 1000 &&
-		(target->player->cheats & CF_GODMODE))
+		(target->player->cheats & CF_GODMODE || target->player->cheats & CF_GODMODE2))
 	{
 		return -1;
 	}

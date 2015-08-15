@@ -1156,6 +1156,7 @@ OptionMenu MessageOptions
 	SubMenu "Text scaling",				"ZA_TextScaling" // [TP]
 	Option "Show messages",				"show_messages", "OnOff"
 	Option "Show obituaries",			"show_obituaries", "OnOff"
+	Option "Show secret notifications",	"cl_showsecretmessage", "OnOff"
 	Option "Chat sound",				"chat_sound", "ZA_ChatSound" // [TP]
 	Option "Scale text in high res", 	"con_scaletext", "ScaleValues"
 	Option "Minimum message level", 	"msg", "MessageLevels"

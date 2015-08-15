@@ -240,6 +240,47 @@ CCMD (map)
 //
 //==========================================================================
 
+CCMD(recordmap)
+{
+	// [BB] netgame -> (NETWORK_GetState( ) != NETSTATE_SINGLE)
+	if (NETWORK_GetState( ) != NETSTATE_SINGLE)
+	{
+		Printf("You cannot record a new game while in a netgame.");
+		return;
+	}
+	if (argv.argc() > 2)
+	{
+		try
+		{
+			if (!P_CheckMapData(argv[2]))
+			{
+				Printf("No map %s\n", argv[2]);
+			}
+			else
+			{
+				G_DeferedInitNew(argv[2]);
+				gameaction = ga_recordgame;
+				newdemoname = argv[1];
+				newdemomap = argv[2];
+			}
+		}
+		catch (CRecoverableError &error)
+		{
+			if (error.GetMessage())
+				Printf("%s", error.GetMessage());
+		}
+	}
+	else
+	{
+		Printf("Usage: recordmap <filename> <map name>\n");
+	}
+}
+
+//==========================================================================
+//
+//
+//==========================================================================
+
 CCMD (open)
 {
 	if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) ||
