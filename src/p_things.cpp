@@ -505,6 +505,9 @@ void P_RemoveThing(AActor * actor)
 	// Don't remove live players.
 	if (actor->player == NULL || actor != actor->player->mo)
 	{
+		// Don't also remove owned inventory items
+		if (actor->IsKindOf(RUNTIME_CLASS(AInventory)) && static_cast<AInventory*>(actor)->Owner != NULL) return;
+
 		// [BC] DESTROY!
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_DestroyThing( actor );
@@ -532,6 +535,7 @@ void P_RemoveThing(AActor * actor)
 		// [BB] Only destroy the actor if it's not needed for a map reset. Otherwise just hide it.
 		actor->HideOrDestroyIfSafe ();
 	}
+
 }
 
 // [BB] Added bIgnorePositionCheck: If the server instructs the client to raise

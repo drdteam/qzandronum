@@ -3608,7 +3608,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Die)
 	}
 
 
-	P_DamageMobj (self, NULL, NULL, self->health, damagetype, DMG_FORCED);
+	if (self->flags & MF_MISSILE)
+		P_ExplodeMissile(self, NULL, NULL);
+	else
+		P_DamageMobj (self, NULL, NULL, self->health, damagetype, DMG_FORCED);
 }
 
 //

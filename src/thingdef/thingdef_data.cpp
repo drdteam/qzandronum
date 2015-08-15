@@ -244,6 +244,7 @@ static FFlagDef ActorFlags[]=
 	DEFINE_FLAG(MF7, HARMFRIENDS, AActor, flags7),
 	DEFINE_FLAG(MF7, BUDDHA, AActor, flags7),
 	DEFINE_FLAG(MF7, FOILBUDDHA, AActor, flags7),
+	DEFINE_FLAG(MF7, DONTTHRUST, AActor, flags7),
 
 	// [BC] New DECORATE flag defines here.
 	DEFINE_FLAG(STFL, BLUETEAM, AActor, ulSTFlags),
