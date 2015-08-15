@@ -77,7 +77,13 @@ struct F3DFloor
 		sector_t *		model;
 		int				isceiling;
 		int				vindex;
-		int				iindex;
+		bool			copied;
+
+		void copyPlane(planeref * other)
+		{
+			*this = *other;
+			copied = true;
+		}
 	};
 
 	planeref			bottom;

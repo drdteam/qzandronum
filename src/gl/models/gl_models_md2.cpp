@@ -115,7 +115,6 @@ bool FDMDModel::Load(const char * path, int, const char * buffer, int length)
 	char   *temp;
 	ModelFrame *frame;
 	int     i, k, c;
-	FTriangle *triangles[MAX_LODS];
 	int     axis[3] = { VX, VY, VZ };
 
 	int fileoffset=12+sizeof(dmd_chunk_t);
@@ -197,8 +196,19 @@ bool FDMDModel::Load(const char * path, int, const char * buffer, int length)
 	{
 		lodInfo[i].numTriangles = LittleLong(lodInfo[i].numTriangles);
 		lodInfo[i].offsetTriangles = LittleLong(lodInfo[i].offsetTriangles);
-
-		lods[i].triangles = triangles[i] = (FTriangle*)(buffer + lodInfo[i].offsetTriangles);
+		if (lodInfo[i].numTriangles > 0)
+		{
+			lods[i].triangles = new FTriangle[lodInfo[i].numTriangles];
+			memcpy(lods[i].triangles, buffer + lodInfo[i].offsetTriangles, lodInfo[i].numTriangles * sizeof(FTriangle));
+			for (int j = 0; j < lodInfo[i].numTriangles; j++)
+			{
+				for (int k = 0; k < 3; k++)
+				{
+					lods[i].triangles[j].textureIndices[k] = LittleShort(lods[i].triangles[j].textureIndices[k]);
+					lods[i].triangles[j].vertexIndices[k] = LittleShort(lods[i].triangles[j].vertexIndices[k]);
+				}
+			}
+		}
 	}
 
 	loaded=true;
@@ -206,65 +216,97 @@ bool FDMDModel::Load(const char * path, int, const char * buffer, int length)
 }
 
 
+//===========================================================================
+//
+//
+//
+//===========================================================================
+
 FDMDModel::~FDMDModel()
 {
-	int i;
+	CleanTempData();
 
-	// clean up
-	if (skins != NULL)
-	{
-		// skins are managed by the texture manager so they must not be deleted here.
-		delete [] skins;
-	}
+	// skins are managed by the texture manager so they must not be deleted here.
+	if (skins != NULL) delete [] skins;
+	if (frames != NULL) delete [] frames;
+}
+
+//===========================================================================
+//
+// Deletes everything that's no longer needed after building the vertex buffer
+//
+//===========================================================================
+
+void FDMDModel::CleanTempData()
+{
+	int i;
 
 	if (frames != NULL)
 	{
 		for (i=0;i<info.numFrames;i++)
 		{
-			delete [] frames[i].vertices;
-			delete [] frames[i].normals;
+			if (frames[i].vertices != NULL) delete [] frames[i].vertices;
+			if (frames[i].normals != NULL) delete [] frames[i].normals;
+
+			frames[i].vertices = NULL;
+			frames[i].normals = NULL;
 		}
-		delete [] frames;
 	}
 
 	for(i = 0; i < info.numLODs; i++)
 	{
 		if (lods[i].triangles != NULL) delete[] lods[i].triangles;
+		lods[i].triangles = NULL;
 	}
 
 	if (texCoords != NULL) delete[] texCoords;
+	texCoords = NULL;
 }
 
+//===========================================================================
+//
+//
+//
+//===========================================================================
 
-void FDMDModel::BuildVertexBuffer(FModelVertexBuffer *buf)
+void FDMDModel::BuildVertexBuffer()
 {
-	for (int i = 0; i < info.numFrames; i++)
+	if (mVBuf == NULL)
 	{
-		ModelFrame *frame = &frames[i];
-		DMDModelVertex *vert = frame->vertices;
-		DMDModelVertex *norm = frame->normals;
+		int VertexBufferSize = info.numFrames * lodInfo[0].numTriangles * 3;
+		unsigned int vindex = 0;
 
-		frame->vindex = buf->vbo_shadowdata.Size();
+		mVBuf = new FModelVertexBuffer(false);
+		FModelVertex *vertptr = mVBuf->LockVertexBuffer(VertexBufferSize);
 
-
-		FTriangle *tri = lods[0].triangles;
-
-		for (int i = 0; i < lodInfo[0].numTriangles; i++)
+		for (int i = 0; i < info.numFrames; i++)
 		{
-			for (int j = 0; j < 3; j++)
+			ModelFrame *frame = &frames[i];
+			DMDModelVertex *vert = frame->vertices;
+			DMDModelVertex *norm = frame->normals;
+
+			frame->vindex = vindex;
+
+
+			FTriangle *tri = lods[0].triangles;
+
+			for (int i = 0; i < lodInfo[0].numTriangles; i++)
 			{
-				FModelVertex bvert;
+				for (int j = 0; j < 3; j++)
+				{
 
-				int ti = tri->textureIndices[j];
-				int vi = tri->vertexIndices[j];
+					int ti = tri->textureIndices[j];
+					int vi = tri->vertexIndices[j];
 
-				bvert.Set(vert[vi].xyz[0], vert[vi].xyz[1], vert[vi].xyz[2], (float)texCoords[ti].s /info.skinWidth, (float)texCoords[ti].t/info.skinHeight);
-				bvert.SetNormal(norm[vi].xyz[0], norm[vi].xyz[1], norm[vi].xyz[2]);
-				buf->vbo_shadowdata.Push(bvert);
+					FModelVertex *bvert = &vertptr[vindex++];
+					bvert->Set(vert[vi].xyz[0], vert[vi].xyz[1], vert[vi].xyz[2], (float)texCoords[ti].s / info.skinWidth, (float)texCoords[ti].t / info.skinHeight);
+					bvert->SetNormal(norm[vi].xyz[0], norm[vi].xyz[1], norm[vi].xyz[2]);
+				}
+				tri++;
 			}
-			tri++;
 		}
-
+		mVBuf->UnlockVertexBuffer();
+		CleanTempData();
 	}
 }
 
@@ -307,7 +349,7 @@ void FDMDModel::RenderFrame(FTexture * skin, int frameno, int frameno2, double i
 	gl_RenderState.SetInterpolationFactor((float)inter);
 
 	gl_RenderState.Apply();
-	GLRenderer->mModelVBO->SetupFrame(frames[frameno].vindex, frames[frameno2].vindex);
+	mVBuf->SetupFrame(frames[frameno].vindex, frames[frameno2].vindex);
 	glDrawArrays(GL_TRIANGLES, 0, lodInfo[0].numTriangles * 3);
 	gl_RenderState.SetInterpolationFactor(0.f);
 }
@@ -433,7 +475,16 @@ bool FMD2Model::Load(const char * path, int, const char * buffer, int length)
 
 	lods[0].triangles = new FTriangle[lodInfo[0].numTriangles];
 		
-	memcpy(lods[0].triangles, buffer + lodInfo[0].offsetTriangles, sizeof(FTriangle) * lodInfo[0].numTriangles);
+	int cnt = lodInfo[0].numTriangles;
+	memcpy(lods[0].triangles, buffer + lodInfo[0].offsetTriangles, sizeof(FTriangle) * cnt);
+	for (int j = 0; j < cnt; j++)
+	{
+		for (int k = 0; k < 3; k++)
+		{
+			lods[0].triangles[j].textureIndices[k] = LittleShort(lods[0].triangles[j].textureIndices[k]);
+			lods[0].triangles[j].vertexIndices[k] = LittleShort(lods[0].triangles[j].vertexIndices[k]);
+		}
+	}
 
 	skins = new FTexture *[info.numSkins];
 
