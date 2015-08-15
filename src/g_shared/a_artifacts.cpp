@@ -1344,6 +1344,18 @@ void APowerTargeter::InitEffect ()
 	PositionAccuracy ();
 }
 
+bool APowerTargeter::HandlePickup(AInventory *item)
+{
+	if (Super::HandlePickup(item))
+	{
+		InitEffect();	// reset the HUD sprites
+		return true;
+	}
+	return false;
+}
+
+
+
 void APowerTargeter::DoEffect ()
 {
 	Super::DoEffect ();
@@ -1430,6 +1442,42 @@ void APowerFrightener::EndEffect ()
 		return;
 
 	Owner->player->cheats &= ~CF_FRIGHTENING;
+}
+
+// Buddha Powerup --------------------------------
+
+IMPLEMENT_CLASS (APowerBuddha)
+
+//===========================================================================
+//
+// APowerBuddha :: InitEffect
+//
+//===========================================================================
+
+void APowerBuddha::InitEffect ()
+{
+	Super::InitEffect();
+
+	if (Owner== NULL || Owner->player == NULL)
+		return;
+
+	Owner->player->cheats |= CF_BUDDHA;
+}
+
+//===========================================================================
+//
+// APowerBuddha :: EndEffect
+//
+//===========================================================================
+
+void APowerBuddha::EndEffect ()
+{
+	Super::EndEffect();
+
+	if (Owner== NULL || Owner->player == NULL)
+		return;
+
+	Owner->player->cheats &= ~CF_BUDDHA;
 }
 
 // Scanner powerup ----------------------------------------------------------

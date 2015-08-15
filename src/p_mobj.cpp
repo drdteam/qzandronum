@@ -1547,7 +1547,7 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 		if (nextstate == NULL) nextstate = mo->FindState(NAME_Death, NAME_Extreme);
 	}
 	if (nextstate == NULL) nextstate = mo->FindState(NAME_Death);
-
+	
 	// [BC] Tell clients that this missile blew up.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
@@ -1561,20 +1561,6 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 			if ( ( nextstate != NULL ) && ( nextstate != mo->FindState(NAME_Death) ) )
 				SERVERCOMMANDS_SetThingFrame( mo, nextstate );
 		}
-	}
-
-	// [BB] We need to keep track if the state change changes the flags.
-	const DWORD dwSavedMoFlags = mo->flags;
-	// [BB] If nextstate is still equal to NULL, mo->SetState (nextstate)
-	// returns false and we have to break out here.
-	if (!(mo->SetState (nextstate)))
-		return;
-	// [BB] If the flags were just changed, we'll have to take special care later.
-	const bool bFlagsChanged = ( mo->flags != dwSavedMoFlags );
-	
-	if (mo->ObjectFlags & OF_EuthanizeMe)
-	{
-		return;
 	}
 
 	if (line != NULL && line->special == Line_Horizon && !(mo->flags3 & MF3_SKYEXPLODE))
@@ -1655,8 +1641,25 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 		}
 	}
 
-	if (nextstate != NULL)
+	// play the sound before changing the state, so that AActor::Destroy can call S_RelinkSounds on it and the death state can override it.
+	if (mo->DeathSound)
 	{
+		S_Sound (mo, CHAN_VOICE, mo->DeathSound, 1,
+			(mo->flags3 & MF3_FULLVOLDEATH) ? ATTN_NONE : ATTN_NORM);
+	}
+
+	// [BB] We need to keep track if the state change changes the flags.
+	const DWORD dwSavedMoFlags = mo->flags;
+	// [BB] If nextstate is still equal to NULL, mo->SetState (nextstate)
+	// returns false and we have to break out here.
+	if (!(mo->SetState (nextstate)))
+		return;
+	// [BB] If the flags were just changed, we'll have to take special care later.
+	const bool bFlagsChanged = ( mo->flags != dwSavedMoFlags );
+
+	if (!(mo->ObjectFlags & OF_EuthanizeMe))
+	{
+		// The rest only applies if the missile actor still exists.
 		// [RH] Change render style of exploding rockets
 		if (mo->flags5 & MF5_DEHEXPLOSION)
 		{
@@ -1697,11 +1700,6 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 		if ( bFlagsChanged && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
 			SERVERCOMMANDS_SetThingFlags( mo, FLAGSET_FLAGS );
 
-		if (mo->DeathSound)
-		{
-			S_Sound (mo, CHAN_VOICE, mo->DeathSound, 1,
-				(mo->flags3 & MF3_FULLVOLDEATH) ? ATTN_NONE : ATTN_NORM);
-		}
 	}
 }
 
@@ -6549,9 +6547,8 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, AAc
 				cls = cls->ParentClass;
 			}
 		}
-	}
 
-statedone:
+	statedone:
 
 	// [BC] If we're the server, tell clients to spawn the blood.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -6571,7 +6568,9 @@ statedone:
 			SERVERCOMMANDS_SpawnBlood( x, y, z, dir, damage, originator );
 	}
 
-	if (!(bloodtype <= 1)) th->renderflags |= RF_INVISIBLE;
+		if (!(bloodtype <= 1)) th->renderflags |= RF_INVISIBLE;
+	}
+
 	if (bloodtype >= 1)
 		P_DrawSplash2 (40, x, y, z, dir, 2, bloodcolor);
 }
@@ -7468,14 +7467,37 @@ AActor *P_SpawnPlayerMissile (AActor *source, fixed_t x, fixed_t y, fixed_t z,
 	return NULL;
 }
 
+int AActor::GetTeam()
+{
+	if (player)
+	{
+		return player->userinfo.GetTeam();
+	}
+
+	int myTeam = DesignatedTeam;
+
+	// Check for monsters that belong to a player on the team but aren't part of the team themselves.
+	// [BB] TEAM_NONE -> TEAM_None
+	if (myTeam == TEAM_None && FriendPlayer != 0)
+	{
+		myTeam = players[FriendPlayer - 1].userinfo.GetTeam();
+	}
+	return myTeam;
+
+}
+
 bool AActor::IsTeammate (AActor *other)
 {
 	// [BL] Function is practically rewritten in Skulltag
 	if (!other)
+	{
 		return false;
+	}
 	// Allow co-op players to be teammates.
 	else if ((( deathmatch == false ) && ( teamgame == false )) && player && other->player)
-		return ( true );
+	{
+		return true;
+	}
 
 	// Can't be an enemy of ourselves!
 	if ( this == other )
@@ -7484,8 +7506,8 @@ bool AActor::IsTeammate (AActor *other)
 	// Teamplay deathmatch, CTF, Skulltag, etc.
 	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
 	{
-		int myTeam = DesignatedTeam;
-		int otherTeam = other->DesignatedTeam;
+		int myTeam = GetTeam();
+		int otherTeam = other->GetTeam();
 		if (player)
 		{
 			if (!player->bOnTeam)
@@ -7499,15 +7521,10 @@ bool AActor::IsTeammate (AActor *other)
 			otherTeam = other->player->ulTeam;
 		}
 
-		// If they're not on our team...
-		if ( myTeam == TEAM_None || myTeam != otherTeam )
-			return ( false );
-
-		// Passed checks. Player is on our team.
-		return ( true );
+		// [BB] TEAM_NONE -> TEAM_None
+		return (myTeam != TEAM_None && myTeam == otherTeam);
 	}
-
-	return ( false );
+	return false;
 }
 
 //==========================================================================

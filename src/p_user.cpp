@@ -1465,9 +1465,6 @@ void APlayerPawn::GiveDefaultInventory ()
 	AWeapon						*pPendingWeapon;
 	AInventory					*pInventory;
 
-	// [GRB] Give inventory specified in DECORATE
-	player->health = GetDefault ()->health;
-
 	// [BB] Spectators are supposed to have no inventory, but they should get their health.
 	if ( player->bSpectating ) return;
 

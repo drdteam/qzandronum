@@ -1765,7 +1765,7 @@ bool P_LookForPlayers (AActor *actor, INTBOOL allaround, FLookExParams *params)
 #endif
 		// [SP] If you don't see any enemies in deathmatch, look for players (but only when friend to a specific player.)
 		// [BB] TEAM_NONE -> TEAM_None
-		if (actor->FriendPlayer == 0 && (!teamplay || actor->DesignatedTeam == TEAM_None)) return result;
+		if (actor->FriendPlayer == 0 && (!teamplay || actor->GetTeam() == TEAM_None)) return result;
 		// [BB] Adapted to take into account teamgame.
 		if (result || (!deathmatch && !teamgame)) return true;
 
@@ -3746,13 +3746,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_BossDeath)
 	{
 		if (type == NAME_Fatso)
 		{
-			EV_DoFloor (DFloor::floorLowerToLowest, NULL, 666, FRACUNIT, 0, 0, 0, false);
+			EV_DoFloor (DFloor::floorLowerToLowest, NULL, 666, FRACUNIT, 0, -1, 0, false);
 			return;
 		}
 		
 		if (type == NAME_Arachnotron)
 		{
-			EV_DoFloor (DFloor::floorRaiseByTexture, NULL, 667, FRACUNIT, 0, 0, 0, false);
+			EV_DoFloor (DFloor::floorRaiseByTexture, NULL, 667, FRACUNIT, 0, -1, 0, false);
 			return;
 		}
 	}
@@ -3761,11 +3761,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_BossDeath)
 		switch (level.flags & LEVEL_SPECACTIONSMASK)
 		{
 		case LEVEL_SPECLOWERFLOOR:
-			EV_DoFloor (DFloor::floorLowerToLowest, NULL, 666, FRACUNIT, 0, 0, 0, false);
+			EV_DoFloor (DFloor::floorLowerToLowest, NULL, 666, FRACUNIT, 0, -1, 0, false);
 			return;
 		
 		case LEVEL_SPECLOWERFLOORTOHIGHEST:
-			EV_DoFloor (DFloor::floorLowerToHighest, NULL, 666, FRACUNIT, 0, 0, 0, false);
+			EV_DoFloor (DFloor::floorLowerToHighest, NULL, 666, FRACUNIT, 0, -1, 0, false);
 			return;
 		
 		case LEVEL_SPECOPENDOOR:

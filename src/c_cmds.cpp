@@ -204,6 +204,15 @@ CCMD (god)
 	}
 }
 
+CCMD(god2)
+{
+	if (CheckCheatmode())
+		return;
+
+	Net_WriteByte(DEM_GENERICCHEAT);
+	Net_WriteByte(CHT_GOD2);
+}
+
 CCMD (iddqd)
 {
 	if (CheckCheatmode ())
@@ -277,6 +286,15 @@ CCMD (buddha)
 
 	Net_WriteByte(DEM_GENERICCHEAT);
 	Net_WriteByte(CHT_BUDDHA);
+}
+
+CCMD(buddha2)
+{
+	if (CheckCheatmode())
+		return;
+
+	Net_WriteByte(DEM_GENERICCHEAT);
+	Net_WriteByte(CHT_BUDDHA2);
 }
 
 CCMD (notarget)

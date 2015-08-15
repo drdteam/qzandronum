@@ -2110,6 +2110,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	p->~player_t();
 	::new(p) player_t;
 
+	p->health = actor->health;
 	p->fragcount = fragcount;
 	p->killcount = killcount;
 	p->itemcount = itemcount;
@@ -2157,6 +2158,8 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 
 	if (gamestate != GS_TITLELEVEL)
 	{
+
+		// [GRB] Give inventory specified in DECORATE
 		// [BB] Added bGiveInventory.
 		if ( bGiveInventory )
 			actor->GiveDefaultInventory ();
