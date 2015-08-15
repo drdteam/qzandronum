@@ -43,7 +43,6 @@
 #include "doomerrors.h"
 #include <math.h>
 
-#include "SDL.h"
 #include "doomtype.h"
 #include "doomstat.h"
 #include "version.h"
@@ -166,9 +165,9 @@ static int has_exited;
 
 void I_Quit (void)
 {
-	has_exited = 1;		/* Prevent infinitely recursive exits -- killough */
+    has_exited = 1;		/* Prevent infinitely recursive exits -- killough */
 
-	if (demorecording)
+    if (demorecording)
 		G_CheckDemoStatus();
 
 	// [BC] Support for client-side demos.
@@ -235,14 +234,14 @@ void STACK_ARGS I_FatalError (const char *error, ...)
 
 void STACK_ARGS I_Error (const char *error, ...)
 {
-	va_list argptr;
-	char errortext[MAX_ERRORTEXT];
+    va_list argptr;
+    char errortext[MAX_ERRORTEXT];
 
-	va_start (argptr, error);
-	vsprintf (errortext, error, argptr);
-	va_end (argptr);
+    va_start (argptr, error);
+    vsprintf (errortext, error, argptr);
+    va_end (argptr);
 
-	throw CRecoverableError (errortext);
+    throw CRecoverableError (errortext);
 }
 
 void I_SetIWADInfo ()

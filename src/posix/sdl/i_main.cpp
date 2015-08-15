@@ -85,10 +85,6 @@ void Mac_I_FatalError(const char* errortext);
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
 
-#ifdef USE_XCURSOR
-extern bool UseXCursor;
-#endif
-
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
 
 #ifndef NO_GTK
@@ -239,19 +235,17 @@ static void unprotect_rtext()
 void I_StartupJoysticks();
 void I_ShutdownJoysticks();
 
-const char* I_GetBackEndName();
-
 int main (int argc, char **argv)
 {
 #if !defined (__APPLE__)
 	{
 		int s[4] = { SIGSEGV, SIGILL, SIGFPE, SIGBUS };
 		cc_install_handlers(argc, argv, 4, s, GAMENAMELOWERCASE"-crash.log", DoomSpecificInfo);
- 	}
+	}
 #endif // !__APPLE__
- 	
-	printf(GAMENAME" %s - %s - %s version\nCompiled on %s\n",
-		GetVersionString(), GetGitTime(), I_GetBackEndName(), __DATE__);
+
+	printf(GAMENAME" %s - %s - SDL version\nCompiled on %s\n",
+		GetVersionString(), GetGitTime(), __DATE__);
 
 	seteuid (getuid ());
     std::set_new_handler (NewFailure);
@@ -292,48 +286,15 @@ int main (int argc, char **argv)
 			return -1;
 		}
 	}
-
 	atterm (SDL_Quit);
 
-	{
-		char viddriver[80];
-
-		if (SDL_VideoDriverName(viddriver, sizeof(viddriver)) != NULL)
-		{
-			printf("Using video driver %s\n", viddriver);
-#ifdef USE_XCURSOR
-			UseXCursor = (strcmp(viddriver, "x11") == 0);
-#endif
-		}
-		printf("\n");
-	}
-
-	char caption[100];
-	mysnprintf(caption, countof(caption), GAMESIG " %s (%s)", GetVersionString(), GetGitTime());
-	SDL_WM_SetCaption(caption, caption);
-
-#ifdef __APPLE__
-	
-	const SDL_VideoInfo* videoInfo = SDL_GetVideoInfo();
-	if ( NULL != videoInfo )
-	{
-		EXTERN_CVAR(  Int, vid_defwidth  )
-		EXTERN_CVAR(  Int, vid_defheight )
-		EXTERN_CVAR(  Int, vid_defbits   )
-		EXTERN_CVAR( Bool, vid_vsync     )
-		EXTERN_CVAR( Bool, fullscreen    )
-		
-		vid_defwidth  = videoInfo->current_w;
-		vid_defheight = videoInfo->current_h;
-		vid_defbits   = videoInfo->vfmt->BitsPerPixel;
-		vid_vsync     = true;
-		fullscreen    = true;
-	}
-	
-#endif // __APPLE__
+	printf("Using video driver %s\n", SDL_GetCurrentVideoDriver());
+	printf("\n");
 	
     try
     {
+		Args = new DArgs(argc, argv);
+
 		/*
 		  killough 1/98:
 
