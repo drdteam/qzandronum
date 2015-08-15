@@ -1362,7 +1362,8 @@ void NetUpdate (void)
 	// listen for other packets
 	GetPackets ();
 
-	if (!resendOnly)
+	// [BB] Clients may never do this.
+	if (!resendOnly && ( NETWORK_InClientMode( ) == false ))
 	{
 		// ideally nettics[0] should be 1 - 3 tics above lowtic
 		// if we are consistantly slower, speed up time
