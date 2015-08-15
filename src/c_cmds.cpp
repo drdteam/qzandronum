@@ -1271,8 +1271,8 @@ CCMD(info)
 			linetarget->SpawnHealth());
 		PrintMiscActorInfo(linetarget);
 	}
-	else Printf("No target found. Info cannot find actors that have\
-				the NOBLOCKMAP flag or have height/radius of 0.\n");
+	else Printf("No target found. Info cannot find actors that have "
+				"the NOBLOCKMAP flag or have height/radius of 0.\n");
 }
 
 //-----------------------------------------------------------------------------
