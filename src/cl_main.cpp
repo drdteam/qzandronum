@@ -2962,8 +2962,11 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 		Printf( "%s\n", pszString );
 
 	// Set the consoleplayer back to 0 and keep our userinfo to avoid desync if we ever reconnect.
-	players[0].userinfo = players[consoleplayer].userinfo;
-	consoleplayer = 0;
+	if ( consoleplayer != 0 )
+	{
+		players[0].userinfo.TransferFrom ( players[consoleplayer].userinfo );
+		consoleplayer = 0;
+	}
 
 	// Clear out the existing players.
 	CLIENT_ClearAllPlayers();
