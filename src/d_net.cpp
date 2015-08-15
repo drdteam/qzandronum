@@ -194,7 +194,7 @@ static struct TicSpecial
 	size_t used[BACKUPTICS];
 	BYTE *streamptr;
 	size_t streamoffs;
-	int   specialsize;
+	size_t specialsize;
 	int	  lastmaketic;
 	bool  okay;
 
@@ -233,11 +233,11 @@ static struct TicSpecial
 	}
 
 	// Make more room for special commands.
-	void GetMoreSpace ()
+	void GetMoreSpace (size_t needed)
 	{
 		int i;
 
-		specialsize <<= 1;
+		specialsize = MAX(specialsize * 2, needed + 30);
 
 		DPrintf ("Expanding special size to %d\n", specialsize);
 
@@ -249,8 +249,8 @@ static struct TicSpecial
 
 	void CheckSpace (size_t needed)
 	{
-		if (streamoffs >= specialsize - needed)
-			GetMoreSpace ();
+		if (streamoffs + needed >= specialsize)
+			GetMoreSpace (streamoffs + needed);
 
 		streamoffs += needed;
 	}
