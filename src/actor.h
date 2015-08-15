@@ -1111,6 +1111,7 @@ public:
 	FNameNoInit DamageType;
 	FNameNoInit DamageTypeReceived;
 	fixed_t DamageFactor;
+	fixed_t DamageMultiply;
 
 	FNameNoInit PainType;
 	FNameNoInit DeathType;

@@ -1819,19 +1819,27 @@ void FBehavior::StaticSerializeModuleStates (FArchive &arc)
 	for (modnum = 0; modnum < StaticModules.Size(); ++modnum)
 	{
 		FBehavior *module = StaticModules[modnum];
+		int ModSize = module->GetDataSize();
 
 		if (arc.IsStoring())
 		{
 			arc.WriteString (module->ModuleName);
+			if (SaveVersion >= 4516) arc << ModSize;
 		}
 		else
 		{
 			char *modname = NULL;
 			arc << modname;
+			if (SaveVersion >= 4516) arc << ModSize;
 			if (stricmp (modname, module->ModuleName) != 0)
 			{
 				delete[] modname;
 				I_Error ("Level was saved with a different set of ACS modules.");
+			}
+			else if (ModSize != module->GetDataSize())
+			{
+				delete[] modname;
+				I_Error("ACS module %s has changed from what was saved. (Have %d bytes, save has %d bytes)", module->ModuleName, module->GetDataSize(), ModSize);
 			}
 			delete[] modname;
 		}
@@ -2108,7 +2116,7 @@ FBehavior::FBehavior (int lumpnum, FileReader * fr, int len)
 				funcm->HasReturnValue = funcf->HasReturnValue;
 				funcm->ImportNum = funcf->ImportNum;
 				funcm->LocalCount = funcf->LocalCount;
-				funcm->Address = funcf->Address;
+				funcm->Address = LittleLong(funcf->Address);
 			}
 		}
 
@@ -2293,7 +2301,7 @@ FBehavior::FBehavior (int lumpnum, FileReader * fr, int len)
 			const char *const parse = (char *)&chunk[2];
 			DWORD i;
 
-			for (i = 0; i < chunk[1]; )
+			for (i = 0; i < LittleLong(chunk[1]); )
 			{
 				if (parse[i])
 				{
@@ -2586,7 +2594,7 @@ void FBehavior::LoadScriptsDirectory ()
 	scripts.b = FindChunk (MAKE_ID('S','F','L','G'));
 	if (scripts.dw != NULL)
 	{
-		max = scripts.dw[1] / 4;
+		max = LittleLong(scripts.dw[1]) / 4;
 		scripts.dw += 2;
 		for (i = max; i > 0; --i, scripts.w += 2)
 		{
@@ -2602,7 +2610,7 @@ void FBehavior::LoadScriptsDirectory ()
 	scripts.b = FindChunk (MAKE_ID('S','V','C','T'));
 	if (scripts.dw != NULL)
 	{
-		max = scripts.dw[1] / 4;
+		max = LittleLong(scripts.dw[1]) / 4;
 		scripts.dw += 2;
 		for (i = max; i > 0; --i, scripts.w += 2)
 		{
@@ -2916,7 +2924,7 @@ BYTE *FBehavior::FindChunk (DWORD id) const
 		{
 			return chunk;
 		}
-		chunk += ((DWORD *)chunk)[1] + 8;
+		chunk += LittleLong(((DWORD *)chunk)[1]) + 8;
 	}
 	return NULL;
 }
@@ -2924,14 +2932,14 @@ BYTE *FBehavior::FindChunk (DWORD id) const
 BYTE *FBehavior::NextChunk (BYTE *chunk) const
 {
 	DWORD id = *(DWORD *)chunk;
-	chunk += ((DWORD *)chunk)[1] + 8;
+	chunk += LittleLong(((DWORD *)chunk)[1]) + 8;
 	while (chunk != NULL && chunk < Data + DataSize)
 	{
 		if (((DWORD *)chunk)[0] == id)
 		{
 			return chunk;
 		}
-		chunk += ((DWORD *)chunk)[1] + 8;
+		chunk += LittleLong(((DWORD *)chunk)[1]) + 8;
 	}
 	return NULL;
 }
@@ -4085,6 +4093,7 @@ enum
 	APROP_AttackZOffset	= 40,
 	APROP_StencilColor	= 41,
 	APROP_Friction		= 42,
+	APROP_DamageMultiplier=43,
 };
 */
 
@@ -4349,6 +4358,10 @@ void DLevelScript::DoSetActorProperty (AActor *actor, int property, int value)
 		actor->DamageFactor = value;
 		break;
 
+	case APROP_DamageMultiplier:
+		actor->DamageMultiply = value;
+		break;
+
 	case APROP_MasterTID:
 		AActor *other;
 		other = SingleActorFromTID (value, NULL);
@@ -4420,6 +4433,7 @@ int DLevelScript::GetActorProperty (int tid, int property, const SDWORD *stack, 
 	case APROP_Speed:		return actor->Speed;
 	case APROP_Damage:		return actor->Damage;	// Should this call GetMissileDamage() instead?
 	case APROP_DamageFactor:return actor->DamageFactor;
+	case APROP_DamageMultiplier: return actor->DamageMultiply;
 	case APROP_Alpha:		return actor->alpha;
 	case APROP_RenderStyle:	for (int style = STYLE_None; style < STYLE_Count; ++style)
 							{ // Check for a legacy render style that matches.

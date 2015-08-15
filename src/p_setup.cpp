@@ -4708,8 +4708,6 @@ static void P_Shutdown ()
 	P_FreeLevelData ();
 	P_FreeExtraLevelData ();
 	ST_Clear();
-	// [BB]
-	//bglobal.DestroyAllBots ();
 }
 
 #if 0

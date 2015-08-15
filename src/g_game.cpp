@@ -1527,11 +1527,8 @@ void G_Ticker ()
 		DWORD rngsum = FRandom::StaticSumSeeds ();
 
 		/* [BB]
-		if ((gametic % ticdup) == 0)
-		{
-			//Added by MC: For some of that bot stuff. The main bot function.
-			bglobal.Main (buf);
-		}
+		//Added by MC: For some of that bot stuff. The main bot function.
+		bglobal.Main ();
 		*/
 
 		for (i = 0; i < MAXPLAYERS; i++)
@@ -2173,7 +2170,6 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 
 	if (gamestate != GS_TITLELEVEL)
 	{
-
 		// [GRB] Give inventory specified in DECORATE
 		// [BB] Added bGiveInventory.
 		if ( bGiveInventory )
@@ -2191,6 +2187,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	{
 		botskill_t skill = p->Bot->skill;
 		p->Bot->Clear ();
+		p->Bot->player = p;
 		p->Bot->skill = skill;
 	}
 	*/
