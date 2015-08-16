@@ -1918,15 +1918,6 @@ void G_FinishTravel ()
 			pawn->AddToHash ();
 			pawn->SetState(pawn->SpawnState);
 			pawn->player->SendPitchLimits();
-			// Sync the FLY flags.
-			if (pawn->flags2 & MF2_FLY)
-			{
-				pawn->player->cheats |= CF_FLY;
-			}
-			else
-			{
-				pawn->player->cheats &= ~CF_FLY;
-			}
 
 			// [BC]
 			pawn->lNetID = lSavedNetID;

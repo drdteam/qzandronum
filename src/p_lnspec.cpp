@@ -3122,7 +3122,7 @@ FUNC(LS_SetPlayerProperty)
 		mask = CF_INSTANTWEAPSWITCH;
 		break;
 	case PROP_FLY:
-		mask = CF_FLY;
+		//mask = CF_FLY;
 		break;
 	case PROP_TOTALLYFROZEN:
 		mask = CF_TOTALLYFROZEN;
@@ -3142,6 +3142,7 @@ FUNC(LS_SetPlayerProperty)
 			it->player->cheats |= mask;
 			if (arg2 == PROP_FLY)
 			{
+				it->flags7 |= MF7_FLYCHEAT;
 				it->flags2 |= MF2_FLY;
 				it->flags |= MF_NOGRAVITY;
 			}
@@ -3151,6 +3152,7 @@ FUNC(LS_SetPlayerProperty)
 			it->player->cheats &= ~mask;
 			if (arg2 == PROP_FLY)
 			{
+				it->flags7 &= ~MF7_FLYCHEAT;
 				it->flags2 &= ~MF2_FLY;
 				it->flags &= ~MF_NOGRAVITY;
 			}
