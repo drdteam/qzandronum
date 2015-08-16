@@ -2090,6 +2090,8 @@ void FDynamicBuffer::SetData (const BYTE *data, int len)
 	else
 	{
 		m_Len = 0;
+		M_Free(m_Data);
+		m_Data = NULL;
 	}
 }
 

@@ -1427,7 +1427,7 @@ void P_LoadSegs (MapData * map)
 			}
 		}
 	}
-	catch (badseg bad)
+	catch (const badseg &bad) // the preferred way is to catch by (const) reference.
 	{
 		switch (bad.badtype)
 		{
@@ -1532,7 +1532,6 @@ void P_LoadSubsectors (MapData * map)
 
 void P_LoadSectors (MapData *map, FMissingTextureTracker &missingtex)
 {
-	char				fname[9];
 	int 				i;
 	char				*msp;
 	mapsector_t			*ms;
@@ -1551,7 +1550,6 @@ void P_LoadSectors (MapData *map, FMissingTextureTracker &missingtex)
 		defSeqType = -1;
 
 	fogMap = normMap = NULL;
-	fname[8] = 0;
 
 	msp = new char[lumplen];
 	map->Read(ML_SECTORS, msp);
@@ -3170,16 +3168,14 @@ void P_LoadBlockMap (MapData * map)
 	}
 }
 
-
+line_t**				linebuffer;
 
 //
 // P_GroupLines
 // Builds sector line lists and subsector sector numbers.
 // Finds block bounding boxes for sectors.
-// [RH] Handles extra lights
+// [RH] Handles extra lights.
 //
-struct linf { short tag; WORD count; };
-line_t**				linebuffer;
 
 static void P_GroupLines (bool buildmap)
 {
@@ -3188,7 +3184,6 @@ static void P_GroupLines (bool buildmap)
 	int 				i;
 	int 				j;
 	int 				total;
-	int					totallights;
 	line_t* 			li;
 	sector_t*			sector;
 	FBoundingBox		bbox;
@@ -3221,7 +3216,6 @@ static void P_GroupLines (bool buildmap)
 	// count number of lines in each sector
 	times[1].Clock();
 	total = 0;
-	totallights = 0;
 	for (i = 0, li = lines; i < numlines; i++, li++)
 	{
 		if (li->frontsector == NULL)

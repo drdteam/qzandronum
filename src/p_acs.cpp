@@ -686,10 +686,7 @@ void ACSStringPool::ReadStrings(PNGHandle *png, DWORD id)
 			i++;
 			j = arc.ReadCount();
 		}
-		if (str != NULL)
-		{
-			delete[] str;
-		}
+		delete[] str;
 		FindFirstFreeEntry(0);
 	}
 }
@@ -2287,7 +2284,6 @@ FBehavior::FBehavior (int lumpnum, FileReader * fr, int len)
 								}
 							}
 						}
-						i += 4+ArrayStore[arraynum].ArraySize;
 					}
 				}
 
@@ -6393,13 +6389,13 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				}
 
 				FActorIterator iterator(args[0]);
-				bool canraiseall = false;
+				bool canraiseall = true;
 				while ((actor = iterator.Next()))
 				{
-					canraiseall = !P_Thing_CanRaise(actor) | canraiseall;
+					canraiseall = P_Thing_CanRaise(actor) && canraiseall;
 				}
 				
-				return !canraiseall;
+				return canraiseall;
 			}
 			break;
 
