@@ -965,6 +965,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\p_tags.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\p_teleport.cpp"
 				>
 			</File>
@@ -1695,6 +1699,10 @@
 			</File>
 			<File
 				RelativePath=".\src\p_spec.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\p_tags.h"
 				>
 			</File>
 			<File
