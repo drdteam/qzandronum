@@ -111,6 +111,9 @@ if( CMAKE_BUILD_TYPE MATCHES Release AND CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE 
 	option( RELEASE_WITH_DEBUG_FILE "Create the debug symbols file for the release build." ON )
 endif( CMAKE_BUILD_TYPE MATCHES Release AND CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE )
 
+option( NO_FMOD "Disable FMODEx sound support" OFF )
+option( NO_OPENAL "Disable OpenAL sound support" OFF )
+
 find_package( BZip2 )
 find_package( JPEG )
 find_package( ZLIB )
