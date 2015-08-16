@@ -2427,9 +2427,9 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 						{
 							bool tg = (mo->target != NULL);
 							bool blockingtg = (BlockingMobj->target != NULL);
-							if (BlockingMobj->flags7 & MF7_AIMREFLECT && (tg || blockingtg))
+							if ((BlockingMobj->flags7 & MF7_AIMREFLECT) && (tg | blockingtg))
 							{
-								AActor *origin=tg ? mo->target : BlockingMobj->target;
+								AActor *origin = tg ? mo->target : BlockingMobj->target;
 
 								float speed = (float)(mo->Speed);
 								//dest->x - source->x
@@ -2441,7 +2441,7 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 							}
 							else
 							{
-								if (BlockingMobj->flags7 & MF7_MIRRORREFLECT && (tg || blockingtg))
+								if ((BlockingMobj->flags7 & MF7_MIRRORREFLECT) && (tg | blockingtg))
 								{
 									mo->angle += ANGLE_180;
 									mo->velx = -mo->velx / 2;
@@ -4404,7 +4404,7 @@ void AActor::Tick ()
 			// Check 3D floors as well
 			floorplane = P_FindFloorPlane(floorsector, x, y, floorz);
 #else
-			floorplane =  floorsector->floorplane;
+			floorplane = floorsector->floorplane;
 #endif
 
 			if (floorplane.c < STEEPSLOPE &&
@@ -7222,24 +7222,30 @@ static fixed_t GetDefaultSpeed(const PClass *type)
 
 AActor *P_SpawnMissile (AActor *source, AActor *dest, const PClass *type, AActor *owner)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	return P_SpawnMissileXYZ (source->x, source->y, source->z + 32*FRACUNIT + source->GetBobOffset(),
 		source, dest, type, true, owner);
 }
 
 AActor *P_SpawnMissileZ (AActor *source, fixed_t z, AActor *dest, const PClass *type)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	return P_SpawnMissileXYZ (source->x, source->y, z, source, dest, type);
 }
 
 AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z,
 	AActor *source, AActor *dest, const PClass *type, bool checkspawn, AActor *owner)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 
 	if (dest == NULL)
 	{
@@ -7310,8 +7316,10 @@ AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z,
 
 AActor * P_OldSpawnMissile(AActor * source, AActor * owner, AActor * dest, const PClass *type)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	angle_t an;
 	fixed_t dist;
 	AActor *th = Spawn (type, source->x, source->y, source->z + 4*8*FRACUNIT, ALLOW_REPLACE);
@@ -7353,8 +7361,10 @@ AActor * P_OldSpawnMissile(AActor * source, AActor * owner, AActor * dest, const
 AActor *P_SpawnMissileAngle (AActor *source, const PClass *type,
 	angle_t angle, fixed_t velz)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	return P_SpawnMissileAngleZSpeed (source, source->z + 32*FRACUNIT + source->GetBobOffset(),
 		type, angle, velz, GetDefaultSpeed (type));
 }
@@ -7362,16 +7372,16 @@ AActor *P_SpawnMissileAngle (AActor *source, const PClass *type,
 AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z,
 	const PClass *type, angle_t angle, fixed_t velz)
 {
-	if(!source)
-		return NULL;
 	return P_SpawnMissileAngleZSpeed (source, z, type, angle, velz,
 		GetDefaultSpeed (type));
 }
 
 AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, const PClass *type)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	angle_t an;
 	fixed_t dist;
 	fixed_t speed;
@@ -7402,8 +7412,10 @@ AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, const PCl
 AActor *P_SpawnMissileAngleSpeed (AActor *source, const PClass *type,
 	angle_t angle, fixed_t velz, fixed_t speed)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	return P_SpawnMissileAngleZSpeed (source, source->z + 32*FRACUNIT + source->GetBobOffset(),
 		type, angle, velz, speed);
 }
@@ -7411,11 +7423,13 @@ AActor *P_SpawnMissileAngleSpeed (AActor *source, const PClass *type,
 AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z,
 	const PClass *type, angle_t angle, fixed_t velz, fixed_t speed, AActor *owner, bool checkspawn)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	AActor *mo;
 
-	if (z != ONFLOORZ && z != ONCEILINGZ && source != NULL) 
+	if (z != ONFLOORZ && z != ONCEILINGZ) 
 	{
 		z -= source->floorclip;
 	}
@@ -7450,8 +7464,10 @@ AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z,
 
 AActor *P_SpawnPlayerMissile (AActor *source, const PClass *type)
 {
-	if(!source)
+	if (source == NULL)
+	{
 		return NULL;
+	}
 	return P_SpawnPlayerMissile (source, 0, 0, 0, type, source->angle);
 }
 

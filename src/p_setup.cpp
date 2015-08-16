@@ -3168,14 +3168,13 @@ void P_LoadBlockMap (MapData * map)
 	}
 }
 
-line_t**				linebuffer;
-
 //
 // P_GroupLines
 // Builds sector line lists and subsector sector numbers.
 // Finds block bounding boxes for sectors.
-// [RH] Handles extra lights.
+// [RH] Handles extra lights
 //
+line_t**				linebuffer;
 
 static void P_GroupLines (bool buildmap)
 {
