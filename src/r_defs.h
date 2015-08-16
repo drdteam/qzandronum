@@ -1169,7 +1169,7 @@ struct subsector_t
 	FPortalCoverage	portalcoverage[2];
 
 	// [BL] Constructor to init GZDoom data
-	subsector_t() : render_sector(NULL), hacked(0), lighthead(NULL) {}
+	subsector_t() : render_sector(NULL), lighthead(NULL), hacked(0) {}
 };
 
 
