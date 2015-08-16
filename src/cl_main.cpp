@@ -12146,7 +12146,7 @@ static void client_EarthQuake( BYTESTREAM_s *pByteStream )
 		return;
 
 	// Create the earthquake. Since this is client-side, damage is always 0.
-	new DEarthquake( pCenter, lIntensity, lDuration, 0, lTremorRadius, quakesound );
+	new DEarthquake( pCenter, lIntensity, lIntensity, 0, lDuration, 0, lTremorRadius, quakesound, 0 );
 }
 
 //*****************************************************************************

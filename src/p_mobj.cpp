@@ -3038,6 +3038,16 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 		}
 	}
 
+	// Hexen compatibility handling for floatbobbing. Ugh...
+	// Hexen yanked all items to the floor, except those being spawned at map start in the air.
+	// Those were kept at their original height.
+	// Do this only if the item was actually spawned by the map above ground to avoid problems.
+	if (mo->special1 > 0 && (mo->flags2 & MF2_FLOATBOB) && (ib_compatflags & BCOMPATF_FLOATBOB))
+	{
+		mo->z = mo->floorz + mo->special1;
+	}
+
+
 	// [W/BB] Apply the old ZDoom gravity here instead
 	if ((zacompatflags & ZACOMPATF_OLD_ZDOOM_ZMOVEMENT))
 		mo->z += mo->velz;
@@ -3476,8 +3486,6 @@ void P_NightmareRespawn (AActor *mobj)
 		z = ONCEILINGZ;
 	else if (info->flags2 & MF2_SPAWNFLOAT)
 		z = FLOATRANDZ;
-	else if (info->flags2 & MF2_FLOATBOB)
-		z = mobj->SpawnPoint[2];
 	else
 		z = ONFLOORZ;
 
@@ -6266,7 +6274,13 @@ AActor *P_SpawnMapThing (FMapThing *mthing, int position)
 	mobj = AActor::StaticSpawn (i, x, y, z, NO_REPLACE, true);
 
 	if (z == ONFLOORZ)
+	{
 		mobj->z += mthing->z;
+		if ((mobj->flags2 & MF2_FLOATBOB) && (ib_compatflags & BCOMPATF_FLOATBOB))
+		{
+			mobj->special1 = mthing->z;
+		}
+	}
 	else if (z == ONCEILINGZ)
 		mobj->z -= mthing->z;
 
@@ -6279,7 +6293,11 @@ AActor *P_SpawnMapThing (FMapThing *mthing, int position)
 	else if (mthing->gravity > 0) mobj->gravity = FixedMul(mobj->gravity, mthing->gravity);
 	else mobj->flags &= ~MF_NOGRAVITY;
 
-	P_FindFloorCeiling(mobj, FFCF_SAMESECTOR | FFCF_ONLY3DFLOORS | FFCF_3DRESTRICT);
+	// For Hexen floatbob 'compatibility' we do not really want to alter the floorz.
+	if (mobj->special1 == 0 || !(mobj->flags2 & MF2_FLOATBOB) || !(ib_compatflags & BCOMPATF_FLOATBOB))
+	{
+		P_FindFloorCeiling(mobj, FFCF_SAMESECTOR | FFCF_ONLY3DFLOORS | FFCF_3DRESTRICT);
+	}
 
 	if (!(mobj->flags2 & MF2_ARGSDEFINED))
 	{
