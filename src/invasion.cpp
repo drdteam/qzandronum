@@ -1449,7 +1449,7 @@ bool INVASION_IsMapThingInvasionSpot( const FMapThing *mthing )
 	if ( mthing == NULL )
 		return false;
 
-	const PClass *pType = DoomEdMap.CheckKey(mthing->type)->Type;
+	const PClass *pType = mthing->info->Type;
 	if ( pType )
 	{
 		pType = pType->ActorInfo->GetReplacement( )->Class;
