@@ -4026,7 +4026,7 @@ void SERVER_ErrorCleanup( void )
 	BOTS_RemoveAllBots( false );
 
 	// Reload the map.
-	sprintf( szString, "map %s", level.MapName );
+	sprintf( szString, "map %s", level.MapName.GetChars() );
 	AddCommandString( szString );
 }
 
