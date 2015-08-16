@@ -145,6 +145,7 @@ bool DTextEnterMenu::Responder(event_t *ev)
 				if (mEnterString[0])
 				{
 					// [TP] If we allow color codes, colorize the string now.
+					// [BB] ZA uses V_ColorizeString instead of strbin
 					if ( AllowColors )
 						V_ColorizeString( mEnterString );
 

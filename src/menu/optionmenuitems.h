@@ -31,6 +31,7 @@
 **---------------------------------------------------------------------------
 **
 */
+#include "v_text.h"
 
 
 void M_DrawConText (int color, int x, int y, const char *str);
@@ -978,12 +979,6 @@ public:
 	}
 };
 
-// -------------------------------------------------------------------------------------------------
-// [TP] Begin Zandronum-specific widgets
-//
-
-#include "team.h"
-#include "v_text.h"
 
 //=============================================================================
 //
@@ -1054,6 +1049,7 @@ public:
 		return false;
 	}
 
+	// [TP]
 	bool IsServerInfo()
 	{
 		return mCVar && mCVar->IsServerInfo();
@@ -1190,6 +1186,13 @@ private:
 	float mMaximum;
 	float mStep;
 };
+
+// -------------------------------------------------------------------------------------------------
+// [TP] Begin Zandronum-specific widgets
+//
+
+#include "team.h"
+#include "v_text.h"
 
 //=============================================================================
 //
