@@ -2082,14 +2082,14 @@ void FDynamicBuffer::SetData (const BYTE *data, int len)
 		m_BufferLen = (len + 255) & ~255;
 		m_Data = (BYTE *)M_Realloc (m_Data, m_BufferLen);
 	}
-	if (data)
+	if (data != NULL)
 	{
 		m_Len = len;
 		memcpy (m_Data, data, len);
 	}
 	else
 	{
-		len = 0;
+		m_Len = 0;
 	}
 }
 
@@ -2697,7 +2697,9 @@ void Net_SkipCommand (int type, BYTE **stream)
 		case DEM_SUMMONFOE2:
 			skip = strlen ((char *)(*stream)) + 26;
 			break;
-
+		case DEM_CHANGEMAP2:
+			skip = strlen((char *)(*stream + 1)) + 2;
+			break;
 		case DEM_MUSICCHANGE:
 		case DEM_PRINT:
 		case DEM_CENTERPRINT:

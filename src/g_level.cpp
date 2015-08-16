@@ -430,7 +430,6 @@ static void InitPlayerClasses ()
 
 void G_InitNew (const char *mapname, bool bTitleLevel)
 {
-	EGameSpeed oldSpeed;
 	bool wantFast;
 	int i;
 
@@ -549,7 +548,6 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 		I_Error ("Could not find map %s\n", mapname);
 	}
 
-	oldSpeed = GameSpeed;
 	wantFast = !!G_SkillProperty(SKILLP_FastMonsters);
 	GameSpeed = wantFast ? SPEED_Fast : SPEED_Normal;
 

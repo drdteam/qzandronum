@@ -690,41 +690,47 @@ bool P_TryWalk (AActor *actor)
 
 void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 {
-	dirtype_t	d[3];
+	dirtype_t	d[2];
 	int			tdir;
 	dirtype_t	olddir, turnaround;
+	bool		attempts[NUMDIRS-1]; // We don't need to attempt DI_NODIR.
 
+	memset(&attempts, false, sizeof(attempts));
 	olddir = (dirtype_t)actor->movedir;
 	turnaround = opposite[olddir];
 
 	if (deltax>10*FRACUNIT)
-		d[1]= DI_EAST;
+		d[0]= DI_EAST;
 	else if (deltax<-10*FRACUNIT)
-		d[1]= DI_WEST;
+		d[0]= DI_WEST;
+	else
+		d[0]=DI_NODIR;
+
+	if (deltay<-10*FRACUNIT)
+		d[1]= DI_SOUTH;
+	else if (deltay>10*FRACUNIT)
+		d[1]= DI_NORTH;
 	else
 		d[1]=DI_NODIR;
 
-	if (deltay<-10*FRACUNIT)
-		d[2]= DI_SOUTH;
-	else if (deltay>10*FRACUNIT)
-		d[2]= DI_NORTH;
-	else
-		d[2]=DI_NODIR;
-
 	// try direct route
-	if (d[1] != DI_NODIR && d[2] != DI_NODIR)
+	if (d[0] != DI_NODIR && d[1] != DI_NODIR)
 	{
 		actor->movedir = diags[((deltay<0)<<1) + (deltax>0)];
-		if (actor->movedir != turnaround && P_TryWalk(actor))
+		if (actor->movedir != turnaround)
 		{
-			// [BC] Set the thing's movement direction. Also, update the thing's
-			// position.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			attempts[actor->movedir] = true;
+			if (P_TryWalk(actor))
 			{
-				SERVERCOMMANDS_MoveThing( actor, CM_X|CM_Y|CM_Z|CM_MOVEDIR );
-			}
+				// [BC] Set the thing's movement direction. Also, update the thing's
+				// position.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					SERVERCOMMANDS_MoveThing( actor, CM_X|CM_Y|CM_Z|CM_MOVEDIR );
+				}
 
-			return;
+				return;
+			}
 		}
 	}
 
@@ -733,18 +739,19 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 	{
 		if ((pr_newchasedir() > 200 || abs(deltay) > abs(deltax)))
 		{
-			swapvalues (d[1], d[2]);
+			swapvalues (d[0], d[1]);
 		}
 
+		if (d[0] == turnaround)
+			d[0] = DI_NODIR;
 		if (d[1] == turnaround)
 			d[1] = DI_NODIR;
-		if (d[2] == turnaround)
-			d[2] = DI_NODIR;
 	}
 		
-	if (d[1] != DI_NODIR)
+	if (d[0] != DI_NODIR && attempts[d[0]] == false)
 	{
-		actor->movedir = d[1];
+		actor->movedir = d[0];
+		attempts[d[0]] = true;
 		if (P_TryWalk (actor))
 		{
 			// [BC] Set the thing's movement direction. Also, update the thing's
@@ -759,9 +766,10 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 		}
 	}
 
-	if (d[2] != DI_NODIR)
+	if (d[1] != DI_NODIR && attempts[d[1]] == false)
 	{
-		actor->movedir = d[2];
+		actor->movedir = d[1];
+		attempts[d[1]] = true;
 		if (P_TryWalk (actor))
 		{
 			// [BC] Set the thing's movement direction. Also, update the thing's
@@ -778,9 +786,10 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 	if (!(actor->flags5 & MF5_AVOIDINGDROPOFF))
 	{
 		// there is no direct path to the player, so pick another direction.
-		if (olddir != DI_NODIR)
+		if (olddir != DI_NODIR && attempts[olddir] == false)
 		{
 			actor->movedir = olddir;
+			attempts[olddir] = true;
 			if (P_TryWalk (actor))
 			{
 				// [BC] Set the thing's movement direction. Also, update the thing's
@@ -800,9 +809,10 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 	{
 		for (tdir = DI_EAST; tdir <= DI_SOUTHEAST; tdir++)
 		{
-			if (tdir != turnaround)
+			if (tdir != turnaround && attempts[tdir] == false)
 			{
 				actor->movedir = tdir;
+				attempts[tdir] = true;
 				if ( P_TryWalk(actor) )
 				{
 					// [BC] Set the thing's movement direction. Also, update the thing's
@@ -821,9 +831,10 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 	{
 		for (tdir = DI_SOUTHEAST; tdir != (DI_EAST-1); tdir--)
 		{
-			if (tdir != turnaround)
+			if (tdir != turnaround && attempts[tdir] == false)
 			{
 				actor->movedir = tdir;
+				attempts[tdir] = true;
 				if ( P_TryWalk(actor) )
 				{
 					// [BC] Set the thing's movement direction. Also, update the thing's
@@ -839,7 +850,7 @@ void P_DoNewChaseDir (AActor *actor, fixed_t deltax, fixed_t deltay)
 		}
 	}
 
-	if (turnaround != DI_NODIR)
+	if (turnaround != DI_NODIR && attempts[turnaround] == false)
 	{
 		actor->movedir =turnaround;
 		if ( P_TryWalk(actor) )
@@ -3203,7 +3214,7 @@ void A_Face (AActor *self, AActor *other, angle_t max_turn, angle_t max_pitch, a
 			target_z = other->z + (other->height / 2) + other->GetBobOffset();
 		if (flags & FAF_TOP)
 			target_z = other->z + (other->height) + other->GetBobOffset();
-		if (!flags & FAF_NODISTFACTOR)
+		if (!(flags & FAF_NODISTFACTOR))
 			target_z += pitch_offset;
 
 		double dist_z = target_z - source_z;

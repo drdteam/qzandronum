@@ -263,11 +263,10 @@ protected:
 public:
 	bool mEnabled;
 
-	FListMenuItem(int xpos = 0, int ypos = 0, FName action = NAME_None)
+	FListMenuItem(int xpos = 0, int ypos = 0, FName action = NAME_None):mAction(action)
 	{
 		mXpos = xpos;
 		mYpos = ypos;
-		mAction = action;
 		mEnabled = true;
 	}
 

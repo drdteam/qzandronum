@@ -961,10 +961,6 @@ void DPolyDoor::Tick ()
 			}
 
 			absSpeed = abs (m_Speed);
-			if (m_Dist == -1)
-			{ // perpetual polyobj
-				return;
-			}
 			m_Dist -= absSpeed;
 			if (m_Dist <= 0)
 			{
