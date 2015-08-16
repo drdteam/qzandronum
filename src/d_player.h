@@ -550,11 +550,17 @@ public:
 
 	FName		LastDamageType;			// [RH] For damage-specific pain and death sounds
 
+	TObjPtr<AActor> MUSINFOactor;		// For MUSINFO purposes
+	SBYTE		MUSINFOtics;
+
+	bool		settings_controller;	// Player can control game settings.
+	SBYTE		crouching;
+	SBYTE		crouchdir;
+
 	/* [BB] ST doesn't use this.
 	//Added by MC:
 	TObjPtr<DBot> Bot;
 	*/
-	bool		settings_controller;	// Player can control game settings.
 
 	float		BlendR;		// [RH] Final blending values
 	float		BlendG;
@@ -566,8 +572,6 @@ public:
 	int			MinPitch;	// Viewpitch limits (negative is up, positive is down)
 	int			MaxPitch;
 
-	SBYTE	crouching;
-	SBYTE	crouchdir;
 	fixed_t crouchfactor;
 	fixed_t crouchoffset;
 	fixed_t crouchviewdelta;

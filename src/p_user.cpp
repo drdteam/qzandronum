@@ -341,6 +341,8 @@ player_t::player_t()
   ConversationPC(0),
   ConversationNPCAngle(0),
   ConversationFaceTalker(0),
+  MUSINFOactor(0),
+  MUSINFOtics(-1),
   // [BC] Initialize ST's additional properties.
   bOnTeam( 0 ),
   ulTeam( 0 ),
@@ -482,6 +484,8 @@ player_t &player_t::operator=(const player_t &p)
 	ConversationPC = p.ConversationPC;
 	ConversationNPCAngle = p.ConversationNPCAngle;
 	ConversationFaceTalker = p.ConversationFaceTalker;
+	MUSINFOactor = p.MUSINFOactor;
+	MUSINFOtics = p.MUSINFOtics;
 
 	// [BB] Zandronum additions
 	bOnTeam = p.bOnTeam;
@@ -568,6 +572,7 @@ size_t player_t::FixPointers (const DObject *old, DObject *rep)
 	if (*&PremorphWeapon == old)	PremorphWeapon = static_cast<AWeapon *>(rep), changed++;
 	if (*&ConversationNPC == old)	ConversationNPC = replacement, changed++;
 	if (*&ConversationPC == old)	ConversationPC = replacement, changed++;
+	if (*&MUSINFOactor == old)		MUSINFOactor = replacement, changed++;
 	// [BC]
 	if ( pIcon == old )		pIcon = static_cast<AFloatyIcon *>( rep ), changed++;
 	if ( OldPendingWeapon == old )		OldPendingWeapon = static_cast<AWeapon *>( rep ), changed++;
@@ -587,6 +592,7 @@ size_t player_t::PropagateMark()
 	GC::Mark(ReadyWeapon);
 	GC::Mark(ConversationNPC);
 	GC::Mark(ConversationPC);
+	GC::Mark(MUSINFOactor);
 	GC::Mark(PremorphWeapon);
 	if (PendingWeapon != WP_NOCHANGE)
 	{
@@ -3544,6 +3550,30 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 
 	player->crouchoffset = -FixedMul(player->mo->ViewHeight, (FRACUNIT - player->crouchfactor));
 
+	// MUSINFO stuff
+	if (player->MUSINFOtics >= 0 && player->MUSINFOactor != NULL)
+	{
+		if (--player->MUSINFOtics < 0)
+		{
+			if (player - players == consoleplayer)
+			{
+				if (player->MUSINFOactor->args[0] != 0)
+				{
+					FName *music = level.info->MusicMap.CheckKey(player->MUSINFOactor->args[0]);
+
+					if (music != NULL)
+					{
+						S_ChangeMusic(music->GetChars(), player->MUSINFOactor->args[1]);
+					}
+				}
+				else
+				{
+					S_ChangeMusic("*");
+				}
+			}
+			DPrintf("MUSINFO change for player %d to %d\n", (int)(player - players), player->MUSINFOactor->args[0]);
+		}
+	}
 
 	if (player->playerstate == PST_DEAD)
 	{
@@ -4355,6 +4385,10 @@ void player_t::Serialize (FArchive &arc)
 	if (skinname.IsNotEmpty())
 	{
 		userinfo.SkinChanged(skinname, CurrentPlayerClass);
+	}
+	if (SaveVersion >= 4522)
+	{
+		arc << MUSINFOactor << MUSINFOtics;
 	}
 }
 

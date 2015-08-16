@@ -91,7 +91,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_CStaffCheck)
 							SERVERCOMMANDS_SetPlayerHealth( ULONG( player - players ));
 					}
 					}
-					P_SetPsprite (player, ps_weapon, weapon->FindState ("Drain"));
+					if (weapon != NULL)
+					{
+						FState * newstate = weapon->FindState("Drain");
+						if (newstate != NULL) P_SetPsprite(player, ps_weapon, newstate);
+					}
 				}
 				if (weapon != NULL)
 				{
