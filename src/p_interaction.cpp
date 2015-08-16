@@ -1034,10 +1034,7 @@ static int UseHealthItems(TArray<AInventory *> &Items, int &saveHealth)
 
 			if (--Items[index]->Amount == 0)
 			{
-				if (!(Items[index]->ItemFlags & IF_KEEPDEPLETED))
-				{
-					Items[index]->Destroy ();
-				}
+				Items[index]->DepleteOrDestroy ();
 				Items.Delete(index);
 				break;
 			}

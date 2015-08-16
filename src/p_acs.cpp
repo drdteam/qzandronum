@@ -1195,48 +1195,6 @@ static void GiveInventory (AActor *activator, const char *type, int amount)
 
 //============================================================================
 //
-// DoTakeInv
-//
-// Takes an item from a single actor.
-//
-//============================================================================
-
-static void DoTakeInv (AActor *actor, const PClass *info, int amount)
-{
-	AInventory *item = actor->FindInventory (info);
-	if (item != NULL)
-	{
-		// [BB] Save the original amount.
-		const int oldAmount = item->Amount;
-
-		item->Amount -= amount;
-		// [BC] If we're the server, tell clients to take the item away.
-		// [BB] We may not pass a negative amount to SERVERCOMMANDS_TakeInventory.
-		// [BB] Also only inform the client if it had actually had something that could be taken.
-		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( actor->player ) && ( ( oldAmount > 0 ) || ( amount < 0 ) ) )
-			SERVERCOMMANDS_TakeInventory( actor->player - players, item->GetClass( )->TypeName.GetChars( ), MAX ( 0, item->Amount ) );
-		if (item->Amount <= 0)
-		{
-			// If it's not ammo or an internal armor, destroy it.
-			// Ammo needs to stick around, even when it's zero for the benefit
-			// of the weapons that use it and to maintain the maximum ammo
-			// amounts a backpack might have given.
-			// Armor shouldn't be removed because they only work properly when
-			// they are the last items in the inventory.
-			if (item->ItemFlags & IF_KEEPDEPLETED)
-			{
-				item->Amount = 0;
-			}
-			else
-			{
-				item->Destroy ();
-			}
-		}
-	}
-}
-
-//============================================================================
-//
 // TakeInventory
 //
 // Takes an item from one or more actors.
@@ -1269,12 +1227,12 @@ static void TakeInventory (AActor *activator, const char *type, int amount)
 		for (int i = 0; i < MAXPLAYERS; ++i)
 		{
 			if (playeringame[i])
-				DoTakeInv (players[i].mo, info, amount);
+				players[i].mo->TakeInventory(info, amount, false, false, true); // [BB] Inform clients
 		}
 	}
 	else
 	{
-		DoTakeInv (activator, info, amount);
+		activator->TakeInventory(info, amount, false, false, true); // [BB] Inform clients
 	}
 }
 
@@ -2537,8 +2495,8 @@ void FBehavior::LoadScriptsDirectory ()
 	}
 
 // [EP] Clang 3.5.0 optimizer miscompiles this function and causes random
-// crashes in the program. I hope that Clang 3.5.x will fix this.
-#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ >= 5
+// crashes in the program. This is fixed in 3.5.1 onwards.
+#if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ == 5 && __clang_patchlevel__ == 0
 	asm("" : "+g" (NumScripts));
 #endif
 	for (i = 0; i < NumScripts; ++i)
@@ -5336,8 +5294,8 @@ static void SetActorTeleFog(AActor *activator, int tid, FString telefogsrc, FStr
 		FActorIterator iterator(tid);
 		AActor *actor;
 
-		const PClass * const src = telefogsrc.IsNotEmpty() ? PClass::FindClass(telefogsrc) : NULL;
-		const PClass * const dest = telefogdest.IsNotEmpty() ? PClass::FindClass(telefogdest) : NULL;
+		const PClass *src = PClass::FindClass(telefogsrc);
+		const PClass * dest = PClass::FindClass(telefogdest);
 		while ((actor = iterator.Next()))
 		{
 			if (telefogsrc.IsNotEmpty())

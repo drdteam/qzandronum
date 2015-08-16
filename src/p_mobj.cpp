@@ -836,6 +836,84 @@ void AActor::RemoveInventory(AInventory *item)
 
 //============================================================================
 //
+// AActor :: TakeInventory
+//
+//============================================================================
+
+// [BB] Added bNeedClientUpdate.
+bool AActor::TakeInventory(const PClass *itemclass, int amount, bool fromdecorate, bool notakeinfinite, bool bNeedClientUpdate)
+{
+	AInventory *item = FindInventory(itemclass);
+
+	if (item == NULL)
+		return false;
+
+	if (!fromdecorate)
+	{
+		item->Amount -= amount;
+		if (item->Amount <= 0)
+		{
+			item->DepleteOrDestroy();
+		}
+		// It won't be used in non-decorate context, so return false here
+		return false;
+	}
+
+	bool result = false;
+	if (item->Amount > 0)
+	{
+		result = true;
+	}
+
+	if (item->IsKindOf(RUNTIME_CLASS(AHexenArmor)))
+		return false;
+
+	// Do not take ammo if the "no take infinite/take as ammo depletion" flag is set
+	// and infinite ammo is on
+	if (notakeinfinite &&
+	((dmflags & DF_INFINITE_AMMO) || (player && player->cheats & CF_INFINITEAMMO)) &&
+		item->IsKindOf(RUNTIME_CLASS(AAmmo)))
+	{
+		// Nothing to do here, except maybe res = false;? Would it make sense?
+	}
+	else if (!amount || amount>=item->Amount)
+	{
+		// [BC] Take the player's inventory.
+		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
+			( bNeedClientUpdate ) &&
+			( item->Owner ) &&
+			( item->Owner->player ))
+		{
+			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( )->TypeName.GetChars( ), 0 );
+		}
+
+		item->DepleteOrDestroy();
+	}
+	else
+	{
+		// [BB] Save the original amount.
+		const int oldAmount = item->Amount;
+
+		item->Amount-=amount;
+
+		// [BC] If we're the server, tell clients to take the item away.
+		// [BB] We may not pass a negative amount to SERVERCOMMANDS_TakeInventory.
+		// [BB] Also only inform the client if it had actually had something that could be taken.
+		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
+			( bNeedClientUpdate ) &&
+			( item->Owner ) &&
+			( item->Owner->player ) && ( ( oldAmount > 0 ) || ( amount < 0 ) ))
+		{
+			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( )->TypeName.GetChars( ), MAX ( 0, item->Amount ) );
+		}
+	}
+
+	return result;
+}
+
+
+//============================================================================
+//
 // AActor :: DestroyAllInventory
 //
 //============================================================================
@@ -915,9 +993,9 @@ bool AActor::UseInventory (AInventory *item)
 	if (dmflags2 & DF2_INFINITE_INVENTORY)
 		return true;
 
-	if (--item->Amount <= 0 && !(item->ItemFlags & IF_KEEPDEPLETED))
+	if (--item->Amount <= 0)
 	{
-		item->Destroy ();
+		item->DepleteOrDestroy ();
 	}
 	return true;
 }

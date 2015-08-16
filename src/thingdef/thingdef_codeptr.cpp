@@ -2305,51 +2305,8 @@ void DoTakeInventory(AActor * receiver, bool use_aaptr, DECLARE_PARAMINFO)
 		COPY_AAPTR_NOT_NULL(receiver, receiver, setreceiver);
 	}
 
-	bool res = false;
-
-	AInventory * inv = receiver->FindInventory(item);
-
-	if (inv && !inv->IsKindOf(RUNTIME_CLASS(AHexenArmor)))
-	{
-		if (inv->Amount > 0)
-		{
-			res = true;
-		}
-		// Do not take ammo if the "no take infinite/take as ammo depletion" flag is set
-		// and infinite ammo is on
-		if (flags & TIF_NOTAKEINFINITE &&
-			((dmflags & DF_INFINITE_AMMO) || (receiver->player->cheats & CF_INFINITEAMMO)) &&
-			inv->IsKindOf(RUNTIME_CLASS(AAmmo)))
-		{
-			// Nothing to do here, except maybe res = false;? Would it make sense?
-		}
-		else if (!amount || amount>=inv->Amount) 
-		{
-			// [BC] Take the player's inventory.
-			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-				( bNeedClientUpdate ) &&
-				( inv->Owner ) &&
-				( inv->Owner->player ))
-			{
-				SERVERCOMMANDS_TakeInventory( inv->Owner->player - players, inv->GetClass( )->TypeName.GetChars( ), 0 );
-			}
-			if (inv->ItemFlags&IF_KEEPDEPLETED) inv->Amount=0;
-			else inv->Destroy();
-		}
-		else
-		{
-			inv->Amount-=amount;
-
-			// [BC] Take the player's inventory.
-			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-				( bNeedClientUpdate ) &&
-				( inv->Owner ) &&
-				( inv->Owner->player ))
-			{
-				SERVERCOMMANDS_TakeInventory( inv->Owner->player - players, inv->GetClass( )->TypeName.GetChars( ), inv->Amount );
-			}
-		}
-	}
+	// [BB] Added bNeedClientUpdate
+	bool res = receiver->TakeInventory(item, amount, true, (flags & TIF_NOTAKEINFINITE) != 0, bNeedClientUpdate);
 	ACTION_SET_RESULT(res);
 }
 
