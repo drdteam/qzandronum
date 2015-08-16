@@ -2749,26 +2749,31 @@ CCMD(listmaps)
 // [CK] Lists all the music loaded in the wad
 CCMD( listmusic )
 {
-	std::set<FString> musicNames;
+	// [BB] Since ZDoom disabled all comparison operators on FString, neither
+	// std::set<FString> nor std::set<std::string> work. So I'll use
+	// a TArray for now and live with the fact that duplicate music names
+	// are nor dropped automatically for now.
+	TArray<FString> musicNames;
 
 	for ( unsigned int i = 0; i < wadlevelinfos.Size(); i++ )
 	{
 		level_info_t *info = &wadlevelinfos[i];
 		if ( info != NULL )
 		{
-			musicNames.insert( info->Music );
+			musicNames.Push( info->Music );
 		}
 	}
 	
-	if ( musicNames.size() <= 0 )
+	if ( musicNames.Size() <= 0 )
 	{
 		Printf( "No music lumps loaded." );
 		return;
 	}
 
 	Printf( "Loaded music:\n" );
-	for ( std::set<FString>::iterator it = musicNames.begin(); it != musicNames.end(); it++ )
+	for ( unsigned int i = 0; i < musicNames.Size(); ++i )
 	{
+		const FString *it = &(musicNames[i]);
 		if ( it->Len() <= 0)
 			continue;
 		

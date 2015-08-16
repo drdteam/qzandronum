@@ -2420,6 +2420,7 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 					{
 						//int dir;
 						//angle_t delta;
+						angle = R_PointToAngle2(BlockingMobj->x, BlockingMobj->y, mo->x, mo->y);
 						bool dontReflect = (mo->AdjustReflectionAngle(BlockingMobj, angle));
 						// Change angle for deflection/reflection
 
@@ -2439,18 +2440,13 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 								//dest->x - source->x
 								FVector3 velocity(origin->x - mo->x, origin->y - mo->y, (origin->z + (origin->height/2)) - mo->z);
 								velocity.Resize(speed);
-								angle = mo->angle >> ANGLETOFINESHIFT;
 								mo->velx = (fixed_t)(velocity.X);
 								mo->vely = (fixed_t)(velocity.Y);
 								mo->velz = (fixed_t)(velocity.Z);
-								/*
-								mo->velx = FixedMul(mo->Speed, finecosine[angle]);
-								mo->vely = FixedMul(mo->Speed, finesine[angle]);
-								mo->velz = -mo->velz;
-								*/
 							}
 							else
 							{
+								
 								mo->angle = angle;
 								angle >>= ANGLETOFINESHIFT;
 								mo->velx = FixedMul(mo->Speed >> 1, finecosine[angle]);
@@ -6396,6 +6392,13 @@ AActor *P_SpawnPuff (AActor *source, const PClass *pufftype, fixed_t x, fixed_t 
 
 	puff = Spawn (pufftype, x, y, z, ALLOW_REPLACE);
 	if (puff == NULL) return NULL;
+
+	if ((puff->flags4 & MF4_RANDOMIZE) && puff->tics > 0)
+	{
+		puff->tics -= pr_spawnpuff() & 3;
+		if (puff->tics < 1)
+			puff->tics = 1;
+	}
 
 	// [CK] The puff has been made if we're a client, so any client prediction 
 	// of puffs is done, meaning we can exit now.
