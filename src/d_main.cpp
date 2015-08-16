@@ -2069,7 +2069,7 @@ static const char *BaseFileSearch (const char *file, const char *ext, bool lookf
 		return wad;
 	}
 
-	if (GameConfig->SetSection ("FileSearch.Directories"))
+	if (GameConfig != NULL && GameConfig->SetSection ("FileSearch.Directories"))
 	{
 		const char *key;
 		const char *value;
@@ -2420,10 +2420,6 @@ static void D_DoomInit()
 	CALLVOTE_Construct( );
 
 	FRandom::StaticClearRandom ();
-
-	Printf ("M_LoadDefaults: Load system defaults.\n");
-	M_LoadDefaults ();			// load before initing other systems
-
 }
 
 //==========================================================================
@@ -2432,10 +2428,9 @@ static void D_DoomInit()
 //
 //==========================================================================
 
-static void AddAutoloadFiles(const char *group, const char *autoname)
+static void AddAutoloadFiles(const char *autoname)
 {
-	LumpFilterGroup = group;
-	LumpFilterIWAD = autoname;
+	LumpFilterIWAD.Format("%s.", autoname);	// The '.' is appened to simplify parsing the string 
 
 	if (!(gameinfo.flags & GI_SHAREWARE) && !Args->CheckParm("-noautoload"))
 	{
@@ -2463,25 +2458,14 @@ static void AddAutoloadFiles(const char *group, const char *autoname)
 		// Add common (global) wads
 		D_AddConfigWads (allwads, "Global.Autoload");
 
-		// Add game-specific wads
-		file = gameinfo.ConfigName;
-		file += ".Autoload";
-		D_AddConfigWads (allwads, file);
+		long len;
+		int lastpos = -1;
 
-		// Add group-specific wads
-		if (group != NULL)
+		while ((len = LumpFilterIWAD.IndexOf('.', lastpos+1)) > 0)
 		{
-			file = group;
-			file += ".Autoload";
+			file = LumpFilterIWAD.Left(len) + ".Autoload";
 			D_AddConfigWads(allwads, file);
-		}
-
-		// Add IWAD-specific wads
-		if (autoname != NULL)
-		{
-			file = autoname;
-			file += ".Autoload";
-			D_AddConfigWads(allwads, file);
+			lastpos = len;
 		}
 	}
 }
@@ -2712,7 +2696,8 @@ void D_DoomMain (void)
 	DArgs *execFiles;
 	TArray<FString> pwads;
 	FString *args;
-	int argcount;
+	int argcount;	
+	FIWadManager *iwad_man;
 
 	// +logfile gets checked too late to catch the full startup log in the logfile so do some extra check for it here.
   /* [BB] Zandronum uses some cvars to configure the logfile, these are not loaded yet.
@@ -2744,8 +2729,6 @@ void D_DoomMain (void)
 	}
 
 	D_DoomInit();
-	PClass::StaticInit ();
-	atterm(FinalGC);
 
 	// [RH] Make sure zdoom.pk3 is always loaded,
 	// as it contains magic stuff we need.
@@ -2757,6 +2740,14 @@ void D_DoomMain (void)
 	}
 	FString basewad = wad;
 
+	iwad_man = new FIWadManager;
+	iwad_man->ParseIWadInfos(basewad);
+
+	Printf ("M_LoadDefaults: Load system defaults.\n");
+	M_LoadDefaults (iwad_man);			// load before initing other systems
+
+	PClass::StaticInit ();
+	atterm(FinalGC);
 
 	// reinit from here
 
@@ -2779,7 +2770,11 @@ void D_DoomMain (void)
 		// restart is initiated without a defined IWAD assume for now that it's not going to change.
 		if (iwad.IsEmpty()) iwad = lastIWAD;
 
-		FIWadManager *iwad_man = new FIWadManager;
+		if (iwad_man == NULL)
+		{
+			iwad_man = new FIWadManager;
+			iwad_man->ParseIWadInfos(basewad);
+		}
 		const FIWADInfo *iwad_info = iwad_man->FindIWAD(allwads, iwad, basewad);
 		gameinfo.gametype = iwad_info->gametype;
 		gameinfo.flags = iwad_info->flags;
@@ -2794,7 +2789,7 @@ void D_DoomMain (void)
 		FBaseCVar::DisableCallbacks();
 		GameConfig->DoGameSetup (gameinfo.ConfigName);
 
-		AddAutoloadFiles(iwad_info->Group, iwad_info->Autoname);
+		AddAutoloadFiles(iwad_info->Autoname);
 
 		// Run automatically executed files
 		execFiles = new DArgs;
@@ -2824,6 +2819,8 @@ void D_DoomMain (void)
 		allwads.Clear();
 		allwads.ShrinkToFit();
 		SetMapxxFlag();
+
+		GameConfig->DoKeySetup(gameinfo.ConfigName);
 
 		// Now that wads are loaded, define mod-specific cvars.
 		ParseCVarInfo();
@@ -3081,6 +3078,7 @@ void D_DoomMain (void)
 		FBaseCVar::EnableNoSet ();
 
 		delete iwad_man;	// now we won't need this anymore
+		iwad_man = NULL;
 
 		// [RH] Run any saved commands from the command line or autoexec.cfg now.
 		gamestate = GS_FULLCONSOLE;

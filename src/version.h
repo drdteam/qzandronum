@@ -85,7 +85,7 @@ unsigned int GetRevisionNumber();
 // Version stored in the ini's [LastRun] section.
 // Bump it if you made some configuration change that you want to
 // be able to migrate in FGameConfigFile::DoGlobalSetup().
-#define LASTRUNVERSION "210"
+#define LASTRUNVERSION "211"
 
 // [TP] Same as above except for Zandronum-specific changes
 #define LASTZARUNVERSION "181"

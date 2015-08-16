@@ -27,7 +27,7 @@
 
 struct ticcmd_t;
 struct WadStuff;
-struct FIWadManager; // [BB] For NoIWADsScreen
+class FIWadManager; // [BB] For NoIWADsScreen
 
 // Index values into the LanguageIDs array
 enum

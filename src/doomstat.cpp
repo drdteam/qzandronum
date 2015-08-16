@@ -79,4 +79,4 @@ int SinglePlayerClass[MAXPLAYERS];
 bool ToggleFullscreen;
 int BorderTopRefresh;
 
-FString LumpFilterGroup, LumpFilterIWAD;
+FString LumpFilterIWAD;
