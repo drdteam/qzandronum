@@ -8750,8 +8750,8 @@ static void client_WeaponChange( BYTESTREAM_s *pByteStream )
 static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 {
 	LONG		lID;
-	FVector3	Start;
-	FVector3	End;
+	TVector3<double>	Start;
+	TVector3<double>	End;
 	LONG		lColor1;
 	LONG		lColor2;
 	float		fMaxDiff;

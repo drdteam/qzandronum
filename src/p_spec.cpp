@@ -865,12 +865,6 @@ void P_GiveSecret(AActor *actor, bool printmessage, bool playsound, int sectornu
 
 void P_PlayerOnSpecialFlat (player_t *player, int floorType)
 {
-	if (player->mo->z > player->mo->Sector->floorplane.ZatPoint (
-		player->mo->x, player->mo->y) &&
-		!player->mo->waterlevel)
-	{ // Player is not touching the floor
-		return;
-	}
 	if (Terrains[floorType].DamageAmount &&
 		!(level.time & Terrains[floorType].DamageTimeMask))
 	{
@@ -885,14 +879,15 @@ void P_PlayerOnSpecialFlat (player_t *player, int floorType)
 			}
 		}
 
+		int damage = 0;
 		// [Dusk] Don't apply TERRAIN damage on our own if we're the
 		// client. The server will tell us when we get hurt.
 		if (ironfeet == NULL && ( NETWORK_InClientMode() == false ) )
 		{
-			P_DamageMobj (player->mo, NULL, NULL, Terrains[floorType].DamageAmount,
+			damage = P_DamageMobj (player->mo, NULL, NULL, Terrains[floorType].DamageAmount,
 				Terrains[floorType].DamageMOD);
 		}
-		if (Terrains[floorType].Splash != -1)
+		if (damage > 0 && Terrains[floorType].Splash != -1)
 		{
 			S_Sound (player->mo, CHAN_AUTO,
 				Splashes[Terrains[floorType].Splash].NormalSplashSound, 1,

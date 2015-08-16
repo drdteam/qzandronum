@@ -2849,7 +2849,7 @@ void SERVERCOMMANDS_WeaponChange( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCom
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_WeaponRailgun( AActor *pSource, const FVector3 &Start, const FVector3 &End, LONG lColor1, LONG lColor2, float fMaxDiff, bool bSilent, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_WeaponRailgun( AActor *pSource, const TVector3<double> &Start, const TVector3<double> &End, LONG lColor1, LONG lColor2, float fMaxDiff, bool bSilent, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	// Evidently, to draw a railgun trail, there must be a source actor.
 	if ( !EnsureActorHasNetID (pSource) )

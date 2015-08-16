@@ -1951,8 +1951,6 @@ void AM_drawSubsectors()
 		scalex = sec->GetXScale(sector_t::floor);
 		scaley = sec->GetYScale(sector_t::floor);
 
-#ifdef _3DFLOORS
-
 		if (sec->e->XFloor.ffloors.Size())
 		{
 			secplane_t *floorplane = &sec->floorplane;
@@ -2013,7 +2011,6 @@ void AM_drawSubsectors()
 			floorlight = *light->p_lightlevel;
 			colormap = light->extra_colormap;
 		}
-#endif
 		if (maptex == skyflatnum)
 		{
 			continue;
@@ -2169,8 +2166,6 @@ void AM_showSS()
 	}
 }
 
-#ifdef _3DFLOORS
-
 //=============================================================================
 //
 // Determines if a 3D floor boundary should be drawn
@@ -2230,7 +2225,6 @@ bool AM_Check3DFloors(line_t *line)
 	// All 3D floors could be matched so let's not draw a boundary.
 	return false;
 }
-#endif
 
 //=============================================================================
 //
@@ -2361,12 +2355,10 @@ void AM_drawWalls (bool allmap)
 			{
 				AM_drawMline(&l, AMColors.CDWallColor); // ceiling level change
 			}
-#ifdef _3DFLOORS
 			else if (AM_Check3DFloors(&lines[i]))
 			{
 				AM_drawMline(&l, AMColors.EFWallColor); // Extra floor border
 			}
-#endif
 			else if (am_cheat > 0 && am_cheat < 4)
 			{
 				AM_drawMline(&l, AMColors.TSWallColor);

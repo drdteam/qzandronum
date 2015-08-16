@@ -226,7 +226,7 @@ void	SERVERCOMMANDS_MissileExplode( AActor *pMissile, line_t *pLine, ULONG ulPla
 // Weapon commands. These handle firing weapons, weapon changes, etc.
 void	SERVERCOMMANDS_WeaponSound( ULONG ulPlayer, const char *pszSound, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_WeaponChange( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
-void	SERVERCOMMANDS_WeaponRailgun( AActor *pSource, const FVector3 &Start, const FVector3 &End, LONG lColor1, LONG lColor2, float fMaxDiff, bool bSilent, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_WeaponRailgun( AActor *pSource, const TVector3<double> &Start, const TVector3<double> &End, LONG lColor1, LONG lColor2, float fMaxDiff, bool bSilent, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 
 // Sector commands. These manipulate some property of sectors.
 void	SERVERCOMMANDS_SetSectorFloorPlane( ULONG ulSector, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
