@@ -1375,6 +1375,9 @@ void G_DoLoadLevel (int position, bool autosave)
 	if (level.flags2 & LEVEL2_FORCETEAMPLAYOFF)
 		teamplay = false;
 
+	FString mapname = level.MapName;
+	mapname.ToLower();
+
 	// [Dusk] Clear keys found
 	g_keysFound.Clear();
 
@@ -1393,7 +1396,7 @@ void G_DoLoadLevel (int position, bool autosave)
 				"\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36"
 				"\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n"
 				TEXTCOLOR_BOLD "%s - %s\n\n",
-				level.MapName.GetChars(), level.LevelName.GetChars());
+				mapname.GetChars(), level.LevelName.GetChars());
 		
 		// [RC] Update the G15 display.
 		G15_NextLevel( level.MapName, level.LevelName.GetChars() );

@@ -1347,14 +1347,14 @@ void G_Ticker ()
 		{
 			if (playeringame[i])
 			{
-				if ((players[i].playerstate == PST_GONE))
+				if (players[i].playerstate == PST_GONE)
 				{
 					G_DoPlayerPop(i);
 				}
 				// [BC] PST_REBORNNOINVENTORY, PST_ENTERNOINVENTORY
-				if ((players[i].playerstate == PST_REBORN || players[i].playerstate == PST_ENTER
+				if (players[i].playerstate == PST_REBORN || players[i].playerstate == PST_ENTER
 					|| players[i].playerstate == PST_REBORNNOINVENTORY
-					|| players[i].playerstate == PST_ENTERNOINVENTORY))
+					|| players[i].playerstate == PST_ENTERNOINVENTORY)
 				{
 					G_DoReborn(i, false);
 				}
@@ -4516,10 +4516,36 @@ void G_SaveGame (const char *filename, const char *description)
 		Printf ("A game save is still pending.\n");
 		return;
 	}
-	savegamefile = filename;
-	strncpy (savedescription, description, sizeof(savedescription)-1);
-	savedescription[sizeof(savedescription)-1] = '\0';
-	sendsave = true;
+    else if (!usergame)
+	{
+        Printf ("not in a saveable game\n");
+    }
+    else if (gamestate != GS_LEVEL)
+	{
+        Printf ("not in a level\n");
+    }
+	// [BB] !multiplayer -> ( NETWORK_GetState( ) == NETSTATE_SINGLE )
+    else if (players[consoleplayer].health <= 0 && ( NETWORK_GetState( ) == NETSTATE_SINGLE ))
+    {
+        Printf ("player is dead in a single-player game\n");
+    }
+	// [BB] No saving in multiplayer.
+	else if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		Printf ("You cannot save the game in multiplayer.\n");
+	}
+	// [BB] Saving bots is not supported yet.
+	else if ( BOTS_CountBots() > 0 )
+	{
+		Printf ("You cannot save the game while bots are in use.\n");
+	}
+	else
+	{
+		savegamefile = filename;
+		strncpy (savedescription, description, sizeof(savedescription)-1);
+		savedescription[sizeof(savedescription)-1] = '\0';
+		sendsave = true;
+	}
 }
 
 FString G_BuildSaveName (const char *prefix, int slot)
@@ -4671,7 +4697,7 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 
 	// Do not even try, if we're not in a level. (Can happen after
 	// a demo finishes playback.)
-	if (lines == NULL || sectors == NULL)
+	if (lines == NULL || sectors == NULL || gamestate != GS_LEVEL)
 	{
 		return;
 	}
