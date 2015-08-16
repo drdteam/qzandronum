@@ -949,7 +949,7 @@ void DPolyDoor::Tick ()
 		break;
 
 	case PODOOR_SWING:
-		if (poly->RotatePolyobj (m_Speed))
+		if (m_Dist <= 0 || poly->RotatePolyobj (m_Speed))
 		{
 
 			// [WS] Inform clients that the door is closing.
