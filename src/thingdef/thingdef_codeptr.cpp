@@ -82,6 +82,8 @@
 #include "unlagged.h"
 #include "d_netinf.h"
 
+AActor *SingleActorFromTID (int tid, AActor *defactor);
+
 static FRandom pr_camissile ("CustomActorfire");
 static FRandom pr_camelee ("CustomMelee");
 static FRandom pr_cabullet ("CustomBullet");
@@ -2379,6 +2381,9 @@ enum SIX_Flags
 	SIXF_ORIGINATOR				= 0x00800000,
 	SIXF_TRANSFERSPRITEFRAME	= 0x01000000,
 	SIXF_TRANSFERROLL			= 0x02000000,
+	SIXF_ISTARGET				= 0x04000000,
+	SIXF_ISMASTER				= 0x08000000,
+	SIXF_ISTRACER				= 0x10000000,
 };
 
 // [BB] Changed return value to bool (returns false if the actor already was destroyed).
@@ -2542,6 +2547,18 @@ static bool InitSpawnedItem(AActor *self, AActor *mo, int flags)
 		mo->roll = self->roll;
 	}
 
+	if (flags & SIXF_ISTARGET)
+	{
+		self->target = mo;
+	}
+	if (flags & SIXF_ISMASTER)
+	{
+		self->master = mo;
+	}
+	if (flags & SIXF_ISTRACER)
+	{
+		self->tracer = mo;
+	}
 	return true;
 }
 
@@ -3716,6 +3733,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Respawn)
 	fixed_t oldz = self->z;
 	self->flags |= MF_SOLID;
 	self->height = self->GetDefault()->height;
+	self->radius = self->GetDefault()->radius;
 	CALL_ACTION(A_RestoreSpecialPosition, self);
 
 	if (flags & RSF_TELEFRAG)

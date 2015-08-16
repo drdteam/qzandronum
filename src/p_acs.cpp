@@ -3998,7 +3998,7 @@ int DoGetMasterTID (AActor *self)
 	else return 0;
 }
 
-static AActor *SingleActorFromTID (int tid, AActor *defactor)
+AActor *SingleActorFromTID (int tid, AActor *defactor)
 {
 	if (tid == 0)
 	{
