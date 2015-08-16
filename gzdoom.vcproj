@@ -2153,6 +2153,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\g_doomedmap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\win32\hardware.cpp"
 				>
 			</File>

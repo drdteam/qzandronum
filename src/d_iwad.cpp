@@ -256,7 +256,7 @@ void FIWadManager::ParseIWadInfo(const char *fn, const char *data, int datasize)
 
 //==========================================================================
 //
-// Lool for IWAD definition lump
+// Look for IWAD definition lump
 //
 //==========================================================================
 
@@ -305,11 +305,11 @@ int FIWadManager::ScanIWAD (const char *iwad)
 			FResourceLump *lump = iwadfile->GetLump(ii);
 
 			CheckLumpName(lump->Name);
-			if (lump->FullName != NULL)
+			if (lump->FullName.IsNotEmpty())
 			{
 				if (strnicmp(lump->FullName, "maps/", 5) == 0)
 				{
-					FString mapname(lump->FullName+5, strcspn(lump->FullName+5, "."));
+					FString mapname(&lump->FullName[5], strcspn(&lump->FullName[5], "."));
 					CheckLumpName(mapname);
 				}
 			}

@@ -341,14 +341,9 @@ void FWadCollection::AddFile (const char *filename, FileReader *wadinfo, bool bL
 			FResourceLump *lump = resfile->GetLump(i);
 			if (lump->Flags & LUMPF_EMBEDDED)
 			{
-				char path[256];
-
-				mysnprintf(path, countof(path), "%s:", filename);
-				char *wadstr = path + strlen(path);
-
+				FString path;
+				path.Format("%s:%s", filename, lump->FullName.GetChars());
 				FileReader *embedded = lump->NewReader();
-				strcpy(wadstr, lump->FullName);
-
 				// [BB] We consider all embedded files as being loaded automatically.
 				AddFile(path, embedded, true, isOptional);
 			}
@@ -397,7 +392,9 @@ void FWadCollection::AddFile (const char *filename, FileReader *wadinfo, bool bL
 						sprintf(cksumout + (j * 2), "%02X", cksum[j]);
 					}
 
-					fprintf(hashfile, "file: %s, lump: %s, hash: %s, size: %d\n", filename, lump->FullName ? lump->FullName : lump->Name, cksumout, lump->LumpSize);
+					fprintf(hashfile, "file: %s, lump: %s, hash: %s, size: %d\n", filename,
+						lump->FullName.IsNotEmpty() ? lump->FullName.GetChars() : lump->Name,
+						cksumout, lump->LumpSize);
 
 					delete reader;
 				}
@@ -789,7 +786,7 @@ void FWadCollection::InitHashChains (void)
 		FirstLumpIndex[j] = i;
 
 		// Do the same for the full paths
-		if (LumpInfo[i].lump->FullName!=NULL)
+		if (LumpInfo[i].lump->FullName.IsNotEmpty())
 		{
 			j = MakeKey(LumpInfo[i].lump->FullName) % NumLumps;
 			NextLumpIndex_FullName[i] = FirstLumpIndex_FullName[j];
@@ -1140,7 +1137,7 @@ const char *FWadCollection::GetLumpFullName (int lump) const
 {
 	if ((size_t)lump >= NumLumps)
 		return NULL;
-	else if (LumpInfo[lump].lump->FullName != NULL)
+	else if (LumpInfo[lump].lump->FullName.IsNotEmpty())
 		return LumpInfo[lump].lump->FullName;
 	else
 		return LumpInfo[lump].lump->Name;
@@ -1766,5 +1763,35 @@ static void PrintLastError ()
 static void PrintLastError ()
 {
 	Printf (TEXTCOLOR_RED "  %s\n", strerror(errno));
+}
+#endif
+
+#ifdef _DEBUG
+//==========================================================================
+//
+// CCMD LumpNum
+//
+//==========================================================================
+
+CCMD(lumpnum)
+{
+	for (int i = 1; i < argv.argc(); ++i)
+	{
+		Printf("%s: %d\n", argv[i], Wads.CheckNumForName(argv[i]));
+	}
+}
+
+//==========================================================================
+//
+// CCMD LumpNumFull
+//
+//==========================================================================
+
+CCMD(lumpnumfull)
+{
+	for (int i = 1; i < argv.argc(); ++i)
+	{
+		Printf("%s: %d\n", argv[i], Wads.CheckNumForFullName(argv[i]));
+	}
 }
 #endif
