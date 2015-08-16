@@ -178,7 +178,7 @@ void gl_LoadExtensions()
 
 void gl_PrintStartupLog()
 {
-	int v;
+	int v = 0;
 	glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &v);
 
 	Printf ("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
