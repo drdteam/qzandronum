@@ -345,17 +345,14 @@ int GetUDMFInt(int type, int index, const char *key)
 {
 	assert(type >=0 && type <=3);
 
-	if (index > 0)
-	{
-		FUDMFKeys *pKeys = UDMFKeys[type].CheckKey(index);
+	FUDMFKeys *pKeys = UDMFKeys[type].CheckKey(index);
 
-		if (pKeys != NULL)
+	if (pKeys != NULL)
+	{
+		FUDMFKey *pKey = pKeys->Find(key);
+		if (pKey != NULL)
 		{
-			FUDMFKey *pKey = pKeys->Find(key);
-			if (pKey != NULL)
-			{
-				return pKey->IntVal;
-			}
+			return pKey->IntVal;
 		}
 	}
 	return 0;
@@ -365,17 +362,14 @@ fixed_t GetUDMFFixed(int type, int index, const char *key)
 {
 	assert(type >=0 && type <=3);
 
-	if (index > 0)
-	{
-		FUDMFKeys *pKeys = UDMFKeys[type].CheckKey(index);
+	FUDMFKeys *pKeys = UDMFKeys[type].CheckKey(index);
 
-		if (pKeys != NULL)
+	if (pKeys != NULL)
+	{
+		FUDMFKey *pKey = pKeys->Find(key);
+		if (pKey != NULL)
 		{
-			FUDMFKey *pKey = pKeys->Find(key);
-			if (pKey != NULL)
-			{
-				return FLOAT2FIXED(pKey->FloatVal);
-			}
+			return FLOAT2FIXED(pKey->FloatVal);
 		}
 	}
 	return 0;
@@ -1111,6 +1105,7 @@ public:
 		sdt->midtexture = "-";
 		sd->SetTextureXScale(FRACUNIT);
 		sd->SetTextureYScale(FRACUNIT);
+		sd->Index = index;
 
 		sc.MustGetToken('{');
 		while (!sc.CheckToken('}'))
