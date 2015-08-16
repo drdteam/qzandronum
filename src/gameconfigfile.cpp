@@ -442,7 +442,7 @@ void FGameConfigFile::DoKeySetup(const char *gamename)
 		{ "Bindings", &Bindings },
 		{ "DoubleBindings", &DoubleBindings },
 		{ "AutomapBindings", &AutomapBindings },
-		NULL, NULL
+		{ NULL, NULL }
 	};
 	const char *key, *value;
 

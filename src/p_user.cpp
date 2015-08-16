@@ -325,6 +325,10 @@ player_t::player_t()
   respawn_time(0),
   camera(0),
   air_finished(0),
+  MUSINFOactor(0),
+  MUSINFOtics(-1),
+  crouching(0),
+  crouchdir(0),
   // [BB]
   //Bot(0),
   BlendR(0),
@@ -332,8 +336,6 @@ player_t::player_t()
   BlendB(0),
   BlendA(0),
   LogText(),
-  crouching(0),
-  crouchdir(0),
   crouchfactor(0),
   crouchoffset(0),
   crouchviewdelta(0),
@@ -341,8 +343,6 @@ player_t::player_t()
   ConversationPC(0),
   ConversationNPCAngle(0),
   ConversationFaceTalker(0),
-  MUSINFOactor(0),
-  MUSINFOtics(-1),
   // [BC] Initialize ST's additional properties.
   bOnTeam( 0 ),
   ulTeam( 0 ),

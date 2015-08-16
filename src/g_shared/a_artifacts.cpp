@@ -1806,6 +1806,8 @@ IMPLEMENT_CLASS(APowerRegeneration)
 
 void APowerRegeneration::DoEffect()
 {
+	Super::DoEffect();
+
 	// [BB] This is server side.
 	if ( NETWORK_InClientMode() )
 		return;

@@ -9000,9 +9000,9 @@ static void client_SetSectorColor( BYTESTREAM_s *pByteStream, bool bIdentifySect
 
 	if ( bIdentifySectorsByTag )
 	{
-		int secnum = -1;
-
-		while ((secnum = P_FindSectorFromTag (lSectorIDOrTag, secnum)) >= 0)
+		int secnum;
+		FSectorTagIterator itr(lSectorIDOrTag);
+		while ((secnum = itr.Next()) >= 0)
 			sectors[secnum].SetColor(lR, lG, lB, lDesaturate, false, true);
 	}
 	else
@@ -9043,9 +9043,10 @@ static void client_SetSectorFade( BYTESTREAM_s *pByteStream, bool bIdentifySecto
 
 	if ( bIdentifySectorsByTag )
 	{
-		int secnum = -1;
+		int secnum;
+		FSectorTagIterator itr(lSectorIDOrTag);
 
-		while ((secnum = P_FindSectorFromTag (lSectorIDOrTag, secnum)) >= 0)
+		while ((secnum = itr.Next()) >= 0)
 			sectors[secnum].SetFade(lR, lG, lB, false, true);
 	}
 	else
@@ -9162,9 +9163,10 @@ static void client_SetSectorRotation( BYTESTREAM_s *pByteStream, bool bIdentifyS
 
 	if ( bIdentifySectorsByTag )
 	{
-		int secnum = -1;
+		int secnum;
+		FSectorTagIterator itr(lSectorIDOrTag);
 
-		while ((secnum = P_FindSectorFromTag (lSectorIDOrTag, secnum)) >= 0)
+		while ((secnum = itr.Next()) >= 0)
 		{
 			sectors[secnum].SetAngle(sector_t::floor, lFloorRotation * ANGLE_1);
 			sectors[secnum].SetAngle(sector_t::ceiling, lCeilingRotation * ANGLE_1);
@@ -9819,7 +9821,8 @@ static void client_SetLineTexture( BYTESTREAM_s *pByteStream, bool bIdentifyLine
 	if ( bIdentifyLinesByID )
 	{
 		int linenum = -1;
-		while ((linenum = P_FindLineFromID (ulLineIdx, linenum)) >= 0)
+		FLineIdIterator itr(ulLineIdx);
+		while ((linenum = itr.Next()) >= 0)
 			client_SetLineTextureHelper ( linenum, ulSide, ulPosition, texture );
 	}
 	else

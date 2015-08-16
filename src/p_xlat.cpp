@@ -59,7 +59,7 @@ typedef enum
 	PushMany,
 } triggertype_e;
 
-void P_TranslateLineDef (line_t *ld, maplinedef_t *mld)
+void P_TranslateLineDef (line_t *ld, maplinedef_t *mld, bool setid)
 {
 	unsigned short special = (unsigned short) LittleShort(mld->special);
 	short tag = LittleShort(mld->tag);
@@ -98,11 +98,14 @@ void P_TranslateLineDef (line_t *ld, maplinedef_t *mld)
 	}
 	flags = newflags;
 
-	// For purposes of maintaining BOOM compatibility, each
-	// line also needs to have its ID set to the same as its tag.
-	// An external conversion program would need to do this more
-	// intelligently.
-	ld->id = tag;
+	if (setid)
+	{
+		// For purposes of maintaining BOOM compatibility, each
+		// line also needs to have its ID set to the same as its tag.
+		// An external conversion program would need to do this more
+		// intelligently.
+		ld->SetMainId(tag);
+	}
 
 	// 0 specials are never translated.
 	if (special == 0)
@@ -302,7 +305,7 @@ void P_TranslateTeleportThings ()
 
 	while ( (dest = iterator.Next()) )
 	{
-		if (dest->Sector->tag == 0)
+		if (dest->Sector->GetMainTag() == 0)
 		{
 			dest->tid = 1;
 			dest->AddToHash ();

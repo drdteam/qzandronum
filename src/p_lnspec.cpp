@@ -1353,7 +1353,7 @@ FUNC(LS_Thing_Destroy)
 		while (actor)
 		{
 			AActor *temp = iterator.Next ();
-			if (actor->flags & MF_SHOOTABLE && actor->Sector->tag == arg2)
+			if (actor->flags & MF_SHOOTABLE && actor->Sector->HasTag(arg2))
 				P_DamageMobj (actor, NULL, it, arg1 ? TELEFRAG_DAMAGE : actor->health, NAME_None);
 			actor = temp;
 		}
@@ -1366,7 +1366,7 @@ FUNC(LS_Thing_Destroy)
 		while (actor)
 		{
 			AActor *temp = iterator.Next ();
-			if (actor->flags & MF_SHOOTABLE && (arg2 == 0 || actor->Sector->tag == arg2))
+			if (actor->flags & MF_SHOOTABLE && (arg2 == 0 || actor->Sector->HasTag(arg2)))
 				P_DamageMobj (actor, NULL, it, arg1 ? TELEFRAG_DAMAGE : actor->health, NAME_None);
 			actor = temp;
 		}
@@ -2052,9 +2052,9 @@ FUNC(LS_Sector_ChangeSound)
 	if (!arg0)
 		return false;
 
-	secNum = -1;
 	rtn = false;
-	while ((secNum = P_FindSectorFromTag (arg0,	secNum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	while ((secNum = itr.Next()) >= 0)
 	{
 		sectors[secNum].seqType = arg1;
 		rtn = true;
@@ -2071,9 +2071,9 @@ FUNC(LS_Sector_ChangeFlags)
 	if (!arg0)
 		return false;
 
-	secNum = -1;
 	rtn = false;
-	while ((secNum = P_FindSectorFromTag (arg0,	secNum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	while ((secNum = itr.Next()) >= 0)
 	{
 		sectors[secNum].Flags = (sectors[secNum].Flags | arg1) & ~arg2;
 		rtn = true;
@@ -2180,10 +2180,11 @@ void AdjustPusher (int tag, int magnitude, int angle, DPusher::EPusher type)
 	}
 
 	size_t numcollected = Collection.Size ();
-	int secnum = -1;
+	int secnum;
 
 	// Now create pushers for any sectors that don't already have them.
-	while ((secnum = P_FindSectorFromTag (tag, secnum)) >= 0)
+	FSectorTagIterator itr(tag);
+	while ((secnum = itr.Next()) >= 0)
 	{
 		unsigned int i;
 		for (i = 0; i < numcollected; i++)
@@ -2235,9 +2236,9 @@ FUNC(LS_Sector_SetTranslucent)
 {
 	if (arg0 != 0)
 	{
-		int secnum = -1;
-
-		while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+		int secnum;
+		FSectorTagIterator itr(arg0);
+		while ((secnum = itr.Next()) >= 0)
 		{
 			sectors[secnum].SetAlpha(arg1, Scale(arg2, OPAQUE, 255));
 			sectors[secnum].ChangeFlags(arg1, ~PLANEF_ADDITIVE, arg3? PLANEF_ADDITIVE:0);
@@ -2252,7 +2253,7 @@ FUNC(LS_Sector_SetLink)
 {
 	if (arg0 != 0)	// control tag == 0 is for static initialization and must not be handled here
 	{
-		int control = P_FindSectorFromTag(arg0, -1);
+		int control = P_FindFirstSectorFromTag(arg0);
 		if (control >= 0)
 		{
 			// [BB] Inform the clients and remember the link to inform future clients.
@@ -2288,7 +2289,7 @@ FUNC(LS_Sector_SetLink)
 		{
 			int wallnum = scroller->GetWallNum ();
 
-			if (wallnum >= 0 && sides[wallnum].linedef->id == id &&
+			if (wallnum >= 0 && sides[wallnum].linedef->HasId(id) &&
 				int(sides[wallnum].linedef->sidedef[sidechoice] - sides) == wallnum &&
 				Where == scroller->GetScrollParts())
 			{
@@ -2307,7 +2308,7 @@ FUNC(LS_Sector_SetLink)
 			while ( (collect.Obj = iterator.Next ()) )
 			{
 				if ((collect.RefNum = ((DScroller *)collect.Obj)->GetWallNum ()) != -1 &&
-					sides[collect.RefNum].linedef->id == id &&
+					sides[collect.RefNum].linedef->HasId(id) &&
 					int(sides[collect.RefNum].linedef->sidedef[sidechoice] - sides) == collect.RefNum &&
 					Where == ((DScroller *)collect.Obj)->GetScrollParts())
 				{
@@ -2318,10 +2319,11 @@ FUNC(LS_Sector_SetLink)
 		}
 
 		size_t numcollected = Collection.Size ();
-		int linenum = -1;
+		int linenum;
 
 		// Now create scrollers for any walls that don't already have them.
-		while ((linenum = P_FindLineFromID (id, linenum)) >= 0)
+		FLineIdIterator itr(id);
+		while ((linenum = itr.Next()) >= 0)
 		{
 			if (lines[linenum].sidedef[sidechoice] != NULL)
 			{
@@ -2397,7 +2399,7 @@ FUNC(LS_Scroll_Wall)
 	{
 		if (scroller->IsType (type))
 		{
-			if (sectors[scroller->GetAffectee ()].tag == tag)
+			if (sectors[scroller->GetAffectee ()].HasTag(tag))
 			{
 				i++;
 				scroller->SetRate (dx, dy);
@@ -2411,7 +2413,8 @@ FUNC(LS_Scroll_Wall)
 	}
 
 	// Need to create scrollers for the sector(s)
-	for (i = -1; (i = P_FindSectorFromTag (tag, i)) >= 0; )
+	FSectorTagIterator itr(tag);
+	while ((i = itr.Next()) >= 0)
 	{
 		new DScroller (type, dx, dy, -1, i, 0);
 	}
@@ -2470,8 +2473,10 @@ FUNC(LS_Sector_SetDamage)
 	// problems by adding an unwanted constructor.
 	// Since it doesn't really matter whether the type is translated
 	// here or in P_PlayerInSpecialSector I think it's the best solution.
-	int secnum = -1;
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0) {
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
+	{
 		sectors[secnum].damage = arg1;
 		sectors[secnum].mod = arg2;
 	}
@@ -2481,14 +2486,15 @@ FUNC(LS_Sector_SetDamage)
 FUNC(LS_Sector_SetGravity)
 // Sector_SetGravity (tag, intpart, fracpart)
 {
-	int secnum = -1;
 	float gravity;
 
 	if (arg2 > 99)
 		arg2 = 99;
 	gravity = (float)arg1 + (float)arg2 * 0.01f;
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sectors[secnum].gravity = gravity;
 
@@ -2503,9 +2509,9 @@ FUNC(LS_Sector_SetGravity)
 FUNC(LS_Sector_SetColor)
 // Sector_SetColor (tag, r, g, b, desaturate)
 {
-	int secnum = -1;
-	
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		// [BB] Don't update the clients for each sector separately.
 		sectors[secnum].SetColor(arg1, arg2, arg3, arg4, false);
@@ -2520,9 +2526,9 @@ FUNC(LS_Sector_SetColor)
 FUNC(LS_Sector_SetFade)
 // Sector_SetFade (tag, r, g, b)
 {
-	int secnum = -1;
-
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		// [BB] Don't update the clients for each sector separately.
 		sectors[secnum].SetFade(arg1, arg2, arg3, false);
@@ -2537,11 +2543,12 @@ FUNC(LS_Sector_SetFade)
 FUNC(LS_Sector_SetCeilingPanning)
 // Sector_SetCeilingPanning (tag, x-int, x-frac, y-int, y-frac)
 {
-	int secnum = -1;
 	fixed_t xofs = arg1 * FRACUNIT + arg2 * (FRACUNIT/100);
 	fixed_t yofs = arg3 * FRACUNIT + arg4 * (FRACUNIT/100);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sectors[secnum].SetXOffset(sector_t::ceiling, xofs);
 		sectors[secnum].SetYOffset(sector_t::ceiling, yofs);
@@ -2556,11 +2563,12 @@ FUNC(LS_Sector_SetCeilingPanning)
 FUNC(LS_Sector_SetFloorPanning)
 // Sector_SetFloorPanning (tag, x-int, x-frac, y-int, y-frac)
 {
-	int secnum = -1;
 	fixed_t xofs = arg1 * FRACUNIT + arg2 * (FRACUNIT/100);
 	fixed_t yofs = arg3 * FRACUNIT + arg4 * (FRACUNIT/100);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sectors[secnum].SetXOffset(sector_t::floor, xofs);
 		sectors[secnum].SetYOffset(sector_t::floor, yofs);
@@ -2575,7 +2583,6 @@ FUNC(LS_Sector_SetFloorPanning)
 FUNC(LS_Sector_SetFloorScale)
 // Sector_SetFloorScale (tag, x-int, x-frac, y-int, y-frac)
 {
-	int secnum = -1;
 	fixed_t xscale = arg1 * FRACUNIT + arg2 * (FRACUNIT/100);
 	fixed_t yscale = arg3 * FRACUNIT + arg4 * (FRACUNIT/100);
 
@@ -2584,7 +2591,9 @@ FUNC(LS_Sector_SetFloorScale)
 	if (yscale)
 		yscale = FixedDiv (FRACUNIT, yscale);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		if (xscale)
 			sectors[secnum].SetXScale(sector_t::floor, xscale);
@@ -2601,7 +2610,6 @@ FUNC(LS_Sector_SetFloorScale)
 FUNC(LS_Sector_SetCeilingScale)
 // Sector_SetCeilingScale (tag, x-int, x-frac, y-int, y-frac)
 {
-	int secnum = -1;
 	fixed_t xscale = arg1 * FRACUNIT + arg2 * (FRACUNIT/100);
 	fixed_t yscale = arg3 * FRACUNIT + arg4 * (FRACUNIT/100);
 
@@ -2610,7 +2618,9 @@ FUNC(LS_Sector_SetCeilingScale)
 	if (yscale)
 		yscale = FixedDiv (FRACUNIT, yscale);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		if (xscale)
 			sectors[secnum].SetXScale(sector_t::ceiling, xscale);
@@ -2627,14 +2637,14 @@ FUNC(LS_Sector_SetCeilingScale)
 FUNC(LS_Sector_SetFloorScale2)
 // Sector_SetFloorScale2 (tag, x-factor, y-factor)
 {
-	int secnum = -1;
-
 	if (arg1)
 		arg1 = FixedDiv (FRACUNIT, arg1);
 	if (arg2)
 		arg2 = FixedDiv (FRACUNIT, arg2);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		if (arg1)
 			sectors[secnum].SetXScale(sector_t::floor, arg1);
@@ -2651,14 +2661,14 @@ FUNC(LS_Sector_SetFloorScale2)
 FUNC(LS_Sector_SetCeilingScale2)
 // Sector_SetFloorScale2 (tag, x-factor, y-factor)
 {
-	int secnum = -1;
-
 	if (arg1)
 		arg1 = FixedDiv (FRACUNIT, arg1);
 	if (arg2)
 		arg2 = FixedDiv (FRACUNIT, arg2);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		if (arg1)
 			sectors[secnum].SetXScale(sector_t::ceiling, arg1);
@@ -2675,11 +2685,12 @@ FUNC(LS_Sector_SetCeilingScale2)
 FUNC(LS_Sector_SetRotation)
 // Sector_SetRotation (tag, floor-angle, ceiling-angle)
 {
-	int secnum = -1;
 	angle_t ceiling = arg2 * ANGLE_1;
 	angle_t floor = arg1 * ANGLE_1;
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sectors[secnum].SetAngle(sector_t::floor, floor);
 		sectors[secnum].SetAngle(sector_t::ceiling, ceiling);
@@ -2695,30 +2706,28 @@ FUNC(LS_Sector_SetRotation)
 FUNC(LS_Line_AlignCeiling)
 // Line_AlignCeiling (lineid, side)
 {
-	int line = P_FindLineFromID (arg0, -1);
 	bool ret = 0;
 
-	if (line < 0)
-		I_Error ("Sector_AlignCeiling: Lineid %d is undefined", arg0);
-	do
+	FLineIdIterator itr(arg0);
+	int line;
+	while ((line = itr.Next()) >= 0)
 	{
 		ret |= P_AlignFlat (line, !!arg1, 1);
-	} while ( (line = P_FindLineFromID (arg0, line)) >= 0);
+	}
 	return ret;
 }
 
 FUNC(LS_Line_AlignFloor)
 // Line_AlignFloor (lineid, side)
 {
-	int line = P_FindLineFromID (arg0, -1);
 	bool ret = 0;
 
-	if (line < 0)
-		I_Error ("Sector_AlignFloor: Lineid %d is undefined", arg0);
-	do
+	FLineIdIterator itr(arg0);
+	int line;
+	while ((line = itr.Next()) >= 0)
 	{
 		ret |= P_AlignFlat (line, !!arg1, 0);
-	} while ( (line = P_FindLineFromID (arg0, line)) >= 0);
+	}
 	return ret;
 }
 
@@ -2730,7 +2739,9 @@ FUNC(LS_Line_SetTextureOffset)
 	if (arg0 == 0 || arg3 < 0 || arg3 > 1)
 		return false;
 
-	for(int line = -1; (line = P_FindLineFromID (arg0, line)) >= 0; )
+	FLineIdIterator itr(arg0);
+	int line;
+	while ((line = itr.Next()) >= 0)
 	{
 		side_t *side = lines[line].sidedef[arg3];
 		if (side != NULL)
@@ -2781,7 +2792,9 @@ FUNC(LS_Line_SetTextureScale)
 	if (arg0 == 0 || arg3 < 0 || arg3 > 1)
 		return false;
 
-	for(int line = -1; (line = P_FindLineFromID (arg0, line)) >= 0; )
+	FLineIdIterator itr(arg0);
+	int line;
+	while ((line = itr.Next()) >= 0)
 	{
 		side_t *side = lines[line].sidedef[arg3];
 		if (side != NULL)
@@ -2852,7 +2865,9 @@ FUNC(LS_Line_SetBlocking)
 		if (arg2 & 1) clearflags |= flagtrans[i];
 	}
 
-	for(int line = -1; (line = P_FindLineFromID (arg0, line)) >= 0; )
+	FLineIdIterator itr(arg0);
+	int line;
+	while ((line = itr.Next()) >= 0)
 	{
 		lines[line].flags = (lines[line].flags & ~clearflags) | setflags;
 
@@ -3218,8 +3233,9 @@ FUNC(LS_SetPlayerProperty)
 FUNC(LS_TranslucentLine)
 // TranslucentLine (id, amount, type)
 {
-	int linenum = -1;
-	while ((linenum = P_FindLineFromID (arg0, linenum)) >= 0)
+	FLineIdIterator itr(arg0);
+	int linenum;
+	while ((linenum = itr.Next()) >= 0)
 	{
 		lines[linenum].Alpha = Scale(clamp(arg1, 0, 255), FRACUNIT, 255);
 
@@ -3371,10 +3387,11 @@ FUNC(LS_ForceField)
 FUNC(LS_ClearForceField)
 // ClearForceField (tag)
 {
-	int secnum = -1;
 	bool rtn = false;
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	FSectorTagIterator itr(arg0);
+	int secnum;
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sector_t *sec = &sectors[secnum];
 		rtn = true;
@@ -3556,12 +3573,14 @@ FUNC(LS_Thing_SetConversation)
 // Normally this would be better placed in p_lnspec.cpp.
 // But I have accidentally overwritten that file several times
 // so I'd rather place it here.
-FUNC(LS_Sector_SetPlaneReflection)
-// Sector_SetPlaneReflection (tag, floor, ceiling)
+static int LS_Sector_SetPlaneReflection (line_t *ln, AActor *it, bool backSide,
+	int arg0, int arg1, int arg2, int arg3, int arg4)
 {
-	int secnum = -1;
+// Sector_SetPlaneReflection (tag, floor, ceiling)
+	int secnum;
+	FSectorTagIterator itr(arg0);
 
-	while ((secnum = P_FindSectorFromTag (arg0, secnum)) >= 0)
+	while ((secnum = itr.Next()) >= 0)
 	{
 		sector_t * s = &sectors[secnum];
 		if (s->floorplane.a==0 && s->floorplane.b==0) s->reflect[sector_t::floor] = arg1/255.f;
