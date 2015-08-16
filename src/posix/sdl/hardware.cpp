@@ -124,14 +124,6 @@ void I_InitGraphics ()
 
 	UCVarValue val;
 
-#ifndef NO_GL
-	// hack by stevenaaus to force software mode if no 32bpp
-	const SDL_VideoInfo *i = SDL_GetVideoInfo();
-	if ((i->vfmt)->BytesPerPixel != 4) {
-		fprintf (stderr, "n32 bit colour not found, disabling OpenGL.n");
-		fprintf (stderr, "To enable OpenGL, restart X with 32 color (try 'startx -- :1 -depth 24'), and enable OpenGL in the Display Options.nn");
-	} 
-#endif
 	val.Bool = !!Args->CheckParm ("-devparm");
 	ticker.SetGenericRepDefault (val, CVAR_Bool);
 
@@ -365,11 +357,7 @@ CUSTOM_CVAR (Float, vid_winscale, 1.f, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 		NewWidth = screen->GetWidth();
 		NewHeight = screen->GetHeight();
 		NewBits = DisplayBits;
-#ifdef NO_GL
 		setmodeneeded = true;
-#else
-		//setmodeneeded = true;	// This CVAR doesn't do anything and only causes problems!
-#endif
 	}
 }
 
