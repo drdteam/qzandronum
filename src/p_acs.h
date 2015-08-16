@@ -359,8 +359,9 @@ enum
 class FBehavior
 {
 public:
-	FBehavior (int lumpnum, FileReader * fr=NULL, int len=0);
+	FBehavior ();
 	~FBehavior ();
+	bool Init(int lumpnum, FileReader * fr = NULL, int len = 0);
 
 	bool IsGood ();
 	BYTE *FindChunk (DWORD id) const;

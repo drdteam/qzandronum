@@ -4116,7 +4116,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( const PClass *pArtifactType, const TA
 		else
 		{
 			// [BB] Restore the original spawn flags, possibly removing MF_SOLID if we added it.
-			pArtifact->flags = spawnFlags;
+			pArtifact->flags = ActorFlags::FromInt(spawnFlags);
 			return pArtifact;
 		}
 	}

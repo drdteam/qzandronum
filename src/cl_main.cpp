@@ -6650,7 +6650,7 @@ static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
 			if ( relinkActor )
 				pActor->UnlinkFromWorld ();
 
-			pActor->flags = ulFlags;
+			pActor->flags = ActorFlags::FromInt(ulFlags);
 
 			// [BB] Link based on the new flags.
 			if ( relinkActor )
@@ -6659,23 +6659,23 @@ static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
 		break;
 	case FLAGSET_FLAGS2:
 
-		pActor->flags2 = ulFlags;
+		pActor->flags2 = ActorFlags2::FromInt(ulFlags);;
 		break;
 	case FLAGSET_FLAGS3:
 
-		pActor->flags3 = ulFlags;
+		pActor->flags3 = ActorFlags3::FromInt(ulFlags);;
 		break;
 	case FLAGSET_FLAGS4:
 
-		pActor->flags4 = ulFlags;
+		pActor->flags4 = ActorFlags4::FromInt(ulFlags);;
 		break;
 	case FLAGSET_FLAGS5:
 
-		pActor->flags5 = ulFlags;
+		pActor->flags5 = ActorFlags5::FromInt(ulFlags);;
 		break;
 	case FLAGSET_FLAGS6:
 
-		pActor->flags6 = ulFlags;
+		pActor->flags6 = ActorFlags6::FromInt(ulFlags);;
 		break;
 	case FLAGSET_FLAGSST:
 

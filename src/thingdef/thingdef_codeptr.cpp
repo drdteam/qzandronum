@@ -3782,8 +3782,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Respawn)
 		if (flags & RSF_FOG)
 		{
 			// [BB] Tell clients to spawn.
-			P_SpawnTeleportFog(self, oldx, oldy, oldz, true, false, true);
-			P_SpawnTeleportFog(self, self->x, self->y, self->z, false, false, true);
+			P_SpawnTeleportFog(self, oldx, oldy, oldz, true, true, true);
+			P_SpawnTeleportFog(self, self->x, self->y, self->z, false, true, true);
 		}
 		if (self->CountsAsKill())
 		{
@@ -4483,10 +4483,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ChangeFlag)
 			if ( NETWORK_InClientMode() )
 				return;
 
-			DWORD *flagp = (DWORD*) (((char*)self) + fd->structoffset);
+			ActorFlags *flagp = (ActorFlags*) (((char*)self) + fd->structoffset);
 
 			// [EP] Store the old value in order to save bandwidth
-			DWORD oldflag = *flagp;
+			DWORD oldflag = flagp->GetValue();
 
 			// If these 2 flags get changed we need to update the blockmap and sector links.
 			bool linkchange = flagp == &self->flags && (fd->flagbit == MF_NOBLOCKMAP || fd->flagbit == MF_NOSECTOR);
@@ -4498,17 +4498,17 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ChangeFlag)
 			// [BB] Let the clients know about the flag change.
 			if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( *flagp != oldflag ) ) {
 				FlagSet flagset = FLAGSET_UNKNOWN;
-				if ( flagp == &self->flags )
+				if ( flagp == (ActorFlags*) &self->flags )
 					flagset = FLAGSET_FLAGS;
-				else if ( flagp == &self->flags2 )
+				else if ( flagp == (ActorFlags*) &self->flags2 )
 					flagset = FLAGSET_FLAGS2;
-				else if ( flagp == &self->flags3 )
+				else if ( flagp == (ActorFlags*) &self->flags3 )
 					flagset = FLAGSET_FLAGS3;
-				else if ( flagp == &self->flags4 )
+				else if ( flagp == (ActorFlags*) &self->flags4 )
 					flagset = FLAGSET_FLAGS4;
-				else if ( flagp == &self->flags5 )
+				else if ( flagp == (ActorFlags*) &self->flags5 )
 					flagset = FLAGSET_FLAGS5;
-				else if ( flagp == &self->flags6 )
+				else if ( flagp == (ActorFlags*) &self->flags6 )
 					flagset = FLAGSET_FLAGS6;
 
 				SERVERCOMMANDS_SetThingFlags( self, flagset );
@@ -5023,9 +5023,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetUserArray)
 
 //===========================================================================
 //
-// A_Teleport(optional state teleportstate, optional class targettype,
-// optional class fogtype, optional int flags, optional fixed mindist,
-// optional fixed maxdist)
+// A_Teleport([state teleportstate, [class targettype,
+// [class fogtype, [int flags, [fixed mindist,
+// [fixed maxdist]]]]]])
 //
 // Attempts to teleport to a targettype at least mindist away and at most
 // maxdist away (0 means unlimited). If successful, spawn a fogtype at old
@@ -5048,13 +5048,25 @@ enum T_Flags
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Teleport)
 {
-	ACTION_PARAM_START(6);
+	ACTION_PARAM_START(7);
 	ACTION_PARAM_STATE(TeleportState, 0);
 	ACTION_PARAM_CLASS(TargetType, 1);
 	ACTION_PARAM_CLASS(FogType, 2);
 	ACTION_PARAM_INT(Flags, 3);
 	ACTION_PARAM_FIXED(MinDist, 4);
 	ACTION_PARAM_FIXED(MaxDist, 5);
+	ACTION_PARAM_INT(ptr, 6);
+
+	AActor *ref = COPY_AAPTR(self, ptr);
+
+	if (!ref)
+	{
+		ACTION_SET_RESULT(false);
+		return;
+	}
+
+	if (ref->flags2 & MF2_NOTELEPORT)
+		return;
 
 	// [BB] This is handled by the server.
 	if ( NETWORK_InClientMode() && ( ( self->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) == false ) )
@@ -5068,7 +5080,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Teleport)
 			192, 120, 120, 120, 64, 64, 32, 16, 0
 		};
 
-		unsigned int chanceindex = self->health / ((self->SpawnHealth()/8 == 0) ? 1 : self->SpawnHealth()/8);
+		unsigned int chanceindex = ref->health / ((ref->SpawnHealth()/8 == 0) ? 1 : ref->SpawnHealth()/8);
 
 		if (chanceindex >= countof(chance))
 		{
@@ -5079,37 +5091,42 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Teleport)
 	}
 
 	DSpotState *state = DSpotState::GetSpotState();
-	if (state == NULL) return;
+	if (state == NULL) 
+		return;
 
-	if (!TargetType) TargetType = PClass::FindClass("BossSpot");
+	if (!TargetType) 
+		TargetType = PClass::FindClass("BossSpot");
 
-	AActor * spot = state->GetSpotWithMinMaxDistance(TargetType, self->x, self->y, MinDist, MaxDist);
-	if (spot == NULL) return;
+	AActor * spot = state->GetSpotWithMinMaxDistance(TargetType, ref->x, ref->y, MinDist, MaxDist);
+	if (spot == NULL) 
+		return;
 
-	fixed_t prevX = self->x;
-	fixed_t prevY = self->y;
-	fixed_t prevZ = self->z;
+	fixed_t prevX = ref->x;
+	fixed_t prevY = ref->y;
+	fixed_t prevZ = ref->z;
 	fixed_t aboveFloor = spot->z - spot->floorz;
 	fixed_t finalz = spot->floorz + aboveFloor;
 
-	if (spot->z + self->height > spot->ceilingz)
-		finalz = spot->ceilingz - self->height;
+	if (spot->z + ref->height > spot->ceilingz)
+		finalz = spot->ceilingz - ref->height;
 	else if (spot->z < spot->floorz)
 		finalz = spot->floorz;
 
 
 	//Take precedence and cooperate with telefragging first.
-	bool teleResult = P_TeleportMove(self, spot->x, spot->y, finalz, Flags & TF_TELEFRAG);
+	bool teleResult = P_TeleportMove(ref, spot->x, spot->y, finalz, Flags & TF_TELEFRAG);
 
-	if (Flags & TF_FORCED)
+	if (!teleResult && (Flags & TF_FORCED))
 	{
 		//If for some reason the original move didn't work, regardless of telefrag, force it to move.
-		self->SetOrigin(spot->x, spot->y, finalz);
+		ref->SetOrigin(spot->x, spot->y, finalz);
 		teleResult = true;
 	}
 
+	AActor *fog1 = NULL, *fog2 = NULL;
 	if (teleResult)
 	{
+
 		//If a fog type is defined in the parameter, or the user wants to use the actor's predefined fogs,
 		//and if there's no desire to be fogless, spawn a fog based upon settings.
 		if (FogType || (Flags & TF_USEACTORFOG))
@@ -5117,31 +5134,40 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Teleport)
 			if (!(Flags & TF_NOSRCFOG))
 			{
 				if (Flags & TF_USEACTORFOG)
-					P_SpawnTeleportFog(self, prevX, prevY, prevZ, true);
+					P_SpawnTeleportFog(ref, prevX, prevY, prevZ, true, true);
 				else
-					Spawn(FogType, prevX, prevY, prevZ, ALLOW_REPLACE);
+				{
+					fog1 = Spawn(FogType, prevX, prevY, prevZ, ALLOW_REPLACE);
+					if (fog1 != NULL)
+						fog1->target = ref;
+				}
 			}
 			if (!(Flags & TF_NODESTFOG))
 			{
 				if (Flags & TF_USEACTORFOG)
-					P_SpawnTeleportFog(self, self->x, self->y, self->z, false);
+					P_SpawnTeleportFog(ref, ref->x, ref->y, ref->z, false, true);
 				else
-					Spawn(FogType, self->x, self->y, self->z, ALLOW_REPLACE);
+				{
+					fog2 = Spawn(FogType, ref->x, ref->y, ref->z, ALLOW_REPLACE);
+					if (fog2 != NULL)
+						fog2->target = ref;
+				}
 			}
+			
 		}
 		
 		if (Flags & TF_USESPOTZ)
-			self->z = spot->z;
+			ref->z = spot->z;
 		else
-			self->z = self->floorz;
+			ref->z = ref->floorz;
 
 		if (!(Flags & TF_KEEPANGLE))
-			self->angle = spot->angle;
+			ref->angle = spot->angle;
 
 		if (!(Flags & TF_KEEPVELOCITY))
-			self->velx = self->vely = self->velz = 0;
+			ref->velx = ref->vely = ref->velz = 0;
 
-		if (!(Flags & TF_NOJUMP))
+		if (!(Flags & TF_NOJUMP)) //The state jump should only happen with the calling actor.
 		{
 			ACTION_SET_RESULT(false); // Jumps should never set the result for inventory state chains!
 			if (TeleportState == NULL)
@@ -6638,6 +6664,43 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ResetHealth)
 		mobj->health = mobj->SpawnHealth();
 	}
 }
+
+//===========================================================================
+// A_JumpIfHigherOrLower
+//
+// Jumps if a target, master, or tracer is higher or lower than the calling 
+// actor. Can also specify how much higher/lower the actor needs to be than 
+// itself. Can also take into account the height of the actor in question,
+// depending on which it's checking. This means adding height of the
+// calling actor's self if the pointer is higher, or height of the pointer 
+// if its lower.
+//===========================================================================
+
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfHigherOrLower)
+{
+	ACTION_PARAM_START(6);
+	ACTION_PARAM_STATE(high, 0);
+	ACTION_PARAM_STATE(low, 1);
+	ACTION_PARAM_FIXED(offsethigh, 2);
+	ACTION_PARAM_FIXED(offsetlow, 3);
+	ACTION_PARAM_BOOL(includeHeight, 4);
+	ACTION_PARAM_INT(ptr, 5);
+
+	AActor *mobj = COPY_AAPTR(self, ptr);
+
+
+	if (!mobj || (mobj == self)) //AAPTR_DEFAULT is completely useless in this regard.
+	{
+		return;
+	}
+	ACTION_SET_RESULT(false); //No inventory jump chains please.
+
+	if ((high) && (mobj->z > ((includeHeight ? self->height : 0) + self->z + offsethigh)))
+		ACTION_JUMP(high, false);	// [BB] Let's hope that the clients know enough.
+	else if ((low) && (mobj->z + (includeHeight ? mobj->height : 0)) < (self->z + offsetlow))
+		ACTION_JUMP(low, false);	// [BB] Let's hope that the clients know enough.
+}
+
 
 //===========================================================================
 //
