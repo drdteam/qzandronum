@@ -48,7 +48,7 @@ public:
 	void Activate (AActor *activator);
 	void Deactivate (AActor *activator);
 	// [BC]
-	bool IsActive( void );
+	bool IsActive( void ) const;
 };
 
 IMPLEMENT_CLASS (AParticleFountain)
@@ -85,7 +85,7 @@ void AParticleFountain::Deactivate (AActor *activator)
 //
 //=============================================================================
 
-bool AParticleFountain::IsActive( void )
+bool AParticleFountain::IsActive( void ) const
 {
 	return !!( effects & ( health << FX_FOUNTAINSHIFT ));
 }

@@ -2393,6 +2393,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\g_shared\a_movingcamera.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\g_shared\a_pickups.cpp"
 				>
 			</File>

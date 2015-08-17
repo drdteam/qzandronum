@@ -52,7 +52,7 @@ protected:
 	int lServerPrevNodeId, lServerCurrNodeId;
 	float fServerTime;
 public:
-	bool IsActive ();
+	bool IsActive () const;
 	void SyncWithClient ( const ULONG ulClient );
 	static void InitFromStream ( BYTESTREAM_s *pByteStream );
 };

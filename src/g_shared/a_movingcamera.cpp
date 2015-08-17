@@ -558,7 +558,7 @@ bool APathFollower::Interpolate ()
 }
 
 // [BB]
-bool APathFollower::IsActive ()
+bool APathFollower::IsActive () const
 {
 	return ( bActive );
 }

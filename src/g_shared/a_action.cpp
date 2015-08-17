@@ -28,7 +28,7 @@ public:
 	void Activate (AActor *activator);
 	void Deactivate (AActor *activator);
 	// [BB]
-	bool IsActive( void );
+	bool IsActive( void ) const;
 };
 
 IMPLEMENT_CLASS (ASwitchableDecoration)
@@ -44,7 +44,7 @@ void ASwitchableDecoration::Deactivate (AActor *activator)
 }
 
 // [BB]
-bool ASwitchableDecoration::IsActive( void )
+bool ASwitchableDecoration::IsActive( void ) const
 {
 	return ( InState ( NAME_Inactive ) == false );
 }
