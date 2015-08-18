@@ -380,25 +380,42 @@ void AWeapon::AttachToOwner (AActor *other)
 		// setting of the one who recorded the demo.
 		if ( !(WeaponFlags & WIF_NO_AUTO_SWITCH) && (CLIENTDEMO_IsPlaying( ) == false))
 		{
-			// [ZZ] Check if PWO is active
-			//		Also check if current player is console player
-			//		to prevent this client from trying to predict other players' switching
-			//		(not sure how Zandronum behaves here in network game)
-			// Added code from Torr to fix NETSTATE_SINGLE_MULTIPLAYER
-			const bool dofpwo = (NETWORK_GetState() != NETSTATE_SERVER) &&
-				(Owner->player->userinfo.GetSwitchOnPickup() == 3) &&
-				(Owner->player == &players[consoleplayer]);
-
 			// [BC] Decide which weapon to compare selection orders against.
 			if ( Owner->player->PendingWeapon != WP_NOCHANGE )
 				pCompareWeapon = Owner->player->PendingWeapon;
 			else
 				pCompareWeapon = Owner->player->ReadyWeapon;
 
+			bool shouldSwitch = false;
+
 			// [ZZ] Changed code so it only treats switchonpickup == 2 as "always switch"
 			// [BC] Handle the "switchonpickup" userinfo cvar. If it's == 2, then
 			// we always want to switch our weapon when we pickup a new one.
 			if ( (Owner->player->userinfo.GetSwitchOnPickup() == 2) || ( zacompatflags & ZACOMPATF_OLD_WEAPON_SWITCH ) )
+			{
+				shouldSwitch  = true;
+			}
+			// [BB] Because of ST's special switchonpickup == 1 handling, we have to make sure here
+			// that we don't pick a powered up version, if we don't have a PowerWeaponLevel2 active.
+			else if ( !( WeaponFlags & WIF_POWERED_UP ) || Owner->FindInventory( RUNTIME_CLASS( APowerWeaponLevel2 )))
+			{
+				if ( pCompareWeapon == NULL )
+				{
+					shouldSwitch = true;
+				}
+				// [TP] Check PWO
+				else if ( PWO_IsActive( Owner->player ))
+				{
+					shouldSwitch = PWO_ShouldSwitch( pCompareWeapon, this );
+				}
+				// If it's 1, then only switch if it ranks higher than our current weapon.
+				else if (( Owner->player->userinfo.GetSwitchOnPickup() == 1 ) && ( SelectionOrder < pCompareWeapon->SelectionOrder ))
+				{
+					shouldSwitch = true;
+				}
+			}
+
+			if ( shouldSwitch )
 			{
 				// [Spleen] Weapon switching is done client-side unless it's a bot.
 				if ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( Owner->player->bIsBot ) )
@@ -407,40 +424,13 @@ void AWeapon::AttachToOwner (AActor *other)
 				// [BC] If we're a client, tell the server we're switching weapons.
 				if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && (( Owner->player - players ) == consoleplayer ))
 				{
-					CLIENTCOMMANDS_WeaponSelect( this->GetClass( ));
+					CLIENTCOMMANDS_WeaponSelect( GetClass() );
 
-					if ( CLIENTDEMO_IsRecording( ))
-						CLIENTDEMO_WriteLocalCommand( CLD_LCMD_INVUSE, this->GetClass( )->TypeName.GetChars( ) );
+					if ( CLIENTDEMO_IsRecording() )
+						CLIENTDEMO_WriteLocalCommand( CLD_LCMD_INVUSE, GetClass()->TypeName );
 				}
 				else if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( Owner->player->bIsBot == true ) )
 					SERVERCOMMANDS_SetPlayerPendingWeapon( static_cast<ULONG> ( Owner->player - players ) );
-			}
-			// If it's 1, then only switch if it ranks higher than our current weapon.
-			else if (( pCompareWeapon == NULL ) ||
-				// [ZZ] Added weapon order overriding by PWO settings
-				((dofpwo && PWO_CheckWeapons(pCompareWeapon, this)) ||
-				(!dofpwo && ( Owner->player->userinfo.GetSwitchOnPickup() == 1 ) && ( SelectionOrder < pCompareWeapon->SelectionOrder ))))
-			{
-				// [BB] Because of ST's special switchonpickup == 1 handling, we have to make sure here
-				// that we don't pick a powered up version, if we don't have a PowerWeaponLevel2 active.
-				if( (WeaponFlags & WIF_POWERED_UP && Owner->FindInventory (RUNTIME_CLASS(APowerWeaponLevel2)))
-					|| !(WeaponFlags & WIF_POWERED_UP) )
-				{
-					// [Spleen] Weapon switching is done client-side unless it's a bot.
-					if ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( Owner->player->bIsBot ) )
-						Owner->player->PendingWeapon = this;
-
-					// [BC] If we're a client, tell the server we're switching weapons.
-					if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) && (( Owner->player - players ) == consoleplayer ))
-					{
-						CLIENTCOMMANDS_WeaponSelect( this->GetClass( ));
-
-						if ( CLIENTDEMO_IsRecording( ))
-							CLIENTDEMO_WriteLocalCommand( CLD_LCMD_INVUSE, this->GetClass( )->TypeName.GetChars( ) );
-					}
-					else if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( Owner->player->bIsBot == true ) )
-						SERVERCOMMANDS_SetPlayerPendingWeapon( static_cast<ULONG> ( Owner->player - players ) );
-				}
 			}
 		}
 		// [BC] The server doesn't have a status bar.

@@ -69,6 +69,7 @@
 #include "team.h"
 #include "g_game.h"
 #include "callvote.h"
+#include "g_shared/pwo.h"
 
 static void M_StartSkirmishGame();
 static void M_ClearBotSlots();
@@ -472,6 +473,58 @@ public:
 };
 
 IMPLEMENT_CLASS( DTextScalingMenu )
+
+// =================================================================================================
+//
+// DWeaponSetupMenu
+//
+// The weapon setup menu calls PWO code to fill in the PWO items.
+//
+// =================================================================================================
+
+EXTERN_CVAR ( Int, switchonpickup )
+
+class DWeaponSetupMenu : public DOptionMenu
+{
+	DECLARE_CLASS( DWeaponSetupMenu, DOptionMenu )
+	TArray<FOptionMenuItem*> mPWOItems;
+
+public:
+	void Init ( DMenu* parent, FOptionMenuDescriptor* desc )
+	{
+		static bool needPWOItems = true;
+		static unsigned int PWOStartIndex = 0;
+
+		if (( desc != NULL ) && needPWOItems )
+		{
+			PWOStartIndex = desc->mItems.Size();
+			PWO_FillMenu ( *desc );
+			needPWOItems = false;
+		}
+
+		// Mark down what our PWO items are so we can alter them later
+		mPWOItems.Reserve( desc->mItems.Size() - PWOStartIndex );
+
+		for ( unsigned int i = 0; i < desc->mItems.Size() - PWOStartIndex; ++i )
+		{
+			mPWOItems[i] = desc->mItems[PWOStartIndex + i];
+			mPWOItems[i]->SetDisabled( switchonpickup != 3 );
+		}
+
+		Super::Init( parent, desc );
+	}
+
+	void CVarChanged ( FBaseCVar* cvar )
+	{
+		if ( cvar == &switchonpickup )
+		{
+			for ( unsigned int i = 0; i < mPWOItems.Size(); ++i )
+				mPWOItems[i]->SetDisabled( switchonpickup != 3 );
+		}
+	}
+};
+
+IMPLEMENT_CLASS( DWeaponSetupMenu )
 
 // =================================================================================================
 //

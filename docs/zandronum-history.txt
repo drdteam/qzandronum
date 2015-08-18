@@ -16,6 +16,7 @@
 ---
 
 *+	- Updated Zandronum's (G)ZDoom base to ZDoom 2.8pre-441-g458e1b1 / GZDoom 1.8.6. [Torr Samaho]
+*!	- Rewrote support for preferred weapon order. Weapon info is now automatically looked up, the ORDERDEF lump has been removed. [Dusk]
 +	- Added NamedRequestScriptPuke, named variant of RequestScriptPuke. The two functions can now take 1-5 parameters, thus supporting 4 script arguments. [Dusk]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 !	- Removed the internal server browser. It was only useful for debugging purposes anyway and the CCMDs querymaster and dumpserverlist are sufficient for this. [Torr Samaho]

@@ -284,7 +284,6 @@ void			NETWORK_NetAddressToSocketAddress( NETADDRESS_s &Address, struct sockaddr
 bool			NETWORK_StringToIP( const char *pszAddress, char *pszIP0, char *pszIP1, char *pszIP2, char *pszIP3 );
 void			NETWORK_AddressToIPStringArray( const NETADDRESS_s &Address, IPStringArray &szAddress );
 const char		*NETWORK_GetHostByIPAddress( NETADDRESS_s Address );
-std::string		GenerateCouldNotOpenFileErrorString( const char *pszFunctionHeader, const char *pszFileName, LONG lErrorCode );
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- CLASSES ---------------------------------------------------------------------------------------------------------------------------------------

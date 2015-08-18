@@ -64,6 +64,7 @@ extern HWND Window;
 #include "d_main.h"
 // [BC] New #includes.
 #include "network.h"
+#include "g_shared/pwo.h"
 // [RC] For name cleaning
 #include "v_text.h"
 
@@ -619,6 +620,11 @@ void FGameConfigFile::ArchiveGameData (const char *gamename)
 	SetSection (section, true);
 	ClearCurrentSection ();
 	BOTS_ArchiveRevealedBotsAndSkins (this);
+
+	// [TP]
+	strcpy( subsection, "PreferredWeaponOrder" );
+	SetSection( section, true );
+	PWO_ArchivePreferences( this );
 }
 
 void FGameConfigFile::ArchiveGlobalData ()
@@ -727,6 +733,22 @@ void FGameConfigFile::SetRavenDefaults (bool isHexen)
 	{
 		val.Int = 0x3f6040;
 		color.SetGenericRepDefault (val, CVAR_Int);
+	}
+}
+
+//
+// [TP] Read PWO
+//
+void FGameConfigFile::ReadPWO( const char* gamename )
+{
+	FString section;
+	const char* key, *value;
+	section.Format ("%s.PreferredWeaponOrder", gamename );
+
+	if ( SetSection( section ))
+	{
+		while ( NextInSection( key, value ))
+			PWO_SetWeaponWeight( key, strtol( value, NULL, 10 ));
 	}
 }
 

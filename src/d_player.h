@@ -356,7 +356,8 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 	// [BB] Changed to GetSwitchOnPickup
 	int GetSwitchOnPickup() const
 	{
-		return *static_cast<FBoolCVar *>(*CheckKey(NAME_SwitchOnPickup));
+		// [TP] switchonpickup is int in Zandronum so we need to cast to FIntCVar* instead.
+		return *static_cast<FIntCVar *>(*CheckKey(NAME_SwitchOnPickup));
 	}
 	fixed_t GetMoveBob() const
 	{

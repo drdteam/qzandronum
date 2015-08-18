@@ -246,6 +246,8 @@ public:
 	{
 		return mMouseCapture;
 	}
+
+	virtual void CVarChanged ( FBaseCVar* ) {} // [TP]
 };
 
 //=============================================================================
@@ -543,6 +545,7 @@ class FOptionMenuItem : public FListMenuItem
 protected:
 	char *mLabel;
 	bool mCentered;
+	bool mDisabled; // [TP]
 
 	void drawLabel(int indent, int y, EColorRange color, bool grayed = false);
 public:
@@ -552,6 +555,7 @@ public:
 	{
 		mLabel = copystring(text);
 		mCentered = center;
+		mDisabled = false; // [TP]
 	}
 
 	~FOptionMenuItem();
@@ -561,8 +565,9 @@ public:
 	virtual bool MouseEvent(int type, int x, int y);
 
 	// [TP]
-	bool IsNetworkBlocked();
-	virtual bool IsServerInfo() { return false; }
+	virtual bool IsServerInfo() const { return false; }
+	virtual bool IsDisabled() const;
+	void SetDisabled ( bool a ) { mDisabled = a; }
 };	
 
 //=============================================================================

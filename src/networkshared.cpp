@@ -563,77 +563,6 @@ const char *NETWORK_GetHostByIPAddress( NETADDRESS_s Address )
 	return s_szName;
 }
 
-//*****************************************************************************
-//
-std::string GenerateCouldNotOpenFileErrorString( const char *pszFunctionHeader, const char *pszFileName, LONG lErrorCode )
-{
-	std::stringstream errorMessage;
-	errorMessage << pszFunctionHeader << ": Couldn't open file: " << pszFileName << "!\nREASON: ";
-	switch ( lErrorCode )
-	{
-	case EACCES:
-
-		errorMessage << "EACCES: Search permission is denied on a component of the path prefix, or the file exists and the permissions specified by mode are denied, or the file does not exist and write permission is denied for the parent directory of the file to be created.\n";
-		break;
-	case EINTR:
-
-		errorMessage << "EINTR: A signal was caught during fopen().\n";
-		break;
-	case EISDIR:
-
-		errorMessage << "EISDIR: The named file is a directory and mode requires write access.\n";
-		break;
-	case EMFILE:
-
-		errorMessage << "EMFILE: {OPEN_MAX} file descriptors are currently open in the calling process.\n";
-		break;
-	case ENAMETOOLONG:
-
-		errorMessage << "ENAMETOOLONG: Pathname resolution of a symbolic link produced an intermediate result whose length exceeds {PATH_MAX}.\n";
-		break;
-	case ENFILE:
-
-		errorMessage << "ENFILE: The maximum allowable number of files is currently open in the system.\n";
-		break;
-	case ENOENT:
-
-		errorMessage << "ENOENT: A component of filename does not name an existing file or filename is an empty string.\n";
-		break;
-	case ENOSPC:
-
-		errorMessage << "ENOSPC: The directory or file system that would contain the new file cannot be expanded, the file does not exist, and it was to be created.\n";
-		break;
-	case ENOTDIR:
-
-		errorMessage << "ENOTDIR: A component of the path prefix is not a directory.\n";
-		break;
-	case ENXIO:
-
-		errorMessage << "ENXIO: The named file is a character special or block special file, and the device associated with this special file does not exist.\n";
-		break;
-	case EROFS:
-
-		errorMessage << "EROFS: The named file resides on a read-only file system and mode requires write access.\n";
-		break;
-	case EINVAL:
-
-		errorMessage << "EINVAL: The value of the mode argument is not valid.\n";
-		break;
-	case ENOMEM:
-
-		errorMessage << "ENOMEM: Insufficient storage space is available.\n";
-		break;
-//	case EOVERFLOW:
-//	case ETXTBSY:
-//	case ELOOP:
-	default:
-
-		errorMessage << "UNKNOWN\n";
-		break;
-	}
-	return errorMessage.str();
-}
-
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- CLASSES ---------------------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -673,7 +602,7 @@ bool IPFileParser::parseIPList( const char* FileName, std::vector<IPADDRESSBAN_s
 	}
 	else
 	{
-		sprintf( _errorMessage, "%s", GenerateCouldNotOpenFileErrorString( "IPFileParser::parseIPList", FileName, errno ).c_str() );
+		sprintf( _errorMessage, "IPFileParser::parseIPList: could not open %s: %s\n", FileName, strerror( errno ));
 		return false;
 	}
 
@@ -1195,13 +1124,13 @@ void IPList::addEntry( const char *pszIP0, const char *pszIP1, const char *pszIP
 			messageStream << " It expires on " << szDate << ".";
 		
 		messageStream << "\n";
-
-		Message = messageStream.str();
 	}
 	else
 	{
-		Message = GenerateCouldNotOpenFileErrorString( "IPList::addEntry", _filename.c_str(), errno );
+		messageStream << "IPList::addEntry: could not open " << _filename << " for writing: " << strerror( errno ) << "\n";
 	}
+
+	Message = messageStream.str();
 }
 
 //*****************************************************************************
@@ -1300,7 +1229,7 @@ bool IPList::rewriteListToFile ()
 	}
 	else
 	{
-		_error = GenerateCouldNotOpenFileErrorString( "IPList::rewriteListToFile", _filename.c_str(), errno );
+		_error = "IPList::rewriteListToFile: couldn't open " + _filename + " for writing: " + strerror( errno ) + "\n";
 		return false;
 	}
 }

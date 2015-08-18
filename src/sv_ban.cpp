@@ -187,7 +187,7 @@ void SERVERBAN_ClearBans( void )
 		Printf( "Banlist cleared.\n" );
 	}
 	else
-		Printf( "%s", GenerateCouldNotOpenFileErrorString( "SERVERBAN_ClearBans", sv_banfile.GetGenericRep( CVAR_String ).String, errno ).c_str() );
+		Printf( "SERVERBAN_ClearBans: Could not open %s for writing: %s\n", *sv_banfile, strerror( errno ));
 }
 
 //*****************************************************************************

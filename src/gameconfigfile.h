@@ -57,6 +57,7 @@ public:
 	FString GetConfigPath (bool tryProg);
 	void ReadNetVars ();
 	void ReadRevealedBotsAndSkins ();
+	void ReadPWO( const char* gamename ); // [TP]
 
 protected:
 	void WriteCommentHeader (FILE *file) const;

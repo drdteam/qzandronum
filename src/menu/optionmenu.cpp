@@ -475,9 +475,8 @@ int FOptionMenuItem::Draw(FOptionMenuDescriptor *desc, int y, int indent, bool s
 
 bool FOptionMenuItem::Selectable()
 {
-	// [TP] If we're in multiplayer and this item is blocked because of multiplayer, it cannot
-	// be selected.
-	if ( IsNetworkBlocked() )
+	// [TP] Some Zandronum-specific checks..
+	if ( IsDisabled() )
 		return false;
 
 	return true;
@@ -517,10 +516,10 @@ void FOptionMenuItem::drawLabel(int indent, int y, EColorRange color, bool graye
 	screen->DrawText (SmallFont, color, x, y, label, DTA_CleanNoMove_1, true, DTA_ColorOverlay, overlay, TAG_DONE);
 }
 
-// [TP] Is this item blocked because of networking?
-bool FOptionMenuItem::IsNetworkBlocked()
+// [TP] Is this item not available?
+bool FOptionMenuItem::IsDisabled() const
 {
-	return NETWORK_InClientMode() && IsServerInfo();
+	return mDisabled || ( NETWORK_InClientMode() && IsServerInfo() );
 }
 
 

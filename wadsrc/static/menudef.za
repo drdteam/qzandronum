@@ -333,7 +333,7 @@ OptionValue ZA_SwitchOnPickup
 	0, "Never"
 	1, "Only higher ranked"
 	2, "Always"
-//	3, "Use PWO"
+	3, "Use PWO"
 }
 
 OptionMenu ZA_WeaponSetup
@@ -343,6 +343,8 @@ OptionMenu ZA_WeaponSetup
 	Option		"Switch on pickup",		"switchonpickup",				"ZA_SwitchOnPickup"
 	Option		"Switch without ammo",	"cl_noammoswitch",				"YesNo"
 	Option		"Railgun color",		"railcolor",					"ZA_RailgunColors"
+
+	Class WeaponSetupMenu
 }
 
 // =================================================================================================

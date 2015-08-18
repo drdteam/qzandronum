@@ -62,6 +62,7 @@
 #include "cl_demo.h"
 #include "m_png.h"
 #include "p_acs.h"
+#include "menu/menu.h"
 
 struct FLatchedValue
 {
@@ -154,6 +155,10 @@ void FBaseCVar::ForceSet (UCVarValue value, ECVarType type, bool nouserinfosend)
 		Callback ();
 
 	Flags &= ~CVAR_ISDEFAULT;
+
+	// [TP]
+	if ( DMenu::CurrentMenu != NULL )
+		DMenu::CurrentMenu->CVarChanged ( this );
 }
 
 void FBaseCVar::SetGenericRep (UCVarValue value, ECVarType type)

@@ -77,6 +77,7 @@
 #include "gamemode.h"
 #include "invasion.h"
 #include "d_netinf.h"
+#include "g_shared/pwo.h"
 
 static FRandom pr_skullpop ("SkullPop");
 
@@ -1037,6 +1038,7 @@ AWeapon *APlayerPawn::BestWeapon (const PClass *ammotype)
 	AInventory *item;
 	AWeapon *weap;
 	bool tomed = NULL != FindInventory (RUNTIME_CLASS(APowerWeaponLevel2), true);
+	int bestWeight = INT_MIN; // [TP]
 
 	// Find the best weapon the player has.
 	for (item = Inventory; item != NULL; item = item->Inventory)
@@ -1046,9 +1048,25 @@ AWeapon *APlayerPawn::BestWeapon (const PClass *ammotype)
 
 		weap = static_cast<AWeapon *> (item);
 
-		// Don't select it if it's worse than what was already found.
-		if (weap->SelectionOrder > bestOrder)
-			continue;
+		// [TP] If PWO is active, a weight check overrides the selection order one (unless the
+		// weights are the same)
+		int weight = 0;
+
+		if ( PWO_IsActive( player ))
+		{
+			PWOWeaponInfo* info = PWOWeaponInfo::FindInfo( weap->GetClass() );
+			weight = info ? info->GetWeight() : INT_MIN;
+
+			if ( weight < bestWeight )
+				continue;
+		}
+
+		if ( ( PWO_IsActive( player ) == false ) || ( weight == bestWeight ) )
+		{
+			// Don't select it if it's worse than what was already found.
+			if (weap->SelectionOrder > bestOrder)
+				continue;
+		}
 
 		// Don't select it if its primary fire doesn't use the desired ammo.
 		if (ammotype != NULL &&
@@ -1078,6 +1096,7 @@ AWeapon *APlayerPawn::BestWeapon (const PClass *ammotype)
 		// This weapon is usable!
 		bestOrder = weap->SelectionOrder;
 		bestMatch = weap;
+		bestWeight = weight; // [TP]
 	}
 	return bestMatch;
 }
