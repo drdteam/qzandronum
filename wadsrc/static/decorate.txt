@@ -148,7 +148,6 @@
 #include "actors/skulltag/skulltagartifacts.txt"
 #include "actors/skulltag/skulltaghealth.txt"
 #include "actors/skulltag/skulltagmisc.txt"
-#include "actors/skulltag/skulltagrunes.txt"
 #include "actors/skulltag/skulltagscorepillars.txt"
 #include "actors/skulltag/skulltagteamitems.txt"
 

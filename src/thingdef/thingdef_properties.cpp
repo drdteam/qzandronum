@@ -2271,6 +2271,7 @@ DEFINE_CLASS_PROPERTY_PREFIX(powerup, type, S, PowerupGiver)
 
 //==========================================================================
 //	[BC] These are new.
+//	[TP] This now only exists for compatibility
 //==========================================================================
 DEFINE_CLASS_PROPERTY_PREFIX(rune, type, S, RuneGiver)
 {
@@ -2283,13 +2284,13 @@ DEFINE_CLASS_PROPERTY_PREFIX(rune, type, S, RuneGiver)
 	{
 		I_Error("Unknown rune type '%s' in '%s'\n", str, bag.Info->Class->TypeName.GetChars());
 	}
-	else if (!runetype->IsDescendantOf(RUNTIME_CLASS(ARune)))
+	else if (!runetype->IsDescendantOf(RUNTIME_CLASS(APowerup)))
 	{
 		I_Error("Invalid rune type '%s' in '%s'\n", str, bag.Info->Class->TypeName.GetChars());
 	}
 	else
 	{
-		defaults->RuneType=runetype;
+		defaults->PowerupType=runetype;
 	}
 }
 

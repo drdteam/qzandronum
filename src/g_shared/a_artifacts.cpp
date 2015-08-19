@@ -50,8 +50,6 @@ static FRandom pr_torch ("Torch");
 #define	TRANSLUCENCY_TICS		( 45 * TICRATE )
 
 IMPLEMENT_CLASS (APowerup)
-// [BC]
-IMPLEMENT_CLASS (ARune)
 
 // Powerup-Giver -------------------------------------------------------------
 
@@ -85,9 +83,13 @@ bool APowerupGiver::Use (bool pickup)
 		power->Strength = Strength;
 	}
 
+	// [TP]
+	ModifyPowerup( power );
+
 	power->ItemFlags |= ItemFlags & (IF_ALWAYSPICKUP|IF_ADDITIVETIME);
 	if (power->CallTryPickup (Owner))
 	{
+		PowerupGranted( power ); // [TP]
 		return true;
 	}
 	power->GoAwayAndDie ();
@@ -241,6 +243,10 @@ void APowerup::Destroy ()
 
 bool APowerup::DrawPowerup (int x, int y)
 {
+	// [TP] Do not draw this powerup if it's the current rune.
+	if ( IsActiveRune() )
+		return false;
+
 	if (!Icon.isValid())
 	{
 		return false;
@@ -359,6 +365,19 @@ AInventory *APowerup::CreateTossable ()
 void APowerup::OwnerDied ()
 {
 	Destroy ();
+}
+
+//===========================================================================
+//
+// [TP] APowerup :: IsActiveRune
+//
+// Is this powerup its owner's current rune?
+//
+//===========================================================================
+
+bool APowerup::IsActiveRune()
+{
+	return ( Owner != NULL ) && ( Owner->Rune == this );
 }
 
 // Invulnerability Powerup ---------------------------------------------------
@@ -1059,6 +1078,10 @@ void APowerFlight::EndEffect ()
 
 bool APowerFlight::DrawPowerup (int x, int y)
 {
+	// [TP] Do not draw this powerup if it's the current rune.
+	if ( IsActiveRune() )
+		return false;
+
 	// If this item got a valid icon use that instead of the default spinning wings.
 	if (Icon.isValid())
 	{
@@ -2232,455 +2255,47 @@ void APowerTranslucency::InitEffect( )
 
 //===========================================================================
 //
-// ARuneGiver :: Use
+// ARuneGiver :: PowerupGranted
 //
 //===========================================================================
 
-bool ARuneGiver::Use (bool pickup)
+void ARuneGiver::PowerupGranted ( APowerup* power )
 {
-	ARune *rune = static_cast<ARune *> (Spawn (RuneType, 0, 0, 0, NO_REPLACE));
+	// If the owner already has a rune, remove that now.
+	if ( Owner->Rune != NULL )
+		Owner->Rune->Destroy();
 
-	if (BlendColor != 0)
-	{
-		rune->BlendColor = BlendColor;
-	}
-
-	// [RC] Apply rune icons. For some obscure reason, the bulk of which is in debugger hieroglyphics, only the RuneGivers have icons.
-	rune->Icon = ARuneGiver::Icon;
-
-	rune->ItemFlags |= ItemFlags & IF_ALWAYSPICKUP;
-	if (rune->CallTryPickup (Owner))
-	{
-		return true;
-	}
-	rune->GoAwayAndDie ();
-	return false;
+	Owner->Rune = power;
 }
 
 //===========================================================================
 //
-// ARuneGiver :: Serialize
+// ARuneGiver :: ModifyPowerup
 //
 //===========================================================================
 
-void ARuneGiver::Serialize (FArchive &arc)
+void ARuneGiver::ModifyPowerup ( APowerup* power )
 {
-	Super::Serialize (arc);
-	arc << RuneType;
-	arc << BlendColor;
-}
-
-// Rune ---------------------------------------------------------------------
-
-//===========================================================================
-//
-// ARune :: Tick
-//
-//===========================================================================
-
-void ARune::Tick ()
-{
-	if (Owner == NULL)
-	{
-		Destroy ();
-	}
-}
-
-//===========================================================================
-//
-// ARune :: Serialize
-//
-//===========================================================================
-
-void ARune::Serialize (FArchive &arc)
-{
-	Super::Serialize (arc);
-	arc << BlendColor;
-}
-
-//===========================================================================
-//
-// ARune :: GetBlend
-//
-//===========================================================================
-
-PalEntry ARune::GetBlend ()
-{
-	if (IsSpecialColormap(BlendColor)) return 0;
-
-	return BlendColor;
-}
-
-//===========================================================================
-//
-// ARune :: InitEffect
-//
-//===========================================================================
-
-void ARune::InitEffect ()
-{
-}
-
-//===========================================================================
-//
-// ARune :: DoEffect
-//
-//===========================================================================
-
-void ARune::DoEffect ()
-{
-	if (Owner == NULL)
-	{
-		return;
-	}
-
-	// [BC] Apply the colormap to the player's body, also.
-	if (IsSpecialColormap(BlendColor))
-	{
-		Owner->player->fixedcolormap = BlendColor;
-		Owner->lFixedColormap = BlendColor;
-	}
-}
-
-//===========================================================================
-//
-// ARune :: EndEffect
-//
-//===========================================================================
-
-void ARune::EndEffect ()
-{
-}
-
-//===========================================================================
-//
-// ARune :: Destroy
-//
-//===========================================================================
-
-void ARune::Destroy ()
-{
-	EndEffect ();
-	Super::Destroy ();
-}
-
-//===========================================================================
-//
-// ARune :: DrawPowerup
-//
-//===========================================================================
-
-bool ARune::DrawPowerup (int x, int y)
-{
-/* [RC] Runes are drawn by the HUD.
-
-	if (Icon <= 0)
-	{
-		return false;
-	}
-
-	FTexture *pic = TexMan(Icon);
-	screen->DrawTexture (pic, x, y,
-		DTA_HUDRules, HUD_Normal,
-//		DTA_TopOffset, pic->GetHeight()/2,
-//		DTA_LeftOffset, pic->GetWidth()/2,
-		TAG_DONE);
-*/
-	return true;
-}
-
-//===========================================================================
-//
-// ARune :: HandlePickup
-//
-//===========================================================================
-
-bool ARune::HandlePickup (AInventory *item)
-{
-	if (item->GetClass() == GetClass())
-	{
-		// We can't pickup two of the same rune!
-		return ( true );
-	}
-	// If this new item is a rune, pick it up, but get rid of our current rune.
-	if ( item->IsKindOf( RUNTIME_CLASS( ARune )))
-	{
-		Owner->RemoveInventory( this );
-		return ( false );
-	}
-	if (Inventory != NULL)
-	{
-		return Inventory->HandlePickup (item);
-	}
-	return false;
-}
-
-//===========================================================================
-//
-// ARune :: CreateCopy
-//
-//===========================================================================
-
-AInventory *ARune::CreateCopy (AActor *other)
-{
-	Owner = other;
-	InitEffect ();
-	Owner = NULL;
-	return this;
-}
-
-//===========================================================================
-//
-// ARune :: CreateTossable
-//
-//
-//===========================================================================
-
-AInventory *ARune::CreateTossable ()
-{
-	return NULL;
-}
-
-//===========================================================================
-//
-// ARune :: OwnerDied
-//
-// Runes don't last beyond death.
-//
-//===========================================================================
-
-void ARune::OwnerDied ()
-{
-	Destroy ();
-}
-
-//===========================================================================
-//
-// ARune :: DetachFromOwner
-//
-// When the rune is removed from the owner, take its powers away from its owner.
-//
-//===========================================================================
-
-void ARune::DetachFromOwner( )
-{
-	EndEffect( );
-	Super::DetachFromOwner( );
-}
-
-// Double damage rune -------------------------------------------------------
-
-IMPLEMENT_CLASS( ARuneDoubleDamage )
-
-//===========================================================================
-//
-// ARuneDoubleDamage :: ModifyDamage
-//
-//===========================================================================
-
-void ARuneDoubleDamage::ModifyDamage( int damage, FName damageType, int &newdamage, bool passive )
-{
-	if (( passive == false ) &&
-		( damage > 0 ))
-	{
-		damage = newdamage = damage * 2;
-	}
-
-	// Go onto the next item.
-	if ( Inventory != NULL )
-		Inventory->ModifyDamage( damage, damageType, newdamage, passive );
-}
-
-// Double firing speed rune -------------------------------------------------
-
-IMPLEMENT_CLASS( ARuneDoubleFiringSpeed )
-
-//===========================================================================
-//
-// ARuneDoubleFiringSpeed :: InitEffect
-//
-//===========================================================================
-
-void ARuneDoubleFiringSpeed::InitEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Give the player the power to fire twice as fast.
-	Owner->player->cheats |= CF_DOUBLEFIRINGSPEED;
-}
-
-//===========================================================================
-//
-// ARuneDoubleFiringSpeed :: EndEffect
-//
-//===========================================================================
-
-void ARuneDoubleFiringSpeed::EndEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Take away the double firing speed power.
-	Owner->player->cheats &= ~CF_DOUBLEFIRINGSPEED;
-}
-
-// Drain rune -------------------------------------------------------
-// [BB] The code for ARuneDrain is nearly identical to the code from APowerDrain.
-// TO DO: Find a way to get rid of this code duplication.
-
-IMPLEMENT_CLASS( ARuneDrain )
-
-//===========================================================================
-//
-// ARuneDrain :: InitEffect
-//
-//===========================================================================
-
-void ARuneDrain::InitEffect( )
-{
-	if (Owner== NULL || Owner->player == NULL)
-		return;
-
-	// Give the player the power to drain life from opponents when he damages them.
-	Owner->player->cheats |= CF_DRAIN;
-}
-
-//===========================================================================
-//
-// ARuneDrain :: EndEffect
-//
-//===========================================================================
-
-void ARuneDrain::EndEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (Owner != NULL && Owner->player != NULL)
-	{
-		// Take away the drain power.
-		Owner->player->cheats &= ~CF_DRAIN;
-	}
-}
-
-// Spread rune -------------------------------------------------------
-
-IMPLEMENT_CLASS( ARuneSpread )
-
-//===========================================================================
-//
-// ARuneSpread :: InitEffect
-//
-//===========================================================================
-
-void ARuneSpread::InitEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Give the player the power to shoot 3x the number of missiles he normally would.
-	Owner->player->cheats2 |= CF2_SPREAD;
-}
-
-//===========================================================================
-//
-// ARuneSpread :: EndEffect
-//
-//===========================================================================
-
-void ARuneSpread::EndEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Take away the spread power.
-	Owner->player->cheats2 &= ~CF2_SPREAD;
-}
-
-// Half damage rune -------------------------------------------------------
-
-IMPLEMENT_CLASS( ARuneHalfDamage )
-
-//===========================================================================
-//
-// ARuneHalfDamage :: ModifyDamage
-//
-//===========================================================================
-
-void ARuneHalfDamage::ModifyDamage( int damage, FName damageType, int &newdamage, bool passive )
-{
-	if (( passive ) &&
-		( damage > 0 ))
-	{
-		damage = newdamage = damage / 2;
-	}
-
-	// Go onto the next item.
-	if ( Inventory != NULL )
-		Inventory->ModifyDamage( damage, damageType, newdamage, passive );
-}
-
-// Regeneration rune -------------------------------------------------------
-// [BB] The code for ARuneRegeneration is nearly identical to the code from APowerRegeneration.
-// TO DO: Find a way to get rid of this code duplication.
-
-IMPLEMENT_CLASS( ARuneRegeneration )
-
-//===========================================================================
-//
-// ARuneRegeneration :: DoEffect
-//
-//===========================================================================
-
-void ARuneRegeneration::DoEffect( )
-{
-	Super::DoEffect();
-
-	// [BB] This is server side.
-	if ( NETWORK_InClientMode() )
-		return;
-
-	if (Owner != NULL && Owner->health > 0 && (level.time & 31) == 0)
-	{
-		if (P_GiveBody(Owner, 5))
-		{
-			S_Sound(Owner, CHAN_ITEM, "*regenerate", 1, ATTN_NORM );
-
-			// [BC] If we're the server, send out the health change, and play the
-			// health sound.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				if ( Owner->player )
-					SERVERCOMMANDS_SetPlayerHealth( Owner->player - players );
-				SERVERCOMMANDS_SoundActor( Owner, CHAN_ITEM, "*regenerate", 1, ATTN_NORM );
-			}
-		}
-	}
+	power->EffectTics = ( INT_MAX - 1 );
+	power->ItemFlags |= IF_PERSISTENTPOWER;
+	power->ItemFlags &= ~IF_ALWAYSPICKUP;
+	power->Icon = Icon;
 }
 
 // Prosperity rune -------------------------------------------------------
 
-IMPLEMENT_CLASS( ARuneProsperity )
+IMPLEMENT_CLASS( APowerProsperity )
 
 //===========================================================================
 //
-// ARuneProsperity :: InitEffect
+// APowerProsperity :: InitEffect
 //
 //===========================================================================
 
-void ARuneProsperity::InitEffect( )
+void APowerProsperity::InitEffect( )
 {
+	Super::InitEffect();
+
 	// Nothing to do if there's no owner.
 	if (( Owner == NULL ) || ( Owner->player == NULL ))
 	{
@@ -2693,12 +2308,14 @@ void ARuneProsperity::InitEffect( )
 
 //===========================================================================
 //
-// ARuneProsperity :: EndEffect
+// APowerProsperity :: EndEffect
 //
 //===========================================================================
 
-void ARuneProsperity::EndEffect( )
+void APowerProsperity::EndEffect( )
 {
+	Super::EndEffect();
+
 	// Nothing to do if there's no owner.
 	if (( Owner == NULL ) || ( Owner->player == NULL ))
 	{
@@ -2711,16 +2328,18 @@ void ARuneProsperity::EndEffect( )
 
 // Reflection rune -------------------------------------------------------
 
-IMPLEMENT_CLASS( ARuneReflection )
+IMPLEMENT_CLASS( APowerReflection )
 
 //===========================================================================
 //
-// ARuneReflection :: InitEffect
+// APowerReflection :: InitEffect
 //
 //===========================================================================
 
-void ARuneReflection::InitEffect( )
+void APowerReflection::InitEffect()
 {
+	Super::InitEffect();
+
 	// Nothing to do if there's no owner.
 	if (( Owner == NULL ) || ( Owner->player == NULL ))
 	{
@@ -2733,12 +2352,14 @@ void ARuneReflection::InitEffect( )
 
 //===========================================================================
 //
-// ARuneReflection :: EndEffect
+// APowerReflection :: EndEffect
 //
 //===========================================================================
 
-void ARuneReflection::EndEffect( )
+void APowerReflection::EndEffect()
 {
+	Super::EndEffect();
+
 	// Nothing to do if there's no owner.
 	if (( Owner == NULL ) || ( Owner->player == NULL ))
 	{
@@ -2749,128 +2370,36 @@ void ARuneReflection::EndEffect( )
 	Owner->player->cheats &= ~CF_REFLECTION;
 }
 
-// High jump rune -------------------------------------------------------
-// [BB] The code for ARuneHighJump is nearly identical to the code from APowerHighJump.
-// TO DO: Find a way to get rid of this code duplication.
+// Spread rune -------------------------------------------------------
 
-IMPLEMENT_CLASS( ARuneHighJump )
+IMPLEMENT_CLASS( APowerSpread )
 
 //===========================================================================
 //
-// ARuneHighJump :: InitEffect
+// APowerSpread :: InitEffect
 //
 //===========================================================================
 
-void ARuneHighJump::InitEffect( )
+void APowerSpread::InitEffect( )
 {
-	if (Owner== NULL || Owner->player == NULL)
-		return;
+	Super::InitEffect();
 
-	// Give the player the power to jump much higher.
-	Owner->player->cheats |= CF_HIGHJUMP;
+	if ( Owner && Owner->player )
+		Owner->player->cheats2 |= CF2_SPREAD;
 }
 
 //===========================================================================
 //
-// ARuneHighJump :: EndEffect
+// APowerSpread :: EndEffect
 //
 //===========================================================================
 
-void ARuneHighJump::EndEffect( )
+void APowerSpread::EndEffect( )
 {
-	// Nothing to do if there's no owner.
-	if (Owner != NULL && Owner->player != NULL)
-	{
-		// Take away the high jump power.
-		Owner->player->cheats &= ~CF_HIGHJUMP;
-	}
-}
+	Super::EndEffect();
 
-// Speed +25% rune -------------------------------------------------------
-
-IMPLEMENT_CLASS( ARuneSpeed25 )
-
-//===========================================================================
-//
-// ARuneDoubleDamage :: InitEffect
-//
-//===========================================================================
-
-void ARuneSpeed25::InitEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Give the player the power to run 25% faster.
-	Owner->player->cheats |= CF_SPEED25;
-}
-
-//===========================================================================
-//
-// ARuneSpeed25 :: DoEffect
-//
-//===========================================================================
-
-void ARuneSpeed25::DoEffect ()
-{
-//	if (Owner->player->cheats & CF_PREDICTING)
-//		return;
-
-	Super::DoEffect ();
-
-	if (level.time & 1)
-		return;
-
-	if ( gameinfo.gametype != GAME_Doom )
-	{
-		if (P_AproxDistance (Owner->velx, Owner->vely) <= 12*FRACUNIT)
-			return;
-	}
-
-	AActor *speedMo = Spawn<APlayerSpeedTrail> (Owner->x, Owner->y, Owner->z, NO_REPLACE);
-	if (speedMo)
-	{
-		speedMo->angle = Owner->angle;
-		speedMo->Translation = Owner->Translation;
-		speedMo->target = Owner;
-		speedMo->sprite = Owner->sprite;
-		speedMo->frame = Owner->frame;
-		speedMo->floorclip = Owner->floorclip;
-
-		// [BC] Also get the scale from the owner.
-		// [GZDoom]
-		speedMo->scaleX = Owner->scaleX;
-		speedMo->scaleY = Owner->scaleY;
-		//speedMo->xscale = Owner->xscale;
-		//speedMo->yscale = Owner->yscale;
-
-		if (Owner == players[consoleplayer].camera &&
-			!(Owner->player->cheats & CF_CHASECAM))
-		{
-			speedMo->renderflags |= RF_INVISIBLE;
-		}
-	}
-}
-
-//===========================================================================
-//
-// ARuneDoubleDamage :: EndEffect
-//
-//===========================================================================
-
-void ARuneSpeed25::EndEffect( )
-{
-	// Nothing to do if there's no owner.
-	if (( Owner == NULL ) || ( Owner->player == NULL ))
-	{
-		return;
-	}
-
-	// Take away the speed power.
-	Owner->player->cheats &= ~CF_SPEED25;
+	if ( Owner && Owner->player )
+		Owner->player->cheats2 &= ~CF2_SPREAD;
 }
 
 // Infinite Ammo Powerup -----------------------------------------------------

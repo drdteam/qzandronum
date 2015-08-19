@@ -8927,7 +8927,7 @@ scriptwait:
 
 					// [BC] If we're the server, tell clients to play this sound.
 					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_SoundPoint( activationline->frontsector->soundorg[0], activationline->frontsector->soundorg[1], activationline->frontsector->soundorg[2], CHAN_AUTO, (char *)lookup, (float)(STACK(1)) / 127.f, ATTN_NORM );
+						SERVERCOMMANDS_SoundSector( activationline->frontsector, CHAN_AUTO, (char *)lookup, (float)(STACK(1)) / 127.f, ATTN_NORM );
 				}
 				else
 				{

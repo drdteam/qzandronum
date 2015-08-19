@@ -661,11 +661,9 @@ void DrawFullHUD_Ammo(AAmmo *pAmmo)
 void DrawFullHUD_Rune()
 {
 	if ( CPlayer->mo )
-		pInventory = CPlayer->mo->Inventory;
+		pInventory = CPlayer->mo->Rune;
 	else
 		pInventory = NULL;
-	while (( pInventory ) && ( pInventory->IsKindOf( PClass::FindClass( "Rune" )) == false ))
-		pInventory = pInventory->Inventory;
 
 	if (( pInventory ) && ( pInventory->Icon.isValid() ))
 	{

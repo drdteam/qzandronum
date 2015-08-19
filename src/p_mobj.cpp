@@ -179,6 +179,7 @@ IMPLEMENT_POINTY_CLASS (AActor)
  // [BC] Declare these so refrences to them get fixed if they're removed.
  DECLARE_POINTER (pMonsterSpot)
  DECLARE_POINTER (pPickupSpot)
+ DECLARE_POINTER (Rune) // [TP]
 END_POINTERS
 
 AActor::~AActor ()
@@ -398,7 +399,8 @@ void AActor::Serialize (FArchive &arc)
 		<< ulNetworkFlags
 		<< ulInvasionWave
 		<< pMonsterSpot
-		<< pPickupSpot;
+		<< pPickupSpot
+		<< Rune;
 
 	{
 		FString tagstr;

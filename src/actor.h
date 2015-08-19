@@ -1208,6 +1208,9 @@ public:
 	// [EP] TODO: remove the 'ul' prefix from this variable, it isn't ULONG anymore
 	unsigned int ulInvasionWave;
 
+	// [TP] Rune that is currently in effect
+	TObjPtr<class APowerup> Rune;
+
 	// [BC] End of ST stuff.
 
 	// [RH] Used to interpolate the view to get >35 FPS

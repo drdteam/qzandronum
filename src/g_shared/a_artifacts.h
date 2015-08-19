@@ -20,6 +20,7 @@ public:
 	virtual void OwnerDied ();
 	virtual PalEntry GetBlend ();
 	virtual bool DrawPowerup (int x, int y);
+	bool IsActiveRune(); // [TP]
 
 	int EffectTics;
 	PalEntry BlendColor;
@@ -42,6 +43,10 @@ class APowerupGiver : public AInventory
 public:
 	virtual bool Use (bool pickup);
 	virtual void Serialize (FArchive &arc);
+
+	// [TP] For runes
+	virtual void PowerupGranted ( APowerup* ) {}
+	virtual void ModifyPowerup ( APowerup* ) {}
 
 	const PClass *PowerupType;
 	int EffectTics;			// Non-0 to override the powerup's default tics
@@ -305,118 +310,36 @@ protected:
 
 // [BC] A rune is like a powerup, except its effect lasts until a new rune is picked up,
 // or the owner dies. Only one rune may be carried at once.
-class ARune : public AInventory
+class ARuneGiver : public APowerupGiver
 {
-	DECLARE_CLASS (ARune, AInventory)
+	DECLARE_CLASS( ARuneGiver, APowerupGiver )
 public:
-	virtual void Tick ();
-	virtual void Destroy ();
-	virtual bool HandlePickup (AInventory *item);
-	virtual AInventory *CreateCopy (AActor *other);
-	virtual AInventory *CreateTossable ();
-	virtual void Serialize (FArchive &arc);
-	virtual void OwnerDied ();
-	virtual PalEntry GetBlend ();
-	virtual bool DrawPowerup (int x, int y);
-	virtual void DetachFromOwner( );
-
-	int EffectTics;
-	PalEntry BlendColor;
-
-protected:
-	virtual void InitEffect ();
-	virtual void DoEffect ();
-	virtual void EndEffect ();
+	void PowerupGranted ( APowerup* power );
+	void ModifyPowerup ( APowerup* power );
 };
 
-class ARuneGiver : public AInventory
+class APowerSpread : public APowerup
 {
-	DECLARE_CLASS (ARuneGiver, AInventory)
-public:
-	virtual bool Use (bool pickup);
-	virtual void Serialize (FArchive &arc);
-
-	const PClass *RuneType;
-	int EffectTics;			// Non-0 to override the powerup's default tics
-	PalEntry BlendColor;	// Non-0 to override the powerup's default blend
+	DECLARE_CLASS( APowerSpread, APowerup )
+protected:
+	void InitEffect();
+	void EndEffect();
 };
 
-class ARuneDoubleDamage : public ARune
+class APowerProsperity : public APowerup
 {
-	DECLARE_CLASS( ARuneDoubleDamage, ARune )
+	DECLARE_CLASS( APowerProsperity, APowerup )
 protected:
-	virtual void ModifyDamage( int damage, FName damageType, int &newdamage, bool passive );
+	void InitEffect();
+	void EndEffect();
 };
 
-class ARuneDoubleFiringSpeed : public ARune
+class APowerReflection : public APowerup
 {
-	DECLARE_CLASS( ARuneDoubleFiringSpeed, ARune )
+	DECLARE_CLASS( APowerReflection, APowerup )
 protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneDrain : public ARune
-{
-	DECLARE_CLASS( ARuneDrain, ARune )
-protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneSpread : public ARune
-{
-	DECLARE_CLASS( ARuneSpread, ARune )
-protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneHalfDamage : public ARune
-{
-	DECLARE_CLASS( ARuneHalfDamage, ARune )
-protected:
-	virtual void ModifyDamage( int damage, FName damageType, int &newdamage, bool passive );
-};
-
-class ARuneRegeneration : public ARune
-{
-	DECLARE_CLASS( ARuneRegeneration, ARune )
-protected:
-	void DoEffect( );
-};
-
-class ARuneProsperity : public ARune
-{
-	DECLARE_CLASS( ARuneProsperity, ARune )
-protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneReflection : public ARune
-{
-	DECLARE_CLASS( ARuneReflection, ARune )
-protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneHighJump : public ARune
-{
-	DECLARE_CLASS( ARuneHighJump, ARune )
-protected:
-	void InitEffect( );
-	void EndEffect( );
-};
-
-class ARuneSpeed25 : public ARune
-{
-	DECLARE_CLASS( ARuneSpeed25, ARune )
-protected:
-	void InitEffect( );
-	void DoEffect( );
-	void EndEffect( );
+	void InitEffect();
+	void EndEffect();
 };
 
 

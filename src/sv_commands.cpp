@@ -1799,6 +1799,7 @@ void SERVERCOMMANDS_SetThingFlags( AActor *pActor, FlagSet flagset, ULONG ulPlay
 		case FLAGSET_FLAGS4:	ulActorFlags = pActor->flags4; break;
 		case FLAGSET_FLAGS5:	ulActorFlags = pActor->flags5; break;
 		case FLAGSET_FLAGS6:	ulActorFlags = pActor->flags6; break;
+		case FLAGSET_FLAGS7:	ulActorFlags = pActor->flags7; break;
 		case FLAGSET_FLAGSST:	ulActorFlags = pActor->ulSTFlags; break;
 		default: return;
 	}
@@ -1837,6 +1838,10 @@ void SERVERCOMMANDS_UpdateThingFlagsNotAtDefaults( AActor *pActor, ULONG ulPlaye
 	if ( pActor->flags6 != pActor->GetDefault( )->flags6 )
 	{
 		SERVERCOMMANDS_SetThingFlags( pActor, FLAGSET_FLAGS6, ulPlayerExtra, flags );
+	}
+	if ( pActor->flags7 != pActor->GetDefault( )->flags7 )
+	{
+		SERVERCOMMANDS_SetThingFlags( pActor, FLAGSET_FLAGS7, ulPlayerExtra, flags );
 	}
 	// [BB] ulSTFlags is intentionally left out here.
 }
@@ -3492,6 +3497,26 @@ void SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSo
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SoundSector( sector_t *sector, int channel, const char *sound, float volume, float attenuation, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	if ( sector == NULL )
+		return;
+
+	int sectorID = sector - sectors;
+	if (( sectorID < 0 ) || ( sectorID >= numsectors ))
+		return;
+
+	NetCommand command( SVC2_SOUNDSECTOR );
+	command.addShort( sectorID );
+	command.addShort( channel );
+	command.addString( sound );
+	command.addByte( LONG ( clamp( volume, 0.0f, 2.0f ) * 127 ) );
+	command.addByte( NETWORK_AttenuationFloatToInt ( attenuation ));
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_SoundPoint( LONG lX, LONG lY, LONG lZ, LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SOUNDPOINT );
@@ -3733,7 +3758,7 @@ void SERVERCOMMANDS_GiveInventory( ULONG ulPlayer, AInventory *pInventory, ULONG
 	NetCommand command ( SVC_GIVEINVENTORY );
 	command.addByte ( ulPlayer );
 	command.addShort (  pInventory->GetClass()->getActorNetworkIndex() );
-	command.addShort ( pInventory->Amount );
+	command.addLong ( pInventory->Amount );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 
 	// [BB] Clients don't know that a BackpackItem may be depleted. In this case we have to resync the ammo count.
@@ -3776,7 +3801,7 @@ void SERVERCOMMANDS_TakeInventory( ULONG ulPlayer, const char *pszClassName, ULO
 	NetCommand command ( SVC_TAKEINVENTORY );
 	command.addByte ( ulPlayer );
 	command.addString ( pszClassName );
-	command.addShort ( ulAmount );
+	command.addLong ( ulAmount );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3795,7 +3820,11 @@ void SERVERCOMMANDS_GivePowerup( ULONG ulPlayer, APowerup *pPowerup, ULONG ulPla
 	command.addShort( pPowerup->GetClass( )->getActorNetworkIndex() );
 	// Can we have multiple amounts of a powerup? Probably not, but I'll be safe for now.
 	command.addShort( pPowerup->Amount );
-	command.addShort( pPowerup->EffectTics );
+	command.addByte( pPowerup->IsActiveRune() );
+
+	if ( pPowerup->IsActiveRune() == false )
+		command.addShort( pPowerup->EffectTics );
+
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

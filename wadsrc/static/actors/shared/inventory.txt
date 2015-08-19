@@ -335,6 +335,31 @@ ACTOR PowerInfiniteAmmo : Powerup native
 	Powerup.Duration -30
 }
 
+// [TP] Runes turned into powerups
+ACTOR PowerSpread : Powerup native
+{
+	Powerup.Duration -30
+}
+
+ACTOR PowerReflection : Powerup native
+{
+	Powerup.Duration -60
+}
+
+ACTOR PowerProsperity : Powerup native
+{
+	Powerup.Duration -120
+}
+
+// [TP] Moved RuneGive here
+ACTOR RuneGiver : PowerupGiver native
+{
+	Inventory.DefMaxAmount
+	+INVENTORY.INVBAR
+	+INVENTORY.FANCYPICKUPSOUND
+	Inventory.PickupSound "misc/p_pkup"
+}
+
 ACTOR MapRevealer : Inventory native {}
 
 ACTOR PuzzleItem : Inventory native

@@ -339,6 +339,7 @@ static	void	client_ACSScriptExecute( BYTESTREAM_s *pByteStream );
 // Sound commands.
 static	void	client_Sound( BYTESTREAM_s *pByteStream );
 static	void	client_SoundActor( BYTESTREAM_s *pByteStream, bool bRespectActorPlayingSomething = false );
+static	void	client_SoundSector( BYTESTREAM_s *pByteStream );
 static	void	client_SoundPoint( BYTESTREAM_s *pByteStream );
 static	void	client_AnnouncerSound( BYTESTREAM_s *pByteSream );
 
@@ -2878,6 +2879,10 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			// [EP]
 			case SVC2_SETTHINGSCALE:
 				client_SetThingScale( pByteStream );
+				break;
+
+			case SVC2_SOUNDSECTOR:
+				client_SoundSector( pByteStream );
 				break;
 
 			default:
@@ -6677,6 +6682,10 @@ static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
 
 		pActor->flags6 = ActorFlags6::FromInt(ulFlags);;
 		break;
+	case FLAGSET_FLAGS7:
+
+		pActor->flags7 = ActorFlags7::FromInt(ulFlags);
+		break;
 	case FLAGSET_FLAGSST:
 
 		pActor->ulSTFlags = ulFlags;
@@ -10037,6 +10046,35 @@ static void client_SoundActor( BYTESTREAM_s *pByteStream, bool bRespectActorPlay
 
 //*****************************************************************************
 //
+static void client_SoundSector( BYTESTREAM_s *pByteStream )
+{
+	// Read in the spot ID.
+	int sectorID = NETWORK_ReadShort( pByteStream );
+
+	// Read in the channel.
+	int channel = NETWORK_ReadShort( pByteStream );
+
+	// Read in the name of the sound to play.
+	const char *soundString = NETWORK_ReadString( pByteStream );
+
+	// Read in the volume.
+	int volume = NETWORK_ReadByte( pByteStream );
+	if ( volume > 127 )
+		volume = 127;
+
+	// Read in the attenuation.
+	int attenuation = NETWORK_ReadByte( pByteStream );
+
+	// Make sure the sector ID is valid.
+	if (( sectorID < 0 ) && ( sectorID >= numsectors ))
+		return;
+
+	// Finally, play the sound.
+	S_Sound( &sectors[sectorID], channel, soundString, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
+}
+
+//*****************************************************************************
+//
 static void client_SoundPoint( BYTESTREAM_s *pByteStream )
 {
 	const char	*pszSoundString;
@@ -10393,7 +10431,7 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
 
 	// Read in the amount of this inventory type the player has.
-	lAmount = NETWORK_ReadShort( pByteStream );
+	lAmount = NETWORK_ReadLong( pByteStream );
 
 	// Check to make sure everything is valid. If not, break out.
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
@@ -10512,7 +10550,7 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 	pszName = NETWORK_ReadString( pByteStream );
 
 	// Read in the new amount of this inventory type the player has.
-	lAmount = NETWORK_ReadShort( pByteStream );
+	lAmount = NETWORK_ReadLong( pByteStream );
 
 	// Check to make sure everything is valid. If not, break out.
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
@@ -10572,8 +10610,11 @@ static void client_GivePowerup( BYTESTREAM_s *pByteStream )
 	// Read in the amount of this inventory type the player has.
 	lAmount = NETWORK_ReadShort( pByteStream );
 
+	// [TP]
+	bool isRune = NETWORK_ReadByte( pByteStream );
+
 	// Read in the amount of time left on this powerup.
-	lEffectTics = NETWORK_ReadShort( pByteStream );
+	lEffectTics = ( isRune == false ) ? NETWORK_ReadShort( pByteStream ) : 0;
 
 	// Check to make sure everything is valid. If not, break out.
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
@@ -10612,7 +10653,13 @@ static void client_GivePowerup( BYTESTREAM_s *pByteStream )
 	}
 
 	if ( pInventory )
+	{
 		static_cast<APowerup *>( pInventory )->EffectTics = lEffectTics;
+
+		// [TP]
+		if ( isRune )
+			pInventory->Owner->Rune = static_cast<APowerup *>( pInventory );
+	}
 
 	// Since an item displayed on the HUD may have been given, refresh the HUD.
 	SCOREBOARD_RefreshHUD( );

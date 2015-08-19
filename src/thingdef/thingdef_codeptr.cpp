@@ -719,18 +719,19 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Jump)
 	ACTION_PARAM_INT(count, 0);
 	ACTION_PARAM_INT(maxchance, 1);
 
+	// [TP] Heuristic: if we will certainly do the jump and we only have one possible jump target,
+	// we know exactly where state flow is going, so we can do the jump on our own as the client.
+	bool predictable = ( maxchance >= 256 ) && ( count == 2 );
+
 	// [BC] Don't jump here in client mode.
-	if ( NETWORK_InClientMode() )
-	{
-		if (( self->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) == false )
-			return;
-	}
+	if ( NETWORK_InClientModeAndActorNotClientHandled( self ) && ( predictable == false ) )
+		return;
 
 	if (count >= 2 && (maxchance >= 256 || pr_cajump() < maxchance))
 	{
 		int jumps = 2 + (count == 2? 0 : (pr_cajump() % (count - 1)));
 		ACTION_PARAM_STATE(jumpto, jumps);
-		ACTION_JUMP(jumpto, true);	// [BC] Random state changes shouldn't be client-side.
+		ACTION_JUMP(jumpto, predictable == false); // [BC] Random state changes shouldn't be client-side.
 	}
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 }
@@ -4528,6 +4529,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ChangeFlag)
 					flagset = FLAGSET_FLAGS5;
 				else if ( flagp == (ActorFlags*) &self->flags6 )
 					flagset = FLAGSET_FLAGS6;
+				else if ( flagp == (ActorFlags*) &self->flags7 )
+					flagset = FLAGSET_FLAGS7;
 
 				SERVERCOMMANDS_SetThingFlags( self, flagset );
 			}

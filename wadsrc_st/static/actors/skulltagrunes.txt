@@ -4,63 +4,51 @@
 //
 //=================================================================================================
 
-ACTOR Rune: Inventory native
+ACTOR Rune : Powerup
 {
 }
 
+ACTOR RuneDoubleDamage : PowerDamage
+{
+	Damagefactor normal, 2.0
+}
 
-ACTOR RuneDoubleDamage : Rune native
+ACTOR RuneDoubleFiringSpeed : PowerDoubleFiringSpeed
 {
 }
 
-ACTOR RuneDoubleFiringSpeed : Rune native
+ACTOR RuneDrain : PowerDrain
 {
 }
 
-ACTOR RuneDrain : Rune native
+ACTOR RuneSpread : PowerSpread
 {
 }
 
-ACTOR RuneSpread : Rune native
+ACTOR RuneHalfDamage : PowerProtection
+{
+	Damagefactor normal, 0.5
+}
+
+ACTOR RuneRegeneration : PowerRegeneration
 {
 }
 
-ACTOR RuneHalfDamage : Rune native
+ACTOR RuneProsperity : PowerProsperity
 {
 }
 
-ACTOR RuneRegeneration : Rune native
+ACTOR RuneReflection : PowerReflection
 {
 }
 
-ACTOR RuneProsperity : Rune native
+ACTOR RuneHighJump : PowerHighJump
 {
 }
 
-ACTOR RuneReflection : Rune native
+ACTOR RuneSpeed25 : PowerSpeed
 {
-}
-
-ACTOR RuneHighJump : Rune native
-{
-}
-
-ACTOR RuneSpeed25 : Rune native
-{
-}
-
-//=================================================================================================
-//
-// RuneGiver
-//
-//=================================================================================================
-
-ACTOR RuneGiver : Inventory native
-{
-	Inventory.DefMaxAmount
-	+INVENTORY.INVBAR
-	+INVENTORY.FANCYPICKUPSOUND
-	Inventory.PickupSound "misc/p_pkup"
+	Speed 1.25
 }
 
 //=================================================================================================
