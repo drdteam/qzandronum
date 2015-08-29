@@ -201,7 +201,7 @@ void DrawHUD_CoopInfo()
 		// [Spleen] And don't draw ammo if sv_infiniteammo is enabled.
 		if ( players[i].ReadyWeapon && players[i].mo->health > 0 )
 		{
-			drawString = players[i].ReadyWeapon->GetClass()->TypeName;
+			drawString = players[i].ReadyWeapon->GetTag();
 			if ( players[i].ReadyWeapon->Ammo1 && ( ( dmflags & DF_INFINITE_AMMO ) == false ) )
 				drawString.AppendFormat( " \\cf%d", players[i].ReadyWeapon->Ammo1->Amount );
 			else

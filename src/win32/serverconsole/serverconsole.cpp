@@ -203,7 +203,7 @@ BOOL CALLBACK SERVERCONSOLE_ServerDialogBoxCallback( HWND hDlg, UINT Message, WP
 			SendMessage( GetDlgItem( hDlg, IDC_MAPMODE ), WM_SETFONT, (WPARAM) CreateFont( 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Tahoma" ), (LPARAM) 1 );
 
 			// Initialize the server console text.
-			SetDlgItemText( hDlg, IDC_CONSOLEBOX, "=== "GAMENAME " server ===" );
+			SetDlgItemText( hDlg, IDC_CONSOLEBOX, "=== " GAMENAME " server ===" );
 			Printf( "\nRunning version: %s\n", GetVersionStringRev() );
 
 			// Append the time.

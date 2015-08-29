@@ -133,11 +133,11 @@ public:
 		return ( _current < MAXPLAYERS );
 	}
 
-	const ULONG operator* ( ) const {
+	ULONG operator* ( ) const {
 		return ( _current );
 	}
 
-	const ULONG operator++ ( ) {
+	ULONG operator++ ( ) {
 		++_current;
 		incremntCurrentTillValid();
 		return ( _current );

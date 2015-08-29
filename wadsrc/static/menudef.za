@@ -339,6 +339,7 @@ OptionValue ZA_SwitchOnPickup
 OptionMenu ZA_WeaponSetup
 {
 	Title		"WEAPON SETUP"
+	Indent 170
 
 	Option		"Switch on pickup",		"switchonpickup",				"ZA_SwitchOnPickup"
 	Option		"Switch without ammo",	"cl_noammoswitch",				"YesNo"

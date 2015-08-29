@@ -152,8 +152,12 @@ void I_CreateRenderer()
 	currentrenderer = vid_renderer;
 	if (Renderer == NULL)
 	{
+#ifndef NO_GL
 		if (currentrenderer==1) Renderer = gl_CreateInterface();
 		else Renderer = new FSoftwareRenderer;
+#else
+		Renderer = new FSoftwareRenderer;
+#endif
 		atterm(I_DeleteRenderer);
 	}
 }

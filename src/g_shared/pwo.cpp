@@ -264,6 +264,8 @@ void PWO_FillMenu ( FOptionMenuDescriptor& descriptor )
 
 	items.Push( new FOptionMenuItemStaticText( " ", true ));
 	items.Push( new FOptionMenuItemStaticText( "PREFERRED WEAPON ORDER", true ));
+	items.Push( new FOptionMenuItemOption( "Switch with same weight", "pwo_switchonsameweight", "YesNo", NULL, false ));
+	items.Push( new FOptionMenuItemOption( "Switch to unknown weapons", "pwo_switchonunknown", "YesNo", NULL, false ));
 
 	for ( unsigned int i = 0; i < WeaponInfo.Size(); ++i )
 	{

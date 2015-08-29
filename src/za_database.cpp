@@ -287,7 +287,7 @@ void DATABASE_CreateTable ( )
 	if ( DATABASE_IsAvailable ( "DATABASE_CreateTable" ) == false )
 		return;
 
-	database_ExecuteCommand ( "CREATE TABLE if not exists "TABLENAME"(Namespace text, KeyName text, Value text, Timestamp text, PRIMARY KEY (Namespace, KeyName))" );
+	database_ExecuteCommand ( "CREATE TABLE if not exists " TABLENAME "(Namespace text, KeyName text, Value text, Timestamp text, PRIMARY KEY (Namespace, KeyName))" );
 }
 
 //*****************************************************************************
@@ -297,7 +297,7 @@ void DATABASE_ClearTable ( )
 	if ( DATABASE_IsAvailable ( "DATABASE_ClearTable" ) == false )
 		return;
 
-	database_ExecuteCommand ( "DELETE FROM "TABLENAME );
+	database_ExecuteCommand ( "DELETE FROM " TABLENAME );
 }
 
 //*****************************************************************************
@@ -307,7 +307,7 @@ void DATABASE_DeleteTable ( )
 	if ( DATABASE_IsAvailable ( "DATABASE_DeleteTable" ) == false )
 		return;
 
-	database_ExecuteCommand ( "DROP TABLE "TABLENAME );
+	database_ExecuteCommand ( "DROP TABLE " TABLENAME );
 }
 
 //*****************************************************************************
@@ -329,7 +329,7 @@ void DATABASE_DumpTable ( )
 		return;
 
 	Printf ( "Dumping table \"%s\"\n", TABLENAME );
-	database_ExecuteCommand ( "SELECT * from "TABLENAME, database_DumpTableCallback );
+	database_ExecuteCommand ( "SELECT * from " TABLENAME, database_DumpTableCallback );
 }
 
 //*****************************************************************************
@@ -340,7 +340,7 @@ void DATABASE_DumpNamespace ( const char *Namespace )
 		return;
 
 	Printf ( "Dumping namespace \"%s\"\n", Namespace );
-	DataBaseCommand cmd ( "SELECT * from "TABLENAME" WHERE Namespace=?1" );
+	DataBaseCommand cmd ( "SELECT * from " TABLENAME " WHERE Namespace=?1" );
 	cmd.bindString ( 1, Namespace );
 	while ( cmd.step( ) )
 		Printf ( "%s %s %s\n", cmd.getText(1), cmd.getText(2), cmd.getText(3) );
@@ -354,7 +354,7 @@ void DATABASE_AddEntry ( const char *Namespace, const char *EntryName, const cha
 	if ( DATABASE_IsAvailable ( "DATABASE_AddEntry" ) == false )
 		return;
 
-	DataBaseCommand cmd ( "INSERT INTO "TABLENAME" VALUES(?1,?2,?3,("TIMEQUERY"))" );
+	DataBaseCommand cmd ( "INSERT INTO " TABLENAME " VALUES(?1,?2,?3,(" TIMEQUERY "))" );
 	cmd.bindString ( 1, Namespace );
 	cmd.bindString ( 2, EntryName );
 	cmd.bindString ( 3, EntryValue );
@@ -368,7 +368,7 @@ void DATABASE_SetEntry ( const char *Namespace, const char *EntryName, const cha
 	if ( DATABASE_IsAvailable ( "DATABASE_SetEntry" ) == false )
 		return;
 
-	DataBaseCommand cmd ( "UPDATE "TABLENAME" SET Value=?3,Timestamp=("TIMEQUERY") WHERE Namespace=?1 AND KeyName=?2" );
+	DataBaseCommand cmd ( "UPDATE " TABLENAME " SET Value=?3,Timestamp=(" TIMEQUERY ") WHERE Namespace=?1 AND KeyName=?2" );
 	cmd.bindString ( 1, Namespace );
 	cmd.bindString ( 2, EntryName );
 	cmd.bindString ( 3, EntryValue );
@@ -382,7 +382,7 @@ FString DATABASE_GetEntry ( const char *Namespace, const char *EntryName )
 	if ( DATABASE_IsAvailable ( "DATABASE_GetEntry" ) == false )
 		return "";
 
-	DataBaseCommand cmd ( "SELECT * FROM "TABLENAME" WHERE Namespace=?1 AND KeyName=?2" );
+	DataBaseCommand cmd ( "SELECT * FROM " TABLENAME " WHERE Namespace=?1 AND KeyName=?2" );
 	cmd.bindString ( 1, Namespace );
 	cmd.bindString ( 2, EntryName );
 	cmd.step( );
@@ -400,7 +400,7 @@ bool DATABASE_EntryExists ( const char *Namespace, const char *EntryName )
 	if ( DATABASE_IsAvailable ( "DATABASE_GetEntry" ) == false )
 		return "";
 
-	DataBaseCommand cmd ( "SELECT * FROM "TABLENAME" WHERE Namespace=?1 AND KeyName=?2" );
+	DataBaseCommand cmd ( "SELECT * FROM " TABLENAME " WHERE Namespace=?1 AND KeyName=?2" );
 	cmd.bindString ( 1, Namespace );
 	cmd.bindString ( 2, EntryName );
 	// [BB] The destructor of DataBaseCommand calls finalize.
@@ -414,7 +414,7 @@ void DATABASE_DeleteEntry ( const char *Namespace, const char *EntryName )
 	if ( DATABASE_IsAvailable ( "DATABASE_DeleteEntry" ) == false )
 		return;
 
-	DataBaseCommand cmd ( "DELETE FROM "TABLENAME" WHERE Namespace=?1 AND KeyName=?2" );
+	DataBaseCommand cmd ( "DELETE FROM " TABLENAME " WHERE Namespace=?1 AND KeyName=?2" );
 	cmd.bindString ( 1, Namespace );
 	cmd.bindString ( 2, EntryName );
 	cmd.exec ( );
@@ -473,7 +473,7 @@ void DATABASE_SaveIncrementEntryInt ( const char *Namespace, const char *EntryNa
 	if ( DATABASE_EntryExists ( Namespace, EntryName ) )
 	{
 		// [BB] Get the old value and set the incremented value in a single query.
-		DataBaseCommand cmd ( "UPDATE "TABLENAME" SET Value=(SELECT CAST(Value AS INTEGER) FROM "TABLENAME" WHERE Namespace=?1 AND KeyName=?2)+?3,Timestamp=("TIMEQUERY") WHERE Namespace=?1 AND KeyName=?2" );
+		DataBaseCommand cmd ( "UPDATE " TABLENAME " SET Value=(SELECT CAST(Value AS INTEGER) FROM " TABLENAME " WHERE Namespace=?1 AND KeyName=?2)+?3,Timestamp=(" TIMEQUERY ") WHERE Namespace=?1 AND KeyName=?2" );
 		cmd.bindString ( 1, Namespace );
 		cmd.bindString ( 2, EntryName );
 		cmd.bindInt ( 3, Increment );
@@ -499,9 +499,9 @@ int DATABASE_GetEntryRank ( const char *Namespace, const char *EntryName, const 
 		// count how many values are lower (or higher) than the value and return
 		// the count + 1.
 		FString commandString;
-		commandString.Format ( "SELECT COUNT(*) from "TABLENAME" WHERE Namespace=?1 AND CAST(Value AS INTEGER)" );
+		commandString.Format ( "SELECT COUNT(*) from " TABLENAME " WHERE Namespace=?1 AND CAST(Value AS INTEGER)" );
 		commandString += Descending ? ">" : "<";
-		commandString += ( "(SELECT CAST(Value AS INTEGER) FROM "TABLENAME" WHERE Namespace=?2 AND KeyName=?3)" );
+		commandString += ( "(SELECT CAST(Value AS INTEGER) FROM " TABLENAME " WHERE Namespace=?2 AND KeyName=?3)" );
 		DataBaseCommand cmd ( commandString.GetChars() );
 		cmd.bindString ( 1, Namespace );
 		cmd.bindString ( 2, Namespace );
@@ -527,7 +527,7 @@ int DATABASE_GetSortedEntries ( const char *Namespace, const int N, const int Of
 	}
 
 	FString commandString;
-	commandString.Format ( "SELECT * from "TABLENAME" WHERE Namespace=?1 ORDER BY CAST(Value AS INTEGER) " );
+	commandString.Format ( "SELECT * from " TABLENAME " WHERE Namespace=?1 ORDER BY CAST(Value AS INTEGER) " );
 	commandString += Descending ? "DESC" : "ASC";
 	commandString += " LIMIT ?2 OFFSET ?3";
 	DataBaseCommand cmd ( commandString.GetChars() );
@@ -548,7 +548,7 @@ int DATABASE_GetEntries ( const char *Namespace, TArray<std::pair<FString, FStri
 		return 0;
 	}
 
-	DataBaseCommand cmd ( "SELECT * from "TABLENAME" WHERE Namespace=?1" );
+	DataBaseCommand cmd ( "SELECT * from " TABLENAME " WHERE Namespace=?1" );
 	cmd.bindString ( 1, Namespace );
 	cmd.iterateAndGetReturnedEntries ( Entries );
 	return Entries.Size();

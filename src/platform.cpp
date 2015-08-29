@@ -101,10 +101,6 @@ void SERVERCONSOLE_Print( char *pszString )
 #include "d_player.h"
 #include "p_setup.h"
 #include "doomtype.h"
-#include "r_data.h"
-
-// [BB] We need the gl nodes even if we don't display anything on the screen, i.e. on the server.
-#include "gl/data/gl_nodes.cpp"
 
 #ifdef _WIN32
 

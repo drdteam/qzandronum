@@ -754,7 +754,7 @@ CCMD ( menu_joingamewithclass )
 	if ( menu_joinclassidx >= 0
 		&& static_cast<unsigned>( menu_joinclassidx ) < PlayerClasses.Size() + 1 )
 	{
-		if ( menu_joinclassidx == PlayerClasses.Size() )
+		if ( static_cast<unsigned>( menu_joinclassidx ) == PlayerClasses.Size() )
 			playerclass = "Random";
 		else
 			playerclass = GetPrintableDisplayName( PlayerClasses[menu_joinclassidx].Type );
