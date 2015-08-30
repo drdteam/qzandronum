@@ -1812,6 +1812,13 @@ OptionValue RatiosTFT
 	 -1, "All"
 }
 
+// [BB]
+OptionValue Renderers
+{
+	0.0, "Software"
+	1.0, "OpenGL"
+}
+
 OptionMenu VideoModeMenu
 {
 	Title "VIDEO MODE"
@@ -1822,6 +1829,8 @@ OptionMenu VideoModeMenu
 		Option "Retina/HiDPI support", "vid_hidpi", "YesNo"
 	}
 	Option "Aspect ratio",			"menu_screenratios", "Ratios"
+	// [BB]
+	Option "Renderer",			"vid_renderer", "Renderers"
 	Option "Force aspect ratio",	"vid_aspect", "ForceRatios"
 	Option "Enable 5:4 aspect ratio","vid_tft", "YesNo"
 	StaticText " "

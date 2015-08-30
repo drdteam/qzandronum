@@ -409,7 +409,7 @@ void SERVERBAN_BanPlayer( ULONG ulPlayer, const char *pszBanLength, const char *
 
 	// Add the ban and kick the player.
 	std::string message;
-	g_ServerBans.addEntry( NETWORK_AddressToString( SERVER_GetClient( ulPlayer )->Address ), szPlayerName, pszBanReason, message, tExpiration );
+	g_ServerBans.addEntry( SERVER_GetClient( ulPlayer )->Address.ToString(), szPlayerName, pszBanReason, message, tExpiration );
 	Printf( "addban: %s", message.c_str() );
 	SERVER_KickPlayer( ulPlayer, pszBanReason ? pszBanReason : "" );  // [RC] serverban_KickBannedPlayers would cover this, but we want the messages to be distinct so there's no confusion.
 
@@ -505,7 +505,7 @@ CCMD( getIP )
 	// Look up the player.
 	ULONG ulIdx = SERVER_GetPlayerIndexFromName( argv[1], true, false );
 	if ( SERVER_IsValidClient( ulIdx ))
-		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), NETWORK_AddressToString( SERVER_GetClient( ulIdx )->Address ));
+		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), SERVER_GetClient( ulIdx )->Address.ToString() );
 	else
 	{
 		if ( SERVER_GetPlayerIndexFromName( argv[1], true, true ) != MAXPLAYERS )
@@ -538,7 +538,7 @@ CCMD( getIP_idx )
 	if ( players[ulIdx].bIsBot )
 		Printf( "%s\\c- is a bot. ", players[ulIdx].userinfo.GetName() );
 	else
-		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), NETWORK_AddressToString( SERVER_GetClient( ulIdx )->Address ));
+		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), SERVER_GetClient( ulIdx )->Address.ToString() );
 }
 
 //*****************************************************************************

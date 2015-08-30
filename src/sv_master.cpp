@@ -156,8 +156,6 @@ void SERVER_MASTER_Destruct( void )
 //
 void SERVER_MASTER_Tick( void )
 {
-	UCVarValue		Val;
-
 	while (( g_lStoredQueryIPHead != g_lStoredQueryIPTail ) && ( gametic >= g_StoredQueryIPs[g_lStoredQueryIPHead].lNextAllowedGametic ))
 	{
 		g_lStoredQueryIPHead++;
@@ -174,16 +172,17 @@ void SERVER_MASTER_Tick( void )
 
 	NETWORK_ClearBuffer( &g_MasterServerBuffer );
 
-	Val = masterhostname.GetGenericRep( CVAR_String );
-
 	// [BB] If we can't find the master address, we can't tick the master.
-	if ( NETWORK_StringToAddress( Val.String, &g_AddressMasterServer ) == false )
+	bool ok;
+	g_AddressMasterServer = NETADDRESS_s::FromString( masterhostname, &ok );
+
+	if ( ok == false )
 	{
-		Printf ( "Warning: Can't find masterhostname %s! Either correct masterhostname or set sv_updatemaster to false.\n", Val.String );
+		Printf ( "Warning: Can't find masterhostname %s! Either correct masterhostname or set sv_updatemaster to false.\n", *masterhostname );
 		return;
 	}
 
-	NETWORK_SetAddressPort( g_AddressMasterServer, g_usMasterPort );
+	g_AddressMasterServer.SetPort( g_usMasterPort );
 
 	// Write to our packet a challenge to the master server.
 	NETWORK_WriteLong( &g_MasterServerBuffer.ByteStream, SERVER_MASTER_CHALLENGE );
@@ -203,9 +202,6 @@ void SERVER_MASTER_Tick( void )
 //
 void SERVER_MASTER_Broadcast( void )
 {
-	NETADDRESS_s	AddressBroadcast;
-	sockaddr_in		broadcast_addr;
-
 	// Send an update to the master server every second.
 	if ( gametic % TICRATE )
 		return;
@@ -216,10 +212,11 @@ void SERVER_MASTER_Broadcast( void )
 
 //	NETWORK_ClearBuffer( &g_MasterServerBuffer );
 
+	sockaddr_in broadcast_addr;
 	broadcast_addr.sin_family = AF_INET;
 	broadcast_addr.sin_addr.s_addr = INADDR_BROADCAST;
 	broadcast_addr.sin_port = htons( DEFAULT_BROADCAST_PORT );
-	NETWORK_SocketAddressToNetAddress( &broadcast_addr, &AddressBroadcast );
+	NETADDRESS_s AddressBroadcast = NETADDRESS_s::FromSocketAddress( broadcast_addr );
 
 	// [BB] Under all Windows versions broadcasts to INADDR_BROADCAST seem to work fine
 	// while class A broadcasts don't work under Vista/7. So just use INADDR_BROADCAST.
@@ -281,7 +278,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 			{
 				// Check to see if this IP exists in our stored query IP list. If it does, then
 				// ignore it, since it queried us less than 10 seconds ago.
-				if ( NETWORK_CompareAddress( Address, g_StoredQueryIPs[ulIdx].Address, true ))
+				if ( Address.CompareNoPort( g_StoredQueryIPs[ulIdx].Address ))
 				{
 					// Write our header.
 					NETWORK_WriteLong( &g_MasterServerBuffer.ByteStream, SERVER_LAUNCHER_IGNORING );
@@ -306,7 +303,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 		}
 	
 		// Now, check to see if this IP has been banend from this server.
-		NETWORK_AddressToIPStringArray( Address, szAddress );
+		Address.ToIPStringArray( szAddress );
 		if ( SERVERBAN_IsIPBanned( szAddress ))
 		{
 			// Write our header.

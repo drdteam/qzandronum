@@ -600,11 +600,11 @@ void CLIENT_Construct( void )
     if ( pszIPAddress )
     {
 		// Convert the given IP string into our server address.
-		NETWORK_StringToAddress( pszIPAddress, &g_AddressServer );
+		g_AddressServer = NETADDRESS_s::FromString( pszIPAddress );
 
 		// If the user didn't specify a port, use the default one.
 		if ( g_AddressServer.usPort == 0 )
-			NETWORK_SetAddressPort( g_AddressServer, DEFAULT_SERVER_PORT );
+			g_AddressServer.SetPort( DEFAULT_SERVER_PORT );
 
 		// If we try to reconnect, use this address.
 		g_AddressLastConnected = g_AddressServer;
@@ -933,7 +933,7 @@ void CLIENT_AttemptConnection( void )
 	}
 
 	g_ulRetryTicks = CONNECTION_RESEND_TIME;
-	Printf( "Connecting to %s\n", NETWORK_AddressToString( g_AddressServer ));
+	Printf( "Connecting to %s\n", g_AddressServer.ToString() );
 
 	// Reset a bunch of stuff.
 	NETWORK_ClearBuffer( &g_LocalBuffer );
@@ -1054,14 +1054,13 @@ void CLIENT_GetPackets( void )
 #endif
 	while (( lSize = NETWORK_GetPackets( )) > 0 )
 	{
-		UCVarValue		Val;
 		BYTESTREAM_s	*pByteStream;
 
 		pByteStream = &NETWORK_GetNetworkMessageBuffer( )->ByteStream;
 
 		// If we're a client and receiving a message from the server...
-		if (( NETWORK_GetState( ) == NETSTATE_CLIENT ) &&
-			( NETWORK_CompareAddress( NETWORK_GetFromAddress( ), CLIENT_GetServerAddress( ), false )))
+		if ( NETWORK_GetState() == NETSTATE_CLIENT
+			&& NETWORK_GetFromAddress().Compare( CLIENT_GetServerAddress() ))
 		{
 			// Statistics.
 			CLIENTSTATISTICS_AddToBytesReceived( lSize );
@@ -1120,12 +1119,10 @@ void CLIENT_GetPackets( void )
 			const char		*pszAddressBuf;
 			NETADDRESS_s	AddressFrom;
 			LONG			lCommand;
-			NETADDRESS_s	MasterAddress;
 			const char		*pszMasterPort;
-			Val = masterhostname.GetGenericRep( CVAR_String );
 			// [BB] This conversion potentially does a DNS lookup.
 			// There is absolutely no reason to call this at beginning of the while loop above (like done before). 
-			NETWORK_StringToAddress( Val.String, &MasterAddress );
+			NETADDRESS_s MasterAddress = NETADDRESS_s::FromString( masterhostname );
 
 			// Allow the user to specify which port the master server is on.
 			pszMasterPort = Args->CheckValue( "-masterport" );
@@ -1135,7 +1132,7 @@ void CLIENT_GetPackets( void )
 				MasterAddress.usPort = NETWORK_ntohs( DEFAULT_MASTER_PORT );
 
 
-			pszAddressBuf = NETWORK_AddressToString( NETWORK_GetFromAddress( ));
+			pszAddressBuf = NETWORK_GetFromAddress().ToString();
 
 			// Skulltag is receiving a message from something on the LAN.
 			if (( strncmp( pszAddressBuf, pszPrefix1, 9 ) == 0 ) || 
@@ -1152,7 +1149,7 @@ void CLIENT_GetPackets( void )
 				AddressFrom = NETWORK_GetFromAddress( );
 
 			// If we're receiving info from the master server...
-			if ( NETWORK_CompareAddress( AddressFrom, MasterAddress, false ))
+			if ( AddressFrom.Compare( MasterAddress ))
 			{
 				lCommand = NETWORK_ReadLong( pByteStream );
 				switch ( lCommand )
@@ -1207,7 +1204,7 @@ void CLIENT_GetPackets( void )
 				else if ( lCommand == SERVER_LAUNCHER_IGNORING )
 					Printf( "WARNING! Please wait a full 10 seconds before refreshing the server list.\n" );
 				//else
-				//	Printf( "Unknown network message from %s.\n", NETWORK_AddressToString( g_AddressFrom ));
+				//	Printf( "Unknown network message from %s.\n", g_AddressFrom.ToString() );
 			}
 		}
 	}
@@ -10278,7 +10275,7 @@ static void client_MapNew( BYTESTREAM_s *pByteStream )
 	// [Dusk] We're also no longer in line at this point.
 	JOINQUEUE_SetClientPositionInLine( -1 );
 
-	Printf( "Connecting to %s\n%s\n", NETWORK_AddressToString( g_AddressServer ), pszMapName );
+	Printf( "Connecting to %s\n%s\n", g_AddressServer.ToString(), pszMapName );
 
 	// Update the connection state, and begin trying to reconnect.
 	CLIENT_SetConnectionState( CTS_ATTEMPTINGCONNECTION );
@@ -12615,11 +12612,11 @@ CCMD( connect )
 	R_SetVisibility( 8.0f );
 
 	// Create a server IP from the given string.
-	NETWORK_StringToAddress( argv[1], &g_AddressServer );
+	g_AddressServer = NETADDRESS_s::FromString( argv[1] );
 
 	// If the user didn't specify a port, use the default port.
 	if ( g_AddressServer.usPort == 0 )
-		NETWORK_SetAddressPort( g_AddressServer, DEFAULT_SERVER_PORT );
+		g_AddressServer.SetPort( DEFAULT_SERVER_PORT );
 
 	g_AddressLastConnected = g_AddressServer;
 

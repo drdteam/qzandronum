@@ -240,7 +240,7 @@ DWORD WINAPI main_Loop( LPVOID )
 			pByteStream->pbStreamEnd = pByteStream->pbStream + NETWORK_GetNetworkMessageBuffer( )->ulCurrentSize;
 
 			// Parse the packet, but only if it came from the server we're trying to reach. Ignore everything else.
-			 if ( g_State > STATE_WAITING && NETWORK_CompareAddress( NETWORK_GetFromAddress( ), g_ServerAddress, false ))
+			 if ( g_State > STATE_WAITING && NETWORK_GetFromAddress().Compare( g_ServerAddress ))
 				main_ParseCommands( pByteStream );
 		}
 		
@@ -266,7 +266,7 @@ DWORD WINAPI main_Loop( LPVOID )
 			{
 				main_AttemptConnection();
 				g_iRetries++;
-				sprintf( szBuffer, "Retrying (%d) to reach %s...", g_iRetries, NETWORK_AddressToString( g_ServerAddress ));
+				sprintf( szBuffer, "Retrying (%d) to reach %s...", g_iRetries, g_ServerAddress.ToString() );
 				main_UpdateStatusbar( szBuffer );
 				main_UpdateTrayTooltip( szBuffer );
 			}
@@ -467,12 +467,12 @@ BOOL CALLBACK main_ConnectDialogCallback( HWND hDlg, UINT Message, WPARAM wParam
 
 				// Read in what the user gave us.
 				GetDlgItemText( hDlg, IDC_SERVERIP, szBuffer, 128 );
-				NETWORK_StringToAddress( szBuffer,  &g_ServerAddress );
+				g_ServerAddress = NETADDRESS_s::FromString( szBuffer );
 				GetDlgItemText( hDlg, IDC_PASSWORD, g_szPassword, 128 );
 
 				// If the user didn't specify a port, use the default one.
 				if ( g_ServerAddress.usPort == 0 )
-					NETWORK_SetAddressPort( g_ServerAddress, DEFAULT_SERVER_PORT );
+					g_ServerAddress.SetPort( DEFAULT_SERVER_PORT );
 
 				// Do some quick error checking.
 				if ( !strlen( szBuffer ))
@@ -582,7 +582,7 @@ static void main_ConnectToFavorite( int iIndex )
 	SetDlgItemText( g_hDlg, IDC_PASSWORD, g_Favorites[iIndex].szPassword );
 
 	// Connect.
-	NETWORK_StringToAddress( g_Favorites[iIndex].szAddress, &g_ServerAddress );
+	g_ServerAddress = NETADDRESS_s::FromString( g_Favorites[iIndex].szAddress );
 	strncpy( g_szPassword, g_Favorites[iIndex].szPassword, 127 );
 	main_AttemptConnection( );
 }
@@ -818,7 +818,7 @@ static void main_AttemptConnection( )
 	// Update the GUI.
 	time( &g_tLastSentCommand );
 	main_SetState( STATE_CONNECTING );
-	sprintf( szBuffer, "Connecting to %s...", NETWORK_AddressToString( g_ServerAddress ));
+	sprintf( szBuffer, "Connecting to %s...", g_ServerAddress.ToString() );
 	main_UpdateStatusbar( szBuffer );
 	main_UpdateTrayTooltip( szBuffer );
 	GetDlgItemText( g_hDlg, IDC_SERVERIP, szBuffer, 128 );

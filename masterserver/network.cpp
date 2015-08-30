@@ -184,12 +184,12 @@ void NETWORK_Construct( USHORT usPort, const char *pszIPAddress )
 	// [BB] We are using a specified IP, so we don't need to figure out what IP we have, but just use the specified one.
 	else
 	{
-		NETWORK_StringToAddress ( pszIPAddress, &LocalAddress );
+		LocalAddress = NETADDRESS_s::FromString( pszIPAddress );
 		LocalAddress.usPort = htons ( NETWORK_GetLocalPort() );
 	}
 
 	// Print out our local IP address.
-	printf( "IP address %s\n", NETWORK_AddressToString( LocalAddress ));
+	printf( "IP address %s\n", LocalAddress.ToString() );
 
 	printf( "UDP Initialized.\n" );
 }
@@ -226,7 +226,7 @@ int NETWORK_GetPackets( void )
 
         if ( errno == WSAEMSGSIZE )
 		{
-             printf( "NETWORK_GetPackets:  WARNING! Oversize packet from %s\n", NETWORK_AddressToString( g_AddressFrom ));
+             printf( "NETWORK_GetPackets:  WARNING! Oversize packet from %s\n", g_AddressFrom.ToString() );
              return ( false );
         }
 
@@ -259,7 +259,7 @@ int NETWORK_GetPackets( void )
 	g_NetworkMessage.ByteStream.pbStreamEnd = g_NetworkMessage.ByteStream.pbStream + g_NetworkMessage.ulCurrentSize;
 
 	// Store the IP address of the sender.
-    NETWORK_SocketAddressToNetAddress( &SocketFrom, &g_AddressFrom );
+	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
 
 	return ( g_NetworkMessage.ulCurrentSize );
 }
@@ -277,7 +277,6 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 {
 	LONG				lNumBytes;
 	INT					iNumBytesOut = sizeof(g_ucHuffmanBuffer);
-	struct sockaddr_in	SocketAddress;
 
 	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
 
@@ -286,7 +285,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 		return;
 
 	// Convert the IP address to a socket address.
-	NETWORK_NetAddressToSocketAddress( Address, SocketAddress );
+	struct sockaddr_in SocketAddress = Address.ToSocketAddress();
 
 	HUFFMAN_Encode( (unsigned char *)pBuffer->pbData, g_ucHuffmanBuffer, pBuffer->ulCurrentSize, &iNumBytesOut );
 
@@ -306,15 +305,15 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 		{
 		case WSAEACCES:
 
-			printf( "NETWORK_LaunchPacket: Error #%d, WSAEACCES: Permission denied for address: %s\n", iError, NETWORK_AddressToString( Address ));
+			printf( "NETWORK_LaunchPacket: Error #%d, WSAEACCES: Permission denied for address: %s\n", iError, Address.ToString() );
 			return;
 		case WSAEADDRNOTAVAIL:
 
-			printf( "NETWORK_LaunchPacket: Error #%d, WSAEADDRENOTAVAIL: Address %s not available\n", iError, NETWORK_AddressToString( Address ));
+			printf( "NETWORK_LaunchPacket: Error #%d, WSAEADDRENOTAVAIL: Address %s not available\n", iError, Address.ToString() );
 			return;
 		case WSAEHOSTUNREACH:
 
-			printf( "NETWORK_LaunchPacket: Error #%d, WSAEHOSTUNREACH: Address %s unreachable\n", iError, NETWORK_AddressToString( Address ));
+			printf( "NETWORK_LaunchPacket: Error #%d, WSAEHOSTUNREACH: Address %s unreachable\n", iError, Address.ToString() );
 			return;				
 		default:
 
@@ -329,39 +328,10 @@ return;
               return;
 
 		printf( "NETWORK_LaunchPacket: %s\n", strerror( errno ));
-		printf( "NETWORK_LaunchPacket: Address %s\n", NETWORK_AddressToString( Address ));
+		printf( "NETWORK_LaunchPacket: Address %s\n", Address.ToString() );
 
 #endif
 	}
-}
-
-//*****************************************************************************
-//
-char *NETWORK_AddressToString( NETADDRESS_s Address )
-{
-	static char	s_szAddress[64];
-
-	sprintf( s_szAddress, "%i.%i.%i.%i:%i", Address.abIP[0], Address.abIP[1], Address.abIP[2], Address.abIP[3], ntohs( Address.usPort ));
-
-	return ( s_szAddress );
-}
-
-//*****************************************************************************
-//
-char *NETWORK_AddressToStringIgnorePort( NETADDRESS_s Address )
-{
-	static char	s_szAddress[64];
-
-	sprintf( s_szAddress, "%i.%i.%i.%i", Address.abIP[0], Address.abIP[1], Address.abIP[2], Address.abIP[3] );
-
-	return ( s_szAddress );
-}
-
-//*****************************************************************************
-//
-void NETWORK_SetAddressPort( NETADDRESS_s &Address, USHORT usPort )
-{
-	Address.usPort = htons( usPort );
 }
 
 //*****************************************************************************
@@ -370,7 +340,6 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 {
 	char				szBuffer[512];
 	struct sockaddr_in	SocketAddress;
-	NETADDRESS_s		Address;
 	int					iNameLength;
 
 #ifndef __WINE__
@@ -379,7 +348,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 	szBuffer[512-1] = 0;
 
 	// Convert the host name to our local 
-	NETWORK_StringToAddress( szBuffer, &Address );
+	NETADDRESS_s Address = NETADDRESS_s::FromString( szBuffer );
 
 	iNameLength = sizeof( SocketAddress );
 #ifndef	WIN32

@@ -268,12 +268,12 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		// [BB] We are using a specified IP, so we don't need to figure out what IP we have, but just use the specified one.
 		else
 		{
-			NETWORK_StringToAddress ( pszIPAddress, &g_LocalAddress );
+			g_LocalAddress = NETADDRESS_s::FromString( pszIPAddress );
 			g_LocalAddress.usPort = htons ( NETWORK_GetLocalPort() );
 		}
 
 		// Print out our local IP address.
-		Printf( "IP address %s\n", NETWORK_AddressToString( g_LocalAddress ));
+		Printf( "IP address %s\n", g_LocalAddress.ToString() );
 	}
 
 	// Init our read buffer.
@@ -542,7 +542,7 @@ int NETWORK_GetPackets( void )
 
 		if ( errno == WSAEMSGSIZE )
 		{
-			Printf( "NETWORK_GetPackets:  WARNING! Oversize packet from %s\n", NETWORK_AddressToString( g_AddressFrom ));
+			Printf( "NETWORK_GetPackets:  WARNING! Oversized packet from %s\n", g_AddressFrom.ToString() );
 			return ( false );
 		}
 
@@ -573,11 +573,11 @@ int NETWORK_GetPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	NETWORK_SocketAddressToNetAddress( &SocketFrom, &g_AddressFrom );
+	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
-	if ( NETWORK_CompareAddress( g_AddressFrom, NETWORK_AUTH_GetCachedServerAddress( ), false ) == false )
+	if ( g_AddressFrom.Compare( NETWORK_AUTH_GetCachedServerAddress() ) == false )
 	{
 		HUFFMAN_Decode( g_ucHuffmanBuffer, (unsigned char *)g_NetworkMessage.pbData, lNumBytes, &iDecodedNumBytes );
 		g_NetworkMessage.ulCurrentSize = iDecodedNumBytes;
@@ -631,7 +631,7 @@ int NETWORK_GetLANPackets( void )
 
         if ( errno == WSAEMSGSIZE )
 		{
-             Printf( "NETWORK_GetPackets:  WARNING! Oversize packet from %s\n", NETWORK_AddressToString( g_AddressFrom ));
+             Printf( "NETWORK_GetPackets:  WARNING! Oversized packet from %s\n", g_AddressFrom.ToString() );
              return ( false );
         }
 
@@ -662,11 +662,11 @@ int NETWORK_GetLANPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	NETWORK_SocketAddressToNetAddress( &SocketFrom, &g_AddressFrom );
+	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
-	if ( NETWORK_CompareAddress( g_AddressFrom, NETWORK_AUTH_GetCachedServerAddress( ), false ) == false )
+	if ( g_AddressFrom.Compare( NETWORK_AUTH_GetCachedServerAddress() ) == false )
 	{
 		HUFFMAN_Decode( g_ucHuffmanBuffer, (unsigned char *)g_NetworkMessage.pbData, lNumBytes, &iDecodedNumBytes );
 		g_NetworkMessage.ulCurrentSize = iDecodedNumBytes;
@@ -697,7 +697,6 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 {
 	LONG				lNumBytes;
 	INT					iNumBytesOut = sizeof(g_ucHuffmanBuffer);
-	struct sockaddr_in	SocketAddress;
 
 	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
 
@@ -706,10 +705,10 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 		return;
 
 	// Convert the IP address to a socket address.
-	NETWORK_NetAddressToSocketAddress( Address, SocketAddress );
+	struct sockaddr_in SocketAddress = Address.ToSocketAddress();
 
 	// [BB] Communication with the auth server is not Huffman-encoded.
-	if ( NETWORK_CompareAddress( Address, NETWORK_AUTH_GetCachedServerAddress( ), false ) == false )
+	if ( Address.Compare( NETWORK_AUTH_GetCachedServerAddress() ) == false )
 		HUFFMAN_Encode( (unsigned char *)pBuffer->pbData, g_ucHuffmanBuffer, pBuffer->ulCurrentSize, &iNumBytesOut );
 	else
 	{
@@ -735,19 +734,19 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 		{
 		case WSAEACCES:
 
-			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEACCES: Permission denied for address: %s\n", iError, NETWORK_AddressToString( Address ));
+			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEACCES: Permission denied for address: %s\n", iError, Address.ToString() );
 			return;
 		case WSAEAFNOSUPPORT:
 
-			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEAFNOSUPPORT: Address %s incompatible with the requested protocol\n", iError, NETWORK_AddressToString( Address ));
+			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEAFNOSUPPORT: Address %s incompatible with the requested protocol\n", iError, Address.ToString() );
 			return;
 		case WSAEADDRNOTAVAIL:
 
-			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEADDRENOTAVAIL: Address %s not available\n", iError, NETWORK_AddressToString( Address ));
+			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEADDRENOTAVAIL: Address %s not available\n", iError, Address.ToString() );
 			return;
 		case WSAEHOSTUNREACH:
 
-			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEHOSTUNREACH: Address %s unreachable\n", iError, NETWORK_AddressToString( Address ));
+			Printf( "NETWORK_LaunchPacket: Error #%d, WSAEHOSTUNREACH: Address %s unreachable\n", iError, Address.ToString() );
 			return;				
 		default:
 
@@ -762,7 +761,7 @@ return;
               return;
 
 		Printf( "NETWORK_LaunchPacket: %s\n", strerror( errno ));
-		Printf( "NETWORK_LaunchPacket: Address %s\n", NETWORK_AddressToString( Address ));
+		Printf( "NETWORK_LaunchPacket: Address %s\n", Address.ToString() );
 
 #endif
 	}
@@ -774,40 +773,10 @@ return;
 
 //*****************************************************************************
 //
-const char *NETWORK_AddressToString( NETADDRESS_s Address )
-{
-	static char	s_szAddress[64];
-
-	sprintf( s_szAddress, "%i.%i.%i.%i:%i", Address.abIP[0], Address.abIP[1], Address.abIP[2], Address.abIP[3], ntohs( Address.usPort ));
-
-	return ( s_szAddress );
-}
-
-//*****************************************************************************
-//
-const char *NETWORK_AddressToStringIgnorePort( NETADDRESS_s Address )
-{
-	static char	s_szAddress[64];
-
-	sprintf( s_szAddress, "%i.%i.%i.%i", Address.abIP[0], Address.abIP[1], Address.abIP[2], Address.abIP[3] );
-
-	return ( s_szAddress );
-}
-
-//*****************************************************************************
-//
-void NETWORK_SetAddressPort( NETADDRESS_s &Address, USHORT usPort )
-{
-	Address.usPort = htons( usPort );
-}
-
-//*****************************************************************************
-//
 NETADDRESS_s NETWORK_GetLocalAddress( void )
 {
 	char				szBuffer[512];
 	struct sockaddr_in	SocketAddress;
-	NETADDRESS_s		Address;
 	int					iNameLength;
 
 #ifndef __WINE__
@@ -816,7 +785,8 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 	szBuffer[512-1] = 0;
 
 	// Convert the host name to our local 
-	bool stringToAddress = NETWORK_StringToAddress( szBuffer, &Address );
+	bool ok;
+	NETADDRESS_s Address = NETADDRESS_s::FromString( szBuffer, &ok );
 
 	iNameLength = sizeof( SocketAddress );
 #ifndef	WIN32
@@ -831,7 +801,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 #ifdef unix
 	// [BB] The "gethostname -> gethostbyname" trick didn't reveal the local IP.
 	// Now we need to resort to something more complicated.
-	if ( stringToAddress == false )
+	if ( ok == false )
 	{
 #ifndef __FreeBSD__
 		unsigned char      *u;
@@ -968,7 +938,7 @@ bool NETWORK_IsGeoIPAvailable ( void )
 // [BB] 
 FString NETWORK_GetCountryCodeFromAddress( NETADDRESS_s Address )
 {
-	const char * addressString = NETWORK_AddressToStringIgnorePort( Address );
+	const char * addressString = Address.ToStringNoPort();
 	if ( ( strnicmp( "10.", addressString, 3 ) == 0 ) ||
 		 ( strnicmp( "192.168.", addressString, 8 ) == 0 ) ||
 		 ( strnicmp( "127.", addressString, 4 ) == 0 ) )
@@ -977,7 +947,7 @@ FString NETWORK_GetCountryCodeFromAddress( NETADDRESS_s Address )
 	if ( g_GeoIPDB == NULL )
 		return "";
 
-	FString country = GeoIP_country_code_by_addr ( g_GeoIPDB, NETWORK_AddressToStringIgnorePort( Address ) );
+	FString country = GeoIP_country_code_by_addr ( g_GeoIPDB, Address.ToStringNoPort() );
 	return country.IsEmpty() ? "N/A" : country;
 }
 
@@ -1446,7 +1416,7 @@ CCMD( ip )
 
 	LocalAddress = NETWORK_GetLocalAddress( );
 
-	Printf( PRINT_HIGH, "IP address is %s\n", NETWORK_AddressToString( LocalAddress ));
+	Printf( PRINT_HIGH, "IP address is %s\n", LocalAddress.ToString() );
 }
 
 //*****************************************************************************

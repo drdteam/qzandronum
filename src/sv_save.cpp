@@ -88,7 +88,7 @@ PLAYERSAVEDINFO_t *SERVER_SAVE_GetSavedInfo( const char *pszPlayerName, NETADDRE
 			continue;
 
 		if (( stricmp( szPlayerName, g_SavedPlayerInfo[ulIdx].szName ) == 0 ) &&
-			( NETWORK_CompareAddress( Address, g_SavedPlayerInfo[ulIdx].Address, false )))
+			Address.Compare( g_SavedPlayerInfo[ulIdx].Address ))
 		{
 			return ( &g_SavedPlayerInfo[ulIdx] );
 		}
@@ -135,7 +135,7 @@ void SERVER_SAVE_SaveInfo( PLAYERSAVEDINFO_t *pInfo )
 		{
 			// If this slot matches the player we're trying to save, just update it.
 			if (( stricmp( szPlayerName, g_SavedPlayerInfo[ulIdx].szName ) == 0 ) &&
-				( NETWORK_CompareAddress( pInfo->Address, g_SavedPlayerInfo[ulIdx].Address, false )))
+				pInfo->Address.Compare( g_SavedPlayerInfo[ulIdx].Address ))
 			{
 				server_save_UpdateSlotWithInfo( ulIdx, pInfo );
 				return;

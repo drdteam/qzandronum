@@ -158,7 +158,7 @@ void CALLVOTE_Tick( void )
 					if ( ( strncmp( g_VoteCommand, "kick", 4 ) == 0 ) || ( strncmp( g_VoteCommand, "forcespec", 9 ) == 0 ) )
 					{
 						if ( strncmp( g_VoteCommand, "kick", 4 ) == 0 )
-							g_VoteCommand.Format( "addban %s 10min \"Vote kick", NETWORK_AddressToString( g_KickVoteVictimAddress ) );
+							g_VoteCommand.Format( "addban %s 10min \"Vote kick", g_KickVoteVictimAddress.ToString() );
 						else
 							g_VoteCommand.Format( "kickfromgame_idx %d \"Vote forcespec", static_cast<int>(SERVER_FindClientByAddress ( g_KickVoteVictimAddress )) );
 						g_VoteCommand.AppendFormat( ", %d to %d", static_cast<int>(callvote_CountPlayersWhoVotedYes( )), static_cast<int>(callvote_CountPlayersWhoVotedNo( )) );
@@ -227,7 +227,7 @@ void CALLVOTE_BeginVote( FString Command, FString Parameters, FString Reason, UL
 	{
 		FString	ReasonBlurb = ( g_VoteReason.Len( )) ? ( ", reason: \"" + g_VoteReason + "\"" ) : "";
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			Printf( "%s\\c- (%s) has called a vote (\"%s\"%s).\n", players[ulPlayer].userinfo.GetName(), NETWORK_AddressToString( SERVER_GetClient( ulPlayer )->Address ), g_VoteCommand.GetChars(), ReasonBlurb.GetChars() );
+			Printf( "%s\\c- (%s) has called a vote (\"%s\"%s).\n", players[ulPlayer].userinfo.GetName(), SERVER_GetClient( ulPlayer )->Address.ToString(), g_VoteCommand.GetChars(), ReasonBlurb.GetChars() );
 		else
 			Printf( "%s\\c- has called a vote (\"%s\"%s).\n", players[ulPlayer].userinfo.GetName(), g_VoteCommand.GetChars(), ReasonBlurb.GetChars() );
 	}
@@ -300,13 +300,13 @@ bool CALLVOTE_VoteYes( ULONG ulPlayer )
 		{
 			if ( g_ulPlayersWhoVotedYes[ulIdx] < MAXPLAYERS )
 			{
-				if ( NETWORK_CompareAddress( SERVER_GetClient( g_ulPlayersWhoVotedYes[ulIdx] )->Address, SERVER_GetClient( ulPlayer )->Address, true ))
+				if ( SERVER_GetClient( g_ulPlayersWhoVotedYes[ulIdx] )->Address.CompareNoPort( SERVER_GetClient( ulPlayer )->Address ))
 					return ( false );
 			}
 
 			if ( g_ulPlayersWhoVotedNo[ulIdx] < MAXPLAYERS )
 			{
-				if ( NETWORK_CompareAddress( SERVER_GetClient( g_ulPlayersWhoVotedNo[ulIdx] )->Address, SERVER_GetClient( ulPlayer )->Address, true ))
+				if ( SERVER_GetClient( g_ulPlayersWhoVotedNo[ulIdx] )->Address.CompareNoPort( SERVER_GetClient( ulPlayer )->Address ))
 					return ( false );
 			}
 		}
@@ -324,7 +324,7 @@ bool CALLVOTE_VoteYes( ULONG ulPlayer )
 
 	// Display the message in the console.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		Printf( "%s\\c- (%s) votes \"yes\".\n", players[ulPlayer].userinfo.GetName(), NETWORK_AddressToString( SERVER_GetClient( ulPlayer )->Address ));
+		Printf( "%s\\c- (%s) votes \"yes\".\n", players[ulPlayer].userinfo.GetName(), SERVER_GetClient( ulPlayer )->Address.ToString() );
 	else
 		Printf( "%s\\c- votes \"yes\".\n", players[ulPlayer].userinfo.GetName() );
 
@@ -400,13 +400,13 @@ bool CALLVOTE_VoteNo( ULONG ulPlayer )
 		{
 			if ( g_ulPlayersWhoVotedYes[ulIdx] < MAXPLAYERS )
 			{
-				if ( NETWORK_CompareAddress( SERVER_GetClient( g_ulPlayersWhoVotedYes[ulIdx] )->Address, SERVER_GetClient( ulPlayer )->Address, true ))
+				if ( SERVER_GetClient( g_ulPlayersWhoVotedYes[ulIdx] )->Address.CompareNoPort( SERVER_GetClient( ulPlayer )->Address ))
 					return ( false );
 			}
 
 			if ( g_ulPlayersWhoVotedNo[ulIdx] < MAXPLAYERS )
 			{
-				if ( NETWORK_CompareAddress( SERVER_GetClient( g_ulPlayersWhoVotedNo[ulIdx] )->Address, SERVER_GetClient( ulPlayer )->Address, true ))
+				if ( SERVER_GetClient( g_ulPlayersWhoVotedNo[ulIdx] )->Address.CompareNoPort( SERVER_GetClient( ulPlayer )->Address ))
 					return ( false );
 			}
 		}
@@ -424,7 +424,7 @@ bool CALLVOTE_VoteNo( ULONG ulPlayer )
 
 	// Display the message in the console.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		Printf( "%s\\c- (%s) votes \"no\".\n", players[ulPlayer].userinfo.GetName(), NETWORK_AddressToString( SERVER_GetClient( ulPlayer )->Address ));
+		Printf( "%s\\c- (%s) votes \"no\".\n", players[ulPlayer].userinfo.GetName(), SERVER_GetClient( ulPlayer )->Address.ToString() );
 	else
 		Printf( "%s\\c- votes \"no\".\n", players[ulPlayer].userinfo.GetName() );
 
@@ -478,7 +478,7 @@ ULONG CALLVOTE_CountNumEligibleVoters( void )
 					}
 
 					// If the two IP addresses match, break out.
-//					if ( NETWORK_CompareAddress( SERVER_GetClient( ulIdx )->Address, SERVER_GetClient( ulIdx2 )->Address, true ))
+//					if ( SERVER_GetClient( ulIdx )->Address.CompareNoPort( SERVER_GetClient( ulIdx2 )->Address ))
 //						break;
 				}
 
@@ -666,7 +666,7 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 	for( std::list<VOTE_s>::reverse_iterator i = g_PreviousVotes.rbegin(); i != g_PreviousVotes.rend(); ++i )
 	{
 		// One *type* of vote per voter per ## minutes (excluding kick votes if they passed).
-		if ( !( callvote_IsKickVote ( i->ulVoteType ) && i->bPassed ) && NETWORK_CompareAddress( i->Address, Address, true ) && ( ulVoteType == i->ulVoteType ) && (( tNow - i->tTimeCalled ) < VOTER_VOTETYPE_INTERVAL * MINUTE ))
+		if ( !( callvote_IsKickVote ( i->ulVoteType ) && i->bPassed ) && i->Address.CompareNoPort( Address ) && ( ulVoteType == i->ulVoteType ) && (( tNow - i->tTimeCalled ) < VOTER_VOTETYPE_INTERVAL * MINUTE ))
 		{
 			int iMinutesLeft = static_cast<int>( 1 + ( i->tTimeCalled + VOTER_VOTETYPE_INTERVAL * MINUTE - tNow ) / MINUTE );
 			SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "You must wait %d minute%s to call another %s vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ), Command.GetChars() );
@@ -674,7 +674,7 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 		}
 
 		// One vote per voter per ## minutes.
-		if ( NETWORK_CompareAddress( i->Address, Address, true ) && (( tNow - i->tTimeCalled ) < VOTER_NEWVOTE_INTERVAL * MINUTE ))
+		if ( i->Address.CompareNoPort( Address ) && (( tNow - i->tTimeCalled ) < VOTER_NEWVOTE_INTERVAL * MINUTE ))
 		{
 			int iMinutesLeft = static_cast<int>( 1 + ( i->tTimeCalled + VOTER_NEWVOTE_INTERVAL * MINUTE - tNow ) / MINUTE );
 			SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "You must wait %d minute%s to call another vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
@@ -687,7 +687,7 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 			int iMinutesLeft = static_cast<int>( 1 + ( i->tTimeCalled + VOTE_LITERALREVOTE_INTERVAL * MINUTE - tNow ) / MINUTE );
 
 			// Kickvotes (can't give the IP to clients!).
-			if ( callvote_IsKickVote ( i->ulVoteType ) && ( !i->bPassed ) && NETWORK_CompareAddress( i->KickAddress, g_KickVoteVictimAddress, true ))
+			if ( callvote_IsKickVote ( i->ulVoteType ) && ( !i->bPassed ) && i->KickAddress.CompareNoPort( g_KickVoteVictimAddress ))
 			{
 				SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "That specific player was recently on voted to be kicked or forced to spectate, but the vote failed. You must wait %d minute%s to call it again.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 				return false;

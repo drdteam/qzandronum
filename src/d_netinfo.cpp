@@ -1546,7 +1546,7 @@ CCMD (playerinfo)
 				// [RC] Are we the server? Draw their IPs as well.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				{
-					infoString.AppendFormat("\\c%c - IP %s", PLAYER_IsTrueSpectator( &players[i] ) ? 'k' : 'j', NETWORK_AddressToString ( SERVER_GetClient( i )->Address ) );
+					infoString.AppendFormat("\\c%c - IP %s", PLAYER_IsTrueSpectator( &players[i] ) ? 'k' : 'j', SERVER_GetClient( i )->Address.ToString() );
 					// [BB] If we detected suspicious behavior of this client, print this now.
 					if ( SERVER_GetClient( i )->bSuspicious )
 						infoString.AppendFormat ( " * %lu", SERVER_GetClient( i )->ulNumConsistencyWarnings );

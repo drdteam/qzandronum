@@ -150,6 +150,17 @@ CVAR (String, save_dir, "", CVAR_ARCHIVE|CVAR_GLOBALCONFIG);
 CVAR (Bool, cl_waitforsave, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 EXTERN_CVAR (Float, con_midtime);
 
+// [BB]
+EXTERN_CVAR (Int, vid_renderer)
+
+// [BB]
+FString GetEngineString ( )
+{
+	FString engine;
+	engine.Format ( "%s (%s)", GAMESIG, ( vid_renderer ? "GL" : "Software" ) );
+	return engine;
+}
+
 //==========================================================================
 //
 // CVAR displaynametags
@@ -4346,7 +4357,8 @@ void G_DoLoadGame ()
 	// Since there are ZDoom derivates using the exact same savegame format but
 	// with mutual incompatibilities this check simplifies things significantly.
 	char *engine = M_GetPNGText (png, "Engine");
-	if (engine == NULL || 0 != strcmp (engine, GAMESIG))
+	// [BB] Use GetEngineString() to distinguish Software from GL saves.
+	if (engine == NULL || 0 != strcmp (engine, GetEngineString() ))
 	{
 		// Make a special case for the message printed for old savegames that don't
 		// have this information.
@@ -4727,7 +4739,8 @@ void G_DoSaveGame (bool okForQuicksave, FString filename, const char *descriptio
 	PutSavePic (stdfile, SAVEPICWIDTH, SAVEPICHEIGHT);
 	mysnprintf(buf, countof(buf), GAMENAME " %s", GetVersionString());
 	M_AppendPNGText (stdfile, "Software", buf);
-	M_AppendPNGText (stdfile, "Engine", GAMESIG);
+	// [BB] Use GetEngineString() to distinguish Software from GL saves.
+	M_AppendPNGText (stdfile, "Engine", GetEngineString() );
 	M_AppendPNGText (stdfile, "ZDoom Save Version", SAVESIG);
 	M_AppendPNGText (stdfile, "Title", description);
 	M_AppendPNGText (stdfile, "Current Map", level.MapName);
