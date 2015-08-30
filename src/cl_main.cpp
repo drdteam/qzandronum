@@ -1497,7 +1497,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				break;
 			case NETWORK_ERRORCODE_WRONGPROTOCOLVERSION:
 
-				szErrorString = "Failed connect. Your version uses outdated network code.\nPlease check http://www." DOMAIN_NAME "/ for updates.";
+				szErrorString.Format( "Failed connect. Your protocol version is different.\nServer uses: %s\nYou use:     %s\nPlease check http://www." DOMAIN_NAME "/ for a matching version.", NETWORK_ReadString( pByteStream ), GetVersionStringRev() );
 				break;
 			case NETWORK_ERRORCODE_BANNED:
 

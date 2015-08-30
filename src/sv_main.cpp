@@ -2296,6 +2296,13 @@ void SERVER_ClientError( ULONG ulClient, ULONG ulErrorCode )
 		// Tell the client what version this server using.
 		NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, DOTVERSIONSTR );
 		break;
+	case NETWORK_ERRORCODE_WRONGPROTOCOLVERSION:
+
+		Printf( "Incorrect protocol version.\n" );
+
+		// Tell the client what version this server using.
+		NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, GetVersionStringRev() );
+		break;
 	case NETWORK_ERRORCODE_BANNED:
 		{
 			FString banReason = SERVERBAN_GetBanList( )->getEntryComment( g_aClients[ulClient].Address );
