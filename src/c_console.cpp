@@ -639,6 +639,13 @@ void CONSOLE_SetRCONPlayer( ULONG ulPlayer )
 
 void AddToConsole (int printlevel, const char *text)
 {
+	// [BB] The server doesn't have a conbuffer.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	{
+		PrintString ( printlevel, text );
+		return;
+	}
+
 	conbuffer->AddText(printlevel, text, Logfile);
 }
 
@@ -701,9 +708,10 @@ int PrintString (int printlevel, const char *outline)
 	{
 		I_PrintStr (outlinecopy);
 
-		AddToConsole (printlevel, outlinecopy);
 		if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		{
+			AddToConsole (printlevel, outlinecopy);
+
 			if (vidactive && screen && SmallFont)
 			{
 				C_AddNotifyString (printlevel, outlinecopy);
