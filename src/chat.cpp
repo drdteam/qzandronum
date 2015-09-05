@@ -477,7 +477,7 @@ void CHAT_PrintChatString( ULONG ulPlayer, ULONG ulMode, const char *pszString )
 	}
 
 	BOTCMD_SetLastChatString( pszString );
-	BOTCMD_SetLastChatPlayer( players[ulPlayer].userinfo.GetName() );
+	BOTCMD_SetLastChatPlayer( PLAYER_IsValidPlayer( ulPlayer ) ? players[ulPlayer].userinfo.GetName() : "" );
 
 	{
 		ULONG	ulIdx;

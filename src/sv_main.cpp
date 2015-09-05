@@ -6505,7 +6505,7 @@ CCMD( kick_ip )
 		return;
 	}
 
-	ULONG ulIdx = SERVER_FindClientByAddress( NETADDRESS_s::FromString( argv[1] ));
+	ULONG ulIdx = SERVER_FindClientByAddress( NETADDRESS_s( argv[1] ));
 
 	// [BB] Validity checks are done in SERVER_KickPlayer.
 	// If we provided a reason, give it.

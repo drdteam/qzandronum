@@ -1719,36 +1719,29 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	m_pPlayer->userinfo.NameChanged ( botname );
 
 	m_pPlayer->userinfo.ColorChanged ( V_GetColorFromString( NULL, g_BotInfo[m_ulBotInfoIdx]->szColor ) );
-	if ( g_BotInfo[m_ulBotInfoIdx]->szSkinName )
+
+	// Store the name of the skin the client gave us, so others can view the skin
+	// even if the server doesn't have the skin loaded.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		strncpy( SERVER_GetClient( ulPlayerNum )->szSkin, g_BotInfo[m_ulBotInfoIdx]->szSkinName, MAX_SKIN_NAME + 1 );
+
+	LONG lSkin = R_FindSkin( g_BotInfo[m_ulBotInfoIdx]->szSkinName, 0 );
+	m_pPlayer->userinfo.SkinNumChanged ( lSkin );
+
+	// If the skin was hidden, reveal it!
+	if ( skins[lSkin].bRevealed == false )
 	{
-		LONG	lSkin;
-
-		// Store the name of the skin the client gave us, so others can view the skin
-		// even if the server doesn't have the skin loaded.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			strncpy( SERVER_GetClient( ulPlayerNum )->szSkin, g_BotInfo[m_ulBotInfoIdx]->szSkinName, MAX_SKIN_NAME + 1 );
-
-		lSkin = R_FindSkin( g_BotInfo[m_ulBotInfoIdx]->szSkinName, 0 );
-		m_pPlayer->userinfo.SkinNumChanged ( lSkin );
-
-		// If the skin was hidden, reveal it!
-		if ( skins[lSkin].bRevealed == false )
-		{
-			Printf( "Hidden skin \"%s\\c-\" has now been revealed!\n", skins[lSkin].name );
-			skins[lSkin].bRevealed = true;
-		}
+		Printf( "Hidden skin \"%s\\c-\" has now been revealed!\n", skins[lSkin].name );
+		skins[lSkin].bRevealed = true;
 	}
 
-	if ( g_BotInfo[m_ulBotInfoIdx]->szClassName )
+	// See if the given class name matches one in the global list.
+	for ( ulIdx = 0; ulIdx < PlayerClasses.Size( ); ulIdx++ )
 	{
-		// See if the given class name matches one in the global list.
-		for ( ulIdx = 0; ulIdx < PlayerClasses.Size( ); ulIdx++ )
+		if ( stricmp( g_BotInfo[m_ulBotInfoIdx]->szClassName, PlayerClasses[ulIdx].Type->Meta.GetMetaString (APMETA_DisplayName)) == 0 )
 		{
-			if ( stricmp( g_BotInfo[m_ulBotInfoIdx]->szClassName, PlayerClasses[ulIdx].Type->Meta.GetMetaString (APMETA_DisplayName)) == 0 )
-			{
-				m_pPlayer->userinfo.PlayerClassNumChanged ( ulIdx );
-				break;
-			}
+			m_pPlayer->userinfo.PlayerClassNumChanged ( ulIdx );
+			break;
 		}
 	}
 

@@ -195,6 +195,7 @@ struct NETADDRESS_s
 	USHORT		usPad;
 
 	NETADDRESS_s();
+	explicit NETADDRESS_s ( const char* string, bool* ok = NULL );
 
 	bool Compare ( const NETADDRESS_s& other, bool ignorePort = false ) const;
 	bool CompareNoPort ( const NETADDRESS_s& other ) const { return Compare( other, true ); }
@@ -205,9 +206,7 @@ struct NETADDRESS_s
 	const char* ToString() const;
 	const char* ToStringNoPort() const;
 	bool LoadFromString( const char* string );
-
-	static NETADDRESS_s FromString ( const char* string, bool* ok = NULL );
-	static NETADDRESS_s FromSocketAddress ( const struct sockaddr_in& sockaddr );
+	void LoadFromSocketAddress ( const struct sockaddr_in& sockaddr );
 
 private:
 	bool operator==( const NETADDRESS_s& );

@@ -173,8 +173,7 @@ void SERVER_MASTER_Tick( void )
 	NETWORK_ClearBuffer( &g_MasterServerBuffer );
 
 	// [BB] If we can't find the master address, we can't tick the master.
-	bool ok;
-	g_AddressMasterServer = NETADDRESS_s::FromString( masterhostname, &ok );
+	bool ok = g_AddressMasterServer.LoadFromString( masterhostname );
 
 	if ( ok == false )
 	{
@@ -216,7 +215,8 @@ void SERVER_MASTER_Broadcast( void )
 	broadcast_addr.sin_family = AF_INET;
 	broadcast_addr.sin_addr.s_addr = INADDR_BROADCAST;
 	broadcast_addr.sin_port = htons( DEFAULT_BROADCAST_PORT );
-	NETADDRESS_s AddressBroadcast = NETADDRESS_s::FromSocketAddress( broadcast_addr );
+	NETADDRESS_s AddressBroadcast;
+	AddressBroadcast.LoadFromSocketAddress( broadcast_addr );
 
 	// [BB] Under all Windows versions broadcasts to INADDR_BROADCAST seem to work fine
 	// while class A broadcasts don't work under Vista/7. So just use INADDR_BROADCAST.

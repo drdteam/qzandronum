@@ -600,7 +600,7 @@ void CLIENT_Construct( void )
     if ( pszIPAddress )
     {
 		// Convert the given IP string into our server address.
-		g_AddressServer = NETADDRESS_s::FromString( pszIPAddress );
+		g_AddressServer.LoadFromString( pszIPAddress );
 
 		// If the user didn't specify a port, use the default one.
 		if ( g_AddressServer.usPort == 0 )
@@ -1122,7 +1122,7 @@ void CLIENT_GetPackets( void )
 			const char		*pszMasterPort;
 			// [BB] This conversion potentially does a DNS lookup.
 			// There is absolutely no reason to call this at beginning of the while loop above (like done before). 
-			NETADDRESS_s MasterAddress = NETADDRESS_s::FromString( masterhostname );
+			NETADDRESS_s MasterAddress ( masterhostname );
 
 			// Allow the user to specify which port the master server is on.
 			pszMasterPort = Args->CheckValue( "-masterport" );
@@ -12612,7 +12612,7 @@ CCMD( connect )
 	R_SetVisibility( 8.0f );
 
 	// Create a server IP from the given string.
-	g_AddressServer = NETADDRESS_s::FromString( argv[1] );
+	g_AddressServer.LoadFromString( argv[1] );
 
 	// If the user didn't specify a port, use the default port.
 	if ( g_AddressServer.usPort == 0 )

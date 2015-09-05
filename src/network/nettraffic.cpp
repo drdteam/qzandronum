@@ -48,6 +48,7 @@
 #include "nettraffic.h"
 #include "network.h"
 #include "c_dispatch.h"
+#include "p_acs.h"
 
 #include <map>
 
@@ -115,7 +116,7 @@ CCMD( dumptrafficmeasure )
 
 	Printf ( "\nNetwork traffic (in bytes) caused by ACS scripts:\n" );
 	for ( std::map<int, int>::const_iterator it = g_ACSScriptTrafficMap.begin(); it != g_ACSScriptTrafficMap.end(); ++it )
-		Printf ( "Script %d: %d\n", (*it).first, (*it).second );
+		Printf ( "Script %s: %d\n", FBehavior::RepresentScript( (*it).first ).GetChars(), (*it).second );
 }
 
 //*****************************************************************************

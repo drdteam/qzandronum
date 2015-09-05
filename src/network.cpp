@@ -268,7 +268,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 		// [BB] We are using a specified IP, so we don't need to figure out what IP we have, but just use the specified one.
 		else
 		{
-			g_LocalAddress = NETADDRESS_s::FromString( pszIPAddress );
+			g_LocalAddress.LoadFromString( pszIPAddress );
 			g_LocalAddress.usPort = htons ( NETWORK_GetLocalPort() );
 		}
 
@@ -573,7 +573,7 @@ int NETWORK_GetPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
+	g_AddressFrom.LoadFromSocketAddress( SocketFrom );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
@@ -662,7 +662,7 @@ int NETWORK_GetLANPackets( void )
 		return ( 0 );
 
 	// Store the IP address of the sender.
-	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
+	g_AddressFrom.LoadFromSocketAddress( SocketFrom );
 
 	// Decode the huffman-encoded message we received.
 	// [BB] Communication with the auth server is not Huffman-encoded.
@@ -786,7 +786,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 
 	// Convert the host name to our local 
 	bool ok;
-	NETADDRESS_s Address = NETADDRESS_s::FromString( szBuffer, &ok );
+	NETADDRESS_s Address ( szBuffer, &ok );
 
 	iNameLength = sizeof( SocketAddress );
 #ifndef	WIN32

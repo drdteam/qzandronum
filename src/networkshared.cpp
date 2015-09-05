@@ -379,12 +379,10 @@ bool NETADDRESS_s::Compare ( const NETADDRESS_s& other, bool ignorePort ) const
 
 //*****************************************************************************
 //
-NETADDRESS_s NETADDRESS_s::FromString ( const char* string, bool* ok )
+NETADDRESS_s::NETADDRESS_s ( const char* string, bool* ok )
 {
 	static bool sink;
-	NETADDRESS_s result;
-	( ok ? *ok : sink ) = result.LoadFromString( string );
-	return result;
+	( ok ? *ok : sink ) = this->LoadFromString( string );
 }
 
 //*****************************************************************************
@@ -431,18 +429,16 @@ bool NETADDRESS_s::LoadFromString ( const char* string )
 			*(int *)&sadr.sin_addr = ulRet;
 	}
 
-	*this = NETADDRESS_s::FromSocketAddress( sadr );
+	this->LoadFromSocketAddress( sadr );
 	return true;
 }
 
 //*****************************************************************************
 //
-NETADDRESS_s NETADDRESS_s::FromSocketAddress ( const sockaddr_in& sockaddr )
+void NETADDRESS_s::LoadFromSocketAddress ( const sockaddr_in& sockaddr )
 {
-	NETADDRESS_s result;
-	*(int *)&result.abIP = *(const int *)&sockaddr.sin_addr;
-	result.usPort = sockaddr.sin_port;
-	return result;
+	*(int *)&this->abIP = *(const int *)&sockaddr.sin_addr;
+	this->usPort = sockaddr.sin_port;
 }
 
 //*****************************************************************************

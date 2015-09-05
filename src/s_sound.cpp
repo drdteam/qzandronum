@@ -2862,7 +2862,8 @@ CCMD (idmus)
 
 CCMD (changemus)
 {
-	if (!nomusic)
+	// [BB] The server is not playing music, but can instruct the clients to do so.
+	if (!nomusic || ( NETWORK_GetState( ) == NETSTATE_SERVER ))
 	{
 		if (argv.argc() > 1)
 		{

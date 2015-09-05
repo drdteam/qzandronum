@@ -50,6 +50,8 @@
 #include "doomstat.h"
 #include "thingdef_exp.h"
 #include "m_fixed.h"
+// [BB] New #includes
+#include "network.h"
 
 int testglobalvar = 1337;	// just for having one global variable to test with
 DEFINE_GLOBAL_VARIABLE(testglobalvar)
@@ -1068,6 +1070,10 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 
 		if (Operator != '*' && v2 == 0)
 		{
+			// [BB] Due to Zandronum's jump handling, valid code can cause this on the clients.
+			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+				goto clientDivisionByZero;
+
 			I_Error("Division by 0");
 		}
 
@@ -1083,6 +1089,10 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 
 		if (Operator != '*' && v2 == 0)
 		{
+			// [BB] Due to Zandronum's jump handling, valid code can cause this on the clients.
+			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+				goto clientDivisionByZero;
+
 			I_Error("Division by 0");
 		}
 
@@ -1092,6 +1102,18 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 				  Operator == '%'? v1 % v2 : 0;
 
 	}
+	return ret;
+
+	// [BB]
+clientDivisionByZero:
+	static bool clientDivisionByZeroWarningPrinted = false;
+	if ( clientDivisionByZeroWarningPrinted == false )
+	{
+		Printf ( PRINT_BOLD, "WARNING: Division by 0 encountered on the client!\n" );
+		clientDivisionByZeroWarningPrinted = true;
+	}
+	ret.Type = VAL_Int;
+	ret.Int = 0; 
 	return ret;
 }
 

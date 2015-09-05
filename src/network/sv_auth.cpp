@@ -145,7 +145,7 @@ void NETWORK_AUTH_Destruct( void )
 NETADDRESS_s NETWORK_AUTH_GetServerAddress( void )
 {
 	bool ok;
-	NETADDRESS_s authServerAddress = NETADDRESS_s::FromString( authhostname, &ok );
+	NETADDRESS_s authServerAddress ( authhostname, &ok );
 
 	if ( ok == false )
 		Printf ( "Warning: Can't find authhostname %s!\n", *authhostname );

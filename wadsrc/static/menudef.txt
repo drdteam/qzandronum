@@ -678,6 +678,14 @@ OptionValue Fuzziness
 	2.0, "Shadow"
 }
 
+// [TP]
+OptionValue ZA_RespawnInvulEffects
+{
+	0.0, "None"
+	1.0, "Skulltag"
+	2.0, "ZDoom"
+}
+
 OptionMenu "OpenGLOptions"
 {
 	Title "OPENGL OPTIONS"
@@ -715,6 +723,7 @@ OptionMenu "VideoOptions"
 	
 	Option "Stretch short skies",		"r_stretchsky", "OnOff"
 	Option "Use fuzz effect",			"r_drawfuzz", "Fuzziness"
+	Option "Respawn invul effect",		"cl_respawninvuleffect", "ZA_RespawnInvulEffects" // [TP]
 	Slider "Lost Soul translucency",	"transsouls", 0.25, 1.0, 0.05, 2
 	Option "Use fake contrast",			"r_fakecontrast", "Contrast"
 	Option "Rocket Trails",				"cl_rockettrails", "RocketTrailTypes"

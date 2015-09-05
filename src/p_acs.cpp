@@ -94,6 +94,75 @@
 // [BB] A std::pair inside TArray inside TArray didn't seem to work.
 std::vector<TArray<std::pair<FString, FString> > > g_dbQueries;
 
+//
+// [TP] Overridable system time property
+//
+CVAR( Int, acstimestamp, 0, CVAR_ARCHIVE | CVAR_NOSETBYACS )
+
+CCMD ( acstime )
+{
+	if ( ACS_IsCalledFromConsoleCommand() )
+		return;
+
+	if ( argv.argc() == 1 )
+	{
+		// Tell the user what the override status is.
+		time_t timer = acstimestamp;
+
+		if ( timer == 0 )
+			Printf( "ACS is using system time.\nUse %s yyyy-mm-dd [hh:mm] to override this.\n", argv[0] );
+		else
+		{
+			char timebuffer[128];
+			strftime( timebuffer, sizeof timebuffer, "%Y-%m-%d %H:%M", localtime( &timer ));
+			Printf( "ACS is using %s as current time.\nUse \"%s clear\" to clear override.\n", timebuffer, argv[0] );
+		}
+	}
+	else
+	{
+		if ( stricmp( argv[1], "clear" ) == 0 )
+		{
+			// User wants to clear the override.
+			acstimestamp = 0;
+			Printf( "ACS time override cleared.\n" );
+		}
+		else
+		{
+			// We wish to set the override time.  Unfortunately strptime is not available on Windows, so we'll have to
+			// use sscanf to read in the date. We need at least the date in order to set the override, the time
+			// defaults to midnight. We use the current time as a template for our new struct tm to keep fields not
+			// directly set by us (e.g. DST).
+			time_t now = time( NULL );
+			struct tm& timeinfo = *localtime( &now );
+			timeinfo.tm_hour = timeinfo.tm_min = timeinfo.tm_sec = 0;
+			FString timestring = argv[1];
+
+			if ( argv.argc() >= 3 )
+				timestring.AppendFormat( " %s", argv[2] );
+
+			int result = sscanf( timestring, "%i-%i-%i %i:%i", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
+				&timeinfo.tm_hour, &timeinfo.tm_min );
+
+			if ( result >= 3 )
+			{
+				// Adjust the date, struct tm's months start from 0 and years start from year 1900.
+				timeinfo.tm_mon--;
+				timeinfo.tm_year -= 1900;
+				time_t timestamp = mktime( &timeinfo );
+
+				if ( timestamp != -1 )
+				{
+					acstimestamp = (int) timestamp;
+					Printf( "ACS time override set.\n" );
+					return;
+				}
+			}
+
+			Printf( "Could not read that date.\n" );
+		}
+	}
+}
+
 extern FILE *Logfile;
 
 FRandom pr_acs ("ACS");
@@ -4955,6 +5024,9 @@ enum EACSFunctions
 	ACSF_EndDBTransaction,
 	ACSF_GetDBEntries,
 	ACSF_NamedRequestScriptPuke,
+	ACSF_SystemTime,
+	ACSF_GetTimeProperty,
+	ACSF_Strftime,
 
 	// ZDaemon
 	ACSF_GetTeamScore = 19620,	// (int team)
@@ -6686,6 +6758,56 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				g_dbQueries.resize ( g_dbQueries.size() + 1 );
 				DATABASE_GetEntries ( FBehavior::StaticLookupString(args[0]), g_dbQueries.back() );
 				return ( g_dbQueries.size() - 1 );
+			}
+
+		// [TP] Returns system time unless user decides that system time means something else
+		case ACSF_SystemTime:
+			return acstimestamp != 0 ? acstimestamp : (int) time( NULL );
+
+		// [TP] It's struct tm in ACS!
+		case ACSF_GetTimeProperty:
+			{
+				enum
+				{
+					TM_SECOND,
+					TM_MINUTE,
+					TM_HOUR,
+					TM_DAY,
+					TM_MONTH,
+					TM_YEAR,
+					TM_WEEKDAY,
+				};
+
+				time_t timer = args[0];
+				bool utc = argCount >= 3 ? !!args[2] : false;
+				struct tm* timeinfo = ( utc ? gmtime : localtime )( &timer );
+
+				switch ( args[1] )
+				{
+				case TM_SECOND: return timeinfo->tm_sec;
+				case TM_MINUTE: return timeinfo->tm_min;
+				case TM_HOUR: return timeinfo->tm_hour;
+				case TM_DAY: return timeinfo->tm_mday;
+				case TM_MONTH: return timeinfo->tm_mon;
+				case TM_YEAR: return 1900 + timeinfo->tm_year;
+				case TM_WEEKDAY: return timeinfo->tm_wday;
+				}
+			}
+			return 0;
+
+		// [TP]
+		case ACSF_Strftime:
+			{
+				char buffer[1024];
+				time_t timer = args[0];
+				FString format = FBehavior::StaticLookupString( args[1] );
+				bool utc = argCount >= 3 ? !!args[2] : false;
+				struct tm* timeinfo = ( utc ? gmtime : localtime )( &timer );
+
+				if ( strftime( buffer, sizeof buffer, format, timeinfo ) == 0 )
+					buffer[0] = '\0'; // Zero the result if strftime fails
+
+				return ACS_PushAndReturnDynamicString( buffer, stack, stackdepth );
 			}
 
 		default:

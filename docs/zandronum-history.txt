@@ -19,10 +19,13 @@
 *!	- Rewrote support for preferred weapon order. Weapon info is now automatically looked up, the ORDERDEF lump has been removed. [Dusk]
 *+	- Generalized the rune system. Any rune can be used as a powerup (including spread, prosperity and reflection, which are now available as powerups), and any powerup can be used as a rune. [Dusk]
 +	- Added NamedRequestScriptPuke, named variant of RequestScriptPuke. The two functions can now take 1-5 parameters, thus supporting 4 script arguments. [Dusk]
++	- Added ACS time and date access functions SystemTime(), GetTimeProperty and Strftime(). The return value of SystemTime() may be overridden by the user with the new CCMD acstime. [Dusk]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
+-	- Fixed: Resurrect cheat didn't work online. [Dusk]
 !	- Removed the internal server browser. It was only useful for debugging purposes anyway and the CCMDs querymaster and dumpserverlist are sufficient for this. [Torr Samaho]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
+!	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
 
 
 2.2

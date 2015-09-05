@@ -463,18 +463,17 @@ CCMD (anubis)
 // [GRB]
 CCMD (resurrect)
 {
-	// [BB] Only allow resurrect in single player.
-	if (( NETWORK_GetState( ) != NETSTATE_SINGLE ) && ( NETWORK_GetState( ) != NETSTATE_SINGLE_MULTIPLAYER ))
-	{
-		Printf ("You cannot use resurrect during a network game.\n");
-		return;
-	}
-
 	if (CheckCheatmode ())
 		return;
 
-	Net_WriteByte (DEM_GENERICCHEAT);
-	Net_WriteByte (CHT_RESSURECT);
+	// [TP]
+	if ( NETWORK_GetState() == NETSTATE_CLIENT )
+		CLIENTCOMMANDS_GenericCheat( CHT_RESSURECT );
+	else
+	{
+		Net_WriteByte (DEM_GENERICCHEAT);
+		Net_WriteByte (CHT_RESSURECT);
+	}
 }
 
 EXTERN_CVAR (Bool, chasedemo)
