@@ -1702,6 +1702,7 @@ enum FP_Flags
 {
 	FPF_AIMATANGLE = 1,
 	FPF_TRANSFERTRANSLATION = 2,
+	FPF_NOAUTOAIM = 4,
 };
 
 // [BB] This functions is needed to keep code duplication at a minimum while applying the spread power.
@@ -1717,7 +1718,7 @@ void A_FireCustomMissileHelper ( AActor * self,
 {
 	// [BB] Don't tell the clients to spawn the missile yet. This is done later
 	// after we are done manipulating angle and momentum.
-	AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &linetarget,	NULL, false, true, false);
+	AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &linetarget,	NULL, false, (Flags & FPF_NOAUTOAIM) != 0, true, false);
 
 	// automatic handling of seeker missiles
 	if (misl)
@@ -5889,7 +5890,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_DropItem)
 // A_SetSpeed
 //
 //==========================================================================
-
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetSpeed)
 {
 	ACTION_PARAM_START(2);
@@ -5905,6 +5905,28 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetSpeed)
 	}
 	
 	ref->Speed = speed;
+}
+
+//==========================================================================
+//
+// A_SetFloatSpeed
+//
+//==========================================================================
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetFloatSpeed)
+{
+	ACTION_PARAM_START(2);
+	ACTION_PARAM_FIXED(speed, 0);
+	ACTION_PARAM_INT(ptr, 1);
+
+	AActor *ref = COPY_AAPTR(self, ptr);
+
+	if (!ref)
+	{
+		ACTION_SET_RESULT(false);
+		return;
+	}
+
+	ref->FloatSpeed = speed;
 }
 
 //===========================================================================
@@ -6648,3 +6670,4 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetRipMax)
 	ACTION_PARAM_INT(max, 0);
 	self->RipLevelMax = max;
 }
+

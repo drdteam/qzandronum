@@ -221,7 +221,6 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 	const char *message;
 	const char *messagename;
 	char gendermessage[1024];
-	bool friendly;
 	int  gender;
 	// We enough characters for the player's name, the terminating zero, and 4 characters
 	// to strip the color codes (I actually believe it's 3, but let's play it safe).
@@ -238,8 +237,6 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 	if (inflictor && inflictor->player && inflictor->player->mo != inflictor)
 		MeansOfDeath = NAME_None;
 
-	// [BB/TP] Clients must set friendly to false here because they do not enter P_DamageMobj.
-	friendly = (self->player != attacker->player && self->IsTeammate(attacker)) && ( NETWORK_InClientMode() == false );
 	mod = MeansOfDeath;
 	message = NULL;
 	messagename = NULL;
@@ -303,7 +300,7 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 
 	if (message == NULL && attacker != NULL && attacker->player != NULL)
 	{
-		if (friendly)
+		if (self->player != attacker->player && self->IsTeammate(attacker))
 		{
 			self = attacker;
 			gender = self->player->userinfo.GetGender();

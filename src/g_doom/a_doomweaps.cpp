@@ -1027,8 +1027,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle + ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false );
-		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle - ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false );
+		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle + ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
+		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle - ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
 	}
 
 }
