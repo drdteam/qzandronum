@@ -417,18 +417,7 @@ static void SummonActor (int command, int command2, FCommandLine argv)
 		{
 			const bool bSetAngle = ( argv.argc() > 2 );
 			const SHORT sAngle = bSetAngle ? atoi (argv[2]) : 0;
-			switch(command)
-			{
-			case DEM_SUMMON:
-				CLIENTCOMMANDS_SummonCheat( type->TypeName.GetChars( ), CLC_SUMMONCHEAT, bSetAngle, sAngle );
-				break;
-			case DEM_SUMMONFRIEND:
-				CLIENTCOMMANDS_SummonCheat( type->TypeName.GetChars( ), CLC_SUMMONFRIENDCHEAT, bSetAngle, sAngle );
-				break;
-			case DEM_SUMMONFOE:
-				CLIENTCOMMANDS_SummonCheat( type->TypeName.GetChars( ), CLC_SUMMONFOECHEAT, bSetAngle, sAngle );
-				break;
-			}
+			CLIENTCOMMANDS_SummonCheat( type->TypeName, command, bSetAngle, sAngle );
 			return;
 		}
 

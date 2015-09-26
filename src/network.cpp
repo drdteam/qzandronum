@@ -96,6 +96,7 @@ enum LumpAuthenticationMode {
 };
 
 // [BB] Implement the string table and the conversion functions for the SVC and SVC2 enums.
+#include "network_enums.h"
 #define GENERATE_ENUM_STRINGS  // Start string generation
 #include "network_enums.h"
 #undef GENERATE_ENUM_STRINGS   // Stop string generation

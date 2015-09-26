@@ -1053,6 +1053,22 @@ FxExpression *FxMulDiv::Resolve(FCompileContext& ctx)
 }
 
 
+// [BB]
+static inline ExpVal handleClientDivisionByZero ( void )
+{
+	ExpVal ret;
+
+	static bool clientDivisionByZeroWarningPrinted = false;
+	if ( clientDivisionByZeroWarningPrinted == false )
+	{
+		Printf ( PRINT_BOLD, "WARNING: Division by 0 encountered on the client!\n" );
+		clientDivisionByZeroWarningPrinted = true;
+	}
+	ret.Type = VAL_Int;
+	ret.Int = 0; 
+	return ret;
+}
+
 //==========================================================================
 //
 //
@@ -1072,7 +1088,7 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 		{
 			// [BB] Due to Zandronum's jump handling, valid code can cause this on the clients.
 			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-				goto clientDivisionByZero;
+				return handleClientDivisionByZero();
 
 			I_Error("Division by 0");
 		}
@@ -1091,7 +1107,7 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 		{
 			// [BB] Due to Zandronum's jump handling, valid code can cause this on the clients.
 			if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-				goto clientDivisionByZero;
+				return handleClientDivisionByZero();
 
 			I_Error("Division by 0");
 		}
@@ -1102,18 +1118,6 @@ ExpVal FxMulDiv::EvalExpression (AActor *self)
 				  Operator == '%'? v1 % v2 : 0;
 
 	}
-	return ret;
-
-	// [BB]
-clientDivisionByZero:
-	static bool clientDivisionByZeroWarningPrinted = false;
-	if ( clientDivisionByZeroWarningPrinted == false )
-	{
-		Printf ( PRINT_BOLD, "WARNING: Division by 0 encountered on the client!\n" );
-		clientDivisionByZeroWarningPrinted = true;
-	}
-	ret.Type = VAL_Int;
-	ret.Int = 0; 
 	return ret;
 }
 

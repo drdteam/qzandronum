@@ -58,31 +58,13 @@
 //*****************************************************************************
 //	DEFINES
 
-//*****************************************************************************
-enum 
-{
-	// [BC] Message headers with bytes starting with 0 and going sequentially
-	// isn't very distinguishing from other formats (such as normal ZDoom demos),
-	// but does that matter?
-	CLD_DEMOLENGTH = NUM_SERVER_COMMANDS,
-	CLD_DEMOVERSION,
-	CLD_CVARS,
-	CLD_USERINFO,
-	CLD_BODYSTART,
-	CLD_TICCMD,
-	CLD_LOCALCOMMAND, // [Dusk]
-	CLD_DEMOEND,
-	CLD_DEMOWADS, // [Dusk]
-
-	NUM_DEMO_COMMANDS
-};
-
 enum ClientDemoLocalCommand
 {
 	CLD_LCMD_INVUSE,
 	CLD_LCMD_CENTERVIEW,
 	CLD_LCMD_TAUNT,
 	CLD_LCMD_CHEAT,
+	CLD_LCMD_WARPCHEAT,
 };
 
 //*****************************************************************************
@@ -104,6 +86,7 @@ void		CLIENTDEMO_FinishPlaying( void );
 LONG		CLIENTDEMO_GetGameticOffset( void );
 void		CLIENTDEMO_WriteLocalCommand( ClientDemoLocalCommand command, const char *pszArg );
 void		CLIENTDEMO_WriteCheat( ECheatCommand cheat );
+void		CLIENTDEMO_WriteWarpCheat( fixed_t x, fixed_t y );
 void		CLIENTDEMO_ReadDemoWads( void );
 BYTESTREAM_s *CLIENTDEMO_GetDemoStream( void );
 

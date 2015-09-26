@@ -48,14 +48,6 @@
 #ifndef __CL_AUTH_H__
 #define __CL_AUTH_H__
 
-//*****************************************************************************
-enum
-{
-	CLC_SRP_USER_REQUEST_LOGIN = NUM_CLIENT_COMMANDS,
-	CLC_SRP_USER_START_AUTHENTICATION,
-	CLC_SRP_USER_PROCESS_CHALLENGE,
-};
-
 void	CLIENT_ProcessSRPServerCommand( LONG lCommand, BYTESTREAM_s *pByteStream );
 
 #endif	// __CL_AUTH_H__

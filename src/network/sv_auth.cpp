@@ -53,6 +53,7 @@
 #include "sv_auth.h"
 #include "sv_commands.h"
 #include "srp.h"
+#include "network_enums.h"
 
 #define	DEFAULT_AUTH_SERVER_PORT 15301
 

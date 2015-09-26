@@ -294,7 +294,8 @@ EXTERN_CVAR (Int, team)
 CUSTOM_CVAR (Float, turbo, 100.f, 0)
 {
 	// [BB] Limit CVAR turbo on clients to 100.
-	if ( ( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( self > 100.f ) )
+	// [TP] Unless sv_cheats is true.
+	if ( ( NETWORK_GetState( ) == NETSTATE_CLIENT ) && ( sv_cheats == false ) && ( self > 100.f ) )
 		self = 100.f;
 
 	if (self < 10.f)
@@ -4091,7 +4092,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 
 //*****************************************************************************
 //
-void GAME_RequestMapRest( void )
+void GAME_RequestMapReset( void )
 {
 	g_bResetMap = true;
 }

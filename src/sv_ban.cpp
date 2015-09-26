@@ -157,10 +157,19 @@ bool SERVERBAN_IsIPBanned( const IPStringArray &szAddress )
 
 //*****************************************************************************
 //
+bool SERVERBAN_IsIPMasterBanned( const NETADDRESS_s &Address )
+{
+	return sv_enforcemasterbanlist
+		&& g_MasterServerBans.isIPInList( Address )
+		&& g_MasterServerBanExemptions.isIPInList( Address ) == false;
+}
+
+//*****************************************************************************
+//
 bool SERVERBAN_IsIPBanned( const NETADDRESS_s &Address )
 {
 	// Is this address is banned on the master server?
-	if ( sv_enforcemasterbanlist && g_MasterServerBans.isIPInList( Address ) && !g_MasterServerBanExemptions.isIPInList( Address ))
+	if ( SERVERBAN_IsIPMasterBanned( Address ))
 		return true;
 
 	// If not, let the server decide.

@@ -57,6 +57,24 @@
 #include "EnumToString.h"
 
 //*****************************************************************************
+BEGIN_ENUM( ServerConnectionCommand )
+{
+	// The server has properly received the client's challenge, and is telling
+	// the client to authenticate his map.
+	ENUM_ELEMENT( SVCC_AUTHENTICATE ),
+
+	// The server received the client's checksum, and it's valid. Now the server
+	// is telling the client to load the map.
+	ENUM_ELEMENT( SVCC_MAPLOAD ),
+
+	// There was an error during the course of the client trying to connect.
+	ENUM_ELEMENT( SVCC_ERROR ),
+
+	ENUM_ELEMENT( NUM_SERVERCONNECT_COMMANDS )
+}
+END_ENUM( ServerConnectionCommand )
+
+//*****************************************************************************
 // Note: If the number of enumerated messages goes beyond 255, commands will need 
 // to be changed to a short. Hopefully that won't have to happen.
 BEGIN_ENUM( SVC )
@@ -345,5 +363,110 @@ BEGIN_ENUM( SVC2 )
 	ENUM_ELEMENT ( NUM_SVC2_COMMANDS ),
 }
 END_ENUM( SVC2 )
+
+BEGIN_ENUM( CLCC )
+{
+	// Client is telling the server he wishes to connect.
+	ENUM_ELEMENT( CLCC_ATTEMPTCONNECTION ),
+
+	// Client is attempting to authenticate the map.
+	ENUM_ELEMENT( CLCC_ATTEMPTAUTHENTICATION ),
+
+	// Client has loaded the map, and is requesting the snapshot.
+	ENUM_ELEMENT( CLCC_REQUESTSNAPSHOT ),
+
+	ENUM_ELEMENT( NUM_CLIENTCONNECT_COMMANDS )
+}
+END_ENUM( CLCC )
+
+BEGIN_ENUM( CLC )
+{
+	ENUM_ELEMENT2( CLC_USERINFO, NUM_CLIENTCONNECT_COMMANDS ),
+	ENUM_ELEMENT( CLC_QUIT ),
+	ENUM_ELEMENT( CLC_STARTCHAT ),
+	ENUM_ELEMENT( CLC_ENDCHAT ),
+	ENUM_ELEMENT( CLC_SAY ),
+	ENUM_ELEMENT( CLC_CLIENTMOVE ),
+	ENUM_ELEMENT( CLC_MISSINGPACKET ),
+	ENUM_ELEMENT( CLC_PONG ),
+	ENUM_ELEMENT( CLC_WEAPONSELECT ),
+	ENUM_ELEMENT( CLC_TAUNT ),
+	ENUM_ELEMENT( CLC_SPECTATE ),
+	ENUM_ELEMENT( CLC_REQUESTJOIN ),
+	ENUM_ELEMENT( CLC_REQUESTRCON ),
+	ENUM_ELEMENT( CLC_RCONCOMMAND ),
+	ENUM_ELEMENT( CLC_SUICIDE ),
+	ENUM_ELEMENT( CLC_CHANGETEAM ),
+	ENUM_ELEMENT( CLC_SPECTATEINFO ),
+	ENUM_ELEMENT( CLC_GENERICCHEAT ),
+	ENUM_ELEMENT( CLC_GIVECHEAT ),
+	ENUM_ELEMENT( CLC_SUMMONCHEAT ),
+	ENUM_ELEMENT( CLC_READYTOGOON ),
+	ENUM_ELEMENT( CLC_CHANGEDISPLAYPLAYER ),
+	ENUM_ELEMENT( CLC_AUTHENTICATELEVEL ),
+	ENUM_ELEMENT( CLC_CALLVOTE ),
+	ENUM_ELEMENT( CLC_VOTEYES ),
+	ENUM_ELEMENT( CLC_VOTENO ),
+	ENUM_ELEMENT( CLC_INVENTORYUSEALL ),
+	ENUM_ELEMENT( CLC_INVENTORYUSE ),
+	ENUM_ELEMENT( CLC_INVENTORYDROP ),
+	ENUM_ELEMENT( CLC_SUMMONFRIENDCHEAT ),
+	ENUM_ELEMENT( CLC_SUMMONFOECHEAT ),
+	ENUM_ELEMENT( CLC_ENTERCONSOLE ),
+	ENUM_ELEMENT( CLC_EXITCONSOLE ),
+	ENUM_ELEMENT( CLC_IGNORE ),
+	ENUM_ELEMENT( CLC_PUKE ),
+	ENUM_ELEMENT( CLC_MORPHEX ),
+	ENUM_ELEMENT( CLC_FULLUPDATE ),
+	ENUM_ELEMENT( CLC_INFOCHEAT ),
+	ENUM_ELEMENT( CLC_WARPCHEAT ),
+
+	ENUM_ELEMENT( NUM_CLIENT_COMMANDS )
+}
+END_ENUM( CLC )
+
+BEGIN_ENUM( CLC_SRP )
+{
+	ENUM_ELEMENT2( CLC_SRP_USER_REQUEST_LOGIN, NUM_CLIENT_COMMANDS ),
+	ENUM_ELEMENT( CLC_SRP_USER_START_AUTHENTICATION ),
+	ENUM_ELEMENT( CLC_SRP_USER_PROCESS_CHALLENGE ),
+}
+END_ENUM( CLC_SRP )
+
+BEGIN_ENUM ( NetworkErrorCode )
+{
+	// Client has the wrong password.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_WRONGPASSWORD ),
+
+	// Client has the wrong version.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_WRONGVERSION ),
+
+	// Client is using a version with different network protocol.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_WRONGPROTOCOLVERSION ),
+
+	// Client has been banned.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_BANNED ),
+
+	// The server is full.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_SERVERISFULL ),
+
+	// Client has the wrong version of the current level.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_AUTHENTICATIONFAILED ),
+
+	// Client failed to send userinfo when connecting.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_FAILEDTOSENDUSERINFO ),
+
+	// [RC] Too many connections from the IP.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_TOOMANYCONNECTIONSFROMIP ),
+
+	// [BB] The protected lump authentication failed.
+	ENUM_ELEMENT( NETWORK_ERRORCODE_PROTECTED_LUMP_AUTHENTICATIONFAILED ),
+
+	// [TP] The client sent bad userinfo
+	ENUM_ELEMENT( NETWORK_ERRORCODE_USERINFOREJECTED ),
+
+	ENUM_ELEMENT( NUM_NETWORK_ERRORCODES )
+}
+END_ENUM ( NetworkErrorCode )
 
 #endif	// ( !defined(__NETWORK_ENUMS_H__) || defined(GENERATE_ENUM_STRINGS) )

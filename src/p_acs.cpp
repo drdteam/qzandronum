@@ -6523,7 +6523,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		case ACSF_ResetMap:
 			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS )
 			{
-				GAME_RequestMapRest ( );
+				GAME_RequestMapReset ( );
 				return 1;
 			}
 			else

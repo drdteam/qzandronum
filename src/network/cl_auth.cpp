@@ -50,6 +50,7 @@
 #include "network.h"
 #include "cl_auth.h"
 #include "srp.h"
+#include "network_enums.h"
 
 //*****************************************************************************
 //	VARIABLES

@@ -61,6 +61,7 @@
 #include "lastmanstanding.h"
 #include "deathmatch.h"
 #include "chat.h"
+#include "network_enums.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -450,7 +451,17 @@ void CLIENTCOMMANDS_GiveCheat( char *pszItem, LONG lAmount )
 //
 void CLIENTCOMMANDS_SummonCheat( const char *pszItem, LONG lType, const bool bSetAngle, const SHORT sAngle )
 {
-	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, lType );
+	int commandtype = 0;
+
+	switch ( lType )
+	{
+	case DEM_SUMMON: commandtype = CLC_SUMMONCHEAT; break;
+	case DEM_SUMMONFRIEND: commandtype = CLC_SUMMONFRIENDCHEAT; break;
+	case DEM_SUMMONFOE: commandtype = CLC_SUMMONFOECHEAT; break;
+	default: return;
+	}
+
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, commandtype );
 	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, pszItem );
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, bSetAngle );
 	if ( bSetAngle )
@@ -606,4 +617,13 @@ void CLIENTCOMMANDS_InfoCheat( AActor* mobj, bool extended )
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_INFOCHEAT );
 	NETWORK_WriteShort( &CLIENT_GetLocalBuffer( )->ByteStream, mobj->lNetID );
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, extended );
+}
+
+//*****************************************************************************
+// [TP]
+void CLIENTCOMMANDS_WarpCheat( fixed_t x, fixed_t y )
+{
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_WARPCHEAT );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, x );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, y );
 }

@@ -1094,7 +1094,13 @@ CCMD (fov)
 
 CCMD (warp)
 {
-	if (CheckCheatmode ())
+	// [TP] The server cannot warp
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
+		return;
+
+	// [TP] Let spectators warp regardless of cheats (the spectator check must come first so that the CheckCheatmode
+	// call is eliminated by lazy evaluation to avoid the sv_cheats message)
+	if (( players[consoleplayer].bSpectating == false ) && CheckCheatmode ())
 	{
 		return;
 	}
@@ -1109,6 +1115,18 @@ CCMD (warp)
 	}
 	else
 	{
+		// [TP] Handle warp cheat online.
+		fixed_t x = FLOAT2FIXED( atof( argv[1] ));
+		fixed_t y = FLOAT2FIXED( atof( argv[2] ));
+		if (( NETWORK_GetState() == NETSTATE_CLIENT ) && ( players[consoleplayer].bSpectating == false ))
+		{
+			CLIENTCOMMANDS_WarpCheat( x, y );
+			return;
+		}
+
+		if ( CLIENTDEMO_IsRecording() )
+			CLIENTDEMO_WriteWarpCheat( x, y );
+
 		P_TeleportMove (players[consoleplayer].mo, fixed_t(atof(argv[1])*65536.0), fixed_t(atof(argv[2])*65536.0), ONFLOORZ, true);
 	}
 }

@@ -60,6 +60,7 @@
 void			SERVERBAN_Tick( void );
 bool			SERVERBAN_IsIPBanned( const IPStringArray &szAddress );
 bool			SERVERBAN_IsIPBanned( const NETADDRESS_s &Address );
+bool			SERVERBAN_IsIPMasterBanned( const NETADDRESS_s &Address );
 void			SERVERBAN_ClearBans( void );
 void			SERVERBAN_ReadMasterServerBans( BYTESTREAM_s *pByteStream );
 void			SERVERBAN_ReadMasterServerBanlistPart( BYTESTREAM_s *pByteStream );

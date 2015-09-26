@@ -78,6 +78,7 @@
 #include "po_man.h"
 #include "i_system.h"
 #include "r_data/colormaps.h"
+#include "network_enums.h"
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
@@ -899,6 +900,20 @@ void SERVERCOMMANDS_SetPlayerKillCount( ULONG ulPlayer, ULONG ulPlayerExtra, Ser
 }
 
 //*****************************************************************************
+// [RC] Notifies all players about a player's boolean flag.
+//
+static void SERVERCOMMANDS_SetPlayerStatus( ULONG ulPlayer, SVC header, bool bValue, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 ) 
+{
+	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
+		return;
+
+	NetCommand command( header );
+	command.addByte( ulPlayer );
+	command.addByte( bValue );
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
 //
 void SERVERCOMMANDS_SetPlayerChatStatus( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
@@ -924,20 +939,6 @@ void SERVERCOMMANDS_SetPlayerConsoleStatus( ULONG ulPlayer, ULONG ulPlayerExtra,
 void SERVERCOMMANDS_SetPlayerReadyToGoOnStatus( ULONG ulPlayer )
 {
 	SERVERCOMMANDS_SetPlayerStatus( ulPlayer, SVC_SETPLAYERREADYTOGOONSTATUS, players[ulPlayer].bReadyToGoOn );
-}
-
-//*****************************************************************************
-// [RC] Notifies all players about a player's boolean flag.
-//
-void SERVERCOMMANDS_SetPlayerStatus( ULONG ulPlayer, SVC header, bool bValue, ULONG ulPlayerExtra, ServerCommandFlags flags ) 
-{
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	NetCommand command( header );
-	command.addByte( ulPlayer );
-	command.addByte( bValue );
-	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
@@ -2943,7 +2944,7 @@ void SERVERCOMMANDS_SetSectorLightLevel( ULONG ulSector, ULONG ulPlayerExtra, Se
 
 	NetCommand command( SVC_SETSECTORLIGHTLEVEL );
 	command.addShort( ulSector );
-	command.addByte( sectors[ulSector].lightlevel );
+	command.addByte( clamp<int>( sectors[ulSector].lightlevel, 0, 255 ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

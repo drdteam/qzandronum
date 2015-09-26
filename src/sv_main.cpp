@@ -118,6 +118,7 @@
 #include "network/sv_auth.h"
 #include "unlagged.h" // [CK]
 #include "r_data/colormaps.h"
+#include "network_enums.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -2312,9 +2313,16 @@ void SERVER_ClientError( ULONG ulClient, ULONG ulErrorCode )
 			else
 				Printf( "Client banned.\n" );
 
-			// Tell the client why he was banned, and when his ban expires.
-			NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, banReason );
-			NETWORK_WriteLong( &g_aClients[ulClient].PacketBuffer.ByteStream, (LONG) SERVERBAN_GetBanList( )->getEntryExpiration( g_aClients[ulClient].Address ));
+			bool masterban = SERVERBAN_IsIPMasterBanned( g_aClients[ulClient].Address );
+			NETWORK_WriteByte( &g_aClients[ulClient].PacketBuffer.ByteStream, masterban );
+
+			if ( masterban == false )
+			{
+				// Tell the client why he was banned, and when his ban expires.
+				NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, banReason );
+				NETWORK_WriteLong( &g_aClients[ulClient].PacketBuffer.ByteStream, (LONG) SERVERBAN_GetBanList( )->getEntryExpiration( g_aClients[ulClient].Address ));
+				NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, sv_hostemail );
+			}
 		}
 		break;
 	case NETWORK_ERRORCODE_AUTHENTICATIONFAILED:
@@ -4519,6 +4527,24 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_SRP_USER_PROCESS_CHALLENGE:
 
 		return SERVER_ProcessSRPClientCommand( lCommand, pByteStream );
+	case CLC_WARPCHEAT:
+
+		{
+			fixed_t x = NETWORK_ReadLong( pByteStream );
+			fixed_t y = NETWORK_ReadLong( pByteStream );
+
+			if ( sv_cheats || players[g_lCurrentClient].bSpectating )
+			{
+				if ( players[g_lCurrentClient].mo )
+					P_TeleportMove( players[g_lCurrentClient].mo, x, y, ONFLOORZ, true );
+			}
+			else
+			{
+				SERVER_KickPlayer( g_lCurrentClient, "Attempted to cheat with sv_cheats being false!" );
+				return ( true );
+			}
+		}
+		break;
 	default:
 
 		Printf( PRINT_HIGH, "SERVER_ParseCommands: Unknown client message: %d\n", static_cast<int> (lCommand) );

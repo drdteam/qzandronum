@@ -47,6 +47,9 @@ CUSTOM_CVAR(Int, gl_vid_multisample, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_
 
 CVAR(Bool, gl_debug, false, 0)
 
+// [BB]
+CVAR(Bool, gl_quadbufferedstereo, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+
 EXTERN_CVAR(Int, vid_refreshrate)
 
 //==========================================================================
@@ -672,7 +675,7 @@ bool Win32GLVideo::SetupPixelFormat(int multisample)
 		// [BB] Starting with driver version 314.07, NVIDIA GeForce cards support OpenGL quad buffered
 		// stereo rendering with 3D Vision hardware. Select the corresponding attribute here.
 		const int offset = ( multisample > 0 ) ? 24 : 20;
-		attributes[offset]	=	WGL_STEREO_ARB;
+		attributes[offset]	=	gl_quadbufferedstereo ? WGL_STEREO_ARB : 0;
 		attributes[offset+1]	=	true;
 		attributes[offset+2]	=	0;
 		attributes[offset+3]	=	0;

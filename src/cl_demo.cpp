@@ -72,6 +72,26 @@
 #include "templates.h"
 #include "r_data/r_translate.h"
 #include "m_cheat.h"
+#include "network_enums.h"
+
+//*****************************************************************************
+enum 
+{
+	// [BC] Message headers with bytes starting with 0 and going sequentially
+	// isn't very distinguishing from other formats (such as normal ZDoom demos),
+	// but does that matter?
+	CLD_DEMOLENGTH = NUM_SERVER_COMMANDS,
+	CLD_DEMOVERSION,
+	CLD_CVARS,
+	CLD_USERINFO,
+	CLD_BODYSTART,
+	CLD_TICCMD,
+	CLD_LOCALCOMMAND, // [Dusk]
+	CLD_DEMOEND,
+	CLD_DEMOWADS, // [Dusk]
+
+	NUM_DEMO_COMMANDS
+};
 
 //*****************************************************************************
 //	PROTOTYPES
@@ -525,6 +545,15 @@ void CLIENTDEMO_ReadPacket( void )
 
 				cht_DoCheat( &players[consoleplayer], NETWORK_ReadByte( &g_ByteStream ));
 				break;
+			case CLD_LCMD_WARPCHEAT:
+
+				{
+					fixed_t x = NETWORK_ReadLong( &g_ByteStream );
+					fixed_t y = NETWORK_ReadLong( &g_ByteStream );
+					Printf( "warp %g %g\n", FIXED2FLOAT( x ), FIXED2FLOAT( y ));
+					P_TeleportMove( players[consoleplayer].mo, x, y, ONFLOORZ, true );
+				}
+				break;
 			}
 			break;
 		case CLD_DEMOEND:
@@ -696,6 +725,17 @@ void CLIENTDEMO_WriteCheat ( ECheatCommand cheat )
 	NETWORK_WriteByte( &g_ByteStream, CLD_LOCALCOMMAND );
 	NETWORK_WriteByte( &g_ByteStream, CLD_LCMD_CHEAT );
 	NETWORK_WriteByte( &g_ByteStream, cheat );
+}
+
+//*****************************************************************************
+//
+void CLIENTDEMO_WriteWarpCheat ( fixed_t x, fixed_t y )
+{
+	clientdemo_CheckDemoBuffer( 10 );
+	NETWORK_WriteByte( &g_ByteStream, CLD_LOCALCOMMAND );
+	NETWORK_WriteByte( &g_ByteStream, CLD_LCMD_WARPCHEAT );
+	NETWORK_WriteLong( &g_ByteStream, x );
+	NETWORK_WriteLong( &g_ByteStream, y );
 }
 
 //*****************************************************************************
