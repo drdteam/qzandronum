@@ -388,7 +388,6 @@ player_t::player_t()
 	// [BB] Check if this is still necessary.
 	userinfo.Reset();
 	memset (psprites, 0, sizeof(psprites));
-	memset (pspinterp, 0, sizeof(pspinterp));
 
 	// [BC] Initialize additonal ST properties.
 	memset( &ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
@@ -453,7 +452,6 @@ player_t &player_t::operator=(const player_t &p)
 	fixedcolormap = p.fixedcolormap;
 	fixedlightlevel = p.fixedlightlevel;
 	memcpy(psprites, &p.psprites, sizeof(psprites));
-	memcpy(pspinterp, &p.pspinterp, sizeof(pspinterp));
 	morphTics = p.morphTics;
 	MorphedPlayerClass = p.MorphedPlayerClass;
 	MorphStyle = p.MorphStyle;
@@ -576,10 +574,6 @@ size_t player_t::FixPointers (const DObject *old, DObject *rep)
 	if (*&ConversationNPC == old)	ConversationNPC = replacement, changed++;
 	if (*&ConversationPC == old)	ConversationPC = replacement, changed++;
 	if (*&MUSINFOactor == old)		MUSINFOactor = replacement, changed++;
-
-	for (int i = 0; i < NUMPSPRITES; i++)
-		if (*&pspinterp[i] == old)	pspinterp[i] = static_cast<DInterpolation *>(rep), changed++;
-
 	// [BC]
 	if ( pIcon == old )		pIcon = static_cast<AFloatyIcon *>( rep ), changed++;
 	if ( OldPendingWeapon == old )		OldPendingWeapon = static_cast<AWeapon *>( rep ), changed++;
@@ -605,11 +599,6 @@ size_t player_t::PropagateMark()
 	{
 		GC::Mark(PendingWeapon);
 	}
-	for (int i = 0; i < NUMPSPRITES; i++)
-	{
-		GC::Mark(pspinterp[i]);
-	}
-
 	// [BB]
 	GC::Mark(pIcon);
 	if (OldPendingWeapon != WP_NOCHANGE)
@@ -4330,11 +4319,7 @@ void player_t::Serialize (FArchive &arc)
 	//for (i = 0; i < MAXPLAYERS; i++)
 	//	arc << frags[i];
 	for (i = 0; i < NUMPSPRITES; i++)
-	{
 		arc << psprites[i];
-		if (SaveVersion >= 4525)
-			arc << pspinterp[i];
-	}
 
 	arc << CurrentPlayerClass;
 

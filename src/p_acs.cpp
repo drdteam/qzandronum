@@ -75,6 +75,7 @@
 #include "actorptrselect.h"
 #include "farchive.h"
 #include "decallib.h"
+#include "version.h"
 // [BB] New #includes.
 #include "announcer.h"
 #include "deathmatch.h"
@@ -6955,6 +6956,7 @@ int DLevelScript::RunScript ()
 	int sp = 0;
 	int *pc = this->pc;
 	ACSFormat fmt = activeBehavior->GetFormat();
+	FBehavior* const savedActiveBehavior = activeBehavior;
 	unsigned int runaway = 0;	// used to prevent infinite loops
 	int pcd;
 	FString work;
@@ -6993,6 +6995,7 @@ int DLevelScript::RunScript ()
 		{
 		default:
 			Printf ("Unknown P-Code %d in %s\n", pcd, ScriptPresentation(script).GetChars());
+			activeBehavior = savedActiveBehavior;
 			// fall through
 		case PCD_TERMINATE:
 			DPrintf ("%s finished\n", ScriptPresentation(script).GetChars());
@@ -8199,9 +8202,9 @@ int DLevelScript::RunScript ()
 			sp--;
 			break;
 
-		case PCD_DROP:
 		case PCD_SETRESULTVALUE:
 			resultValue = STACK(1);
+		case PCD_DROP: //fall through.
 			sp--;
 			break;
 
@@ -8991,14 +8994,6 @@ scriptwait:
 				PushToStack( -1 );
 			else
 				PushToStack( (LONG)INVASION_GetState( ));
-			break;
-		case PCD_CONSOLECOMMAND:
-
-			g_bCalledFromConsoleCommand = true;
-			if ( FBehavior::StaticLookupString( STACK( 3 )))
-				C_DoCommand( FBehavior::StaticLookupString( STACK( 3 )));
-			g_bCalledFromConsoleCommand = false;
-			sp -= 3;
 			break;
 		case PCD_CONSOLECOMMANDDIRECT:
 
@@ -10651,6 +10646,15 @@ scriptwait:
 			}
 			break;
 
+		case PCD_CONSOLECOMMAND:
+			//Printf (TEXTCOLOR_RED GAMENAME " doesn't support execution of console commands from scripts\n");
+			// [BB] Zandronum currently still supports this.
+			g_bCalledFromConsoleCommand = true;
+			if ( FBehavior::StaticLookupString( STACK( 3 )))
+				C_DoCommand( FBehavior::StaticLookupString( STACK( 3 )));
+			g_bCalledFromConsoleCommand = false;
+			sp -= 3;
+			break;
 
 		// [CW] Begin team additions.
 		case PCD_GETTEAMPLAYERCOUNT:
