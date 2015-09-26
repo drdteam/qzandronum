@@ -129,7 +129,6 @@ extern FILE *Logfile;
 bool	ClassOwnsState( const PClass *pClass, const FState *pState );
 bool	ActorOwnsState( const AActor *pActor, const FState *pState );
 void	D_ErrorCleanup ();
-extern bool FriendlyFire;
 extern const AInventory *SendItemUse;
 DECLARE_ACTION(A_RestoreSpecialPosition)
 
@@ -1013,10 +1012,6 @@ void CLIENT_RequestSnapshot( void )
 
 	// Make sure all players are gone from the level.
 	CLIENT_ClearAllPlayers();
-
-	// [BB] Clear the value of the FriendlyFire bool defined in p_interaction.cpp. This is pretty hackish,
-	// but prevents the clients from needing to call P_DamageMobj.
-	FriendlyFire = false;
 }
 
 //*****************************************************************************

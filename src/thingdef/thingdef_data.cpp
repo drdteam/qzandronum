@@ -354,11 +354,13 @@ static FFlagDef InventoryFlagDefs[] =
 	DEFINE_FLAG(IF, TOSSED, AInventory, ItemFlags),
 	DEFINE_FLAG(IF, ALWAYSRESPAWN, AInventory, ItemFlags),
 	DEFINE_FLAG(IF, TRANSFER, AInventory, ItemFlags),
+	DEFINE_FLAG(IF, NOTELEPORTFREEZE, AInventory, ItemFlags),
 	// [BB] New ST flags.
 	DEFINE_FLAG(IF, FORCERESPAWNINSURVIVAL, AInventory, ItemFlags),
 
 	DEFINE_DEPRECATED_FLAG(PICKUPFLASH),
-	DEFINE_DEPRECATED_FLAG(INTERHUBSTRIP),};
+	DEFINE_DEPRECATED_FLAG(INTERHUBSTRIP),
+};
 
 static FFlagDef WeaponFlagDefs[] =
 {

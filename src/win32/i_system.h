@@ -183,6 +183,9 @@ TArray<FString> I_GetSteamPath();
 // [RC] Lunches the path given. This was encapsulated to make wragling with #includes easier.
 void I_RunProgram( const char *szPath );
 
+// [GZ] Same deal for GOG paths
+TArray<FString> I_GetGogPaths();
+
 // Damn Microsoft for doing Get/SetWindowLongPtr half-assed. Instead of
 // giving them proper prototypes under Win32, they are just macros for
 // Get/SetWindowLong, meaning they take LONGs and not LONG_PTRs.

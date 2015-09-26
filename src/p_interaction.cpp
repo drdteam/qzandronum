@@ -100,7 +100,6 @@ EXTERN_CVAR (Bool, show_obituaries)
 
 
 FName MeansOfDeath;
-bool FriendlyFire;
 
 //
 // GET STUFF
@@ -239,15 +238,8 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 	if (inflictor && inflictor->player && inflictor->player->mo != inflictor)
 		MeansOfDeath = NAME_None;
 
-	// Must be in cooperative mode.
-	// [TP] Changed to work in deathmatch modes too. Clients must set FriendlyFire
-	// to false here because they do not enter P_DamageMobj.
-	if ( attacker && attacker->IsTeammate( self ) )
-		FriendlyFire = true;
-	else if ( NETWORK_InClientMode() )
-		FriendlyFire = false;
-
-	friendly = FriendlyFire;
+	// [BB/TP] Clients must set friendly to false here because they do not enter P_DamageMobj.
+	friendly = (self->player != attacker->player && self->IsTeammate(attacker)) && ( NETWORK_InClientMode() == false );
 	mod = MeansOfDeath;
 	message = NULL;
 	messagename = NULL;
@@ -313,8 +305,6 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 	{
 		if (friendly)
 		{
-			// [BC] We'll do this elsewhere.
-//			attacker->player->fragcount -= 2;
 			self = attacker;
 			gender = self->player->userinfo.GetGender();
 			mysnprintf (gendermessage, countof(gendermessage), "OB_FRIENDLY%c", '1' + (pr_obituary() & 3));
@@ -599,10 +589,23 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVER_STATISTIC_AddToTotalFrags( );
 
+				/* [BB] Zandronum handles this differently.
+				if (this->IsTeammate(source))
+				{
+					source->player->fragcount--;
+				}
+				else
+				{
+					++source->player->fragcount;
+					++source->player->spreecount;
+				}
+				*/
+
 				if (source->player->morphTics)
 				{ // Make a super chicken
 					source->GiveInventoryType (RUNTIME_CLASS(APowerWeaponLevel2));
 				}
+
 			}
 
 			// Play announcer sounds for amount of frags remaining.
@@ -1297,7 +1300,6 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	}
 	
 	MeansOfDeath = mod;
-	FriendlyFire = false;
 	// [RH] Andy Baker's Stealth monsters
 	if (target->flags & MF_STEALTH)
 	{
@@ -1543,9 +1545,6 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		((player && player != source->player) || (!player && target != source)) &&
 		target->IsTeammate (source))
 	{
-		// [BL] Some adjustments for Skulltag
-		if (player && (( teamlms || survival ) && ( MeansOfDeath == NAME_SpawnTelefrag )) == false )
-			FriendlyFire = true;
 		if (damage < TELEFRAG_DAMAGE)
 		{ // Still allow telefragging :-(
 			damage = (int)((float)damage * level.teamdamage);
@@ -1559,8 +1558,6 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		((player && player != source->player) || (!player && target != source)) &&
 		target->IsTeammate (source))
 	{
-		if (player)
-			FriendlyFire = true;
 		if (rawdamage < TELEFRAG_DAMAGE) //Use the original damage to check for telefrag amount. Don't let the now-amplified damagetypes do it.
 		{ // Still allow telefragging :-(
 			damage = (int)((float)damage * level.teamdamage);

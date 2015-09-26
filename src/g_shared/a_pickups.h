@@ -137,7 +137,8 @@ enum
 	IF_TOSSED			= 1<<22,	// Was spawned by P_DropItem (i.e. as a monster drop)
 	IF_ALWAYSRESPAWN	= 1<<23,	// Always respawn, regardless of dmflag
 	IF_TRANSFER			= 1<<24,	// All inventory items that the inventory item contains is also transfered to the pickuper
-	IF_FORCERESPAWNINSURVIVAL = 1<<25,	// [BB] Will be respawned in survival even without DF_ITEMS_RESPAWN.
+	IF_NOTELEPORTFREEZE	= 1<<25,	// does not 'freeze' the player right after teleporting.
+	IF_FORCERESPAWNINSURVIVAL = 1<<26,	// [BB] Will be respawned in survival even without DF_ITEMS_RESPAWN.
 };
 
 
@@ -207,6 +208,7 @@ public:
 	virtual void AbsorbDamage (int damage, FName damageType, int &newdamage);
 	virtual void ModifyDamage (int damage, FName damageType, int &newdamage, bool passive);
 	virtual fixed_t GetSpeedFactor();
+	virtual bool GetNoTeleportFreeze();
 	virtual int AlterWeaponSprite (visstyle_t *vis);
 
 	virtual PalEntry GetBlend ();
