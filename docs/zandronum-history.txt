@@ -48,6 +48,9 @@
 -	- Fixed inconsistent 'spectating' text draw when a dead spectator coop spies another player. [Edward-san]
 -	- Fixed: Online clients trying to run an offline skirmish were not disconnected properly. [Edward-san]
 -	- Fixed: A_SpawnFly's customized BrainFire-like fog actor parameter reproduced the wrong sound online. [Edward-san]
+-	- Fixed: A_FadeTo did not work properly online. [Edward-san]
+-	- Fixed: clients were not updated about the successful gauntlet lifesteal attacks from a player. [Edward-san]
+-	- Fixed: clients ignored the customized sound argument of A_VileAttack. [Edward-san]
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
 

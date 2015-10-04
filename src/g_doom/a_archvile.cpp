@@ -166,7 +166,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileAttack)
 		
 	// [BC] Tell clients to play the arch-vile sound on their end.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "vile/stop", 1, ATTN_NORM );
+		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( snd ), 1, ATTN_NORM );
 
 	an = self->angle >> ANGLETOFINESHIFT;
 	fire = self->tracer;

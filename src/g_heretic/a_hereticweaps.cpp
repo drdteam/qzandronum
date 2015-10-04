@@ -447,14 +447,34 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 	{
 		player->extralight = 2;
 	}
-	if (power)
+
+	// [EP] Clients should not execute this, let the server know what's needed.
+	if ( NETWORK_InClientMode() == false )
 	{
-		if (!(linetarget->flags5 & MF5_DONTDRAIN)) P_GiveBody (self, actualdamage>>1);
-		S_Sound (self, CHAN_AUTO, "weapons/gauntletspowhit", 1, ATTN_NORM);
-	}
-	else
-	{
-		S_Sound (self, CHAN_AUTO, "weapons/gauntletshit", 1, ATTN_NORM);
+		if (power)
+		{
+			// [EP] Save the current health value for bandwidth.
+			const int prevhealth = self->health;
+
+			if (!(linetarget->flags5 & MF5_DONTDRAIN)) P_GiveBody (self, actualdamage>>1);
+			S_Sound (self, CHAN_AUTO, "weapons/gauntletspowhit", 1, ATTN_NORM);
+
+			// [EP] Inform the clients about the sound and the possible health change.
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
+			{
+				SERVERCOMMANDS_SoundActor( self, CHAN_AUTO, "weapons/gauntletspowhit", 1, ATTN_NORM );
+				if ( prevhealth != self->health )
+					 SERVERCOMMANDS_SetPlayerHealth( player - players );
+			}
+		}
+		else
+		{
+			S_Sound (self, CHAN_AUTO, "weapons/gauntletshit", 1, ATTN_NORM);
+
+			// [EP] Inform the clients about the sound.
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
+				SERVERCOMMANDS_SoundActor( self, CHAN_AUTO, "weapons/gauntletshit", 1, ATTN_NORM );
+		}
 	}
 	// turn to face target
 	angle = R_PointToAngle2 (self->x, self->y,
