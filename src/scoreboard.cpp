@@ -362,7 +362,7 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 	{
 		g_BottomString += "\n";
 		lPosition = JOINQUEUE_GetPositionInLine( ulDisplayPlayer );
-		if ( players[ulDisplayPlayer].bDeadSpectator )
+		if ( players[consoleplayer].bDeadSpectator )
 			g_BottomString += "\\cdSPECTATING - WAITING TO RESPAWN";
 		else if ( lPosition != -1 )
 		{

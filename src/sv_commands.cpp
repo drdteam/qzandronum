@@ -1856,11 +1856,11 @@ void SERVERCOMMANDS_SetThingArguments( AActor *pActor, ULONG ulPlayerExtra, Serv
 
 	NetCommand command( SVC_SETTHINGARGUMENTS );
 	command.addShort( pActor->lNetID );
-	command.addByte( pActor->args[0] );
-	command.addByte( pActor->args[1] );
-	command.addByte( pActor->args[2] );
-	command.addByte( pActor->args[3] );
-	command.addByte( pActor->args[4] );
+	command.addLong( pActor->args[0] );
+	command.addLong( pActor->args[1] );
+	command.addLong( pActor->args[2] );
+	command.addLong( pActor->args[3] );
+	command.addLong( pActor->args[4] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

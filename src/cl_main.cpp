@@ -6712,26 +6712,13 @@ static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
 //
 static void client_SetThingArguments( BYTESTREAM_s *pByteStream )
 {
-	LONG	lID;
-	ULONG	ulArgs0;
-	ULONG	ulArgs1;
-	ULONG	ulArgs2;
-	ULONG	ulArgs3;
-	ULONG	ulArgs4;
-	AActor	*pActor;
+	LONG lID = NETWORK_ReadShort( pByteStream );
+	AActor* pActor = CLIENT_FindThingByNetID( lID );
 
-	// Get the ID of the actor whose arguments are being updated.
-	lID = NETWORK_ReadShort( pByteStream );
+	int args[5];
+	for ( unsigned int i = 0; i < countof( args ); ++i )
+		args[i] = NETWORK_ReadLong( pByteStream );
 
-	// Read in the actor's arguments.
-	ulArgs0 = NETWORK_ReadByte( pByteStream );
-	ulArgs1 = NETWORK_ReadByte( pByteStream );
-	ulArgs2 = NETWORK_ReadByte( pByteStream );
-	ulArgs3 = NETWORK_ReadByte( pByteStream );
-	ulArgs4 = NETWORK_ReadByte( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
 	if ( pActor == NULL )
 	{
 #ifdef CLIENT_WARNING_MESSAGES
@@ -6740,12 +6727,8 @@ static void client_SetThingArguments( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	// Finally, set the thing's arguments.
-	pActor->args[0] = ulArgs0;
-	pActor->args[1] = ulArgs1;
-	pActor->args[2] = ulArgs2;
-	pActor->args[3] = ulArgs3;
-	pActor->args[4] = ulArgs4;
+	for ( unsigned int i = 0; i < countof( args ); ++i )
+		pActor->args[i] = args[i];
 
 	// Gross hack for invisible bridges, since they set their height/radius
 	// based on their args the instant they're spawned.

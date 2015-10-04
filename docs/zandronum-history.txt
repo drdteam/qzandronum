@@ -44,6 +44,10 @@
 -	- Fixed: The game could tick too fast after getting kicked. [Leonard]
 -	- Fixed: The automap would render spectators other than the local player. The local player, if spectating, now won't be rendered either if the user spies on someone. [Dusk]
 -	- Fixed: the server did not handle item givings and takings with amounts greater than 32767. [Edward-san]
+-	- Fixed: Thing arguments were transmitted with 1 byte each instead of 4 bytes. [Dusk]
+-	- Fixed inconsistent 'spectating' text draw when a dead spectator coop spies another player. [Edward-san]
+-	- Fixed: Online clients trying to run an offline skirmish were not disconnected properly. [Edward-san]
+-	- Fixed: A_SpawnFly's customized BrainFire-like fog actor parameter reproduced the wrong sound online. [Edward-san]
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
 

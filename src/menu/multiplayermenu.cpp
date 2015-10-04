@@ -254,6 +254,10 @@ static void M_StartSkirmishGame()
 	GAMEMODE_e mode = static_cast<GAMEMODE_e>( *menu_skirmishgamemode );
 	MODIFIER_e modifier = static_cast<MODIFIER_e>( *menu_skirmishmodifier );
 
+	// Tell the server we're leaving the game.
+	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+		CLIENT_QuitNetworkGame( NULL );
+
 	NETWORK_SetState( NETSTATE_SINGLE );
 	CAMPAIGN_DisableCampaign( );
 	GAMEMODE_SetCurrentMode( mode );

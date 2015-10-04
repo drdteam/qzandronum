@@ -218,7 +218,7 @@ static void SpawnFly(AActor *self, const PClass *spawntype, FSoundID sound)
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( fog ))
 	{
 		SERVERCOMMANDS_SpawnThing( fog );
-		SERVERCOMMANDS_SoundPoint( fog->x, fog->y, fog->z, CHAN_BODY, "brain/spawn", 1, ATTN_NORM );
+		SERVERCOMMANDS_SoundPoint( fog->x, fog->y, fog->z, CHAN_BODY, S_GetName( sound ), 1, ATTN_NORM );
 	}
 
 	FName SpawnName;
