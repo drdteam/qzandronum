@@ -537,6 +537,13 @@ void CLIENTCOMMANDS_RequestInventoryUse( AInventory *item )
 //
 void CLIENTCOMMANDS_RequestInventoryDrop( AInventory *pItem )
 {
+	// [BB] The server may forbid dropping completely.
+	if ( zadmflags & ZADF_NODROP )
+	{
+		Printf( "Dropping items is not allowed in this server.\n" );
+		return;
+	}
+
 	if ( sv_limitcommands )
 	{
 		if ( !(GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE) )

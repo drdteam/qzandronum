@@ -59,12 +59,6 @@ OptionMenu ZA_MultiplayerOptions
 //
 // =================================================================================================
 
-OptionValue ZA_UnlagType
-{
-	0.0, "Gametic"
-	1.0, "Ping"
-}
-
 OptionValue ZA_UpdateRate
 {
 	1.0, "Fastest (every tick)"
@@ -84,7 +78,6 @@ OptionMenu ZA_NetworkOptions
 
 	Option		"Connection type",			"cl_connectiontype",		"ZA_ConnectionType"
 	Option		"Unlagged",					"cl_unlagged",				"OnOff"
-	Option		"Unlag Type",				"cl_ping_unlagged",			"ZA_UnlagType"
 	Option		"Update Rate",				"cl_ticsperupdate",			"ZA_UpdateRate"
 	Option		"Hitscan decals",			"cl_hitscandecalhack",		"OnOff"
 	Option		"Clientside puffs",			"cl_clientsidepuffs",		"OnOff"

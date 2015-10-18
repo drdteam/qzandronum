@@ -116,7 +116,6 @@
 #include "po_man.h"
 #include "network/cl_auth.h"
 #include "network/sv_auth.h"
-#include "unlagged.h" // [CK]
 #include "r_data/colormaps.h"
 #include "network_enums.h"
 
@@ -267,7 +266,6 @@ CVAR( Bool, sv_minimizetosystray, true, CVAR_ARCHIVE )
 CVAR( Int, sv_queryignoretime, 10, CVAR_ARCHIVE )
 CVAR( Bool, sv_markchatlines, false, CVAR_ARCHIVE )
 CVAR( Bool, sv_nokill, false, CVAR_ARCHIVE )
-CVAR( Bool, sv_nodrop, false, CVAR_ARCHIVE )
 CVAR( Bool, sv_pure, true, CVAR_SERVERINFO | CVAR_LATCH )
 CVAR( Int, sv_maxclientsperip, 2, CVAR_ARCHIVE )
 CVAR( Int, sv_afk2spec, 0, CVAR_ARCHIVE ) // [K6]
@@ -6343,11 +6341,8 @@ static bool server_InventoryDrop( BYTESTREAM_s *pByteStream )
 	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
 
 	// [BB] The server may forbid dropping completely.
-	if ( sv_nodrop )
-	{
-		SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient(), "Dropping items is not allowed in this server.\n" );
+	if ( zadmflags & ZADF_NODROP )
 		return ( false );
-	}
 
 	if (gamestate == GS_LEVEL && !paused && PLAYER_IsValidPlayerWithMo(g_lCurrentClient) )
 	{
