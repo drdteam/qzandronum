@@ -265,7 +265,7 @@ CVAR( Bool, sv_disallowbots, false, CVAR_ARCHIVE )
 CVAR( Bool, sv_minimizetosystray, true, CVAR_ARCHIVE )
 CVAR( Int, sv_queryignoretime, 10, CVAR_ARCHIVE )
 CVAR( Bool, sv_markchatlines, false, CVAR_ARCHIVE )
-CVAR( Bool, sv_nokill, false, CVAR_ARCHIVE )
+CVAR( Flag, sv_nokill, dmflags2, DF2_NOSUICIDE )
 CVAR( Bool, sv_pure, true, CVAR_SERVERINFO | CVAR_LATCH )
 CVAR( Int, sv_maxclientsperip, 2, CVAR_ARCHIVE )
 CVAR( Int, sv_afk2spec, 0, CVAR_ARCHIVE ) // [K6]
@@ -5572,11 +5572,8 @@ static bool server_Suicide( BYTESTREAM_s *pByteStream )
 		return ( false );
 
 	// [BB] The server may forbid suiciding completely.
-	if ( sv_nokill )
-	{
-		SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient(), "Suiciding is not allowed in this server.\n" );
+	if ( dmflags2 & DF2_NOSUICIDE )
 		return ( false );
-	}
 
 	g_aClients[g_lCurrentClient].ulLastSuicideTime = gametic;
 
