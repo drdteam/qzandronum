@@ -786,6 +786,12 @@ void V_RemoveTrailingCrap( char *pszString )
 			pszString[ulStringLength-1] = 0;
 			ulStringLength--;
 		}
+		// [BB] Remove trailing escaped terminator, i.e "\0".
+		else if ( ( ulStringLength > 1 ) && ( pszString[ulStringLength-2] == '\\' ) && ( pszString[ulStringLength-1] == '0' ) )
+		{
+			pszString[ulStringLength-2] = 0;
+			ulStringLength -= 2;
+		}
 		// [BB] Remove trailing incomplete color code, i.e "\c".
 		else if ( ( ulStringLength > 1 ) && V_ColorCodeStart ( pszString, ulStringLength-2 ) )
 		{

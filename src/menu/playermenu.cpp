@@ -844,6 +844,10 @@ void DPlayerMenu::UpdateSkins()
 			{
 				if (PlayerClass->CheckSkin(i))
 				{
+					// [BB] Support for hidden skins.
+					if ( skins[i].bRevealed == false )
+						continue;
+
 					int j = PlayerSkins.Push(i);
 					li->SetString(j, skins[i].name);
 					if (players[consoleplayer].userinfo.GetSkin() == i)

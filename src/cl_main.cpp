@@ -7723,6 +7723,8 @@ static void client_PrintMOTD( BYTESTREAM_s *pByteStream )
 {
 	// Read in the MOTD, and display it later.
 	g_MOTD = NETWORK_ReadString( pByteStream );
+	// [BB] Some cleaning of the string since we can't trust the server.
+	V_RemoveTrailingCrapFromFString ( g_MOTD );
 }
 
 //*****************************************************************************

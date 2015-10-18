@@ -51,6 +51,7 @@
 -	- Fixed: A_FadeTo did not work properly online. [Edward-san]
 -	- Fixed: clients were not updated about the successful gauntlet lifesteal attacks from a player. [Edward-san]
 -	- Fixed: clients ignored the customized sound argument of A_VileAttack. [Edward-san]
+-	- Fixed display problems of the MOTD on the clients when the server sent an invalid string. [Torr Samaho]
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
 

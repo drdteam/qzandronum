@@ -211,6 +211,10 @@ CVAR (Int, wipetype, 1, CVAR_ARCHIVE);
 CVAR (Int, snd_drawoutput, 0, 0);
 CUSTOM_CVAR (String, vid_cursor, "None", CVAR_ARCHIVE | CVAR_NOINITCALL)
 {
+	// [TP/BB] The server does not use cursors.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		return;
+
 	bool res = false;
 
 	if (!stricmp(self, "None" ) && gameinfo.CursorPic.IsNotEmpty())

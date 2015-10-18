@@ -828,6 +828,12 @@ void FMapInfoParser::ParseNextMap(FString &mapname)
 				}
 				mapname = sc.String;
 			}
+			// [BB] In a multiplayer game, we can't go to the title either.
+			if ( ( stricmp (sc.String, "EndTitle") == 0 ) && ( AllEpisodes.Size() > 0 ) )
+			{
+				sprintf (sc.String, AllEpisodes[0].mEpisodeMap.GetChars());
+				mapname = sc.String;
+			}
 		}
 	}
 }
