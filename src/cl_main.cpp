@@ -2822,6 +2822,18 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				}
 				break;
 
+			case SVC2_SETPLAYERVIEWHEIGHT:
+				{
+					const ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
+					const int viewHeight = NETWORK_ReadLong( pByteStream );
+
+					if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false ) 
+						break;
+
+					players[ulPlayer].mo->ViewHeight = viewHeight;
+				}
+				break;
+
 			case SVC2_SRP_USER_START_AUTHENTICATION:
 			case SVC2_SRP_USER_PROCESS_CHALLENGE:
 			case SVC2_SRP_USER_VERIFY_SESSION:
@@ -9882,7 +9894,6 @@ static void client_SetSideFlags( BYTESTREAM_s *pByteStream )
 //
 static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 {
-	ULONG			ulScript;
 	LONG			lID;
 	LONG			lLineIdx;
 	bool			bBackSide;
@@ -9896,7 +9907,14 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	BYTE			argheader;
 
 	// Read in the script to be executed.
-	ulScript = NETWORK_ReadShort( pByteStream );
+	int scriptNum = NETWORK_ReadShort( pByteStream );
+
+	// [BB] This is a named script, the server sends the name.
+	if ( scriptNum < 0 )
+	{
+		const FString scriptName = NETWORK_ReadString( pByteStream );
+		scriptNum = -FName ( scriptName );
+	}
 
 	// Read in the ID of the activator.
 	lID = NETWORK_ReadShort( pByteStream );
@@ -9964,7 +9982,7 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	else
 		pLine = &lines[lLineIdx];
 
-	P_StartScript( pActor, pLine, ulScript, mapname, args, 3, ( bBackSide ? ACS_BACKSIDE : 0 ) | ( bAlways ? ACS_ALWAYS : 0 ) );
+	P_StartScript( pActor, pLine, scriptNum, mapname, args, 3, ( bBackSide ? ACS_BACKSIDE : 0 ) | ( bAlways ? ACS_ALWAYS : 0 ) );
 }
 
 //*****************************************************************************

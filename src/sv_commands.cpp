@@ -1149,6 +1149,19 @@ void SERVERCOMMANDS_SetPlayerLivesLeft( ULONG ulPlayer, ULONG ulPlayerExtra, Ser
 
 //*****************************************************************************
 //
+void SERVERCOMMANDS_SetPlayerViewHeight( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false )
+		return;
+
+	NetCommand command( SVC2_SETPLAYERVIEWHEIGHT );
+	command.addByte( ulPlayer );
+	command.addLong( players[ulPlayer].mo->ViewHeight );
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
+//
 void SERVERCOMMANDS_SyncPlayerAmmoAmount( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false )
@@ -3385,7 +3398,7 @@ void SERVERCOMMANDS_SetSomeLineFlags( ULONG ulLine, ULONG ulPlayerExtra, ServerC
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_ACSScriptExecute( ULONG ulScript, AActor *pActivator, LONG lLineIdx, int levelnum, bool bBackSide, int iArg0, int iArg1, int iArg2, bool bAlways, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lLineIdx, int levelnum, bool bBackSide, int iArg0, int iArg1, int iArg2, bool bAlways, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	LONG lActivatorID = ( pActivator ? pActivator->lNetID : -1 );
 
@@ -3425,7 +3438,15 @@ void SERVERCOMMANDS_ACSScriptExecute( ULONG ulScript, AActor *pActivator, LONG l
 	argheader |= ( bAlways ? 1 : 0 ) << 7;
 
 	NetCommand command ( SVC_ACSSCRIPTEXECUTE );
-	command.addShort( ulScript );
+	if ( ScriptNum >= 0 )
+		command.addShort( ScriptNum );
+	// [BB] The FName numbers may differ on client and server, so we have to send the name.
+	else
+	{
+		command.addShort( -1 );
+		command.addString( FName (( ENamedName ) - ScriptNum ) );
+	}
+
 	command.addShort( lActivatorID );
 	command.addShort( lLineIdx );
 	command.addByte( levelnum );
