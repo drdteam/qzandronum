@@ -27,6 +27,7 @@
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]
 -	- Fixed: Kill [class] cheat didn't work online. The kill monsters cheat can also be used by clients if sv_cheats is true. The server can use the kill [class] cheat anytime, like with kill monsters. [Dusk]
+-	- Fixed: Logfiles would sometimes contain timestamps in the middle of lines. [Dusk]
 !	- Removed the internal server browser. It was only useful for debugging purposes anyway and the CCMDs querymaster and dumpserverlist are sufficient for this. [Torr Samaho]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
