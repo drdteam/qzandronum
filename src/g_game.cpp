@@ -1117,7 +1117,7 @@ static void ChangeSpy (int changespy)
 		}
 
 		// [BC] Allow view switch to players on our team.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 		{
 			// Break if the player isn't on a team.
 			if ( players[consoleplayer].bOnTeam == false )
@@ -2484,7 +2484,7 @@ void G_DeathMatchSpawnPlayer( int playernum, bool bClientUpdate )
 
 	// [BB] If sv_useteamstartsindm is true, we want to use team starts in deathmatch
 	// game modes with teams, e.g. TDM, TLMS.
-	if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 		&& players[playernum].bOnTeam
 		&& TEAM_CheckIfValid ( players[playernum].ulTeam )
 		&& ( teams[players[playernum].ulTeam].TeamStarts.Size( ) >= 1 )
@@ -3044,11 +3044,11 @@ void GAME_CheckMode( void )
 	// scripts necessary is missing and works because of the break further down.
 	for ( ULONG i = 0; i < TEAM_GetNumAvailableTeams( ); i++ )
 	{
-		if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USETEAMITEM ) &&
+		if ( ( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM ) &&
 			(( FBehavior::StaticCountTypedScripts( SCRIPT_Pickup ) == 0 ) ||
 			( FBehavior::StaticCountTypedScripts( TEAM_GetReturnScriptOffset( i ) ) == 0 )) )
 		{
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEFLAGASTEAMITEM )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
 			{
 				TEAM_SetSimpleCTFSTMode( true );
 
@@ -3188,7 +3188,7 @@ void GAME_CheckMode( void )
 
 	// [BB] Since we possibly just changed the game mode, make sure that players are not on a team anymore
 	// if the current game mode doesn't have teams.
-	if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) == false )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) == false )
 	{
 		for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 			PLAYER_SetTeam( &players[ulIdx], teams.Size( ), true );
@@ -3329,7 +3329,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 	DECAL_ClearDecals( );
 
 	// [BB] Possibly reset level time to 0.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESET_RESETS_MAPTIME )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESET_RESETS_MAPTIME )
 		level.time = 0;
 
 	// [BB] The effect of MapRevealer needs to be reset manually.

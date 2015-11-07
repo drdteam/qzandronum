@@ -100,7 +100,7 @@ TArray<FString> C_GetTabCompletes (const FString& part);
 
 // [TP]
 void C_StartCapture();
-FString C_EndCapture();
+const char* C_EndCapture();
 bool C_IsCapturing();
 
 #endif

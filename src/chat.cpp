@@ -777,7 +777,7 @@ CCMD( say_team )
 	}
 
 	// Make sure we have teammates to talk to before we use team chat.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		// Not on a team. No one to talk to.
 		if ( ( players[consoleplayer].bOnTeam == false ) && ( PLAYER_IsTrueSpectator ( &players[consoleplayer] ) == false ) )

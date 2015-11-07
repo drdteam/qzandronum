@@ -367,7 +367,7 @@ void ANNOUNCER_PlayFragSounds( ULONG ulPlayer, LONG lOldFragCount, LONG lNewFrag
 	}
 
 	// Potentially play the "3 frags left", etc. announcer sounds.
-	if (( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS ) && ( fraglimit ))
+	if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ) && ( fraglimit ))
 	{
 		ANNOUNCER_PotentiallyPlayFragsLeftSound( fraglimit - lNewFragCount );
 	}

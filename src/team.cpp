@@ -415,12 +415,12 @@ ULONG TEAM_ChooseBestTeamForPlayer( const bool bIgnoreTeamStartsAvailability )
 		if ( bPossibleTeams[i] == false )
 			continue;
 
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		{
 			if ( lLowestScoreCount > TEAM_GetFragCount( i ))
 				lLowestScoreCount = TEAM_GetFragCount( i );
 		}
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			if ( lLowestScoreCount > TEAM_GetWinCount( i ))
 				lLowestScoreCount = TEAM_GetWinCount( i );
@@ -434,9 +434,9 @@ ULONG TEAM_ChooseBestTeamForPlayer( const bool bIgnoreTeamStartsAvailability )
 
 	for ( ULONG i = 0; i < teams.Size( ); i++ )
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			lGotScore[i] = TEAM_GetFragCount( i );
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			lGotScore[i] = TEAM_GetWinCount( i );
 		else
 			lGotScore[i] = TEAM_GetScore( i );
@@ -808,14 +808,14 @@ void TEAM_TimeExpired( void )
 	// there aren't any, then just end the map.
 	if ( SERVER_CalcNumPlayers( ))
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			lHighestScore = TEAM_GetHighestScoreCount( );
 		else
 			lHighestScore = TEAM_GetHighestFragCount( );
 
 		for ( ULONG i = 0; i < teams.Size( ); i++ )
 		{
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNPOINTS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			{
 				if ( lHighestScore == static_cast<unsigned> (TEAM_GetScore( i )))
 				{
@@ -1074,7 +1074,7 @@ const char *TEAM_GetSmallHUDIcon( ULONG ulTeamIdx )
 {
 	if ( TEAM_CheckIfValid( ulTeamIdx ))
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEFLAGASTEAMITEM )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
 			return ( teams[ulTeamIdx].SmallFlagHUDIcon.GetChars( ));
 		else
 			return ( teams[ulTeamIdx].SmallSkullHUDIcon.GetChars( ) );
@@ -1102,7 +1102,7 @@ const char *TEAM_GetLargeHUDIcon( ULONG ulTeamIdx )
 {
 	if ( ulTeamIdx < teams.Size( ))
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEFLAGASTEAMITEM )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
 			return ( teams[ulTeamIdx].LargeFlagHUDIcon.GetChars( ));
 		else
 			return ( teams[ulTeamIdx].LargeSkullHUDIcon.GetChars( ) );
@@ -1163,7 +1163,7 @@ const PClass *TEAM_GetItem( ULONG ulTeamIdx )
 {
 	if ( TEAM_CheckIfValid( ulTeamIdx ))
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEFLAGASTEAMITEM )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
 			return ( PClass::FindClass( teams[ulTeamIdx].FlagItem.GetChars( )));
 		else
 			return ( PClass::FindClass( teams[ulTeamIdx].SkullItem.GetChars( )));
@@ -1292,7 +1292,7 @@ void TEAM_SetFragCount( ULONG ulTeamIdx, LONG lFragCount, bool bAnnounce )
 	// Potentially play some announcer sounds resulting from this frag ("Teams are tied!"),
 	// etc.
 	if (( bAnnounce ) &&
-		(GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS ))
+		(GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ))
 	{
 		ANNOUNCER_PlayTeamFragSounds( ulTeamIdx, teams[ulTeamIdx].lFragCount, lFragCount );
 	}
@@ -1768,7 +1768,7 @@ bool TEAM_IsClassAllowedForPlayer( ULONG ulClass, player_t *pPlayer )
 bool TEAM_CheckTeamRestriction( ULONG ulTeam, ULONG ulTeamRestriction )
 {
 	// [BB] No teamgame, so no team restrictions apply.
-	if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) )
+	if ( !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) )
 		return true;
 
 	// [BB] Not restricted to a certain team.
@@ -2071,7 +2071,7 @@ CUSTOM_CVAR( Bool, domination, false, CVAR_SERVERINFO | CVAR_LATCH | CVAR_CAMPAI
 CCMD( team )
 {
 	// Not a valid team mode. Ignore.
-	if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) )
+	if ( !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) )
 		return;
 
 	// If the played inputted a team they'd like to join (such as, "team red"), handle that
@@ -2124,7 +2124,7 @@ CCMD( changeteam )
 	}
 
 	// Not a team mode.
-	if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) == false )
+	if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) == false )
 	{
 		Printf( "You can only change your team in a team game.\n" );
 		return;

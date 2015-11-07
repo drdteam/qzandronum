@@ -946,7 +946,7 @@ bool medal_PlayerHasCarrierIcon ( ULONG ulPlayer )
 
 	if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon )
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USETEAMITEM )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM )
 			bInvalid = ( TEAM_FindOpposingTeamsItemInPlayersInventory ( pPlayer ) == NULL );
 	}
 
@@ -1034,7 +1034,7 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 
 	// Draw an ally icon if this person is on our team. Would this be useful for co-op, too?
 	// [BB] In free spectate mode, we don't have allies (and SCOREBOARD_GetViewPlayer doesn't return a useful value).
-	if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) && ( CLIENTDEMO_IsInFreeSpectateMode() == false ) )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( CLIENTDEMO_IsInFreeSpectateMode() == false ) )
 	{
 		// [BB] Dead spectators shall see the icon for their teammates.
 		if ( pPlayer->mo->IsTeammate( players[SCOREBOARD_GetViewPlayer()].mo ) && !PLAYER_IsTrueSpectator ( &players[SCOREBOARD_GetViewPlayer()] ) )
@@ -1054,7 +1054,7 @@ ULONG medal_GetDesiredIcon( player_t *pPlayer, AInventory *&pTeamItem )
 		ulDesiredSprite = SPRITE_LAG;
 
 	// Draw a flag/skull above this player if he's carrying one.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USETEAMITEM )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM )
 	{
 		if ( pPlayer->bOnTeam )
 		{
@@ -1241,7 +1241,7 @@ void medal_SelectIcon( ULONG ulPlayer )
 	{
 		if ( pPlayer->pIcon && pPlayer->pIcon->bTeamItemFloatyIcon )
 		{
-			if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USETEAMITEM ) || ( pPlayer->bOnTeam == false )
+			if ( !( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM ) || ( pPlayer->bOnTeam == false )
 			     || ( TEAM_FindOpposingTeamsItemInPlayersInventory ( pPlayer ) == NULL ) )
 			{
 				pPlayer->pIcon->Destroy( );

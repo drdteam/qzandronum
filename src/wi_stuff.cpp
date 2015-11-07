@@ -364,11 +364,11 @@ ULONG WI_CalcRank( void )
 	if ( deathmatch == false )
 		return ( 2 );
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		// In teamplay deathmatch, go by the team's score to determine what this player's
 		// rank is.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		{
 			// Not being on a team in teamplay is an automatic loss!
 			if ( players[consoleplayer].bOnTeam == false )
@@ -382,7 +382,7 @@ ULONG WI_CalcRank( void )
 
 		// In team LMS, go by the team's wins to determine what this player's
 		// rank is.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			// Not being on a team in teamplay is an automatic loss!
 			if ( players[consoleplayer].bOnTeam == false )
@@ -396,7 +396,7 @@ ULONG WI_CalcRank( void )
 
 		// In team possession, go by the team's points to determine what this player's
 		// rank is.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		{
 			// Not being on a team in teamplay is an automatic loss!
 			if ( players[consoleplayer].bOnTeam == false )
@@ -422,13 +422,13 @@ ULONG WI_CalcRank( void )
 		}
 
 		// In LMS, use wins to determine the player's score.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			if ( players[ulIdx].ulWins > players[consoleplayer].ulWins )
 				ulRank++;
 		}
 		// In possession, use points to determine the player's score.
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		{
 			if ( players[ulIdx].lPointCount > players[consoleplayer].lPointCount )
 				ulRank++;
@@ -1606,9 +1606,9 @@ void WI_UpdateCampaignStats( void )
 				cnt_Rank = WI_CalcRank( );
 		}
 
-		if ( cnt_NumPlayers >= static_cast<signed> ((( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) ? 2 : SERVER_CalcNumPlayers( ))))
+		if ( cnt_NumPlayers >= static_cast<signed> ((( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) ? 2 : SERVER_CalcNumPlayers( ))))
 		{
-			cnt_NumPlayers = (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) ? 2 : SERVER_CalcNumPlayers( ));
+			cnt_NumPlayers = (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) ? 2 : SERVER_CalcNumPlayers( ));
 			S_Sound( CHAN_VOICE, "intermission/nextstage", 1, ATTN_NONE );
 			cp_state++;
 		}
@@ -1668,17 +1668,17 @@ void WI_DrawCampaignStats (void)
 	WI_drawBackground(); 
 	WI_drawLF();
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY, "WINS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY+lh, "FRAGS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 	}
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 	{
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY, "POINTS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY+lh, "FRAGS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 	}
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 	{
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY, "FRAGS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
 		screen->DrawText (BigFont, CR_RED, SP_STATSX, SP_STATSY+lh, "DEATHS", DTA_Clean, true, DTA_Shadow, true, TAG_DONE);
@@ -1708,7 +1708,7 @@ void WI_DrawCampaignStats (void)
 
 		if ( cp_state >= 7 )
 		{
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			{
 				if ( CAMPAIGN_DidPlayerBeatMap( ))
 					sprintf( szString, "YOU WIN!" );

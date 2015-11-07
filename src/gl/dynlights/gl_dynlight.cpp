@@ -1106,6 +1106,10 @@ void gl_AttachLight(AActor *actor, unsigned int count, const FLightDefaults *lig
 
 void gl_SetActorLights(AActor *actor)
 {
+	// [BB] The server never displays dynamic lights.
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		return;
+
 	TArray<FInternalLightAssociation *> * l = gl_GetActorLights(actor);
 	unsigned int count = 0;
 

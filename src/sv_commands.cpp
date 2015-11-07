@@ -1329,7 +1329,7 @@ void SERVERCOMMANDS_PlayerSay( ULONG ulPlayer, const char *pszString, ULONG ulMo
 		// The player is sending a message to his teammates.
 		if ( ulMode == CHATMODE_TEAM )
 		{
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			{
 				// If either player is not on a team, don't send the message.
 				if ( (( players[*it].bOnTeam == false ) || ( players[ulPlayer].bOnTeam == false ))

@@ -162,7 +162,7 @@ AInventory *AAmmo::CreateCopy (AActor *other)
 		{
 			// [BC] In certain modes, hide this item indefinitely so we can respawn it if
 			// necessary.
-			if ((( flags & MF_DROPPED ) == false ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS ))
+			if ((( flags & MF_DROPPED ) == false ) && ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ))
 				SetState ( FindState("HideIndefinitely") );
 			// [BC] Changed this so it stays around for one frame.
 			else
@@ -714,7 +714,7 @@ bool AInventory::GoAway ()
 		// [BB] If the map resets and this item is level spawned but not supposed to
 		// be respawned regularly, we need to make sure that the item doesn't respawn,
 		// but still allow it to return when the map resets.
-		else if ( ( ulSTFlags & STFL_LEVELSPAWNED ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS ) )
+		else if ( ( ulSTFlags & STFL_LEVELSPAWNED ) && ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ) )
 		{
 			HideIndefinitely( );
 			return true;
@@ -741,7 +741,7 @@ void AInventory::GoAwayAndDie ()
 
 		// [BC] In certain modes, hide this item indefinitely so we can respawn it if
 		// necessary.
-		if ((( flags & MF_DROPPED ) == false ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS ))
+		if ((( flags & MF_DROPPED ) == false ) && ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ))
 			SetState(FindState("HideIndefinitely"));
 		else
 			SetState (FindState("HoldAndDestroy"));

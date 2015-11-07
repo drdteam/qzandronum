@@ -121,8 +121,8 @@ void DrawHUD_CoopInfo()
 	// [BB] Only draw the info if the user wishes to see it (cl_drawcoopinfo)
 	// and if this is a cooperative or team based game mode. Further don't draw this in single player.
 	if ( ( cl_drawcoopinfo == false ) || ( zadmflags & ZADF_NO_COOP_INFO )
-		|| ! ( (GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE)
-			|| (GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS) )
+		|| ! ( (GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE)
+			|| (GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS) )
 		|| NETWORK_GetState() == NETSTATE_SINGLE )
 		return;
 
@@ -163,7 +163,7 @@ void DrawHUD_CoopInfo()
 		V_ColorizeString( drawString );
 		EColorRange nameColor = CR_GREY;
 		// [BB] If the player is on a team, use the team's text color.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			nameColor = static_cast<EColorRange> ( TEAM_GetTextColor ( players[i].ulTeam ) );
 		HUD_DrawTextAligned ( nameColor, curYPos, drawString.GetChars(), drawLeft, bScale );
 		curYPos += SmallFont->GetHeight( ) + 1;

@@ -220,7 +220,7 @@ void COOP_SpawnVoodooDollsForPlayerIfNecessary ( const ULONG ulPlayer, const boo
 bool COOP_VoodooDollsSelectedByGameMode ( void )
 {
 	// [BB] Voodoo dolls are only used in coop.
-	if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) )
+	if ( !( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) )
 		return false;
 
 	// [BB] Only use them if the compat flag tells us to.
@@ -246,7 +246,7 @@ void COOP_PotentiallyStoreUVDPickup ( const PClass *pType )
 		return;
 
 	// [BB] There is no ingame joining in such gamemodes, so no need to store any pickups.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS )
 		return;
 
 	// [BB] Nothing to store.

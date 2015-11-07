@@ -547,7 +547,7 @@ void cht_DoCheat (player_t *player, int cheat)
 		return;
 
 	if( ( cheat != CHT_CHASECAM )
-		|| ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE )
+		|| ( !( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE )
 			&& ( player->bSpectating == false ) && !(dmflags2 & DF2_CHASECAM))){
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVER_Printf( PRINT_HIGH, "%s is a cheater: %s\n", player->userinfo.GetName(), msg );

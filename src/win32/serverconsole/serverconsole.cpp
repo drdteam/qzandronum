@@ -1824,11 +1824,11 @@ void SERVERCONSOLE_SetupColumns( void )
 	{
 		ColumnData.mask = LVCF_TEXT;
 
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			ColumnData.pszText = "Wins";
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			ColumnData.pszText = "Frags";
-		else if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS ) || (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNKILLS ) && ( zadmflags & ZADF_AWARD_DAMAGE_INSTEAD_KILLS )))
+		else if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS ) || (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS ) && ( zadmflags & ZADF_AWARD_DAMAGE_INSTEAD_KILLS )))
 			ColumnData.pszText = "Points";
 		else
 			ColumnData.pszText = "Kills";

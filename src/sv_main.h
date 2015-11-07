@@ -471,6 +471,7 @@ const FString& SERVER_GetMasterBanlistVerificationString( void );
 void		SERVER_UpdateThingMomentum( AActor *pActor, bool updateZ, bool updateXY = true );
 void		SERVER_SyncSharedKeys( int playerToSync, bool withmessage );
 void		SERVER_SyncServerModCVars ( const int PlayerToSync );
+void		SERVER_KillCheat( const char* what );
 
 // From sv_master.cpp
 void		SERVER_MASTER_Construct( void );

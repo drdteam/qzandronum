@@ -507,7 +507,7 @@ CCMD( getIP )
 
 	if ( argv.argc( ) < 2 )
 	{
-		Printf( "Usage: getIP <playername> \nDescription: Returns the player's IP address." );
+		Printf( "Usage: getIP <playername> \nDescription: Returns the player's IP address.\n" );
 		return;
 	}
 
@@ -518,7 +518,7 @@ CCMD( getIP )
 	else
 	{
 		if ( SERVER_GetPlayerIndexFromName( argv[1], true, true ) != MAXPLAYERS )
-			Printf( "%s\\c- is a bot.", argv[1] );
+			Printf( "%s\\c- is a bot.\n", argv[1] );
 		else
 			Printf( "Unknown player: %s\\c-\n",argv[1] );
 	}
@@ -545,7 +545,7 @@ CCMD( getIP_idx )
 		return;
 
 	if ( players[ulIdx].bIsBot )
-		Printf( "%s\\c- is a bot. ", players[ulIdx].userinfo.GetName() );
+		Printf( "%s\\c- is a bot.\n", players[ulIdx].userinfo.GetName() );
 	else
 		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), SERVER_GetClient( ulIdx )->Address.ToString() );
 }
@@ -601,7 +601,7 @@ CCMD( ban )
 	else
 	{
 		if ( SERVER_GetPlayerIndexFromName( argv[1], true, true ) != MAXPLAYERS )
-			Printf( "%s\\c- is a bot.", argv[1] );
+			Printf( "%s\\c- is a bot.\n", argv[1] );
 		else
 			Printf( "Unknown player: %s\\c-\n",argv[1] );
 	}

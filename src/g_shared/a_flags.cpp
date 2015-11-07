@@ -100,7 +100,7 @@ bool ATeamItem::TryPickup( AActor *&pToucher )
 	AInventory	*pInventory;
 
 	// If we're not in teamgame mode, just use the default pickup handling.
-	if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USETEAMITEM ) )
+	if ( !( GAMEMODE_GetCurrentFlags() & GMF_USETEAMITEM ) )
 		return ( Super::TryPickup( pToucher ));
 
 	// First, check to see if any of the toucher's inventory items want to
@@ -293,7 +293,7 @@ LONG ATeamItem::AllowFlagPickup( AActor *pToucher )
 	if ( TEAM_CountPlayers ( TEAM_GetTeamFromItem ( this ) ) == 0 )
 	{
 		FString message = "You can't pick up the ";
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEFLAGASTEAMITEM )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
 			message += "flag";
 		else
 			message += "skull";

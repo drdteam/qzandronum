@@ -218,7 +218,7 @@ private:
 		DrawFace ();
 		DrawKeys ();
 
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		{
 			if ( OldPoints != CPlayer->lPointCount )
 			{
@@ -714,7 +714,7 @@ void DrawFullHUD_GameInformation()
 				szString );
 
 		// [BB] In cooperative games we want to see the kill count and the keys.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE )
 		{
 			DrawFullScreenKeysST( ulCurXPos, ulCurYPos, 10 );
 		}
@@ -778,15 +778,15 @@ void DrawFullHUD_GameInformation()
 
 	// [RC] If the game is team-based but isn't an a team
 	// article game (ST/CTF), just show the scores / frags.
-	else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		LONG	lPoints[MAX_TEAMS]; // Frags or points
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			for ( ULONG i = 0; i < teams.Size( ); i++ )
 				lPoints[i] = TEAM_GetWinCount( i );
 		}			
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		{
 			for ( ULONG i = 0; i < teams.Size( ); i++ )
 				lPoints[i] = TEAM_GetFragCount( i );;
@@ -1117,7 +1117,7 @@ void DrawFullHUD_GameInformation()
 		}
 
 		// Draw keys in cooperative modes.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_COOPERATIVE )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE )
 		{
 			int maxw = 0;
 			int count = 0;
@@ -1270,11 +1270,11 @@ void DrawFullHUD_GameInformation()
 			healthArmorTexWidth = MAX ( MAX ( TexMan["MEDIA0"]->GetWidth(), TexMan["ARM1A0"]->GetWidth() ) , armorTex->GetWidth() );
 
 			// Draw health.
-			if( !( instagib && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEATHMATCH ) )) // [RC] Hide in instagib (when playing instagib)
+			if( !( instagib && ( GAMEMODE_GetCurrentFlags() & GMF_DEATHMATCH ) )) // [RC] Hide in instagib (when playing instagib)
 				DrawFullHUD_Health();
 
 			// Next, draw the armor.
-			if( !( instagib && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEATHMATCH ) )) // [RC] Hide in instagib (when playing instagib)
+			if( !( instagib && ( GAMEMODE_GetCurrentFlags() & GMF_DEATHMATCH ) )) // [RC] Hide in instagib (when playing instagib)
 				DrawFullHUD_Armor();
 			
 			// Now draw the ammo.
@@ -1491,7 +1491,7 @@ void DDoomStatusBar::FDoomStatusBarTexture::MakeTexture ()
 	{
 		DrawToBar ("STARMS", 104, 0, NULL);
 	}
-	else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		DrawToBar( "STPTS", 104, 0, NULL );
 	DrawToBar("STTPRCNT", 90, 3, NULL);
 	DrawToBar("STTPRCNT", 221, 3, NULL);
@@ -1507,7 +1507,7 @@ int DDoomStatusBar::FDoomStatusBarTexture::CopyTrueColorPixels(FBitmap *bmp, int
 	if (!deathmatch)
 	{
 		// [BB] Possibly draw STPTS instead of STARMS.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			tex = TexMan["STPTS"];
 		else
 			tex = TexMan["STARMS"];

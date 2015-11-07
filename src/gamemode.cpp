@@ -378,7 +378,7 @@ bool GAMEMODE_IsGameWaitingForPlayers( void )
 	else if ( possession || teampossession )
 		return ( POSSESSION_GetState( ) == PSNS_WAITINGFORPLAYERS );
 	// [BB] Non-coop game modes need two or more players.
-	else if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( ) ) & GMF_COOPERATIVE ) == false )
+	else if ( ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) == false )
 		return ( GAME_CountActivePlayers( ) < 2 );
 	// [BB] For coop games one player is enough.
 	else
@@ -425,7 +425,7 @@ bool GAMEMODE_IsGameInProgress( void )
 	// [BB] In non-coop game modes without warmup phase, we just say the game is
 	// in progress when there are two or more players and the game is not frozen
 	// due to the end level delay.
-	else if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( ) ) & GMF_COOPERATIVE ) == false )
+	else if ( ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) == false )
 		return ( ( GAME_CountActivePlayers( ) >= 2 ) && ( GAME_GetEndLevelDelay () == 0 ) );
 	// [BB] For coop games one player is enough.
 	else
@@ -499,7 +499,7 @@ bool GAMEMODE_IsTimelimitActive( void )
 		return false;
 
 	// [BB] In gamemodes that reset the time during a map reset, the timelimit doesn't make sense when the game is not in progress.
-	if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESET_RESETS_MAPTIME ) && ( GAMEMODE_IsGameInProgress( ) == false ) )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESET_RESETS_MAPTIME ) && ( GAMEMODE_IsGameInProgress( ) == false ) )
 		return false;
 
 	// [BB] Teamlms doesn't support timelimit, so just turn it off in this mode.
@@ -571,7 +571,7 @@ void GAMEMODE_RespawnDeadSpectatorsAndPopQueue( BYTE Playerstate )
 
 		players[ulIdx].bSpectating = false;
 		players[ulIdx].bDeadSpectator = false;
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEMAXLIVES )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
 		{
 			PLAYER_SetLivesLeft ( &players[ulIdx], GAMEMODE_GetMaxLives() - 1 );
 		}
@@ -747,7 +747,7 @@ bool GAMEMODE_PreventPlayersFromJoining( ULONG ulExcludePlayer )
 bool GAMEMODE_AreLivesLimited( void )
 {
 	// [BB] Invasion is a special case: If sv_maxlives == 0 in invasion, players have infinite lives.
-	return ( ( ( sv_maxlives > 0 ) || ( invasion == false ) ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEMAXLIVES ) );
+	return ( ( ( sv_maxlives > 0 ) || ( invasion == false ) ) && ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES ) );
 }
 
 //*****************************************************************************

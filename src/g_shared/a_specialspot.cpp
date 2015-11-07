@@ -399,7 +399,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnSingleItem)
 	// [BC] The mace spawner object isn't an object that can be picked up, therefore it is
 	// spawned on the map for modes that do not have special objects. Therefore, we need
 	// to do an additional check to not spawn the mace in these modes.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DONTSPAWNMAPTHINGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_DONTSPAWNMAPTHINGS )
 		return;
 
 	// [BC] Let the server respawn this in client mode.

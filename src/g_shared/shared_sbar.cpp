@@ -1570,11 +1570,11 @@ void DBaseStatusBar::DrawCornerScore ()
 	if( !(cl_stfullscreenhud && gameinfo.gametype == GAME_Doom) && (gameinfo.gametype != GAME_Strife)  )
 	{
 		// Draw the player's counter (points, frags, wins).
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			DrBNumberOuter (CPlayer->lPointCount, -44, 1);
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNFRAGS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			DrBNumberOuter (CPlayer->fragcount, -44, 1);
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNWINS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			DrBNumberOuter (CPlayer->ulWins, -44, 1);
 	}
 }
@@ -1655,7 +1655,7 @@ void DBaseStatusBar::DrawPowerups ()
 		y += ConFont ? static_cast<int> ( fYScale * 1.5 * ConFont->GetHeight( ) ) : 0;
 	}
 	// [BB] In this case we have to account for DrawCornerScore.
-	else if ( (gameinfo.gametype != GAME_Strife) && !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNKILLS ) )
+	else if ( (gameinfo.gametype != GAME_Strife) && !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS ) )
 		y += BigFont ? static_cast<int> ( 1.5 * BigFont->GetHeight( ) ) : 0;
 
 	for (item = CPlayer->mo->Inventory; item != NULL; item = item->Inventory)
@@ -1817,7 +1817,7 @@ void DBaseStatusBar::DrawTargetName ()
 		strcpy(szDiplomacyStatus,  "\\crEnemy");
 
 		// Attempt to use the team color.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 		{
 			if( pTargetPlayer->mo->IsTeammate( players[consoleplayer].mo) )
 				strcpy(szDiplomacyStatus, "\\cqAlly");
@@ -1833,7 +1833,7 @@ void DBaseStatusBar::DrawTargetName ()
 		}
 
 		// In cooperative modes, all players are allies.
-		if(GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE)
+		if(GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE)
 			strcpy(szDiplomacyStatus, "\\cqAlly");
 
 		// [BB] Be sure not to use szString as destination and as part of the argument!

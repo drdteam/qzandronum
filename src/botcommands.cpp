@@ -2357,7 +2357,7 @@ static void botcmd_TryToJoinGame( CSkullBot *pBot )
 		return;
 
 	// Player can't rejoin their LMS/survival game if they are dead.
-	if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) && ( pBot->GetPlayer( )->bDeadSpectator ))
+	if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) && ( pBot->GetPlayer( )->bDeadSpectator ))
 		return;
 
 	// [BB] If players aren't allowed to join at the moment, just put the bot in line.
@@ -2375,7 +2375,7 @@ static void botcmd_TryToJoinGame( CSkullBot *pBot )
 	// Everything's okay! Go ahead and join!
 	PLAYER_SpectatorJoinsGame ( pBot->GetPlayer( ) );
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 		PLAYER_SetTeam( pBot->GetPlayer( ), TEAM_ChooseBestTeamForPlayer( ), true );
 
 	Printf( "%s \\c-joined the game.\n", pBot->GetPlayer( )->userinfo.GetName() );
@@ -2530,11 +2530,11 @@ static void botcmd_GetGameMode( CSkullBot *pBot )
 //
 static void botcmd_GetSpread( CSkullBot *pBot )
 {
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			g_iReturnInt = TEAM_GetScoreCountSpread( pBot->GetPlayer( )->ulTeam );
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			g_iReturnInt = TEAM_GetFragCountSpread( pBot->GetPlayer( )->ulTeam );
 		else if ( teamlms )
 			g_iReturnInt = TEAM_GetWinCountSpread( pBot->GetPlayer( )->ulTeam );

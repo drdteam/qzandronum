@@ -364,7 +364,7 @@ void D_GetPlayerColor (int player, float *h, float *s, float *v, FPlayerColorSet
 		*set = colorset;
 	}
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		if ( players[player].bOnTeam && ( TEAM_IsCustomPlayerColorAllowed ( players[player].ulTeam ) == false ) )
 		{

@@ -304,7 +304,7 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 		char cColor = V_GetColorChar( CR_RED );
 
 		// [RC] Or draw this in their team's color.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSONTEAMS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			 cColor = V_GetColorChar( TEAM_GetTextColor( players[ SCOREBOARD_GetViewPlayer() ].ulTeam ) );
 
 		g_BottomString.AppendFormat( "\\c%cFOLLOWING - %s\\c%c", cColor, players[ SCOREBOARD_GetViewPlayer() ].userinfo.GetName(), cColor );
@@ -314,7 +314,7 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 	if ( !players[ulDisplayPlayer].bSpectating )
 	{
 		// Survival
-		if ( survival && ( SURVIVAL_GetState( ) == SURVS_INPROGRESS ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) )
+		if ( survival && ( SURVIVAL_GetState( ) == SURVS_INPROGRESS ) && ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) )
 		{
 			if (( players[consoleplayer].camera ) && ( players[consoleplayer].camera != players[consoleplayer].mo ) && ( players[consoleplayer].camera->player ))
 				g_BottomString.AppendFormat(" - ");
@@ -328,7 +328,7 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 		}
 
 		// Last Man Standing
-		if ( ( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_INPROGRESS ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEATHMATCH ) )
+		if ( ( lastmanstanding || teamlms ) && ( LASTMANSTANDING_GetState( ) == LMSS_INPROGRESS ) && ( GAMEMODE_GetCurrentFlags() & GMF_DEATHMATCH ) )
 		{
 			if (( players[consoleplayer].camera ) && ( players[consoleplayer].camera != players[consoleplayer].mo ) && ( players[consoleplayer].camera->player ))
 				g_BottomString.AppendFormat(" - ");
@@ -514,14 +514,14 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 		if( ( SCOREBOARD_IsUsingNewHud() && SCOREBOARD_IsHudFullscreen() ) == false )
 		{
 			// Are we in a team game? Draw scores.
-			if( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS )
+			if( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 				SCOREBOARD_RenderStats_TeamScores( );
 
 			if ( !players[ulDisplayPlayer].bSpectating )
 			{
 				// Draw the player's rank and spread in FFA modes.
-				if( !(GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS ))
-					if( (GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS ))
+				if( !(GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ))
+					if( (GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ))
 						SCOREBOARD_RenderStats_RankSpread( );
 
 				// [BB] Draw number of lives left.
@@ -583,7 +583,7 @@ void SCOREBOARD_RenderBoard( ULONG ulDisplayPlayer )
 	}
 
 	// The 5 column display is only availible for modes that support it.
-	if (( ulNumIdealColumns == 5 ) && !( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & (GMF_PLAYERSEARNPOINTS|GMF_PLAYERSEARNWINS) ))
+	if (( ulNumIdealColumns == 5 ) && !( GAMEMODE_GetCurrentFlags() & (GMF_PLAYERSEARNPOINTS|GMF_PLAYERSEARNWINS) ))
 		ulNumIdealColumns = 4;
 
 	if ( ulNumIdealColumns == 5 )
@@ -784,18 +784,18 @@ void SCOREBOARD_RenderStats_TeamScores( void )
 
 	ulYPos = ST_Y - ( g_ulTextHeight * 2 ) + 1;
 
-	if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		for ( ULONG i = 0; i < teams.Size( ); i++ )
 		{
 			if ( TEAM_ShouldUseTeam( i ) == false )
 				continue;
 
-			if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 				lTeamScore[i] = TEAM_GetWinCount( i );
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 				lTeamScore[i] = TEAM_GetScore( i );
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 				lTeamScore[i] = TEAM_GetFragCount( i );
 			else
 				return;
@@ -1490,7 +1490,7 @@ LONG SCOREBOARD_CalcSpread( ULONG ulPlayerNum )
 	// First, find the highest fragcount that isn't ours.
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			if (( ulPlayerNum == ulIdx ) || ( playeringame[ulIdx] == false ) || ( PLAYER_IsTrueSpectator( &players[ulIdx] )))
 				continue;
@@ -1504,7 +1504,7 @@ LONG SCOREBOARD_CalcSpread( ULONG ulPlayerNum )
 			if ( players[ulIdx].ulWins > (ULONG)lHighestFrags )
 				lHighestFrags = players[ulIdx].ulWins;
 		}
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		{
 			if (( ulPlayerNum == ulIdx ) || ( playeringame[ulIdx] == false ) || ( players[ulIdx].bSpectating ))
 				continue;
@@ -1537,18 +1537,18 @@ LONG SCOREBOARD_CalcSpread( ULONG ulPlayerNum )
 	// If we're the only person in the game...
 	if ( bInit )
 	{
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			lHighestFrags = players[ulPlayerNum].ulWins;
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			lHighestFrags = players[ulPlayerNum].lPointCount;
 		else
 			lHighestFrags = players[ulPlayerNum].fragcount;
 	}
 
 	// Finally, simply return the difference.
-	if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		return ( players[ulPlayerNum].ulWins - lHighestFrags );
-	else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		return ( players[ulPlayerNum].lPointCount - lHighestFrags );
 	else
 		return ( players[ulPlayerNum].fragcount - lHighestFrags );
@@ -1760,17 +1760,17 @@ FString SCOREBOARD_SpellOrdinalColored( int ranknum )
 //
 void SCOREBOARD_BuildPlaceString ( char* pszString )
 {
-	if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNFRAGS ) )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ) )
 	{
 		// Build the score message.
 		SCOREBOARD_BuildPointString( pszString, "frag", &TEAM_CheckAllTeamsHaveEqualFrags, &TEAM_GetHighestFragCount, &TEAM_GetFragCount );
 	}
-	else if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNPOINTS ) )
+	else if ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS ) )
 	{
 		// Build the score message.
 		SCOREBOARD_BuildPointString( pszString, "score", &TEAM_CheckAllTeamsHaveEqualScores, &TEAM_GetHighestScoreCount, &TEAM_GetScore );
 	}
-	else if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & (GMF_PLAYERSEARNFRAGS|GMF_PLAYERSEARNPOINTS) ) )
+	else if ( !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( GAMEMODE_GetCurrentFlags() & (GMF_PLAYERSEARNFRAGS|GMF_PLAYERSEARNPOINTS) ) )
 	{
 		// If the player is tied with someone else, add a "tied for" to their string.
 		if ( SCOREBOARD_IsTied( consoleplayer ) )
@@ -1781,7 +1781,7 @@ void SCOREBOARD_BuildPlaceString ( char* pszString )
 		strcpy( pszString + strlen ( pszString ), SCOREBOARD_SpellOrdinalColored( g_ulRank ));
 
 		// Tack on the rest of the string.
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			sprintf( pszString + strlen ( pszString ), "\\c- place with %d point%s", static_cast<int> (players[consoleplayer].lPointCount), players[consoleplayer].lPointCount == 1 ? "" : "s" );
 		else
 			sprintf( pszString + strlen ( pszString ), "\\c- place with %d frag%s", players[consoleplayer].fragcount, players[consoleplayer].fragcount == 1 ? "" : "s" );
@@ -2017,7 +2017,7 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 		return ( 0 );
 
 	// KILL-based mode. [BB] This works indepently of any players in game.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNKILLS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS )
 	{
 		if ( invasion )
 			return (LONG) INVASION_GetNumMonstersLeft( );
@@ -2033,26 +2033,26 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 	}
 
 	// [BB] In a team game with only empty teams or if there are no players at all, just return the appropriate limit.
-	if ( ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	     && ( TEAM_TeamsWithPlayersOn() == 0 ) )
 		 || ( SERVER_CalcNumNonSpectatingPlayers( MAXPLAYERS ) == 0 ) )
 	{
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			return winlimit;
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			return pointlimit;
-		else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			return fraglimit;
 		else
 			return 0;
 	}
 
 	// FRAG-based mode.
-	if ( fraglimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+	if ( fraglimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 	{
 		LONG	lHighestFragcount;
 				
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			lHighestFragcount = TEAM_GetHighestFragCount( );		
 		else
 		{
@@ -2068,7 +2068,7 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 	}
 
 	// POINT-based mode.
-	else if ( pointlimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+	else if ( pointlimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 	{
 		if ( teamgame || teampossession )
 			return ( pointlimit - TEAM_GetHighestScoreCount( ));		
@@ -2086,7 +2086,7 @@ LONG SCOREBOARD_GetLeftToLimit( void )
 	}
 
 	// WIN-based mode (LMS).
-	else if ( winlimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+	else if ( winlimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
 		bool	bFoundPlayer = false;
 		LONG	lHighestWincount = 0;
@@ -2409,7 +2409,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				sprintf( szString, "%d", players[ulPlayer].fragcount );
 
 				// If the player isn't really playing, change this.
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 					( players[ulPlayer].bOnTeam == false ))
 				{
 					sprintf( szString, "NO TEAM" );
@@ -2417,7 +2417,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				if(PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 					sprintf(szString, "SPECT");
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2429,7 +2429,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				sprintf( szString, "%d", static_cast<int> (players[ulPlayer].lPointCount) );
 				
 				// If the player isn't really playing, change this.
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 					( players[ulPlayer].bOnTeam == false ))
 				{
 					sprintf( szString, "NO TEAM" );
@@ -2437,7 +2437,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				if(PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 					sprintf(szString, "SPECT");
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2449,7 +2449,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				sprintf(szString, "%d / %d", static_cast<int> (players[ulPlayer].lPointCount), static_cast<unsigned int> (players[ulPlayer].ulMedalCount[14]));
 
 				// If the player isn't really playing, change this.
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 					( players[ulPlayer].bOnTeam == false ))
 				{
 					sprintf( szString, "NO TEAM" );
@@ -2457,7 +2457,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				if(PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 					sprintf(szString, "SPECT");
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2473,7 +2473,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				sprintf(szString, "%d", static_cast<unsigned int> (players[ulPlayer].ulWins));
 
 				// If the player isn't really playing, change this.
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 					( players[ulPlayer].bOnTeam == false ))
 				{
 					sprintf( szString, "NO TEAM" );
@@ -2481,7 +2481,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				if(PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 					sprintf(szString, "SPECT");
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2496,7 +2496,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				if(PLAYER_IsTrueSpectator( &players[ulPlayer] ))
 					sprintf(szString, "SPECT");
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2514,7 +2514,7 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 					sprintf(szString, "DEAD");
 				}
 
-				if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) &&
+				if (( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) &&
 					(( players[ulPlayer].health <= 0 ) || ( players[ulPlayer].bDeadSpectator )) &&
 					( gamestate != GS_INTERMISSION ))
 				{
@@ -2607,7 +2607,7 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	LONG remaining = SCOREBOARD_GetLeftToLimit( );
 
 	// Build the fraglimit and/or duellimit strings.
-	scoreboard_AddSingleLimit( lines, ( fraglimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS ), remaining, "frag" );
+	scoreboard_AddSingleLimit( lines, ( fraglimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ), remaining, "frag" );
 	// [TL] The number of duels left is the maximum number of duels less the number of duels fought.
 	scoreboard_AddSingleLimit( lines, ( duellimit && duel ), duellimit - DUEL_GetNumDuels( ), "duel" );
 
@@ -2645,8 +2645,8 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	}
 
 	// Build the pointlimit, winlimit, and/or wavelimit strings.
-	scoreboard_AddSingleLimit( lines, ( pointlimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS ), remaining, "point" );
-	scoreboard_AddSingleLimit( lines, ( winlimit && GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS ), remaining, "win" );
+	scoreboard_AddSingleLimit( lines, ( pointlimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS ), remaining, "point" );
+	scoreboard_AddSingleLimit( lines, ( winlimit && GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS ), remaining, "win" );
 	scoreboard_AddSingleLimit( lines, ( invasion && wavelimit ), wavelimit - INVASION_GetCurrentWave( ), "wave" );
 
 	// Render the timelimit string. - [BB] if the gamemode uses it.
@@ -2660,7 +2660,7 @@ void SCOREBOARD_BuildLimitStrings( std::list<FString> &lines, bool bAcceptColors
 	}
 
 	// Render the number of monsters left in coop.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNKILLS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS )
 	{
 		if ( dmflags2 & DF2_KILL_MONSTERS )
 			sprintf( szString, "%d%% remaining", static_cast<int> (remaining) );		
@@ -2706,14 +2706,14 @@ static void scoreboard_DrawTeamScores( ULONG ulPlayer )
 {
 	char	szString[128];
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		if ( gamestate != GS_LEVEL )
 			g_ulCurYPos += 10;
 
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 			SCOREBOARD_BuildPointString( szString, "frag", &TEAM_CheckAllTeamsHaveEqualFrags, &TEAM_GetHighestFragCount, &TEAM_GetFragCount );
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			SCOREBOARD_BuildPointString( szString, "win", &TEAM_CheckAllTeamsHaveEqualWins, &TEAM_GetHighestWinCount, &TEAM_GetWinCount );
 		else
 			SCOREBOARD_BuildPointString( szString, "score", &TEAM_CheckAllTeamsHaveEqualScores, &TEAM_GetHighestScoreCount, &TEAM_GetScore );
@@ -2762,7 +2762,7 @@ static void scoreboard_DrawMyRank( ULONG ulPlayer )
 	bool	bIsTied;
 
 	// Render the current ranking string.
-	if ( deathmatch && !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) && ( PLAYER_IsTrueSpectator( &players[ulPlayer] ) == false ))
+	if ( deathmatch && !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( PLAYER_IsTrueSpectator( &players[ulPlayer] ) == false ))
 	{
 		bIsTied	= SCOREBOARD_IsTied( ulPlayer );
 
@@ -2776,9 +2776,9 @@ static void scoreboard_DrawMyRank( ULONG ulPlayer )
 		strcpy( szString + strlen ( szString ), SCOREBOARD_SpellOrdinalColored( g_ulRank ));
 
 		// Tack on the rest of the string.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 			sprintf( szString + strlen ( szString ), "\\c- place with %d win%s",  static_cast<unsigned int> (players[ulPlayer].ulWins), players[ulPlayer].ulWins == 1 ? "" : "s" );
-		else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 			sprintf( szString + strlen ( szString ), "\\c- place with %d point%s", static_cast<int> (players[ulPlayer].lPointCount), players[ulPlayer].lPointCount == 1 ? "" : "s" );
 		else
 			sprintf( szString + strlen ( szString ), "\\c- place with %d frag%s", players[ulPlayer].fragcount, players[ulPlayer].fragcount == 1 ? "" : "s" );
@@ -2837,7 +2837,7 @@ static void scoreboard_Prepare5ColumnDisplay( void )
 	g_aulColumnX[4] = 286;
 
 	// Build columns for modes in which players try to earn points.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 	{
 		g_aulColumnType[0] = COLUMN_POINTS;
 		// [BC] Doesn't look like this is being used right now (at least not properly).
@@ -2858,7 +2858,7 @@ static void scoreboard_Prepare5ColumnDisplay( void )
 	}
 
 	// Build columns for modes in which players try to earn wins.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
 		g_aulColumnType[0] = COLUMN_WINS;
 		g_aulColumnType[1] = COLUMN_FRAGS;
@@ -2909,7 +2909,7 @@ static void scoreboard_Prepare4ColumnDisplay( void )
 	g_aulColumnX[3] = 256;
 	
 	// Build columns for modes in which players try to earn kills.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNKILLS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS )
 	{
 		scoreboard_SetColumnZeroToKillsAndSortPlayers();
 		g_aulColumnType[1] = COLUMN_NAME;
@@ -2920,7 +2920,7 @@ static void scoreboard_Prepare4ColumnDisplay( void )
 	}
 
 	// Build columns for modes in which players try to earn frags.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 	{
 		g_aulColumnType[0] = COLUMN_FRAGS;
 		g_aulColumnType[1] = COLUMN_NAME;
@@ -2934,7 +2934,7 @@ static void scoreboard_Prepare4ColumnDisplay( void )
 	}
 	
 	// Build columns for modes in which players try to earn points.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 	{
 //		if ( ctf || skulltag ) // Can have assists
 //			g_aulColumnType[0] = COL_POINTSASSISTS;
@@ -2951,7 +2951,7 @@ static void scoreboard_Prepare4ColumnDisplay( void )
 	}
 
 	// Build columns for modes in which players try to earn wins.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
 		g_aulColumnType[0] = COLUMN_WINS;
 		g_aulColumnType[1] = COLUMN_NAME;
@@ -2988,13 +2988,13 @@ static void scoreboard_Prepare3ColumnDisplay( void )
 		g_aulColumnType[2] = COLUMN_PING;
 
 	// Build columns for modes in which players try to earn kills.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNKILLS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNKILLS )
 	{
 		scoreboard_SetColumnZeroToKillsAndSortPlayers();
 	}
 
 	// Build columns for modes in which players try to earn frags.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNFRAGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 	{
 		g_aulColumnType[0] = COLUMN_FRAGS;
 
@@ -3003,7 +3003,7 @@ static void scoreboard_Prepare3ColumnDisplay( void )
 	}
 	
 	// Build columns for modes in which players try to earn points.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNPOINTS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 	{
 //		if ( ctf || skulltag ) // Can have assists
 //			g_aulColumnType[0] = COL_POINTSASSISTS;
@@ -3015,7 +3015,7 @@ static void scoreboard_Prepare3ColumnDisplay( void )
 	}
 
 	// Build columns for modes in which players try to earn wins.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSEARNWINS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 	{
 		g_aulColumnType[0] = COLUMN_WINS;
 
@@ -3133,7 +3133,7 @@ static void scoreboard_DrawRankings( ULONG ulPlayer )
 	g_ulCurYPos += 24;
 
 	// Team-based games: Divide up the teams.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		// Draw players on teams.
 		for ( ulTeamIdx = 0; ulTeamIdx < teams.Size( ); ulTeamIdx++ )

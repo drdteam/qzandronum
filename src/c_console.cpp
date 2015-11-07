@@ -2135,7 +2135,7 @@ void C_StartCapture()
 //
 // [TP] Ends capture mode and returns the result
 //
-FString C_EndCapture()
+const char* C_EndCapture()
 {
 	g_IsCapturing = false;
 	return g_CaptureBuffer;

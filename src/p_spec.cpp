@@ -193,7 +193,7 @@ bool CheckIfExitIsGood (AActor *self, level_info_t *info)
 		// [BB] Refine this: Instead of needing to kill all monsters, only sv_killallmonsters_percentage percent have to be killed.
 		float fPercentKilled = 100 * ( static_cast<float>(level.killed_monsters) / static_cast<float>(level.total_monsters) );
 		// [BB] Use the flag only in cooperative game modes, doesn't make much sense otherwise.
-		if ( ( fPercentKilled < sv_killallmonsters_percentage ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) )
+		if ( ( fPercentKilled < sv_killallmonsters_percentage ) && ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) )
 		{
 			// [BB] We have to do something when a player passes a line that should exit the level, so we just
 			// teleport the player back to one of the player starts.
@@ -933,7 +933,7 @@ void P_UpdateSpecials ()
 					LASTMANSTANDING_TimeExpired( );
 				else if ( possession || teampossession )
 					POSSESSION_TimeExpired( );
-				else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSONTEAMS )
+				else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 					TEAM_TimeExpired( );
 				else if ( cooperative )
 				{

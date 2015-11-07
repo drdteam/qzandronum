@@ -631,7 +631,7 @@ void AActor::HideOrDestroyIfSafe ()
 	// [BB] If we're playing a game mode in which the map resets, and this is something
 	// that is level spawned, don't destroy it. Instead, put it in a temporary invisibile
 	// state.
-	if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS ) &&
+	if (( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ) &&
 		( ulSTFlags & STFL_LEVELSPAWNED ) &&
 		( NETWORK_InClientMode() == false ))
 	{
@@ -927,7 +927,7 @@ void AActor::DestroyAllInventory ()
 		AInventory *item = Inventory;
 		// [BC] In certain modes, we may need to keep this item around.
 		if (( item->ulSTFlags & STFL_LEVELSPAWNED ) &&
-			( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS ))
+			( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ))
 		{
 			item->HideIndefinitely( );
 
@@ -5750,7 +5750,7 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 			p->pSkullBot->PostEvent( BOTEVENT_SPECTATING );
 	}
 	// [BB] If this not a coop game and cheats are not allowed, remove the chasecam.
-	else if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) && ( sv_cheats == false ) )
+	else if ( !( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) && ( sv_cheats == false ) )
 	{
 		p->cheats &= ~(CF_CHASECAM);
 	}
@@ -5951,7 +5951,7 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	{
 		p->ulTime = 0;
 		p->ulDeathCount = 0;
-		if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEMAXLIVES )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
 		{
 			PLAYER_SetLivesLeft ( p, GAMEMODE_GetMaxLives() - 1 );
 		}
@@ -7704,7 +7704,7 @@ bool AActor::IsTeammate (AActor *other)
 		return ( true );
 
 	// Teamplay deathmatch, CTF, Skulltag, etc.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		int myTeam = GetTeam();
 		int otherTeam = other->GetTeam();

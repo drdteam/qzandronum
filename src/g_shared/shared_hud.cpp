@@ -866,9 +866,9 @@ static void DrawFrags(player_t * CPlayer, int x, int y)
 
 static int GetScoreForTeam( int t )
 {
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNFRAGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		return TEAM_GetFragCount( t );
-	else if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode() ) & GMF_PLAYERSEARNWINS )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		return TEAM_GetWinCount( t );
 
 	return TEAM_GetScore( t );

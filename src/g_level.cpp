@@ -764,7 +764,7 @@ void G_ChangeLevel(const char *levelname, int position, int flags, int nextSkill
 
 			// [BB] sv_maxlives is meant to specify the number of lives per map.
 			// So restore ulLivesLeft after a map change.
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_USEMAXLIVES )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_USEMAXLIVES )
 			{
 				PLAYER_SetLivesLeft ( player, GAMEMODE_GetMaxLives() - 1 );
 			}
@@ -1094,7 +1094,7 @@ void G_DoLoadLevel (int position, bool autosave)
 	UCVarValue			Val;
 
 	// [BB] Make sure that dead spectators are respawned before moving to the next map.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS )
 		GAMEMODE_RespawnDeadSpectatorsAndPopQueue( );
 	// [BB] If we don't have dead spectators, still pop the queue. Possibly somone tried to join during intermission or the server admin increased sv_maxplayers during intermission.
 	else if ( NETWORK_InClientMode() == false )
@@ -1145,7 +1145,7 @@ void G_DoLoadLevel (int position, bool autosave)
 		}
 
 		// [BB] Only assign players to a team on a game mode that has teams.
-		if ( ( dmflags2 & DF2_NO_TEAM_SELECT ) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) )
+		if ( ( dmflags2 & DF2_NO_TEAM_SELECT ) && ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) )
 		{
 			LONG	lNumNeedingTeam;
 			LONG	lRand;
@@ -1311,7 +1311,7 @@ void G_DoLoadLevel (int position, bool autosave)
 			for ( i = 0; i < MAXPLAYERS; i++ )
 			{
 				// [BB] If this is not a team game, there is no need to check or pass BotTeamName.
-				if ( !( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) )
+				if ( !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) )
 					BOTSPAWN_AddToTable( pInfo->BotSpawn[i].szBotName, NULL );
 				else if ( pInfo->BotSpawn[i].BotTeamName.IsNotEmpty() && TEAM_ShouldUseTeam ( TEAM_GetTeamNumberByName (  pInfo->BotSpawn[i].BotTeamName.GetChars() ) ) )
 					BOTSPAWN_AddToTable( pInfo->BotSpawn[i].szBotName, pInfo->BotSpawn[i].BotTeamName.GetChars() );
@@ -1328,7 +1328,7 @@ void G_DoLoadLevel (int position, bool autosave)
 			if ( NETWORK_GetState( ) == NETSTATE_SINGLE )
 				NETWORK_SetState( NETSTATE_SINGLE_MULTIPLAYER );
 
-			if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) && ( pInfo->PlayerTeamName.IsNotEmpty() ))
+			if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) && ( pInfo->PlayerTeamName.IsNotEmpty() ))
 			{
 				ULONG ulTeam = TEAM_GetTeamNumberByName ( pInfo->PlayerTeamName.GetChars() );
 

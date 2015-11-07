@@ -4114,7 +4114,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 
 	// [WS] Don't set custom skin color when the player is morphed.
 	// [BB] In team games (where we assume that all players are on a team), we allow the team color for morphed players.
-	if (!(pActor->flags2 & MF2_DONTTRANSLATE) && ( !bMorph || ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )))
+	if (!(pActor->flags2 & MF2_DONTTRANSLATE) && ( !bMorph || ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )))
 	{
 		// [RH] Be sure the player has the right translation
 		R_BuildPlayerTranslation ( ulPlayer );
@@ -4559,16 +4559,16 @@ static void client_KillPlayer( BYTESTREAM_s *pByteStream )
 		}
 	}
 
-	if (( (GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE) == false ) &&
+	if (( (GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE) == false ) &&
 		( cl_showlargefragmessages ) &&
 		( ulSourcePlayer < MAXPLAYERS ) &&
 		( ulPlayer != ulSourcePlayer ) &&
 		( MOD != NAME_SpawnTelefrag ) &&
 		( GAMEMODE_IsGameInProgress() ))
 	{
-		if ((( ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS ) == false ) || (( fraglimit == 0 ) || ( players[ulSourcePlayer].fragcount < fraglimit ))) &&
-			(( ( ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS ) && !( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS ) ) == false ) || (( winlimit == 0 ) || ( players[ulSourcePlayer].ulWins < static_cast<ULONG>(winlimit) ))) &&
-			(( ( ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS ) && ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSONTEAMS ) ) == false ) || (( winlimit == 0 ) || ( TEAM_GetWinCount( players[ulSourcePlayer].ulTeam ) < winlimit ))))
+		if ((( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ) == false ) || (( fraglimit == 0 ) || ( players[ulSourcePlayer].fragcount < fraglimit ))) &&
+			(( ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS ) && !( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) ) == false ) || (( winlimit == 0 ) || ( players[ulSourcePlayer].ulWins < static_cast<ULONG>(winlimit) ))) &&
+			(( ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS ) && ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) ) == false ) || (( winlimit == 0 ) || ( TEAM_GetWinCount( players[ulSourcePlayer].ulTeam ) < winlimit ))))
 		{
 			// Display a large "You were fragged by <name>." message in the middle of the screen.
 			if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
@@ -4718,7 +4718,7 @@ static void client_SetPlayerState( BYTESTREAM_s *pByteStream )
 		// [BB] SERVERCOMMANDS_MovePlayer/client_MovePlayer now informs a client about BT_ATTACK or BT_ALTATTACK
 		// of every player. This hopefully properly fixes these problems once and for all.
 		/*
-		if ( ( CLIENTDEMO_IsPlaying( ) || ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) && static_cast<signed> (ulPlayer) != consoleplayer ) )
+		if ( ( CLIENTDEMO_IsPlaying( ) || ( ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) && static_cast<signed> (ulPlayer) != consoleplayer ) )
 				&& players[ulPlayer].ReadyWeapon )
 		{
 			if ( ulState == STATE_PLAYER_ATTACK )
@@ -4906,8 +4906,8 @@ static void client_SetPlayerFrags( BYTESTREAM_s *pByteStream )
 		return;
 
 	if (( g_ConnectionState == CTS_ACTIVE ) &&
-		( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS ) &&
-		!( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) &&
+		( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ) &&
+		!( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 		( GAMEMODE_IsGameInProgress() ) &&
 		// [BB] If we are still in the first tic of the level, we are receiving the frag count
 		// as part of the full update (that is not considered as a snapshot after a "changemap"

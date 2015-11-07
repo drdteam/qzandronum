@@ -358,7 +358,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 
 	// If the launcher desires to know the team score, but we're not in a game mode where
 	// teams have scores, then don't send back team score information.
-	if (( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS ) == false )
+	if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) == false )
 	{
 		if ( ulBits & SQF_TEAMSCORES )
 			ulBits &= ~SQF_TEAMSCORES;
@@ -489,7 +489,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 			NETWORK_WriteFloat( &g_MasterServerBuffer.ByteStream, teamdamage );
 	}
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		// [CW] This command is now deprecated as there are now more than two teams.
 		// Send the team scores.
@@ -497,9 +497,9 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 		{
 			for ( ulIdx = 0; ulIdx < 2; ulIdx++ )
 			{
-				if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+				if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetFragCount( ulIdx ));
-				else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+				else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetWinCount( ulIdx ));
 				else
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetScore( ulIdx ));
@@ -518,11 +518,11 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 				continue;
 
 			NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, players[ulIdx].userinfo.GetName() );
-			if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 				NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, players[ulIdx].lPointCount );
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 				NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, players[ulIdx].ulWins );
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 				NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, players[ulIdx].fragcount );
 			else
 				NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, players[ulIdx].killcount );
@@ -531,7 +531,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 			NETWORK_WriteByte( &g_MasterServerBuffer.ByteStream, PLAYER_IsTrueSpectator( &players[ulIdx] ));
 			NETWORK_WriteByte( &g_MasterServerBuffer.ByteStream, players[ulIdx].bIsBot );
 
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			{
 				if ( players[ulIdx].bOnTeam == false )
 					NETWORK_WriteByte( &g_MasterServerBuffer.ByteStream, 255 );
@@ -543,7 +543,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 		}
 	}
 
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		if ( ulBits & SQF_TEAMINFO_NUMBER )
 			NETWORK_WriteByte( &g_MasterServerBuffer.ByteStream, TEAM_GetNumAvailableTeams( ));
@@ -560,9 +560,9 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 		{
 			for ( ulIdx = 0; ulIdx < TEAM_GetNumAvailableTeams( ); ulIdx++ )
 			{
-				if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+				if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetFragCount( ulIdx ));
-				else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+				else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetWinCount( ulIdx ));
 				else
 					NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, TEAM_GetScore( ulIdx ));

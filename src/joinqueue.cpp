@@ -281,7 +281,7 @@ void JOINQUEUE_PopQueue( LONG lNumSlots )
 				SERVER_GetClient( g_lJoinQueue[ulIdx].ulPlayer )->ulClientGameTic +=
 				( gametic - SERVER_GetClient( g_lJoinQueue[ulIdx].ulPlayer )->ulLastCommandTic );
 
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 			{
 				if ( TEAM_CheckIfValid ( g_lJoinQueue[ulIdx].ulTeam ) )
 					PLAYER_SetTeam( &players[g_lJoinQueue[ulIdx].ulPlayer], g_lJoinQueue[ulIdx].ulTeam, true );
@@ -423,7 +423,7 @@ void JOINQUEUE_PrintQueue( void )
 			player_t* pPlayer = &players[ulIdx];
 			bQueueEmpty = false;
 			Printf ( "%02lu - %s", ulIdx + 1, pPlayer->userinfo.GetName() );
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 				Printf ( " - %s", TEAM_CheckIfValid ( g_lJoinQueue[ulIdx].ulTeam ) ? TEAM_GetName ( g_lJoinQueue[ulIdx].ulTeam ) : "auto team selection" );
 			Printf ( "\n" );
 		}

@@ -1818,7 +1818,7 @@ class CommandGameMode : public SBarInfoCommandFlowControl
 			SetTruth(((NETWORK_GetState( ) == NETSTATE_SINGLE) && (modes & SINGLEPLAYER)) ||
 				(deathmatch && (modes & DEATHMATCH)) ||
 				// [BB] Skulltag needs to check for more than just !deathmatch.
-				((NETWORK_GetState( ) != NETSTATE_SINGLE) && ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE ) && (modes & COOPERATIVE)) ||
+				((NETWORK_GetState( ) != NETSTATE_SINGLE) && ( GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE ) && (modes & COOPERATIVE)) ||
 				(teamplay && (modes & TEAMGAME)) ||
 				((modes & CTF) && ctf) ||
 				((modes & ONEFLAGCTF) && oneflagctf) ||

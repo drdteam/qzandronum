@@ -546,7 +546,7 @@ void CLIENTCOMMANDS_RequestInventoryDrop( AInventory *pItem )
 
 	if ( sv_limitcommands )
 	{
-		if ( !(GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_COOPERATIVE) )
+		if ( !(GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE) )
 		{
 			Printf( "Dropping is not allowed in non-cooperative game modes.\n" );
 			return;
@@ -633,4 +633,12 @@ void CLIENTCOMMANDS_WarpCheat( fixed_t x, fixed_t y )
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_WARPCHEAT );
 	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, x );
 	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, y );
+}
+
+//*****************************************************************************
+// [TP]
+void CLIENTCOMMANDS_KillCheat( const char* what )
+{
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_KILLCHEAT );
+	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, what );
 }

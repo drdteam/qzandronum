@@ -1412,9 +1412,9 @@ static int CheckInventory (AActor *activator, const char *type)
 //
 //============================================================================
 static LONG GetTeamScore (ULONG team) {
-	if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		return TEAM_GetFragCount( team );
-	else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		return TEAM_GetWinCount( team );
 	return TEAM_GetScore( team );
 }
@@ -6523,7 +6523,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 
 		// [BB]
 		case ACSF_ResetMap:
-			if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_MAPRESETS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS )
 			{
 				GAME_RequestMapReset ( );
 				return 1;
@@ -6540,7 +6540,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				const ULONG ulPlayer = static_cast<ULONG> ( args[0] );
 				if ( PLAYER_IsValidPlayer ( ulPlayer ) )
 				{
-					if ( ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_DEADSPECTATORS ) && players[ulPlayer].bDeadSpectator )
+					if ( ( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS ) && players[ulPlayer].bDeadSpectator )
 						return 2;
 					else
 						return players[ulPlayer].bSpectating;
@@ -8961,18 +8961,18 @@ scriptwait:
 			break;
 		case PCD_BLUETEAMSCORE:
 			
-			if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 				PushToStack( TEAM_GetFragCount( 0 ));
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 				PushToStack( TEAM_GetWinCount( 0 ));
 			else
 				PushToStack( TEAM_GetScore( 0 ));
 			break;
 		case PCD_REDTEAMSCORE:
 			
-			if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+			if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 				PushToStack( TEAM_GetFragCount( 1 ));
-			else if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+			else if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 				PushToStack( TEAM_GetWinCount( 1 ));
 			else
 				PushToStack( TEAM_GetScore( 1 ));

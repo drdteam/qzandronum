@@ -3289,7 +3289,7 @@ void PLAYER_JoinGameFromSpectators( int iChar )
 	Printf( "%s \\c-joined the game.\n", players[consoleplayer].userinfo.GetName() );
 
 	// [BB] If players are supposed to be on teams, select one for the player now.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 		PLAYER_SetTeam( &players[consoleplayer], TEAM_ChooseBestTeamForPlayer( ), true );
 }
 

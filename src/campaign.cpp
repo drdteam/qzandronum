@@ -204,14 +204,14 @@ void CAMPAIGN_SetInCampaign( bool bInCampaign )
 bool CAMPAIGN_DidPlayerBeatMap( void )
 {
 	// Preliminary check.
-	if ( GAMEMODE_GetFlags( GAMEMODE_GetCurrentMode( )) & GMF_PLAYERSONTEAMS )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )
 	{
 		// If the console player isn't on a team, he DEFINITELY lost.
 		if ( players[consoleplayer].bOnTeam == false )
 			return ( false );
 
 		// If this is teamplay, compare the fragcount of the two teams.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNFRAGS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS )
 		{
 			for ( ULONG i = 0; i < teams.Size( ); i++ )
 			{
@@ -221,7 +221,7 @@ bool CAMPAIGN_DidPlayerBeatMap( void )
 		}
 
 		// If this is a teamgame or team possession, compare the team scores.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNPOINTS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNPOINTS )
 		{
 			for ( ULONG i = 0; i < teams.Size( ); i++ )
 			{
@@ -231,7 +231,7 @@ bool CAMPAIGN_DidPlayerBeatMap( void )
 		}
 
 		// If this is teamlms, compare the team wins.
-		if ( GAMEMODE_GetFlags(GAMEMODE_GetCurrentMode()) & GMF_PLAYERSEARNWINS )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS )
 		{
 			for ( ULONG i = 0; i < teams.Size( ); i++ )
 			{
