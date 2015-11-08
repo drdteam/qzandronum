@@ -807,18 +807,20 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInsideMeleeRange)
 //==========================================================================
 void DoJumpIfCloser(AActor *target, DECLARE_PARAMINFO)
 {
-	ACTION_PARAM_START(2);
+	ACTION_PARAM_START(3);
 	ACTION_PARAM_FIXED(dist, 0);
 	ACTION_PARAM_STATE(jump, 1);
+	ACTION_PARAM_BOOL(noz, 2);
 
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 
 	// No target - no jump
-	if (target != NULL && P_AproxDistance(self->x-target->x, self->y-target->y) < dist &&
-		( (self->z > target->z && self->z - (target->z + target->height) < dist) || 
-		  (self->z <=target->z && target->z - (self->z + self->height) < dist) 
-		)
-	   )
+	if (!target)
+		return;
+	if (P_AproxDistance(self->x-target->x, self->y-target->y) < dist &&
+		(noz || 
+		((self->z > target->z && self->z - (target->z + target->height) < dist) ||
+		(self->z <= target->z && target->z - (self->z + self->height) < dist))))
 	{
 		ACTION_JUMP(jump,CLIENTUPDATE_FRAME|CLIENTUPDATE_POSITION);	// [BC] Since monsters don't have targets on the client end, we need to send an update.
 	}
@@ -1219,7 +1221,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomMissile)
                 	targ=owner;
                 	missile->target=owner;
 					// automatic handling of seeker missiles
-					if (self->flags & missile->flags2 & MF2_SEEKERMISSILE)
+					if (self->flags2 & missile->flags2 & MF2_SEEKERMISSILE)
 					{
 						missile->tracer=self->tracer;
 					}
@@ -4170,7 +4172,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 	lof_data.Flags = flags;
 	lof_data.BadActor = false;
 
-	Trace(x1, y1, z1, sec, vx, vy, vz, range, 0xFFFFFFFF, ML_BLOCKEVERYTHING, self, trace, 0,
+	Trace(x1, y1, z1, sec, vx, vy, vz, range, ActorFlags::FromInt(0xFFFFFFFF), ML_BLOCKEVERYTHING, self, trace, 0,
 		CheckLOFTraceFunc, &lof_data);
 
 	if (trace.HitType == TRACE_HitActor ||
@@ -5506,7 +5508,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_WolfAttack)
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Warp)
 {
-	ACTION_PARAM_START(8);
+	ACTION_PARAM_START(10);
 
 	ACTION_PARAM_INT(destination_selector, 0);
 	ACTION_PARAM_FIXED(xofs, 1);
@@ -5515,7 +5517,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Warp)
 	ACTION_PARAM_ANGLE(angle, 4);
 	ACTION_PARAM_INT(flags, 5);
 	ACTION_PARAM_STATE(success_state, 6);
-	ACTION_PARAM_FIXED(heightoffset,7)
+	ACTION_PARAM_FIXED(heightoffset, 7);
+	ACTION_PARAM_FIXED(radiusoffset, 8);
+	ACTION_PARAM_ANGLE(pitch, 9);
 	
 	// [BB] This is handled server-side.
 	if ( NETWORK_InClientModeAndActorNotClientHandled( self ) )
@@ -5539,7 +5543,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Warp)
 		return;
 	}
 
-	if (P_Thing_Warp(self, reference, xofs, yofs, zofs, angle, flags, heightoffset))
+	if (P_Thing_Warp(self, reference, xofs, yofs, zofs, angle, flags, heightoffset, radiusoffset, pitch))
 	{
 		// [BB] Inform the clients.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -5957,6 +5961,28 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetFloatSpeed)
 	}
 
 	ref->FloatSpeed = speed;
+}
+
+//==========================================================================
+//
+// A_SetPainThreshold
+//
+//==========================================================================
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetPainThreshold)
+{
+	ACTION_PARAM_START(2);
+	ACTION_PARAM_INT(threshold, 0);
+	ACTION_PARAM_INT(ptr, 1);
+
+	AActor *ref = COPY_AAPTR(self, ptr);
+
+	if (!ref)
+	{
+		ACTION_SET_RESULT(false);
+		return;
+	}
+
+	ref->PainThreshold = threshold;
 }
 
 //===========================================================================
@@ -6701,3 +6727,62 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetRipMax)
 	self->RipLevelMax = max;
 }
 
+/*===========================================================================
+A_CheckBlock
+(state block, int flags, int ptr)
+
+Checks if something is blocking the actor('s pointer) 'ptr'.
+
+The SET pointer flags only affect the caller, not the pointer.
+===========================================================================*/
+enum CBF
+{
+	CBF_NOLINES			= 1 << 0,	//Don't check actors.
+	CBF_SETTARGET		= 1 << 1,	//Sets the caller/pointer's target to the actor blocking it. Actors only.
+	CBF_SETMASTER		= 1 << 2,	//^ but with master.
+	CBF_SETTRACER		= 1 << 3,	//^ but with tracer.
+	CBF_SETONPTR		= 1 << 4,	//Sets the pointer change on the actor doing the checking instead of self.
+};
+
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckBlock)
+{
+	ACTION_PARAM_START(3);
+	ACTION_PARAM_STATE(block, 0);
+	ACTION_PARAM_INT(flags, 1);
+	ACTION_PARAM_INT(ptr, 2);
+
+	AActor *mobj = COPY_AAPTR(self, ptr);
+
+	ACTION_SET_RESULT(false);
+	//Needs at least one state jump to work. 
+	if (!mobj)
+	{
+		return;
+	}
+
+	//Nothing to block it so skip the rest.
+	if (P_TestMobjLocation(mobj)) return;
+
+	if (mobj->BlockingMobj)
+	{
+		AActor *setter = (flags & CBF_SETONPTR) ? mobj : self;
+		if (setter)
+		{
+			if (flags & CBF_SETTARGET)	setter->target = mobj->BlockingMobj;
+			if (flags & CBF_SETMASTER)	setter->master = mobj->BlockingMobj;
+			if (flags & CBF_SETTRACER)	setter->tracer = mobj->BlockingMobj;
+		}
+	}
+
+	//[MC] If modders don't want jumping, but just getting the pointer, only abort at
+	//this point. I.e. A_CheckBlock("",CBF_SETTRACER) is like having CBF_NOLINES.
+	//It gets the mobj blocking, if any, and doesn't jump at all.
+	if (!block)
+		return;
+
+	//[MC] Easiest way to tell if an actor is blocking it, use the pointers.
+	if (mobj->BlockingMobj || (!(flags & CBF_NOLINES) && mobj->BlockingLine != NULL))
+	{
+		ACTION_JUMP(block, false);	// [BB] Let's hope that the clients know enough.
+	}
+}
