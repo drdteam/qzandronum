@@ -783,6 +783,9 @@ void G_BuildTiccmd (ticcmd_t *cmd)
 
 	I_GetAxes(joyaxes);
 
+	// [Leo] Clamp JOYAXIS_Side.
+	joyaxes[JOYAXIS_Side] = clamp<float>(joyaxes[JOYAXIS_Side], -1.f, 1.f);
+
 	// Remap some axes depending on button state.
 	if (Button_Strafe.bDown || (Button_Mlook.bDown && lookstrafe))
 	{
@@ -889,6 +892,11 @@ void G_BuildTiccmd (ticcmd_t *cmd)
 
 	cmd->ucmd.forwardmove <<= 8;
 	cmd->ucmd.sidemove <<= 8;
+
+	// [ZZ] fix up the ticcmd so it's not possible to change angle and sr50 at the same time.
+	//      clientside part to not break the prediction of self.
+	if (cmd->ucmd.yaw != 0)
+		cmd->ucmd.sidemove = clamp<short>(cmd->ucmd.sidemove, -10240, 10240); // 10240 = 40; 12800 = 50
 
 	// [BB] The client calculates a checksum of the ticcmd just built. This
 	// should allow us to detect if the ticcmd is manipulated later.

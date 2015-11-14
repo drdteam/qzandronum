@@ -5155,12 +5155,21 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 	{
 		if ( pPlayer->mo )
 		{
+			bool extAngleCheckForSR50 = false;
+
 			// [BB] Ignore the angle and pitch sent by the client if the client isn't authenticated yet.
 			// In this case the client still sends these values based on the previous map.
 			if ( SERVER_GetClient( ulClient )->State == CLS_SPAWNED ) {
+				extAngleCheckForSR50 = (moveCmd.angle != pPlayer->mo->angle);
 				pPlayer->mo->angle = moveCmd.angle;
 				pPlayer->mo->pitch = moveCmd.pitch;
 			}
+
+			// [ZZ] fix up the ticcmd so it's not possible to change angle and sr50 at the same time.
+			//      serverside part to actually stop the cheating.
+			//		added angleExtCheckForSR50 to check against explicit angle changes (we don't expect the hackers to always kindly set .yaw for us right?)
+			if ((pCmd->ucmd.yaw != 0) || extAngleCheckForSR50)
+				pCmd->ucmd.sidemove = clamp<short>(pCmd->ucmd.sidemove, -10240, 10240); // 10240 = 40; 12800 = 50
 
 			// Makes sure the pitch is valid (should we kick them if it's not?)
 			if ( pPlayer->mo->pitch < ( -ANGLE_1 * 90 ))

@@ -3372,7 +3372,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckSight)
 		}
 	}
 
-	ACTION_JUMP(jump, false);	// [BC] This is hopefully okay.
+	ACTION_JUMP(jump, CLIENTUPDATE_FRAME);	// [BB] Inform the clients about the jump.
 }
 
 //===========================================================================
