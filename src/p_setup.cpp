@@ -4479,10 +4479,7 @@ void P_SetupLevel (const char *lumpname, int position)
 					if ( duel == false )
 					{
 						// [BB] If the player was in the join queue, remove him.
-						JOINQUEUE_RemovePlayerFromQueue ( i, false );
-						// [BB] Tell the client about the removal.
-						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-							SERVERCOMMANDS_SetQueuePosition( i, SVCF_ONLYTHISCLIENT );
+						JOINQUEUE_RemovePlayerFromQueue ( i );
 					}
 
 					// If this bot spawned as a spectator, let him know.

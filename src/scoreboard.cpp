@@ -2206,6 +2206,38 @@ static void scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPl
 				// Track where we are to draw multiple icons.
 				lXPosOffset = -SmallFont->StringWidth( "  " );
 
+				// [TP] If this player is in the join queue, display the position.
+				{
+					int position = JOINQUEUE_GetPositionInLine( ulPlayer );
+					if ( position != -1 )
+					{
+						FString text;
+						text.Format( "%d.", position + 1 );
+						lXPosOffset -= SmallFont->StringWidth ( text );
+						if ( g_bScale )
+						{
+							screen->DrawText( SmallFont, ( position == 0 ) ? CR_RED : CR_GOLD,
+								(LONG)( g_aulColumnX[ulIdx] * g_fXScale ) + lXPosOffset,
+								g_ulCurYPos,
+								text.GetChars(),
+								DTA_VirtualWidth, g_ValWidth.Int,
+								DTA_VirtualHeight, g_ValHeight.Int,
+								TAG_DONE );
+						}
+						else
+						{
+							screen->DrawText( SmallFont, ( position == 0 ) ? CR_RED : CR_GOLD,
+								(LONG)( g_aulColumnX[ulIdx] / 320.0f * SCREENWIDTH ) + lXPosOffset,
+								g_ulCurYPos,
+								text.GetChars(),
+								DTA_Clean,
+								g_bScale,
+								TAG_DONE );
+						}
+						lXPosOffset -= 4;
+					}
+				}
+
 				// Draw the user's handicap, if any.
 				if ( players[ulPlayer].userinfo.GetHandicap() > 0 )
 				{

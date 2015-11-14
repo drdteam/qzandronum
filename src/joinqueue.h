@@ -56,29 +56,29 @@
 //*****************************************************************************
 //	STRUCTURES
 
-typedef struct {
-
+struct JoinSlot
+{
 	// Player ID of the incoming player.
-	ULONG	ulPlayer;
+	unsigned int player;
 
 	// Team the incoming player will be on.
-	ULONG	ulTeam;
-
-} JOINSLOT_t;
+	unsigned int team;
+};
 
 //*****************************************************************************
 //	PROTOTYPES
 
-void	JOINQUEUE_Construct( void );
+void JOINQUEUE_Construct( void );
 
-void	JOINQUEUE_RemovePlayerFromQueue ( ULONG ulPlayer, bool bBroadcast );
-void	JOINQUEUE_PlayerLeftGame( bool bWantPop );
-void	JOINQUEUE_SpectatorLeftGame( ULONG ulPlayer );
-void	JOINQUEUE_PopQueue( LONG lNumSlots );
-ULONG	JOINQUEUE_AddPlayer( JOINSLOT_t JoinSlot );
-void	JOINQUEUE_ClearList( void );
-LONG	JOINQUEUE_GetPositionInLine( ULONG ulPlayer );
-void	JOINQUEUE_SetClientPositionInLine( LONG lPosition );
-void	JOINQUEUE_AddConsolePlayer( ULONG ulDesiredTeam );
+void JOINQUEUE_RemovePlayerFromQueue ( unsigned int player );
+void JOINQUEUE_RemovePlayerAtPosition ( unsigned int position );
+void JOINQUEUE_PlayerLeftGame( int player, bool pop );
+void JOINQUEUE_PopQueue( int slotCount );
+unsigned int JOINQUEUE_AddPlayer( unsigned int player, unsigned int team );
+void JOINQUEUE_ClearList( void );
+int JOINQUEUE_GetPositionInLine( unsigned int player );
+void JOINQUEUE_AddConsolePlayer( unsigned int desiredTeam );
+const JoinSlot& JOINQUEUE_GetSlotAt( unsigned int index );
+unsigned int JOINQUEUE_GetSize();
 
 #endif	// __JOINQUEUE_H__

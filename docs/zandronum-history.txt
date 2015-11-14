@@ -23,6 +23,7 @@
 +	- Quad-buffered stereo / 3D Vision support can now be toggled with the new CVAR gl_quadbufferedstereo (default false). [Torr Samaho]
 +	- The warp cheat now works online and can be used by spectators even if sv_cheats is false. [Dusk]
 +	- Being banned from a server now shows the server's contact email address. Being masterbanned now shows a clearer message that directs to the forums. [Dusk]
++	- Players' positions in the join queue are now rendered on the scoreboard. [Dusk]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]

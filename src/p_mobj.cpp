@@ -6637,7 +6637,8 @@ AActor *P_SpawnPuff (AActor *source, const PClass *pufftype, fixed_t x, fixed_t 
 
 void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, AActor *originator)
 {
-	AActor *th;
+	// [BB] Initialize with NULL.
+	AActor *th = NULL;
 	PalEntry bloodcolor = originator->GetBloodColor();
 	const PClass *bloodcls = originator->GetBloodType();
 	
@@ -6646,9 +6647,7 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, AAc
 	if (bloodcls != NULL && !(GetDefaultByType(bloodcls)->flags4 & MF4_ALLOWPARTICLES))
 		bloodtype = 0;
 
-	// [BC] Always spawn blood if we're the server. That way we can tell clients to spawn
-	// the blood actor, and then they can elect to spawn either the actor or particles.
-	if (bloodcls != NULL || ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+	if (bloodcls != NULL)
 	{
 		z += pr_spawnblood.Random2 () << 10;
 		th = Spawn (bloodcls, x, y, z, NO_REPLACE); // GetBloodType already performed the replacement
@@ -6724,7 +6723,7 @@ void P_SpawnBlood (fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, AAc
 	{
 		// [BB] If the bloodcolor is not the standard one, we have to inform the client 
 		// about the correct color.
-		if ( bloodcolor == 0 )
+		if ( ( bloodcolor == 0 ) && ( th != NULL ) )
 		{
 			// [BC] It's not translated, nor is it spawning in a state other than its
 			// spawn state. Therefore, there's no need to treat it as a special case.

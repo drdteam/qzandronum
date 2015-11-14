@@ -65,7 +65,6 @@ ACTOR Pistol : DoomWeapon
 	Tag "$TAG_PISTOL"
 	Radius 20
 	Height 16
-	Attacksound "weapons/pistol"
 	States
 	{
 	Ready:
@@ -148,7 +147,6 @@ ACTOR Shotgun : DoomWeapon
 	Inventory.PickupMessage "$GOTSHOTGUN"
 	Obituary "$OB_MPSHOTGUN"
 	Tag "$TAG_SHOTGUN"
-	Attacksound "weapons/shotgf"
 	States
 	{
 	Ready:
@@ -194,7 +192,6 @@ ACTOR SuperShotgun : DoomWeapon
 	Inventory.PickupMessage "$GOTSHOTGUN2"
 	Obituary "$OB_MPSSHOTGUN"
 	Tag "$TAG_SUPERSHOTGUN"
-	Attacksound "weapons/sshotf"
 	States
 	{
 	Ready:
@@ -247,7 +244,6 @@ ACTOR Chaingun : DoomWeapon
 	Inventory.PickupMessage "$GOTCHAINGUN"
 	Obituary "$OB_MPCHAINGUN"
 	Tag "$TAG_CHAINGUN"
-	Attacksound "weapons/chngun"
 	States
 	{
 	Ready:

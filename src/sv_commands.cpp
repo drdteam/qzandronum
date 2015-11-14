@@ -4667,16 +4667,42 @@ void SERVERCOMMANDS_Earthquake( AActor *pCenter, LONG lIntensity, LONG lDuration
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetQueuePosition( ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SyncJoinQueue( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )	
-	{
-		LONG lPosition = JOINQUEUE_GetPositionInLine( *it );
+	NetCommand command ( SVC2_SYNCJOINQUEUE );
+	command.addByte( JOINQUEUE_GetSize() );
 
-		NetCommand command( SVC_SETQUEUEPOSITION );
-		command.addByte( lPosition != -1 ? lPosition : 255 );
-		command.sendCommandToOneClient( *it );
+	for ( unsigned int i = 0; i < JOINQUEUE_GetSize(); ++i )
+	{
+		const JoinSlot& slot = JOINQUEUE_GetSlotAt( i );
+		command.addByte( slot.player );
+		command.addByte( slot.team );
 	}
+
+	command.sendCommandToClients( ulPlayerExtra, flags );
+}
+
+//*****************************************************************************
+//
+void SERVERCOMMANDS_PushToJoinQueue( ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	if ( JOINQUEUE_GetSize() > 0 )
+	{
+		const JoinSlot& slot = JOINQUEUE_GetSlotAt( JOINQUEUE_GetSize() - 1 );
+		NetCommand command ( SVC2_PUSHTOJOINQUEUE );
+		command.addByte( slot.player );
+		command.addByte( slot.team );
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
+}
+
+//*****************************************************************************
+//
+void SERVERCOMMANDS_RemoveFromJoinQueue( unsigned int index, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	NetCommand command ( SVC2_REMOVEFROMJOINQUEUE );
+	command.addByte( index );
+	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************

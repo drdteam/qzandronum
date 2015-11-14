@@ -667,8 +667,8 @@ void BOTS_RemoveBot( ULONG ulPlayerIdx, bool bExitMsg )
 	players[ulPlayerIdx].bIsBot = false;
 
 	// Tell the join queue module that a player has left the game.
-	if (( PLAYER_IsTrueSpectator( &players[ulPlayerIdx] ) == false ) && ( gameaction != ga_worlddone ))
-		JOINQUEUE_PlayerLeftGame( true );
+	if ( gameaction != ga_worlddone )
+		JOINQUEUE_PlayerLeftGame( ulPlayerIdx, true );
 
 	// If this bot was the enemy of another bot, tell the bot.
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )

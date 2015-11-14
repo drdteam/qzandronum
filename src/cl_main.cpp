@@ -437,7 +437,6 @@ static	void	client_SetPolyobjRotation( BYTESTREAM_s *pByteStream );
 
 // Miscellaneous commands.
 static	void	client_EarthQuake( BYTESTREAM_s *pByteStream );
-static	void	client_SetQueuePosition( BYTESTREAM_s *pByteStream );
 static	void	client_DoScroller( BYTESTREAM_s *pByteStream );
 static	void	client_SetScroller( BYTESTREAM_s *pByteStream );
 static	void	client_SetWallScroller( BYTESTREAM_s *pByteStream );
@@ -2492,10 +2491,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_EarthQuake( pByteStream );
 		break;
-	case SVC_SETQUEUEPOSITION:
-
-		client_SetQueuePosition( pByteStream );
-		break;
 	case SVC_DOSCROLLER:
 
 		client_DoScroller( pByteStream );
@@ -2906,6 +2901,29 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 			case SVC2_SOUNDSECTOR:
 				client_SoundSector( pByteStream );
+				break;
+
+			case SVC2_SYNCJOINQUEUE:
+				JOINQUEUE_ClearList();
+
+				for ( int i = NETWORK_ReadByte( pByteStream ); i > 0; --i )
+				{
+					int player = NETWORK_ReadByte( pByteStream );
+					int team = NETWORK_ReadByte( pByteStream );
+					JOINQUEUE_AddPlayer( player, team );
+				}
+				break;
+
+			case SVC2_PUSHTOJOINQUEUE:
+				{
+					int player = NETWORK_ReadByte( pByteStream );
+					int team = NETWORK_ReadByte( pByteStream );
+					JOINQUEUE_AddPlayer( player, team );
+				}
+				break;
+
+			case SVC2_REMOVEFROMJOINQUEUE:
+				JOINQUEUE_RemovePlayerAtPosition( NETWORK_ReadByte( pByteStream ) );
 				break;
 
 			default:
@@ -4112,7 +4130,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	// If this is the console player, and he's spawned as a regular player, he's definitely not
 	// in line anymore!
 	if ((( pPlayer - players ) == consoleplayer ) && ( pPlayer->bSpectating == false ))
-		JOINQUEUE_SetClientPositionInLine( -1 );
+		JOINQUEUE_RemovePlayerFromQueue( consoleplayer );
 
 	// Set the player's bot status.
 	pPlayer->bIsBot = bIsBot;
@@ -10291,9 +10309,6 @@ static void client_MapNew( BYTESTREAM_s *pByteStream )
 	// Also, the view is no longer active.
 	viewactive = false;
 
-	// [Dusk] We're also no longer in line at this point.
-	JOINQUEUE_SetClientPositionInLine( -1 );
-
 	Printf( "Connecting to %s\n%s\n", g_AddressServer.ToString(), pszMapName );
 
 	// Update the connection state, and begin trying to reconnect.
@@ -12213,35 +12228,6 @@ static void client_EarthQuake( BYTESTREAM_s *pByteStream )
 
 	// Create the earthquake. Since this is client-side, damage is always 0.
 	new DEarthquake( pCenter, lIntensity, lIntensity, 0, lDuration, 0, lTremorRadius, quakesound, 0, 0, 0, 0 );
-}
-
-//*****************************************************************************
-//
-static void client_SetQueuePosition( BYTESTREAM_s *pByteStream )
-{
-	LONG	lPosition;
-
-	// Read in our position in the join queue.
-	lPosition = NETWORK_ReadByte( pByteStream );
-
-	// [BB] We were removed from the queue for whatever reason.
-	if ( lPosition == 255 )
-	{
-		JOINQUEUE_SetClientPositionInLine( -1 );
-		return;
-	}
-	// [BB] This should never happen!
-	else if ( lPosition == MAXPLAYERS )
-	{
-		Printf( "Join queue full!\n" );
-		JOINQUEUE_SetClientPositionInLine( -1 );
-		return;
-	}
-	else
-		Printf( "Your position in line is: %d\n", static_cast<int> (lPosition + 1) );
-
-	// Update the joinqueue module with our position in line.
-	JOINQUEUE_SetClientPositionInLine( lPosition );
 }
 
 //*****************************************************************************

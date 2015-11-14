@@ -2363,12 +2363,8 @@ static void botcmd_TryToJoinGame( CSkullBot *pBot )
 	// [BB] If players aren't allowed to join at the moment, just put the bot in line.
 	if ( GAMEMODE_PreventPlayersFromJoining() )
 	{
-		JOINSLOT_t	JoinSlot;
-
-		JoinSlot.ulPlayer = pBot->GetPlayer( ) - players;
 		// [BB] Don't chose the team before the bot actually joins.
-		JoinSlot.ulTeam = teams.Size( );
-		JOINQUEUE_AddPlayer( JoinSlot );	
+		JOINQUEUE_AddPlayer( pBot->GetPlayer( ) - players, teams.Size() );
 		return;
 	}
 
