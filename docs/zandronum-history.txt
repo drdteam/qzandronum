@@ -60,6 +60,8 @@
 -	- Fixed: clients ignored the customized sound argument of A_VileAttack. [Edward-san]
 -	- Fixed display problems of the MOTD on the clients when the server sent an invalid string. [Torr Samaho]
 -	- Fixed: The server didn't inform the clients about jumps made by A_CheckSight. [Torr Samaho]
+-	- Fixed c/s sync problems on maps with more than 65535 sidedefs. [Torr Samaho]
+-	- Fixed sidedef related problems with map resets on UDMF maps. [Torr Samaho]
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
 !	- Since the only purpose of the CVAR sv_useticbuffer is to debug problems with the client movement buffer, it is now restricted to testing binaries. [Torr Samaho]

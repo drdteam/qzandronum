@@ -9897,7 +9897,7 @@ static void client_SetSideFlags( BYTESTREAM_s *pByteStream )
 	LONG	lFlags;
 
 	// Read in the side ID.
-	lSide = NETWORK_ReadShort( pByteStream );
+	lSide = NETWORK_ReadLong( pByteStream );
 
 	// Read in the flags.
 	lFlags = NETWORK_ReadByte( pByteStream );
@@ -12249,7 +12249,7 @@ static void client_DoScroller( BYTESTREAM_s *pByteStream )
 	dY = NETWORK_ReadLong( pByteStream );
 
 	// Read in the sector/side being scrolled.
-	lAffectee = NETWORK_ReadShort( pByteStream );
+	lAffectee = NETWORK_ReadLong( pByteStream );
 
 	// Check to make sure what we've read in is valid.
 	// [BB] sc_side is allowed, too, but we need to make a different check for it.
