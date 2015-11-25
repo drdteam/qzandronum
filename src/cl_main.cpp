@@ -9926,14 +9926,15 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	BYTE			argheader;
 
 	// Read in the script to be executed.
-	int scriptNum = NETWORK_ReadShort( pByteStream );
+	int scriptId = NETWORK_ReadShort( pByteStream );
 
-	// [BB] This is a named script, the server sends the name.
-	if ( scriptNum < 0 )
-	{
-		const FString scriptName = NETWORK_ReadString( pByteStream );
-		scriptNum = -FName ( scriptName );
-	}
+	// [TP] Resolve the script netid into a script number
+	int scriptNum;
+
+	if ( scriptId != NO_SCRIPT_NETID )
+		scriptNum = NETWORK_ACSScriptFromNetID( scriptId );
+	else
+		scriptNum = -FName( NETWORK_ReadString( pByteStream ));
 
 	// Read in the ID of the activator.
 	lID = NETWORK_ReadShort( pByteStream );

@@ -1076,6 +1076,7 @@ bool	ACS_IsScriptClientSide( const ScriptPtr *pScriptData );
 bool	ACS_IsScriptPukeable( ULONG ulScript );
 int		ACS_GetTranslationIndex( FRemapTable *pTranslation );
 int		ACS_PushAndReturnDynamicString ( const FString &Work, const SDWORD *stack, int stackdepth );
+bool	ACS_ExistsScript( int script );
 
 // [BB] Export DoGiveInv
 bool	DoGiveInv(AActor *actor, const PClass *info, int amount);

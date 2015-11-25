@@ -62,6 +62,7 @@
 #include "deathmatch.h"
 #include "chat.h"
 #include "network_enums.h"
+#include "p_acs.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -572,16 +573,26 @@ void CLIENTCOMMANDS_RequestInventoryDrop( AInventory *pItem )
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_Puke ( int script, int args[4], bool always )
+void CLIENTCOMMANDS_Puke ( int scriptNum, int args[4], bool always )
 {
+	if ( ACS_ExistsScript( scriptNum ) == false )
+		return;
+
 	// [TP] Calculate argn from args.
 	int argn = ( args[3] != 0 ) ? 4 :
 	           ( args[2] != 0 ) ? 3 :
 	           ( args[1] != 0 ) ? 2 :
 	           ( args[0] != 0 ) ? 1 : 0;
 
+	const int scriptNetID = NETWORK_ACSScriptToNetID( scriptNum );
+
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_PUKE );
-	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, script );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, scriptNetID );
+
+	// [TP/BB] If we don't have a netID on file for this script, we send the name as a string.
+	if ( scriptNetID == NO_SCRIPT_NETID )
+		NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, FName( ENamedName( -scriptNum )));
+
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, argn );
 
 	for ( int i = 0; i < argn; ++i )

@@ -3400,6 +3400,9 @@ void SERVERCOMMANDS_SetSomeLineFlags( ULONG ulLine, ULONG ulPlayerExtra, ServerC
 //
 void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lLineIdx, int levelnum, bool bBackSide, int iArg0, int iArg1, int iArg2, bool bAlways, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
+	if ( ACS_ExistsScript( ScriptNum ) == false )
+		return;
+
 	LONG lActivatorID = ( pActivator ? pActivator->lNetID : -1 );
 
 	// [TP] Argument header:
@@ -3437,15 +3440,15 @@ void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lL
 	argheader |= ( bBackSide ? 1 : 0 ) << 6;
 	argheader |= ( bAlways ? 1 : 0 ) << 7;
 
+	int netid = NETWORK_ACSScriptToNetID( ScriptNum );
+
 	NetCommand command ( SVC_ACSSCRIPTEXECUTE );
-	if ( ScriptNum >= 0 )
-		command.addShort( ScriptNum );
-	// [BB] The FName numbers may differ on client and server, so we have to send the name.
-	else
-	{
-		command.addShort( -1 );
-		command.addString( FName (( ENamedName ) - ScriptNum ) );
-	}
+	command.addShort( netid );
+
+	// [TP] If we don't have a netID on file for this script, we send the name as a string.
+	// Let's hope that this doesn't happen too often.
+	if ( netid == NO_SCRIPT_NETID )
+		command.addString( FName( ENamedName( -ScriptNum )));
 
 	command.addShort( lActivatorID );
 	command.addShort( lLineIdx );

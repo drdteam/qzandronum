@@ -149,6 +149,11 @@ static GeoIP * g_GeoIPDB = NULL;
 // [BB]
 extern int restart;
 
+// [TP] Named ACS scripts share the name pool with all other names in the engine, which means named script numbers may
+// differ wildly between systems, e.g. if the server and client have different vid_renderer values the names will
+// already be off. So we index the named scripts so that they'll be the same on the client and server.
+static TArray<FName> g_NamedScriptNetIDs;
+
 //*****************************************************************************
 //	PROTOTYPES
 
@@ -1065,6 +1070,76 @@ void NETWORK_MakeMapCollectionChecksum( )
 {
 	if ( g_MapCollectionChecksum.IsEmpty( ) )
 		g_MapCollectionChecksum = NETWORK_MapCollectionChecksum( );
+}
+
+//*****************************************************************************
+// [TP] Converts a network representation of a script to a local script number.
+int NETWORK_ACSScriptFromNetID( int netid )
+{
+	if ( netid < 0 )
+	{
+		unsigned idx = -netid - 2;
+		if ( idx < g_NamedScriptNetIDs.Size() )
+		{
+			return -g_NamedScriptNetIDs[idx];
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return netid;
+	}
+}
+
+//*****************************************************************************
+// [TP] Converts a script number to a network representation.
+int NETWORK_ACSScriptToNetID( int script )
+{
+	if ( script < 0 )
+	{
+		FName name = FName ( ENamedName ( -script ));
+		for ( int i = 0; i < (signed) g_NamedScriptNetIDs.Size(); ++i )
+		{
+			if ( g_NamedScriptNetIDs[i] == name )
+			{
+				return -i - 2;
+			}
+		}
+
+		return NO_SCRIPT_NETID;
+	}
+	else
+	{
+		return script;
+	}
+}
+
+//*****************************************************************************
+// [TP] Indexes an ACS script so that it can be addressed over the network.
+void NETWORK_IndexACSScript( int script )
+{
+	if ( script < 0 )
+	{
+		int netid = NETWORK_ACSScriptToNetID( script );
+
+		// If no net ID exists for this script yet, then add it to the index
+		if ( netid == NO_SCRIPT_NETID )
+			g_NamedScriptNetIDs.Push( FName ( ENamedName ( -script )));
+	}
+}
+
+//*****************************************************************************
+// [TP]
+CCMD( dumpacsnetids )
+{
+	for ( int i = 0; i < (signed) g_NamedScriptNetIDs.Size(); ++i )
+	{
+		FName name = g_NamedScriptNetIDs[i];
+		Printf( "%d: \"%s\" (%d)\n", -i - 2, name.GetChars(), name.GetIndex() );
+	}
 }
 
 // [CW]

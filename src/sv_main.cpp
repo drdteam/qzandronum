@@ -6396,7 +6396,13 @@ static bool server_InventoryDrop( BYTESTREAM_s *pByteStream )
 //
 static bool server_Puke( BYTESTREAM_s *pByteStream )
 {
-	ULONG ulScript = NETWORK_ReadLong( pByteStream );
+	const int scriptNetID = NETWORK_ReadLong( pByteStream );
+
+	// [TP/BB] Resolve the script netid into a script number
+	const int scriptNum = ( scriptNetID != NO_SCRIPT_NETID )
+		? NETWORK_ACSScriptFromNetID ( scriptNetID )
+		: -FName( NETWORK_ReadString( pByteStream ) );
+
 	ULONG ulArgn = NETWORK_ReadByte( pByteStream );
 
 	// [BB] Valid clients don't send more than four args.
@@ -6413,7 +6419,7 @@ static bool server_Puke( BYTESTREAM_s *pByteStream )
 
 	// [BB] A normal client checks if the script is pukeable and only requests to puke pukeable scripts.
 	// Thus if the requested script is not pukeable, the client was tampered with.
-	if ( ACS_IsScriptPukeable ( ulScript ) == false )
+	if ( ACS_IsScriptPukeable ( scriptNum ) == false )
 	{
 		// [BB] Trying to puke a non-pukeable script is treated as possible command flooding
 		if ( server_CheckForClientCommandFlood ( g_lCurrentClient ) == true )
@@ -6423,7 +6429,7 @@ static bool server_Puke( BYTESTREAM_s *pByteStream )
 	}
 
 	// [BB] Execute the script as if it was invoked by the puke command.
-	P_StartScript (players[g_lCurrentClient].mo, NULL, ulScript, level.MapName,
+	P_StartScript (players[g_lCurrentClient].mo, NULL, scriptNum, level.MapName,
 		arg, 4, ( bAlways ? ACS_ALWAYS : 0 ) | ACS_NET );
 
 	return ( false );
