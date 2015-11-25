@@ -386,7 +386,9 @@ enum
 	SECF_UNDERWATERMASK	= 32+64,
 	SECF_DRAWN			= 128,	// sector has been drawn at least once
 	SECF_HIDDEN			= 256,	// Do not draw on textured automap
-	SECF_RETURNZONE		= 512,	// [BC] Flags should be immediately returned if they're dropped within this sector (lava sectors, unreachable sectors, etc.).
+	SECF_NOFLOORSKYBOX	= 512,	// force use of regular sky 
+	SECF_NOCEILINGSKYBOX	= 1024,	// force use of regular sky 
+	SECF_RETURNZONE		= 2048,	// [BC] Flags should be immediately returned if they're dropped within this sector (lava sectors, unreachable sectors, etc.).
 };
 
 enum
@@ -502,6 +504,8 @@ struct sector_t
 
 	DInterpolation *SetInterpolation(int position, bool attach);
 	void StopInterpolation(int position);
+
+	ASkyViewpoint *GetSkyBox(int which);
 
 	enum
 	{
