@@ -56,6 +56,7 @@
 #include "p_3dmidtex.h"
 #include "d_net.h"
 #include "d_event.h"
+#include "gstrings.h"
 #include "r_data/colormaps.h"
 // [BC] New #includes.
 #include "cooperative.h"
@@ -3351,21 +3352,17 @@ FUNC(LS_SendToCommunicator)
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_Sound( CHAN_VOICE, name, 1, ATTN_NORM, ulPlayer, SVCF_ONLYTHISCLIENT );
 
-			if (arg2 == 0)
+			// Get the message from the LANGUAGE lump.
+			FString msg;
+			msg.Format("TXT_COMM%d", arg2);
+			const char *str = GStrings[msg];
+			if (msg != NULL)
 			{
-				Printf (PRINT_CHAT, "Incoming Message\n");
+				Printf (PRINT_CHAT, "%s\n", str);
 
 				// [BB] Print the message on the client.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_PrintfPlayer( PRINT_CHAT, ulPlayer, "Incoming Message\n" );
-			}
-			else if (arg2 == 1)
-			{
-				Printf (PRINT_CHAT, "Incoming Message from BlackBird\n");
-
-				// [BB] Print the message on the client.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_PrintfPlayer( PRINT_CHAT, ulPlayer, "Incoming Message from BlackBird\n" );
+					SERVER_PrintfPlayer( PRINT_CHAT, ulPlayer, "%s\n", str );
 			}
 		}
 		return true;

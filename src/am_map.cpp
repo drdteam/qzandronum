@@ -2344,7 +2344,9 @@ void AM_drawWalls (bool allmap)
 					AM_drawMline (&l, AMColors.LockedColor);  // locked special
 				}
 			}
-			else if (am_showtriggerlines && AMColors.isValid(AMColors.SpecialWallColor) && lines[i].special != 0
+			else if (am_showtriggerlines && AMColors.isValid(AMColors.SpecialWallColor) 
+				&& LineSpecialsInfo[lines[i].special] != NULL
+				&& LineSpecialsInfo[lines[i].special]->max_args >= 0
 				&& lines[i].special != Door_Open
 				&& lines[i].special != Door_Close
 				&& lines[i].special != Door_CloseWaitOpen

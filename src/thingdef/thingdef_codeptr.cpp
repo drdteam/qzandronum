@@ -5725,21 +5725,23 @@ enum RadiusGiveFlags
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 {
-	ACTION_PARAM_START(6);
+	ACTION_PARAM_START(7);
 	ACTION_PARAM_CLASS(item, 0);
 	ACTION_PARAM_FIXED(distance, 1);
 	ACTION_PARAM_INT(flags, 2);
 	ACTION_PARAM_INT(amount, 3);
 	ACTION_PARAM_CLASS(filter, 4);
 	ACTION_PARAM_NAME(species, 5);
+	ACTION_PARAM_FIXED(mindist, 6);
 
 	// [BB] This is handled server-side.
 	if ( NETWORK_InClientModeAndActorNotClientHandled( self ) )
 		return;
 
 	// We need a valid item, valid targets, and a valid range
-	if (item == NULL || (flags & RGF_MASK) == 0 || !flags || distance <= 0)
+	if (item == NULL || (flags & RGF_MASK) == 0 || !flags || distance <= 0 || mindist >= distance)
 	{
+		ACTION_SET_RESULT(false);
 		return;
 	}
 	
@@ -5748,9 +5750,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 		amount = 1;
 	}
 	FBlockThingsIterator it(FBoundingBox(self->x, self->y, distance));
-	double distsquared = double(distance) * double(distance);
 
 	AActor *thing;
+	bool given = false;
 	while ((thing = it.Next()))
 	{
 		//[MC] Check for a filter, species, and the related exfilter/expecies/either flag(s).
@@ -5795,7 +5797,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 		bool corpsePass = !!((flags & RGF_CORPSES) && thing->flags & MF_CORPSE);
 		bool killedPass = !!((flags & RGF_KILLED) && thing->flags6 & MF6_KILLED);
 		bool monsterPass = !!((flags & RGF_MONSTERS) && thing->flags3 & MF3_ISMONSTER);
-		bool objectPass = !!((flags & RGF_OBJECTS) && ((thing->flags & MF_SHOOTABLE) || (thing->flags6 & MF6_VULNERABLE)));
+		bool objectPass = !!((flags & RGF_OBJECTS) && (thing->player == NULL) && (!(thing->flags3 & MF3_ISMONSTER))
+											&& ((thing->flags & MF_SHOOTABLE) || (thing->flags6 & MF6_VULNERABLE)));
 		bool playerPass = !!((flags & RGF_PLAYERS) && (thing->player != NULL) && (thing->player->mo == thing));
 		bool voodooPass = !!((flags & RGF_VOODOO) && (thing->player != NULL) && (thing->player->mo != thing));
 		//Self calls priority over the rest of this.
@@ -5818,20 +5821,26 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 
 		if (selfPass || monsterPass || corpsePass || killedPass || itemPass || objectPass || missilePass || playerPass || voodooPass)
 		{
+
 			if (flags & RGF_CUBE)
 			{ // check if inside a cube
-				if (fabs((double)thing->x - self->x) > (double)distance ||
-					fabs((double)thing->y - self->y) > (double)distance ||
-					fabs((double)(thing->z + thing->height / 2) - (self->z + self->height / 2)) > (double)distance)
+				double dx = fabs((double)(thing->x - self->x));
+				double dy = fabs((double)(thing->y - self->y));
+				double dz = fabs((double)(thing->z + thing->height / 2) - (self->z + self->height / 2));
+				double dist = (double)distance;
+				double min = (double)mindist;
+				if ((dx > dist || dy > dist || dz > dist) || (min && (dx < min && dy < min && dz < min)))
 				{
 					continue;
 				}
 			}
 			else
 			{ // check if inside a sphere
+				double distsquared = double(distance) * double(distance);
+				double minsquared = double(mindist) * double(mindist);
 				TVector3<double> tpos(thing->x, thing->y, thing->z + thing->height / 2);
 				TVector3<double> spos(self->x, self->y, self->z + self->height / 2);
-				if ((tpos - spos).LengthSquared() > distsquared)
+				if ((tpos - spos).LengthSquared() > distsquared || (minsquared && ((tpos - spos).LengthSquared() < minsquared)))
 				{
 					continue;
 				}
@@ -5854,12 +5863,18 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 				{
 					gift->Destroy();
 				}
-			// [BB] If a player got something, inform the clients.
-			else if ( ( thing->player ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
-				SERVERCOMMANDS_GiveInventoryNotOverwritingAmount( thing, gift );
+				else
+				{
+					given = true;
+
+					// [BB] If a player got something, inform the clients.
+					if ( ( thing->player ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
+						SERVERCOMMANDS_GiveInventoryNotOverwritingAmount( thing, gift );
+				}
 			}
 		}
 	}
+	ACTION_SET_RESULT(given);
 }
 
 
