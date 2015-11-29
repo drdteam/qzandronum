@@ -2735,6 +2735,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		SERVERCOMMANDS_SetMapSky( ulClient, SVCF_ONLYTHISCLIENT );
 	}
 
+	// [BB]
+	SERVERCOMMANDS_SetDefaultSkybox( ulClient, SVCF_ONLYTHISCLIENT ); 
+
 	// [BB] Inform the client about the values of server mod cvars.
 	SERVER_SyncServerModCVars ( ulClient );
 

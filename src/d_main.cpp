@@ -1776,7 +1776,8 @@ void ParseCVarInfo()
 			sc.MustGetToken(TK_Identifier);
 			if (FindCVar(sc.String, NULL) != NULL)
 			{
-				sc.ScriptError("cvar '%s' already exists", sc.String);
+				// [BB] Extended error message.
+				sc.ScriptError("cvar '%s' already exists\n\nRemove '%s' and all other conflicting cvars from your ini and restart %s to continue.", sc.String, sc.String, GAMENAME);
 			}
 			cvarname = sc.String;
 			// A default value is optional and signalled by a '=' token.

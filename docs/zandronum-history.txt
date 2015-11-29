@@ -37,6 +37,7 @@
 !	- Removed ping unlagged as gametic unlagged has superceded it. [Dusk]
 !	- sv_nodrop is now a dmflag. [Dusk]
 !	- Merged sv_nokill and sv_disallowsuicide into one dmflag with two names. [Dusk]
+!	- The CVARINFO error message triggered when an existing CVAR in the ini conflicts with CVARINFO now instructs the user to clean the ini. [Torr Samaho]
 
 
 2.2

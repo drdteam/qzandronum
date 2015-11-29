@@ -37,9 +37,10 @@ endif(CMAKE_CROSSCOMPILING)
 function( add_pk3 PK3_NAME PK3_DIR )
 	# Generate target name. Just use "pk3" for main pk3 target.
 	string( REPLACE "." "_" PK3_TARGET ${PK3_NAME} )
-	if( ${PK3_TARGET} STREQUAL "zdoom_pk3" )
+	# [BB] Replaced 'zdoom' with 'zandronum'
+	if( ${PK3_TARGET} STREQUAL "zandronum_pk3" )
 		set( PK3_TARGET "pk3" )
-	endif( ${PK3_TARGET} STREQUAL "zdoom_pk3" )
+	endif( ${PK3_TARGET} STREQUAL "zandronum_pk3" )
 
 	if( NOT NO_GENERATOR_EXPRESSIONS AND NOT ZDOOM_OUTPUT_OLDSTYLE )
 		add_custom_command( OUTPUT ${ZDOOM_OUTPUT_DIR}/${PK3_NAME}

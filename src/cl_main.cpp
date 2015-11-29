@@ -2926,6 +2926,20 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				JOINQUEUE_RemovePlayerAtPosition( NETWORK_ReadByte( pByteStream ) );
 				break;
 
+			case SVC2_SETDEFAULTSKYBOX:
+				{
+					int mobjNetID = NETWORK_ReadShort( pByteStream );
+					if ( mobjNetID == -1  )
+						level.DefaultSkybox = NULL;
+					else
+					{
+						AActor *mo = CLIENT_FindThingByNetID( mobjNetID );
+						if ( mo && mo->GetClass()->IsDescendantOf( RUNTIME_CLASS( ASkyViewpoint ) ) )
+							level.DefaultSkybox = static_cast<ASkyViewpoint *>( mo );
+					}
+				}
+				break;
+
 			default:
 				sprintf( szString, "CLIENT_ParsePacket: Illegible server message: %d\nLast command: %d\n", static_cast<int> (lExtCommand), static_cast<int> (g_lLastCmd) );
 				CLIENT_QuitNetworkGame( szString );
