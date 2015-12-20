@@ -1848,10 +1848,6 @@ void G_Ticker ()
 
 						if ( bLimitHit )
 						{
-							if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-								SERVER_Printf( PRINT_HIGH, "Winlimit hit.\n" );
-							else
-								Printf( "Winlimit hit.\n" );
 							G_ExitLevel( 0, false );
 						}
 						else

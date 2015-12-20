@@ -1594,6 +1594,17 @@ CCMD (playerinfo)
 
 		while (it.NextPair(pair))
 		{
+			// [TP] The server doesn't know about a number of certain userinfo settings of this player
+			if (( NETWORK_GetState() == NETSTATE_SERVER )
+				&& ( pair->Key == NAME_MoveBob
+					|| pair->Key == NAME_StillBob
+					|| pair->Key == NAME_SwitchOnPickup
+					|| pair->Key == NAME_Wi_NoAutostartMap ))
+			{
+				Printf( "%20s: <unknown>\n", pair->Key.GetChars() );
+				continue;
+			}
+
 			if (pair->Key != NAME_Name && pair->Key != NAME_Team && pair->Key != NAME_Skin &&
 				pair->Key != NAME_Gender && pair->Key != NAME_PlayerClass)
 			{

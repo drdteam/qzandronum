@@ -154,6 +154,9 @@ struct FOptionMenuDescriptor : public FMenuDescriptor
 	bool mDontDim;
 	bool mNetgameOnly; // [TP]
 
+	// [BB] The default constructor initializes our custom members.
+	FOptionMenuDescriptor ( ) : mNetgameOnly ( false ) {}
+
 	void CalcIndent();
 	FOptionMenuItem *GetItem(FName name);
 	void Reset()

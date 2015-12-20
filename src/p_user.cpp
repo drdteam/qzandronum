@@ -1769,9 +1769,7 @@ void APlayerPawn::GiveDefaultInventory ()
 			PLAYER_SetWeapon( player, pPendingWeapon, true );
 		}
 		// [BC] If the user has the shotgun start flag set, do that!
-		else if (( dmflags2 & DF2_COOP_SHOTGUNSTART ) &&
-			( deathmatch == false ) &&
-			( teamgame == false ))
+		else if ( dmflags2 & DF2_COOP_SHOTGUNSTART )
 		{
 			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "Shotgun" ) );
 			if ( pInventory )
