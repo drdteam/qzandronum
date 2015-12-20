@@ -138,6 +138,7 @@ DHUDMessage::DHUDMessage (FFont *font, const char *text, float x, float y, int h
 	NoWrap = false;
 	ClipX = ClipY = ClipWidth = ClipHeight = 0;
 	WrapWidth = 0;
+	HandleAspect = true;
 	Top = y;
 	Next = NULL;
 	Lines = NULL;
@@ -200,6 +201,14 @@ void DHUDMessage::Serialize (FArchive &arc)
 		NoWrap = false;
 		ClipX = ClipY = ClipWidth = ClipHeight = WrapWidth = 0;
 	}
+	if (SaveVersion >= 4525)
+	{
+		arc << HandleAspect;
+	}
+	else
+	{
+		HandleAspect = true;
+	}
 	if (arc.IsLoading ())
 	{
 		Lines = NULL;
@@ -261,7 +270,7 @@ void DHUDMessage::CalcClipCoords(int hudheight)
 	else
 	{
 		screen->VirtualToRealCoordsInt(x, y, w, h,
-			HUDWidth, hudheight, false, true);
+			HUDWidth, hudheight, false, HandleAspect);
 		ClipLeft = x;
 		ClipTop = y;
 		ClipRight = x + w;

@@ -5943,6 +5943,7 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, SDWORD *args, const 
 			ClipRectWidth = argCount > 2 ? args[2] : 0;
 			ClipRectHeight = argCount > 3 ? args[3] : 0;
 			WrapWidth = argCount > 4 ? args[4] : 0;
+			HandleAspect = argCount > 5 ? !!args[5] : true;
 			break;
 
 		case ACSF_SetHUDWrapWidth:
@@ -6855,6 +6856,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		default:
 			break;
 	}
+
 
 	return 0;
 }
@@ -8855,7 +8857,7 @@ scriptwait:
 					// Most of the things below will need extra network handling.
 					if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 					{
-						msg->SetClipRect(ClipRectLeft, ClipRectTop, ClipRectWidth, ClipRectHeight);
+						msg->SetClipRect(ClipRectLeft, ClipRectTop, ClipRectWidth, ClipRectHeight, HandleAspect);
 						if (WrapWidth != 0)
 						{
 							msg->SetWrapWidth(WrapWidth);
@@ -10798,6 +10800,7 @@ DLevelScript::DLevelScript (AActor *who, line_t *where, int num, const ScriptPtr
 
 	hudwidth = hudheight = 0;
 	ClipRectLeft = ClipRectTop = ClipRectWidth = ClipRectHeight = WrapWidth = 0;
+	HandleAspect = true;
 	state = SCRIPT_Running;
 
 	// Hexen waited one second before executing any open scripts. I didn't realize

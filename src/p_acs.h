@@ -977,6 +977,7 @@ protected:
 	int				hudwidth, hudheight;
 	int				ClipRectLeft, ClipRectTop, ClipRectWidth, ClipRectHeight;
 	int				WrapWidth;
+	bool			HandleAspect;
 	FBehavior	    *activeBehavior;
 	int				InModuleScriptNumber;
 	FString			activefontname; // [TP]

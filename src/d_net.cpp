@@ -987,7 +987,7 @@ void NetUpdate (void)
 	{
 		I_StartTic ();
 		D_ProcessEvents ();
-		if ((maketic - gametic) / ticdup >= BACKUPTICS/2-1)
+		if (pauseext || (maketic - gametic) / ticdup >= BACKUPTICS/2-1)
 			break;			// can't hold any more
 		
 		//Printf ("mk:%i ",maketic);
@@ -1218,7 +1218,7 @@ void NetUpdate (void)
 
 		// Send current network delay
 		// The number of tics we just made should be removed from the count.
-		netbuffer[k++] = ((maketic - newtics - gametic) / ticdup);
+		netbuffer[k++] = ((maketic - numtics - gametic) / ticdup);
 
 		if (numtics > 0)
 		{
@@ -1835,7 +1835,8 @@ void TryRunTics (void)
 
 	// If paused, do not eat more CPU time than we need, because it
 	// will all be wasted anyway.
-	if (pauseext) r_NoInterpolate = true;
+	if (pauseext) 
+		r_NoInterpolate = true;
 	bool doWait = cl_capfps || r_NoInterpolate /*|| netgame*/;
 
 	// get real tics
@@ -1852,6 +1853,9 @@ void TryRunTics (void)
 
 	// get available tics
 	NetUpdate ();
+
+	if (pauseext)
+		return;
 
 	lowtic = INT_MAX;
 	numplaying = 0;
@@ -1968,7 +1972,7 @@ void TryRunTics (void)
 			C_Ticker ();
 			M_Ticker ();
 			I_GetTime (true);
-			if (!pauseext) G_Ticker();
+			G_Ticker();
 			gametic++;
 
 			NetUpdate ();	// check for new console commands
