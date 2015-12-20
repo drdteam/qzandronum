@@ -1704,6 +1704,11 @@ FUNC(LS_Thing_Move)		// [BC]
 	return P_Thing_Move (arg0, it, arg1, arg2 ? false : true);
 }
 
+enum
+{
+	TRANSLATION_ICE = 0x100007
+};
+
 FUNC(LS_Thing_SetTranslation)
 // Thing_SetTranslation (tid, range)
 {
@@ -1719,6 +1724,10 @@ FUNC(LS_Thing_SetTranslation)
 	else if (arg1 >= 1 && arg1 < MAX_ACS_TRANSLATIONS)
 	{
 		range = TRANSLATION(TRANSLATION_LevelScripted, (arg1-1));
+	}
+	else if (arg1 == TRANSLATION_ICE)
+	{
+		range = TRANSLATION(TRANSLATION_Standard, 7);
 	}
 	else
 	{
@@ -3356,7 +3365,7 @@ FUNC(LS_SendToCommunicator)
 			FString msg;
 			msg.Format("TXT_COMM%d", arg2);
 			const char *str = GStrings[msg];
-			if (msg != NULL)
+			if (str != NULL)
 			{
 				Printf (PRINT_CHAT, "%s\n", str);
 
