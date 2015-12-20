@@ -567,9 +567,10 @@ CVAR (Flag, sv_shotgunstart,		dmflags2, DF2_COOP_SHOTGUNSTART);
 //
 //==========================================================================
 
-// [BB] Only necessary to handle ZADF_FORCE_GL_DEFAULTS.
+// [BB/EP] Only necessary to handle ZADF_FORCE_GL_DEFAULTS.
 #ifndef NO_GL
 EXTERN_CVAR(Int, gl_lightmode)
+EXTERN_CVAR(Int, gl_distfog)
 #endif
 
 CUSTOM_CVAR (Int, zadmflags, 0, CVAR_SERVERINFO)
@@ -586,10 +587,13 @@ CUSTOM_CVAR (Int, zadmflags, 0, CVAR_SERVERINFO)
 	}
 
 #ifndef NO_GL
-	// [BB] This makes gl_lightmode handle ZADF_FORCE_GL_DEFAULTS.
+	// [BB/EP] This makes gl_lightmode and gl_distfog handle ZADF_FORCE_GL_DEFAULTS.
 	// [BB] Don't do this on startup since gl.flags is not properly initialized yet.
 	if ( gamestate != GS_STARTUP )
+	{
 		gl_lightmode.Callback();
+		gl_distfog.Callback();
+	}
 #endif
 }
 

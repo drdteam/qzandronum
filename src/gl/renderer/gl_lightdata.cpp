@@ -91,6 +91,9 @@ CVAR(Bool, gl_brightfog, false, CVAR_ARCHIVE);
 
 CUSTOM_CVAR (Int, gl_distfog, 70, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 {
+	// [BB/EP] Take care of gl_distfog and ZADF_FORCE_GL_DEFAULTS.
+	OVERRIDE_INT_GL_CVAR_IF_NECESSARY( gl_distfog );
+
 	for (int i=0;i<256;i++)
 	{
 
