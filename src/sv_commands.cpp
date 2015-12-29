@@ -3430,14 +3430,19 @@ void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lL
 
 	int netid = NETWORK_ACSScriptToNetID( ScriptNum );
 
+	if ( netid == NO_SCRIPT_NETID )
+	{
+		// [TP] This shouldn't happen
+		if ( sv_showwarnings )
+		{
+			Printf( "SERVERCOMMANDS_ACSScriptExecute: Failed to find a netid for script %s!\n",
+				FName( ENamedName( -ScriptNum )).GetChars() );
+		}
+		return;
+	}
+
 	NetCommand command ( SVC_ACSSCRIPTEXECUTE );
 	command.addShort( netid );
-
-	// [TP] If we don't have a netID on file for this script, we send the name as a string.
-	// Let's hope that this doesn't happen too often.
-	if ( netid == NO_SCRIPT_NETID )
-		command.addString( FName( ENamedName( -ScriptNum )));
-
 	command.addShort( lActivatorID );
 	command.addShort( lLineIdx );
 	command.addByte( levelnum );

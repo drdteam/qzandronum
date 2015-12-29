@@ -85,6 +85,7 @@
 #include "p_lnspec.h"
 #include "cmdlib.h"
 #include "templates.h"
+#include "p_acs.h"
 
 #include "md5.h"
 #include "network/sv_auth.h"
@@ -151,8 +152,8 @@ extern int restart;
 
 // [TP] Named ACS scripts share the name pool with all other names in the engine, which means named script numbers may
 // differ wildly between systems, e.g. if the server and client have different vid_renderer values the names will
-// already be off. So we index the named scripts so that they'll be the same on the client and server.
-static TArray<FName> g_NamedScriptNetIDs;
+// already be off. So we create a special index of script names here.
+static TArray<FName> g_ACSNameIndex;
 
 //*****************************************************************************
 //	PROTOTYPES
@@ -1073,15 +1074,41 @@ void NETWORK_MakeMapCollectionChecksum( )
 }
 
 //*****************************************************************************
+// [TP]
+static int STACK_ARGS namesort( const void* p1, const void* p2 )
+{
+	FName n1 = *reinterpret_cast<const FName*>( p1 );
+	FName n2 = *reinterpret_cast<const FName*>( p2 );
+	return stricmp( n1, n2 );
+}
+
+//*****************************************************************************
+// [TP] Generates a name index of scripts for the below conversions. Done at map load.
+void NETWORK_MakeScriptNameIndex()
+{
+	g_ACSNameIndex = FBehavior::StaticGetAllScriptNames();
+	qsort( &g_ACSNameIndex[0], g_ACSNameIndex.Size(), sizeof g_ACSNameIndex[0], namesort );
+
+	// Remove duplicates if there are any
+	for ( unsigned int i = 1; i < g_ACSNameIndex.Size(); )
+	{
+		if ( g_ACSNameIndex[i - 1] == g_ACSNameIndex[i] )
+			g_ACSNameIndex.Delete( i );
+		else
+			++i;
+	}
+}
+
+//*****************************************************************************
 // [TP] Converts a network representation of a script to a local script number.
 int NETWORK_ACSScriptFromNetID( int netid )
 {
 	if ( netid < 0 )
 	{
 		unsigned idx = -netid - 2;
-		if ( idx < g_NamedScriptNetIDs.Size() )
+		if ( idx < g_ACSNameIndex.Size() )
 		{
-			return -g_NamedScriptNetIDs[idx];
+			return -g_ACSNameIndex[idx];
 		}
 		else
 		{
@@ -1101,9 +1128,9 @@ int NETWORK_ACSScriptToNetID( int script )
 	if ( script < 0 )
 	{
 		FName name = FName ( ENamedName ( -script ));
-		for ( int i = 0; i < (signed) g_NamedScriptNetIDs.Size(); ++i )
+		for ( int i = 0; i < (signed) g_ACSNameIndex.Size(); ++i )
 		{
-			if ( g_NamedScriptNetIDs[i] == name )
+			if ( g_ACSNameIndex[i] == name )
 			{
 				return -i - 2;
 			}
@@ -1118,26 +1145,12 @@ int NETWORK_ACSScriptToNetID( int script )
 }
 
 //*****************************************************************************
-// [TP] Indexes an ACS script so that it can be addressed over the network.
-void NETWORK_IndexACSScript( int script )
-{
-	if ( script < 0 )
-	{
-		int netid = NETWORK_ACSScriptToNetID( script );
-
-		// If no net ID exists for this script yet, then add it to the index
-		if ( netid == NO_SCRIPT_NETID )
-			g_NamedScriptNetIDs.Push( FName ( ENamedName ( -script )));
-	}
-}
-
-//*****************************************************************************
 // [TP]
 CCMD( dumpacsnetids )
 {
-	for ( int i = 0; i < (signed) g_NamedScriptNetIDs.Size(); ++i )
+	for ( int i = 0; i < (signed) g_ACSNameIndex.Size(); ++i )
 	{
-		FName name = g_NamedScriptNetIDs[i];
+		FName name = g_ACSNameIndex[i];
 		Printf( "%d: \"%s\" (%d)\n", -i - 2, name.GetChars(), name.GetIndex() );
 	}
 }

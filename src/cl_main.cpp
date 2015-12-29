@@ -9917,16 +9917,8 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	int				levelnum;
 	BYTE			argheader;
 
-	// Read in the script to be executed.
-	int scriptId = NETWORK_ReadShort( pByteStream );
-
-	// [TP] Resolve the script netid into a script number
-	int scriptNum;
-
-	if ( scriptId != NO_SCRIPT_NETID )
-		scriptNum = NETWORK_ACSScriptFromNetID( scriptId );
-	else
-		scriptNum = -FName( NETWORK_ReadString( pByteStream ));
+	// [TP] Read in and resolve the script netid into a script number
+	int scriptNum = NETWORK_ACSScriptFromNetID( NETWORK_ReadShort( pByteStream ));
 
 	// Read in the ID of the activator.
 	lID = NETWORK_ReadShort( pByteStream );
