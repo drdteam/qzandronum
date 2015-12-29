@@ -1680,18 +1680,6 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DamageThing( AActor *pActor )
-{
-	if ( !EnsureActorHasNetID (pActor) )
-		return;
-
-	NetCommand command( SVC_DAMAGETHING );
-	command.addShort( pActor->lNetID );
-	command.sendCommandToClients();
-}
-
-//*****************************************************************************
-//
 void SERVERCOMMANDS_KillThing( AActor *pActor, AActor *pSource, AActor *pInflictor )
 {
 	LONG	lSourceID;
@@ -4031,6 +4019,18 @@ void SERVERCOMMANDS_UpdateThingScaleNotAtDefault( AActor* pActor, ULONG ulPlayer
 
 	if ( scaleFlags != 0 )
 		SERVERCOMMANDS_SetThingScale( pActor, scaleFlags, ulPlayerExtra, flags  );
+}
+
+//*****************************************************************************
+//
+void SERVERCOMMANDS_FlashStealthMonster( AActor* pActor, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	if ( EnsureActorHasNetID( pActor ) == false )
+		return;
+
+	NetCommand command ( SVC2_FLASHSTEALTHMONSTER );
+	command.addShort( pActor->lNetID );
+	command.sendCommandToClients();
 }
 
 //*****************************************************************************

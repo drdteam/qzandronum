@@ -1302,6 +1302,10 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	{
 		target->alpha = OPAQUE;
 		target->visdir = -1;
+
+		// [TP] If we're the server, tell clients to flash this stealth monster
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+			SERVERCOMMANDS_FlashStealthMonster( target );
 	}
 	// [BB] The clients may not do this.
 	if ( (target->flags & MF_SKULLFLY)
@@ -1773,9 +1777,6 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	{
 		if ( player )
 			SERVERCOMMANDS_DamagePlayer( ULONG( player - players ));
-		else
-			// Is this even necessary?
-			SERVERCOMMANDS_DamageThing( target );
 	}
 
 	if (target->health <= 0)

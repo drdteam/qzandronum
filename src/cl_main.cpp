@@ -214,7 +214,6 @@ static	void	client_SpawnThingExact( BYTESTREAM_s *pByteStream );
 static	void	client_SpawnThingExactNoNetID( BYTESTREAM_s *pByteStream );
 static	void	client_MoveThing( BYTESTREAM_s *pByteStream );
 static	void	client_MoveThingExact( BYTESTREAM_s *pByteStream );
-static	void	client_DamageThing( BYTESTREAM_s *pByteStream );
 static	void	client_KillThing( BYTESTREAM_s *pByteStream );
 static	void	client_SetThingState( BYTESTREAM_s *pByteStream );
 static	void	client_SetThingTarget( BYTESTREAM_s *pByteStream );
@@ -1800,10 +1799,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_MoveThingExact( pByteStream );
 		break;
-	case SVC_DAMAGETHING:
-
-		client_DamageThing( pByteStream );
-		break;
 	case SVC_KILLTHING:
 
 		client_KillThing( pByteStream );
@@ -2936,6 +2931,18 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 						AActor *mo = CLIENT_FindThingByNetID( mobjNetID );
 						if ( mo && mo->GetClass()->IsDescendantOf( RUNTIME_CLASS( ASkyViewpoint ) ) )
 							level.DefaultSkybox = static_cast<ASkyViewpoint *>( mo );
+					}
+				}
+				break;
+
+			case SVC2_FLASHSTEALTHMONSTER:
+				{
+					AActor* mobj = CLIENT_FindThingByNetID( NETWORK_ReadShort( pByteStream ));
+
+					if ( mobj && ( mobj->flags & MF_STEALTH ))
+					{
+						mobj->alpha = OPAQUE;
+						mobj->visdir = -1;
 					}
 				}
 				break;
@@ -6308,35 +6315,6 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 	// Read in the movedir data.
 	if ( lBits & CM_MOVEDIR )
 		pActor->movedir = NETWORK_ReadByte( pByteStream );
-}
-
-//*****************************************************************************
-//
-static void client_DamageThing( BYTESTREAM_s *pByteStream )
-{
-	LONG		lID;
-	AActor		*pActor;
-
-	// Read in ID of the thing being damaged.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Not in a level; nothing to do!
-	if ( gamestate != GS_LEVEL )
-		return;
-
-	pActor = CLIENT_FindThingByNetID( lID );
-
-	// Nothing to damage.
-	if ( pActor == NULL )
-	{
-#ifdef CLIENT_WARNING_MESSAGES
-		Printf( "client_DamageThing: Couldn't find thing: %d\n", lID );
-#endif
-		return;
-	}
-
-	// Damage the thing.
-	P_DamageMobj( pActor, NULL, NULL, 0, NAME_None );
 }
 
 //*****************************************************************************
