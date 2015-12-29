@@ -406,7 +406,9 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 					if ( ( stricmp ( lumpsToAuthenticate[i].c_str(), "DEHACKED" ) == 0 )
 						&& ( ( stricmp ( checksum.GetChars(), "3c48ccc87e71d791ee3df64668b3fb42" ) == 0 ) // Freedoom 0.8-beta1
 							|| ( stricmp ( checksum.GetChars(), "9de9ddd0bc435cb8572db76a13d3140f" ) == 0 ) // Freedoom 0.8
-							|| ( stricmp ( checksum.GetChars(), "90e9007b1efc1e35eeacc99c5971a15b" ) == 0 ) ) ) // Freedoom 0.9
+							|| ( stricmp ( checksum.GetChars(), "90e9007b1efc1e35eeacc99c5971a15b" ) == 0 ) // Freedoom 0.9
+							|| ( stricmp ( checksum.GetChars(), "67b253fe502cbf269e2cd2f6b7e76f17" ) == 0 ) // Freedoom 0.10
+							) )
 						continue;
 
 					// [TP] The wad that had this lump is no longer optional.

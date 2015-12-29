@@ -1488,14 +1488,21 @@ if( ZD_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 	endif( SSE_MATTERS )
 endif( ZD_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 
-# [EP]
+# [EP/BB]
 if ( RELEASE_WITH_DEBUG_FILE )
-	add_custom_command(TARGET zdoom POST_BUILD
-		COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME} ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}.debug
-		COMMAND ${CMAKE_STRIP} --strip-debug --strip-unneeded ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}
-		COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}.debug ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}
-		COMMENT "Creating '${ZDOOM_EXE_NAME}.debug' ..."
-	)
+	if(  MSVC )
+		set_target_properties( zdoom PROPERTIES
+			COMPILE_PDB_NAME ${ZDOOM_EXE_NAME}
+			COMPILE_PDB_OUTPUT_DIRECTORY ${ZDOOM_OUTPUT_DIR}
+		)
+	else ( MSVC )
+		add_custom_command(TARGET zdoom POST_BUILD
+			COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME} ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}.debug
+			COMMAND ${CMAKE_STRIP} --strip-debug --strip-unneeded ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}
+			COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}.debug ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}
+			COMMENT "Creating '${ZDOOM_EXE_NAME}.debug' ..."
+		)
+	endif ( MSVC )
 endif ( RELEASE_WITH_DEBUG_FILE )
 
 if( APPLE )
