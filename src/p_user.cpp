@@ -730,6 +730,10 @@ void APlayerPawn::Serialize (FArchive &arc)
 	{
 		arc << AirCapacity;
 	}
+	if (SaveVersion >= 4526)
+	{
+		arc << ViewHeight;
+	}
 }
 
 //===========================================================================
