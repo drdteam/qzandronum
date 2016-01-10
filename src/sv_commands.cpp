@@ -2856,24 +2856,44 @@ void SERVERCOMMANDS_WeaponChange( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCom
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_WeaponRailgun( AActor *pSource, const TVector3<double> &Start, const TVector3<double> &End, LONG lColor1, LONG lColor2, float fMaxDiff, bool bSilent, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_WeaponRailgun( AActor *source, const TVector3<double> &start, const TVector3<double> &end, LONG color1, LONG color2, float maxdiff, int railflags, angle_t angleoffset, const PClass* spawnclass, int duration, float sparsity, float drift, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	// Evidently, to draw a railgun trail, there must be a source actor.
-	if ( !EnsureActorHasNetID (pSource) )
+	if ( !EnsureActorHasNetID (source) )
 		return;
 
 	NetCommand command ( SVC_WEAPONRAILGUN );
-	command.addShort( pSource->lNetID );
-	command.addFloat( Start.X );
-	command.addFloat( Start.Y );
-	command.addFloat( Start.Z );
-	command.addFloat( End.X );
-	command.addFloat( End.Y );
-	command.addFloat( End.Z );
-	command.addLong( lColor1 );
-	command.addLong( lColor2 );
-	command.addFloat( fMaxDiff );
-	command.addByte( bSilent );
+	command.addShort( source->lNetID );
+	command.addFloat( start.X );
+	command.addFloat( start.Y );
+	command.addFloat( start.Z );
+	command.addFloat( end.X );
+	command.addFloat( end.Y );
+	command.addFloat( end.Z );
+	command.addLong( color1 );
+	command.addLong( color2 );
+	command.addFloat( maxdiff );
+
+	// [TP] Recent ZDoom versions have added more railgun parameters. Add these parameters to the command
+	// only if they're not at defaults. We signal these parameters by adding 0x80 to the flags byte.
+	if ( angleoffset != 0
+		|| spawnclass != NULL
+		|| duration != 0
+		|| fabs( sparsity - 1.0f ) > 1e-8
+		|| fabs( drift - 1.0f ) > 1e-8 )
+	{
+		command.addByte( railflags | 0x80 );
+		command.addLong( angleoffset );
+		command.addShort( spawnclass ? spawnclass->getActorNetworkIndex() : 0 );
+		command.addShort( duration ); // Let's play safe and send this as a short
+		command.addFloat( sparsity );
+		command.addFloat( drift );
+	}
+	else
+	{
+		command.addByte( railflags );
+	}
+
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

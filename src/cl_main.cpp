@@ -8778,49 +8778,57 @@ static void client_WeaponChange( BYTESTREAM_s *pByteStream )
 //
 static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 {
-	LONG		lID;
-	TVector3<double>	Start;
-	TVector3<double>	End;
-	LONG		lColor1;
-	LONG		lColor2;
-	float		fMaxDiff;
-	bool		bSilent;
-	AActor		*pActor;
-
-	// Read in the network ID of the source actor.
-	lID = NETWORK_ReadShort( pByteStream );
+	// Read in the network ID of the source actor, and find the actor associated with the given network ID.
+	int id = NETWORK_ReadShort( pByteStream );
+	AActor *source = CLIENT_FindThingByNetID( id );
 
 	// Read in the XYZ position of the start of the trail.
-	Start.X = NETWORK_ReadFloat( pByteStream );
-	Start.Y = NETWORK_ReadFloat( pByteStream );
-	Start.Z = NETWORK_ReadFloat( pByteStream );
+	TVector3<double> start;
+	start.X = NETWORK_ReadFloat( pByteStream );
+	start.Y = NETWORK_ReadFloat( pByteStream );
+	start.Z = NETWORK_ReadFloat( pByteStream );
 
 	// Read in the XYZ position of the end of the trail.
-	End.X = NETWORK_ReadFloat( pByteStream );
-	End.Y = NETWORK_ReadFloat( pByteStream );
-	End.Z = NETWORK_ReadFloat( pByteStream );
+	TVector3<double> end;
+	end.X = NETWORK_ReadFloat( pByteStream );
+	end.Y = NETWORK_ReadFloat( pByteStream );
+	end.Z = NETWORK_ReadFloat( pByteStream );
 
 	// Read in the colors of the trail.
-	lColor1 = NETWORK_ReadLong( pByteStream );
-	lColor2 = NETWORK_ReadLong( pByteStream );
+	int color1 = NETWORK_ReadLong( pByteStream );
+	int color2 = NETWORK_ReadLong( pByteStream );
 
-	// Read in maxdiff (whatever that is).
-	fMaxDiff = NETWORK_ReadFloat( pByteStream );
+	// Read in maxdiff.
+	float maxdiff = NETWORK_ReadFloat( pByteStream );
 
-	// Read in whether or not the trail should make a nosie.
-	bSilent = !!NETWORK_ReadByte( pByteStream );
+	// Read in flags.
+	int flags = NETWORK_ReadByte( pByteStream );
 
-	// Find the actor associated with the given network ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
+	angle_t angle = source->angle;
+	const PClass* spawnclass = NULL;
+	int duration = 0;
+	float sparsity = 1.0f;
+	float drift = 1.0f;
+
+	if ( flags & 0x80 )
+	{
+		// [TP] The server has signaled that more information follows
+		angle = source->angle + NETWORK_ReadLong( pByteStream );
+		spawnclass = NETWORK_GetClassFromIdentification( NETWORK_ReadShort( pByteStream ));
+		duration = NETWORK_ReadShort( pByteStream );
+		sparsity = NETWORK_ReadFloat( pByteStream );
+		drift = NETWORK_ReadFloat( pByteStream );
+	}
+
+	if ( source == NULL )
 	{
 #ifdef CLIENT_WARNING_MESSAGES
-		Printf( "client_WeaponRailgun: Couldn't find thing: %d\n", lID );
+		Printf( "client_WeaponRailgun: Couldn't find thing: %d\n", id );
 #endif
 		return;
 	}
 
-	P_DrawRailTrail( pActor, Start, End, lColor1, lColor2, fMaxDiff, bSilent );
+	P_DrawRailTrail( source, start, end, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
 }
 
 //*****************************************************************************
