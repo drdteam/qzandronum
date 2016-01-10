@@ -947,6 +947,13 @@ static void ParseOptionMenuBody(FScanner &sc, FOptionMenuDescriptor *desc)
 		{
 			desc->mNetgameOnly = true;
 		}
+		// [BB]
+		else if ( sc.Compare ( "ServerBrowserSlot" ) )
+		{
+			sc.MustGetNumber();
+			FOptionMenuItem *it = new FOptionMenuServerBrowserLine(sc.Number);
+			desc->mItems.Push(it);
+		}
 		// [TP] --
 		else
 		{

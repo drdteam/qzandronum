@@ -24,6 +24,7 @@
 +	- The warp cheat now works online and can be used by spectators even if sv_cheats is false. [Dusk]
 +	- Being banned from a server now shows the server's contact email address. Being masterbanned now shows a clearer message that directs to the forums. [Dusk]
 +	- Players' positions in the join queue are now rendered on the scoreboard. [Dusk]
++	- The internal server browser now automatically loads the wads of the selected server when joining. For this, all wads need to be in a place where they can be found with the '-file' command line option. In the browser menu, the left and right keys allow to scroll through the list of filtered servers. [Torr Samaho]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]
@@ -31,7 +32,7 @@
 -	- Fixed: Logfiles would sometimes contain timestamps in the middle of lines. [Dusk]
 -	- sv_shotgunstart is now respected in non-cooperative gamemodes. [Dusk]
 -	- Fixed: An invalid "winlimit hit" message would be displayed on map change in possession. [Dusk]
-!	- Removed the internal server browser. It was only useful for debugging purposes anyway and the CCMDs querymaster and dumpserverlist are sufficient for this. [Torr Samaho]
+-	- Fixed: The internal server browser didn't list all of the compatible, available servers. [Torr Samaho]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
@@ -40,6 +41,7 @@
 !	- sv_nodrop is now a dmflag. [Dusk]
 !	- Merged sv_nokill and sv_disallowsuicide into one dmflag with two names. [Dusk]
 !	- The CVARINFO error message triggered when an existing CVAR in the ini conflicts with CVARINFO now instructs the user to clean the ini. [Torr Samaho]
+!	- The server now displays the IP address of a disconnecting client in the log message. [Dusk]
 
 
 2.2

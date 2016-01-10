@@ -1414,6 +1414,29 @@ public:
 	}
 };
 
+//=============================================================================
+//
+// [BB] FOptionMenuServerBrowserLine
+//
+//=============================================================================
+
+class FOptionMenuServerBrowserLine : public FOptionMenuItem
+{
+	int mSlotNum;
+public:
+
+	FOptionMenuServerBrowserLine( const int slotNum )
+		: FOptionMenuItem ( "" )
+	{
+		mSlotNum = slotNum;
+	}
+
+	bool Activate();
+	int Draw(FOptionMenuDescriptor *desc, int y, int indent, bool selected);
+	bool Selectable();
+	bool MenuEvent (int mkey, bool fromcontroller);
+};
+
 //
 // [TP] End of Zandronum-specific option menu widgets
 // -------------------------------------------------------------------------------------------------

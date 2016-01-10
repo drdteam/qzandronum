@@ -2904,10 +2904,21 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
 		// (which we do when the player is spawned in SERVER_ConnectNewPlayer)
 		if ( players[ulClient].userinfo.GetName() && ( SERVER_GetClient( ulClient )->State >= CLS_SPAWNED_BUT_NEEDS_AUTHENTICATION ) )
 		{
+			FString message;
+
 			if ( ( gametic - g_aClients[ulClient].ulLastCommandTic ) == ( CLIENT_TIMEOUT * 35 ) )
-				SERVER_Printf( PRINT_HIGH, "%s \\c-timed out.\n", players[ulClient].userinfo.GetName() );
+				message.Format( "%s\\c-{ip} timed out.\n", players[ulClient].userinfo.GetName() );
 			else
-				SERVER_Printf( PRINT_HIGH, "client %s \\c-disconnected.\n", players[ulClient].userinfo.GetName() );
+				message.Format( "client %s\\c-{ip} disconnected.\n", players[ulClient].userinfo.GetName() );
+
+			// [TP] First print locally a version of this message with the IP address shown.
+			FString localmessage = message;
+			localmessage.Substitute( "{ip}", FString( " (" ) + g_aClients[ulClient].Address.ToString() + ")" );
+			Printf( "%s", localmessage.GetChars() );
+
+			// [TP] Then print a version of the message without the IP address to clients.
+			message.Substitute( "{ip}", "" );
+			SERVERCOMMANDS_Print( message, PRINT_HIGH );
 		}
 		else
 			Printf( "%s \\c-disconnected.\n", g_aClients[ulClient].Address.ToString() );

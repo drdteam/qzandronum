@@ -460,6 +460,8 @@ bool BROWSER_GetServerList( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
+void M_BuildServerList( void );
+
 void BROWSER_ParseServerQuery( BYTESTREAM_s *pByteStream, bool bLAN )
 {
 	GAMEMODE_e	GameMode = GAMEMODE_COOPERATIVE;
@@ -736,6 +738,10 @@ void BROWSER_ParseServerQuery( BYTESTREAM_s *pByteStream, bool bLAN )
 		for ( int i = NETWORK_ReadByte( pByteStream ); i > 0; --i )
 			NETWORK_ReadString( pByteStream );
 	}
+
+	// Now that this server has been read in, resort the servers in the menu.
+	if ( bResortList )
+		M_BuildServerList( );
 }
 
 //*****************************************************************************
@@ -856,19 +862,6 @@ static void browser_QueryServer( ULONG ulServer )
 
 //*****************************************************************************
 //
-
-CCMD( querymaster )
-{
-	// Don't do anything if we're still waiting for a response from the master server.
-	if ( BROWSER_WaitingForMasterResponse( ))
-		return;
-
-	// First, clear the existing server list.
-	BROWSER_ClearServerList( );
-
-	// Then, query the master server.
-	BROWSER_QueryMasterServer( );
-}
 
 CCMD( dumpserverlist )
 {

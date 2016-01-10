@@ -359,22 +359,7 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 	// If the launcher desires to know the team score, but we're not in a game mode where
 	// teams have scores, then don't send back team score information.
 	if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) == false )
-	{
-		if ( ulBits & SQF_TEAMSCORES )
-			ulBits &= ~SQF_TEAMSCORES;
-
-		// [CW] Don't send these either.
-		{
-			if ( ulBits & SQF_TEAMINFO_NUMBER )
-				ulBits &= ~SQF_TEAMINFO_NUMBER;
-			if ( ulBits & SQF_TEAMINFO_NAME )
-				ulBits &= ~SQF_TEAMINFO_NAME;
-			if ( ulBits & SQF_TEAMINFO_COLOR )
-				ulBits &= ~SQF_TEAMINFO_COLOR;
-			if ( ulBits & SQF_TEAMINFO_SCORE )
-				ulBits &= ~SQF_TEAMINFO_SCORE;
-		}
-	}
+		ulBits &= ~( SQF_TEAMSCORES | SQF_TEAMINFO_NUMBER | SQF_TEAMINFO_NAME | SQF_TEAMINFO_COLOR | SQF_TEAMINFO_SCORE );
 
 	// If the launcher wants to know player data, then we have to tell them how many players
 	// are in the server.
