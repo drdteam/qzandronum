@@ -71,6 +71,8 @@
 #include "gl/scene/gl_drawinfo.h"
 #include "gl/scene/gl_portal.h"
 #include "gl/shaders/gl_shader.h"
+#include "gl/stereo3d/gl_stereo3d.h"
+#include "gl/stereo3d/scoped_view_shifter.h"
 #include "gl/textures/gl_material.h"
 #include "gl/utility/gl_clock.h"
 #include "gl/utility/gl_convert.h"
@@ -273,6 +275,14 @@ void FGLRenderer::SetProjection(float fov, float ratio, float fovratio, float ey
 		gl_RenderState.mModelMatrix.translate(-eyeShift, 0, 0);
 	}
 
+	gl_RenderState.Set2DMode(false);
+}
+
+// raw matrix input from stereo 3d modes
+void FGLRenderer::SetProjection(VSMatrix matrix)
+{
+	gl_RenderState.mProjectionMatrix.loadIdentity();
+	gl_RenderState.mProjectionMatrix.multMatrix(matrix);
 	gl_RenderState.Set2DMode(false);
 }
 
@@ -796,13 +806,6 @@ void FGLRenderer::SetFixedColormap (player_t *player)
 
 sector_t * FGLRenderer::RenderViewpoint (AActor * camera, GL_IRECT * bounds, float fov, float ratio, float fovratio, bool mainview, bool toscreen)
 {       
-	// [BB] Check if stereo rendering is supported.
-	GLboolean supportsStereo = false;
-	GLboolean supportsBuffered = false;
-	glGetBooleanv(GL_STEREO, &supportsStereo);
-	glGetBooleanv(GL_DOUBLEBUFFER, &supportsBuffered);
-	const bool renderStereo = (supportsStereo && supportsBuffered && toscreen);
-
 	sector_t * retval;
 	R_SetupFrame (camera);
 	SetViewArea();
@@ -838,49 +841,36 @@ sector_t * FGLRenderer::RenderViewpoint (AActor * camera, GL_IRECT * bounds, flo
 
 	retval = viewsector;
 
-	SetViewport(bounds);
-	mCurrentFoV = fov;
-	// [BB] Added stereo rendering based on one of the initial GZ3Doom revisions.
-	if ( renderStereo == false )
+	// Render (potentially) multiple views for stereo 3d
+	float viewShift[3];
+	const s3d::Stereo3DMode& stereo3dMode = s3d::Stereo3DMode::getCurrentMode();
+	stereo3dMode.SetUp();
+	s3d::Stereo3DMode::const_iterator eye;
+	for (eye = stereo3dMode.begin(); eye != stereo3dMode.end(); ++eye)
 	{
-		SetProjection(fov, ratio, fovratio);	// switch to perspective mode and set up clipper
+		(*eye)->SetUp();
+		// TODO: stereo specific viewport - needed when implementing side-by-side modes etc.
+		SetViewport(bounds);
+		mCurrentFoV = fov;
+		// Stereo mode specific perspective projection
+		SetProjection( (*eye)->GetProjection(fov, ratio, fovratio) );
+		// SetProjection(fov, ratio, fovratio);	// switch to perspective mode and set up clipper
 		SetViewAngle(viewangle);
+		// Stereo mode specific viewpoint adjustment - temporarily shifts global viewx, viewy, viewz
+		(*eye)->GetViewShift(GLRenderer->mAngles.Yaw, viewShift);
+		s3d::ScopedViewShifter viewShifter(viewShift);
 		SetViewMatrix(viewx, viewy, viewz, false, false);
 		gl_RenderState.ApplyMatrices();
 
 		clipper.Clear();
 		angle_t a1 = FrustumAngle();
-		clipper.SafeAddClipRangeRealAngles(viewangle+a1, viewangle-a1);
+		clipper.SafeAddClipRangeRealAngles(viewangle + a1, viewangle - a1);
 
 		ProcessScene(toscreen);
+		EndDrawScene(viewsector);
+		(*eye)->TearDown();
 	}
-	else
-	{
-		SetViewAngle(viewangle);
-		SetViewMatrix(viewx, viewy, viewz, false, false);
-		angle_t a1 = FrustumAngle();
-
-		// Stereo 
-		// 1 doom unit = about 3 cm
-		float iod = 2.0; // intraocular distance
-
-		// Left eye
-		glDrawBuffer(GL_BACK_LEFT);
-		SetProjection(fov, ratio, fovratio, -iod/2);	// switch to perspective mode and set up clipper
-		clipper.Clear();
-		clipper.SafeAddClipRangeRealAngles(viewangle+a1, viewangle-a1);
-		ProcessScene(toscreen);
-
-		// Right eye
-		SetViewport(bounds);
-		glDrawBuffer(GL_BACK_RIGHT);
-		SetProjection(fov, ratio, fovratio, +iod/2);	// switch to perspective mode and set up clipper
-		clipper.Clear();
-		clipper.SafeAddClipRangeRealAngles(viewangle+a1, viewangle-a1);
-		ProcessScene(toscreen);
-
-		glDrawBuffer(GL_BACK);
-	}
+	stereo3dMode.TearDown();
 
 	gl_frameCount++;	// This counter must be increased right before the interpolations are restored.
 	interpolator.RestoreInterpolations ();
@@ -993,7 +983,6 @@ void FGLRenderer::RenderView (player_t* player)
 	GLRenderer->mLightCount = ((it.Next()) != NULL);
 
 	sector_t * viewsector = RenderViewpoint(player->camera, NULL, FieldOfView * 360.0f / FINEANGLES, ratio, fovratio, true, true);
-	EndDrawScene(viewsector);
 
 	All.Unclock();
 }

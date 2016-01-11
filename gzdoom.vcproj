@@ -3078,66 +3078,66 @@
 				</File>
 				<File
 					RelativePath=".\src\timidity\timidity.cpp"
-						>
-					</File>
-				</Filter>
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="WildMidi"
+			>
+			<Filter
+				Name="Headers"
+				>
+				<File
+					RelativePath=".\src\wildmidi\common.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\file_io.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\gus_pat.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\reverb.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\wildmidi_lib.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\wm_error.h"
+					>
+				</File>
 			</Filter>
 			<Filter
-				Name="WildMidi"
+				Name="Source"
 				>
-				<Filter
-					Name="Headers"
+				<File
+					RelativePath=".\src\wildmidi\file_io.cpp"
 					>
-					<File
-						RelativePath=".\src\wildmidi\common.h"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\file_io.h"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\gus_pat.h"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\reverb.h"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\wildmidi_lib.h"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\wm_error.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="Source"
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\gus_pat.cpp"
 					>
-					<File
-						RelativePath=".\src\wildmidi\file_io.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\gus_pat.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\reverb.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\wildmidi_lib.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\src\wildmidi\wm_error.cpp"
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\reverb.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\src\timidity\timidity.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\wildmidi_lib.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\wildmidi\wm_error.cpp"
 					>
 				</File>
 			</Filter>
@@ -4274,6 +4274,50 @@
 				</File>
 				<File
 					RelativePath=".\src\gl\hqnx\mystdint.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Stereo3D"
+				>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_anaglyph.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_anaglyph.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_stereo3d.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_stereo3d.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_stereo_cvars.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_stereo_leftright.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\gl_stereo_leftright.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\scoped_color_mask.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\scoped_view_shifter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\gl\stereo3d\scoped_view_shifter.h"
 					>
 				</File>
 			</Filter>
