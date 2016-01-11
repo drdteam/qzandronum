@@ -265,7 +265,7 @@ void FRenderState::Apply()
 		}
 	}
 
-	ApplyColorMask();
+	//ApplyColorMask(); I don't think this is needed.
 
 	if (mVertexBuffer != mCurrentVertexBuffer)
 	{
