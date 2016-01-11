@@ -702,7 +702,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 					break;
 				}
 
-				if ( pBackSector->damage > 0 )
+				if ( pBackSector->damageamount > 0 )
 					ulFlags |= BOTPATH_DAMAGINGSECTOR;
 
 				switch ( pLine->special )

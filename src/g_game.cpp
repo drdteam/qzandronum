@@ -3682,11 +3682,11 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorSpecial( ulIdx );
 		}
 
-		if (( sectors[ulIdx].SavedDamage != sectors[ulIdx].damage ) ||
-			( sectors[ulIdx].SavedMOD != sectors[ulIdx].mod ))
+		if (( sectors[ulIdx].SavedDamage != sectors[ulIdx].damageamount ) ||
+			( sectors[ulIdx].SavedMOD != sectors[ulIdx].damagetype ))
 		{
-			sectors[ulIdx].damage = sectors[ulIdx].SavedDamage;
-			sectors[ulIdx].mod = sectors[ulIdx].SavedMOD;
+			sectors[ulIdx].damageamount = sectors[ulIdx].SavedDamage;
+			sectors[ulIdx].damagetype = sectors[ulIdx].SavedMOD;
 
 			// No client update necessary here.
 		}
