@@ -43,6 +43,14 @@
 
 IMPLEMENT_CLASS (ASectorAction)
 
+ASectorAction::ASectorAction (bool activatedByUse) :
+	ActivatedByUse (activatedByUse) {}
+
+bool ASectorAction::IsActivatedByUse() const
+{
+	return ActivatedByUse;
+}
+
 // [BB] Moved the code from ASectorAction::Destroy() here, so that it also can
 // be used in ASectorAction::PrepareForHiding()
 void ASectorAction::RemoveFromSectorActionsList ()
@@ -120,16 +128,21 @@ bool ASectorAction::DoTriggerAction (AActor *triggerer, int activationType)
 		return false;
 }
 
-bool ASectorAction::CheckTrigger (AActor *triggerer) const
+bool ASectorAction::CanTrigger (AActor *triggerer) const
 {
 	// Special Zandronum checks
 	if ( GAMEMODE_IsHandledSpecial (triggerer, special) == false )
 		return false;
 
-	if (special &&
+	return special &&
 		((triggerer->player && !(flags & MF_FRIENDLY)) ||
-		 ((flags & MF_AMBUSH) && (triggerer->flags2 & MF2_MCROSS)) ||
-		 ((flags2 & MF2_DORMANT) && (triggerer->flags2 & MF2_PCROSS))))
+		((flags & MF_AMBUSH) && (triggerer->flags2 & MF2_MCROSS)) ||
+		((flags2 & MF2_DORMANT) && (triggerer->flags2 & MF2_PCROSS)));
+}
+
+bool ASectorAction::CheckTrigger (AActor *triggerer) const
+{
+	if (CanTrigger(triggerer))
 	{
 		bool res = !!P_ExecuteSpecial(special, NULL, triggerer, false, args[0], args[1],
 			args[2], args[3], args[4]);
@@ -218,6 +231,7 @@ class ASecActUse : public ASectorAction
 {
 	DECLARE_CLASS (ASecActUse, ASectorAction)
 public:
+	ASecActUse() : ASectorAction (true) {}
 	bool DoTriggerAction (AActor *triggerer, int activationType);
 };
 
@@ -236,6 +250,7 @@ class ASecActUseWall : public ASectorAction
 {
 	DECLARE_CLASS (ASecActUseWall, ASectorAction)
 public:
+	ASecActUseWall() : ASectorAction (true) {}
 	bool DoTriggerAction (AActor *triggerer, int activationType);
 };
 
