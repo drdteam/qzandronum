@@ -1128,6 +1128,7 @@ struct line_t
 	sector_t	*frontsector, *backsector;
 	int 		validcount;	// if == validcount, already checked
 	int			locknumber;	// [Dusk] lock number for special
+	TObjPtr<ASkyViewpoint> skybox;
 
 	// [BC] Have any of this line's textures been changed during the course of the level?
 	// [EP] TODO: remove the 'ul' prefix from this variable, it isn't ULONG anymore

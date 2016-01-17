@@ -553,6 +553,11 @@ void P_SerializeWorld (FArchive &arc)
 			<< li->SavedFlags
 			<< li->SavedAlpha;
 
+		if (SaveVersion >= 4531)
+		{
+			arc << li->skybox;
+		}
+
 		for (j = 0; j < 2; j++)
 		{
 			if (li->sidedef[j] == NULL)
