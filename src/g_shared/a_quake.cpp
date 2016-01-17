@@ -138,7 +138,7 @@ void DEarthquake::Tick ()
 				AActor *victim = players[i].mo;
 				fixed_t dist;
 
-				dist = P_AproxDistance (victim->x - m_Spot->x, victim->y - m_Spot->y);
+				dist = m_Spot->AproxDistance (victim, true);
 				// Check if in damage radius
 				if (dist < m_DamageRadius && victim->z <= victim->floorz)
 				{
@@ -251,8 +251,7 @@ int DEarthquake::StaticGetQuakeIntensities(AActor *victim, FQuakeJiggers &jigger
 	{
 		if (quake->m_Spot != NULL)
 		{
-			fixed_t dist = P_AproxDistance (victim->x - quake->m_Spot->x,
-				victim->y - quake->m_Spot->y);
+			fixed_t dist = quake->m_Spot->AproxDistance (victim, true);
 			if (dist < quake->m_TremorRadius)
 			{
 				++count;

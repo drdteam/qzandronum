@@ -341,7 +341,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_M_Saw)
 			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName ( hitsound ), 1, ATTN_NORM );
 			
 		// turn to face target
-		angle = R_PointToAngle2 (self->x, self->y, linetarget->x, linetarget->y);
+		angle = self->AngleTo(linetarget);
 		if (angle - self->angle > ANG180)
 		{
 			if (angle - self->angle < (angle_t)(-ANG90/20))
@@ -406,7 +406,7 @@ static void MarinePunch(AActor *self, int damagemul)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "*fist", 1, ATTN_NORM );
 
-		self->angle = R_PointToAngle2 (self->x, self->y, linetarget->x, linetarget->y);
+		self->angle = self->AngleTo(linetarget);
 
 		// [BB] Update the thing's angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

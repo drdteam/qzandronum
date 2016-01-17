@@ -817,7 +817,7 @@ void DoJumpIfCloser(AActor *target, DECLARE_PARAMINFO)
 	// No target - no jump
 	if (!target)
 		return;
-	if (P_AproxDistance(self->x-target->x, self->y-target->y) < dist &&
+	if (self->AproxDistance(target) < dist &&
 		(noz || 
 		((self->z > target->z && self->z - (target->z + target->height) < dist) ||
 		(self->z <= target->z && target->z - (self->z + self->height) < dist))))
@@ -1951,10 +1951,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 		if (!(flags & CPF_NOTURN))
 		{
 			// turn to face target
-			self->angle = R_PointToAngle2 (self->x,
-											self->y,
-											linetarget->x,
-											linetarget->y);
+			self->angle = self->AngleTo(linetarget);
 		}
 
 		if (flags & CPF_PULLIN) self->flags |= MF_JUSTATTACKED;
@@ -2095,10 +2092,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 
 	if (aim)
 	{
-		self->angle = R_PointToAngle2 (self->x,
-										self->y,
-										self->target->x,
-										self->target->y);
+		self->angle = self->AngleTo(self->target);
 	}
 	self->pitch = P_AimLineAttack (self, self->angle, MISSILERANGE, &linetarget, ANGLE_1*60, 0, aim ? self->target : NULL);
 	if (linetarget == NULL && aim)
@@ -2112,9 +2106,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 	// Let the aim trail behind the player
 	if (aim)
 	{
-		saved_angle = self->angle = R_PointToAngle2 (self->x, self->y,
-										self->target->x - self->target->velx * 3,
-										self->target->y - self->target->vely * 3);
+		saved_angle = self->angle = self->AngleTo(self->target, -self->target->velx * 3, -self->target->vely * 3);
 
 		if (aim == CRF_AIMDIRECT)
 		{
@@ -2123,9 +2115,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 			self->x += Spawnofs_XY * finecosine[self->angle];
 			self->y += Spawnofs_XY * finesine[self->angle];
 			Spawnofs_XY = 0;
-			self->angle = R_PointToAngle2 (self->x, self->y,
-											self->target->x - self->target->velx * 3,
-											self->target->y - self->target->vely * 3);
+			self->angle = self->AngleTo(self->target,- self->target->velx * 3, -self->target->vely * 3);
 		}
 
 		if (self->target->flags & MF_SHADOW)
@@ -4100,8 +4090,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 
 		if (target)
 		{
-			FVector2 xyvec(target->x - x1, target->y - y1);
-			fixed_t distance = P_AproxDistance((fixed_t)xyvec.Length(), target->z - z1);
+			fixed_t xydist = self->Distance2D(target);
+			fixed_t distance = P_AproxDistance(xydist, target->z - z1);
 
 			if (range && !(flags & CLOFF_CHECKPARTIAL))
 			{
@@ -4115,7 +4105,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 				{
 					ang = self->angle;
 				}
-				else ang = R_PointToAngle2 (x1, y1, target->x, target->y);
+				else ang = self->AngleTo (target);
 				
 				angle += ang;
 				
@@ -4130,11 +4120,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 			}
 			else if (flags & CLOFF_AIM_VERT_NOOFFSET)
 			{
-				pitch += R_PointToAngle2 (0,0, (fixed_t)xyvec.Length(), target->z - z1 + offsetheight + target->height / 2);
+				pitch += R_PointToAngle2 (0,0, xydist, target->z - z1 + offsetheight + target->height / 2);
 			}
 			else
 			{
-				pitch += R_PointToAngle2 (0,0, (fixed_t)xyvec.Length(), target->z - z1 + target->height / 2);
+				pitch += R_PointToAngle2 (0,0, xydist, target->z - z1 + target->height / 2);
 			}
 		}
 		else if (flags & CLOFF_ALLOWNULL)
@@ -4304,8 +4294,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInLOS)
 	// [FDARI] If actors share team, don't jump
 	if ((flags & JLOSF_ALLYNOJUMP) && self->IsFriend(target)) return;
 
-	fixed_t distance = P_AproxDistance(target->x - self->x, target->y - self->y);
-	distance = P_AproxDistance(distance, target->z - self->z);
+	fixed_t distance = self->AproxDistance3D(target);
 
 	if (dist_max && (distance > dist_max)) return;
 
@@ -4335,11 +4324,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInLOS)
 
 	if (fov && (fov < ANGLE_MAX))
 	{
-		an = R_PointToAngle2 (viewport->x,
-							  viewport->y,
-							  target->x,
-							  target->y)
-			- viewport->angle;
+		an = viewport->AngleTo(target) - viewport->angle;
 
 		if (an > (fov / 2) && an < (ANGLE_MAX - (fov / 2)))
 		{
@@ -4401,8 +4386,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfInTargetLOS)
 
 	if ((flags & JLOSF_DEADNOJUMP) && (target->health <= 0)) return;
 
-	fixed_t distance = P_AproxDistance(target->x - self->x, target->y - self->y);
-	distance = P_AproxDistance(distance, target->z - self->z);
+	fixed_t distance = self->AproxDistance3D(target);
 
 	if (dist_max && (distance > dist_max)) return;
 
@@ -4422,11 +4406,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfInTargetLOS)
 
 	if (fov && (fov < ANGLE_MAX))
 	{
-		an = R_PointToAngle2 (target->x,
-							  target->y,
-							  self->x,
-							  self->y)
-			- target->angle;
+		an = target->AngleTo(self) - target->angle;
 
 		if (an > (fov / 2) && an < (ANGLE_MAX - (fov / 2)))
 		{
@@ -5423,7 +5403,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_WolfAttack)
 
 
 	// Target can dodge if it can see enemy
-	angle_t angle = R_PointToAngle2(self->target->x, self->target->y, self->x, self->y) - self->target->angle;
+	angle_t angle = self->target->AngleTo(self) - self->target->angle;
 	angle >>= 24;
 	bool dodge = (P_CheckSight(self->target, self) && (angle>226 || angle<30));
 
@@ -5462,7 +5442,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_WolfAttack)
 		dx = self->target->x;
 		dy = self->target->y;
 		dz = self->target->z + (self->target->height>>1);
-		angle = R_PointToAngle2(dx, dy, self->x, self->y);
+		angle = self->target->AngleTo(self);
 		
 		dx += FixedMul(self->target->radius, finecosine[angle>>ANGLETOFINESHIFT]);
 		dy += FixedMul(self->target->radius, finesine[angle>>ANGLETOFINESHIFT]);
@@ -5497,7 +5477,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_WolfAttack)
 			if (spawnblood)
 			{
 				P_SpawnBlood(dx, dy, dz, angle, newdam > 0 ? newdam : damage, self->target);
-				P_TraceBleed(newdam > 0 ? newdam : damage, self->target, R_PointToAngle2(self->x, self->y, dx, dy), 0);
+				P_TraceBleed(newdam > 0 ? newdam : damage, self->target, self->AngleTo(dx, dy, self->target), 0);
 			}
 		}
 	}
@@ -6806,7 +6786,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckProximity)
 			continue;
 
 		//Make sure it's in range and respect the desire for Z or not.
-		if (P_AproxDistance(ref->x - mo->x, ref->y - mo->y) < distance &&
+		if (ref->AproxDistance(mo) < distance &&
 			((flags & CPXF_NOZ) ||
 			((ref->z > mo->z && ref->z - (mo->z + mo->height) < distance) ||
 			(ref->z <= mo->z && mo->z - (ref->z + ref->height) < distance))))
