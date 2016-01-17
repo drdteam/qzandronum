@@ -1584,7 +1584,6 @@ void P_LoadSectors (MapData *map, FMissingTextureTracker &missingtex)
 			ss->special = LittleShort(ms->special);
 		else	// [RH] Translate to new sector special
 			ss->special = P_TranslateSectorSpecial (LittleShort(ms->special));
-		ss->secretsector = !!(ss->special&SECRET_MASK);
 		tagManager.AddSectorTag(i, LittleShort(ms->tag));
 		ss->thinglist = NULL;
 		ss->touching_thinglist = NULL;		// phares 3/14/98
@@ -4536,7 +4535,7 @@ void P_SetupLevel (const char *lumpname, int position)
 		{
 			if (mo->flags & MF_COUNTKILL)
 			{
-				if (mo->Sector->special == dDamage_End)
+				if (mo->Sector->damageamount > 0 && (mo->Sector->Flags & (SECF_ENDGODMODE|SECF_ENDLEVEL)) == (SECF_ENDGODMODE|SECF_ENDLEVEL))
 				{
 					mo->ClearCounters();
 				}

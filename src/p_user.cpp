@@ -443,6 +443,8 @@ player_t &player_t::operator=(const player_t &p)
 	damagecount = p.damagecount;
 	bonuscount = p.bonuscount;
 	hazardcount = p.hazardcount;
+	hazardtype = p.hazardtype;
+	hazardinterval = p.hazardinterval;
 	poisoncount = p.poisoncount;
 	poisontype = p.poisontype;
 	poisonpaintype = p.poisonpaintype;
@@ -3765,10 +3767,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	if ( CLIENT_PREDICT_IsPredicting( ) == false )
 	{
 		P_PlayerOnSpecial3DFloor (player);
-		if (player->mo->Sector->special || player->mo->Sector->damageamount != 0)
-		{
-			P_PlayerInSpecialSector (player);
-		}
+		P_PlayerInSpecialSector (player);
+
 		if (player->mo->z <= player->mo->Sector->floorplane.ZatPoint(
 			player->mo->x, player->mo->y) ||
 			player->mo->waterlevel)
@@ -3831,8 +3831,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 			// [BB] The clients only tick down, the server handles the damage.
 			if ( NETWORK_InClientMode() == false )
 			{
-				if (!(level.time & 31) && player->hazardcount > 16*TICRATE)
-					P_DamageMobj (player->mo, NULL, NULL, 5, NAME_Slime);
+				if (!(level.time % player->hazardinterval) && player->hazardcount > 16*TICRATE)
+					P_DamageMobj (player->mo, NULL, NULL, 5, player->hazardtype);
 			}
 		}
 
@@ -4266,8 +4266,13 @@ void player_t::Serialize (FArchive &arc)
 		<< air_finished
 		<< turnticks
 		<< oldbuttons;
+	if (SaveVersion >= 4929)
+	{
+		arc << hazardtype
+			<< hazardinterval;
+	}
 	/* [BB]
-	bool IsBot;
+	bool IsBot = false;
 	if (SaveVersion >= 4514)
 	{
 		arc << Bot;

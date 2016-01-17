@@ -1579,8 +1579,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		ApplyCoopDamagefactor(damage, source);
 
 		// end of game hell hack
-		if ((target->Sector->special & 255) == dDamage_End
-			&& damage >= target->health
+		if ((target->Sector->Flags & SECF_ENDLEVEL) && damage >= target->health
 			// [BB] A player who tries to exit a map in a competitive game mode when DF_NO_EXIT is set,
 			// should not be saved by the hack, but killed.
 			&& MeansOfDeath != NAME_Exit)

@@ -553,157 +553,63 @@ void P_PlayerInSpecialSector (player_t *player, sector_t * sector)
 	// Has hit ground.
 	AInventory *ironfeet;
 
-	// Allow subclasses. Better would be to implement it as armor and let that reduce
-	// the damage as part of the normal damage procedure. Unfortunately, I don't have
-	// different damage types yet, so that's not happening for now.
-	for (ironfeet = player->mo->Inventory; ironfeet != NULL; ironfeet = ironfeet->Inventory)
-	{
-		if (ironfeet->IsKindOf (RUNTIME_CLASS(APowerIronFeet)))
-			break;
-	}
-
-	// [RH] Normal DOOM special or BOOM specialized?
-	if (special >= dLight_Flicker && special <= 255)
-	{
-		switch (special)
-		{
-		case Sector_Heal:
-			// CoD's healing sector
-			if (!(level.time & 0x1f))
-				P_GiveBody (player->mo, 1);
-			break;
-
-		case Damage_InstantDeath:
-			// Strife's instant death sector
-			P_DamageMobj (player->mo, NULL, NULL, 999, NAME_InstantDeath);
-			break;
-
-		case dDamage_Hellslime:
-			// HELLSLIME DAMAGE
-			if (ironfeet == NULL && !(level.time&0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 10, NAME_Slime);
-			break;
-
-		case dDamage_Nukage:
-			// NUKAGE DAMAGE
-		case sLight_Strobe_Hurt:
-			if (ironfeet == NULL && !(level.time&0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 5, NAME_Slime);
-			break;
-
-		case hDamage_Sludge:
-			if (ironfeet == NULL && !(level.time&0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 4, NAME_Slime);
-			break;
-
-		case dDamage_SuperHellslime:
-			// SUPER HELLSLIME DAMAGE
-		case dLight_Strobe_Hurt:
-			// STROBE HURT
-			if (ironfeet == NULL || pr_playerinspecialsector() < 5)
-			{
-				if (!(level.time&0x1f))
-					P_DamageMobj (player->mo, NULL, NULL, 20, NAME_Slime);
-			}
-			break;
-
-		case sDamage_Hellslime:
-			// [Dusk] Don't touch the hazard count as the client
-			if (ironfeet == NULL && ( NETWORK_InClientMode() == false ))
-			{
-				player->hazardcount += 2;
-
-				// [Dusk] Update the hazard count
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetPlayerHazardCount ( static_cast<ULONG>(player - players) );
-			}
-			break;
-
-		case sDamage_SuperHellslime:
-			// [Dusk] Don't touch the hazard count as the client
-			if (ironfeet == NULL && ( NETWORK_InClientMode() == false ))
-			{
-				player->hazardcount += 4;
-
-				// [Dusk] Update the hazard count
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetPlayerHazardCount ( static_cast<ULONG>(player - players) );
-			}
-			break;
-
-		case dDamage_End:
-			// EXIT SUPER DAMAGE! (for E1M8 finale)
-			player->cheats &= ~CF_GODMODE;
-
-			if (!(level.time & 0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 20, NAME_None);
-
-			// [BB] Also do a CheckIfExitIsGood good check to properly handle DF_NO_EXIT.
-			// This check kills the player in case exiting is forbidden.
-			if (player->health <= 10 && CheckIfExitIsGood ( player->mo, NULL ) )
-				G_ExitLevel(0, false);
-			break;
-
-		case dDamage_LavaWimpy:
-		case dScroll_EastLavaDamage:
-			if (!(level.time & 15))
-			{
-				P_DamageMobj(player->mo, NULL, NULL, 5, NAME_Fire);
-				P_HitFloor(player->mo);
-			}
-			break;
-
-		case dDamage_LavaHefty:
-			if(!(level.time & 15))
-			{
-				P_DamageMobj(player->mo, NULL, NULL, 8, NAME_Fire);
-				P_HitFloor(player->mo);
-			}
-			break;
-
-		default:
-			// [RH] Ignore unknown specials
-			break;
-		}
-	}
-	else
-	{
-		//jff 3/14/98 handle extended sector types for secrets and damage
-		switch (special & DAMAGE_MASK)
-		{
-		case 0x000: // no damage
-			break;
-		case 0x100: // 2/5 damage per 31 ticks
-			if (ironfeet == NULL && !(level.time&0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 5, NAME_Fire);
-			break;
-		case 0x200: // 5/10 damage per 31 ticks
-			if (ironfeet == NULL && !(level.time&0x1f))
-				P_DamageMobj (player->mo, NULL, NULL, 10, NAME_Slime);
-			break;
-		case 0x300: // 10/20 damage per 31 ticks
-			if (ironfeet == NULL
-				|| pr_playerinspecialsector() < 5)	// take damage even with suit
-			{
-				if (!(level.time&0x1f))
-					P_DamageMobj (player->mo, NULL, NULL, 20, NAME_Slime);
-			}
-			break;
-		}
-	}
-
 	// [RH] Apply any customizable damage
-	if (sector->damageamount != 0)
+	// [BB] The server informs the clients about damage.
+	if (sector->damageamount > 0 && ( NETWORK_InClientMode() == false ))
 	{
-		if (level.time % sector->damageinterval == 0 && (ironfeet == NULL || pr_playerinspecialsector() < sector->leakydamage))
+		// Allow subclasses. Better would be to implement it as armor and let that reduce
+		// the damage as part of the normal damage procedure. Unfortunately, I don't have
+		// different damage types yet, so that's not happening for now.
+		for (ironfeet = player->mo->Inventory; ironfeet != NULL; ironfeet = ironfeet->Inventory)
 		{
-			P_DamageMobj (player->mo, NULL, NULL, sector->damageamount, sector->damagetype);
+			if (ironfeet->IsKindOf (RUNTIME_CLASS(APowerIronFeet)))
+				break;
+		}
+
+		if (sector->Flags & SECF_ENDGODMODE) player->cheats &= ~CF_GODMODE;
+		if ((ironfeet == NULL || pr_playerinspecialsector() < sector->leakydamage))
+		{
+			if (sector->Flags & SECF_HAZARD)
+			{
+				player->hazardcount += sector->damageamount;
+
+				// [TP/BB] Update the hazard count
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetPlayerHazardCount ( static_cast<ULONG>(player - players) );
+
+				player->hazardtype = sector->damagetype;
+				player->hazardinterval = sector->damageinterval;
+			}
+			else if (level.time % sector->damageinterval == 0)
+			{
+				P_DamageMobj(player->mo, NULL, NULL, sector->damageamount, sector->damagetype);
+				if ((sector->Flags & SECF_ENDLEVEL) && player->health <= 10 && (!deathmatch || !(dmflags & DF_NO_EXIT)))
+				{
+					G_ExitLevel(0, false);
+				}
+				if (sector->Flags & SECF_DMGTERRAINFX)
+				{
+					P_HitWater(player->mo, sector, INT_MIN, INT_MIN, INT_MIN, false, true, true);
+				}
+			}
+		}
+	}
+	// [BB] The server informs the clients about health.
+	else if (sector->damageamount < 0)
+	{
+		if (level.time % sector->damageinterval == 0)
+		{
+			P_GiveBody(player->mo, -sector->damageamount, 100);
+
+			// [BB]
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetPlayerHealth( static_cast<ULONG>(player - players) );
 		}
 	}
 
-	if (sector->special & SECRET_MASK)
+	if (sector->isSecret())
 	{
-		sector->special &= ~SECRET_MASK;
+		sector->ClearSecret();
 		P_GiveSecret(player->mo, true, true, int(sector - sectors));
 	}
 }
@@ -1402,6 +1308,276 @@ void P_SpawnPortal(line_t *line, int sectortag, int plane, int alpha)
 
 
 //
+// P_SetSectorDamage
+//
+// Sets damage properties for one sector. Allows combination of original specials with explicit use of the damage properties
+//
+
+static void P_SetupSectorDamage(sector_t *sector, int damage, int interval, int leakchance, FName type, int flags)
+{
+	// Only set if damage is not yet initialized. This ensures that UDMF takes precedence over sector specials.
+	if (sector->damageamount == 0)
+	{
+		sector->damageamount = damage;
+		sector->damageinterval = MAX(1, interval);
+		sector->leakydamage = leakchance;
+		sector->damagetype = type;
+		sector->Flags = (sector->Flags & ~SECF_DAMAGEFLAGS) | (flags & SECF_DAMAGEFLAGS);
+	}
+}
+
+//
+// P_InitSectorSpecial
+//
+// Sets up everything derived from 'sector->special' for one sector
+// ('fromload' is necessary to allow conversion upon savegame load.)
+//
+
+void P_InitSectorSpecial(sector_t *sector, int special, bool nothinkers)
+{
+	// [RH] All secret sectors are marked with a BOOM-ish bitfield
+	if (sector->special & SECRET_MASK)
+	{
+		sector->Flags |= SECF_SECRET | SECF_WASSECRET;
+		level.total_secrets++;
+	}
+	if (sector->special & FRICTION_MASK)
+	{
+		sector->Flags |= SECF_FRICTION;
+	}
+	if (sector->special & PUSH_MASK)
+	{
+		sector->Flags |= SECF_PUSH;
+	}
+	if ((sector->special & DAMAGE_MASK) == 0x100)
+	{
+		P_SetupSectorDamage(sector, 5, 32, 0, NAME_Fire, 0);
+	}
+	else if ((sector->special & DAMAGE_MASK) == 0x200)
+	{
+		P_SetupSectorDamage(sector, 10, 32, 0, NAME_Slime, 0);
+	}
+	else if ((sector->special & DAMAGE_MASK) == 0x300)
+	{
+		P_SetupSectorDamage(sector, 20, 32, 5, NAME_Slime, 0);
+	}
+	sector->special &= 0xff;
+
+	// [RH] Normal DOOM special or BOOM specialized?
+	bool keepspecial = false;
+	switch (sector->special)
+	{
+	case Light_Phased:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DPhased (sector, 48, 63 - (sector->lightlevel & 63));
+		break;
+
+		// [RH] Hexen-like phased lighting
+	case LightSequenceStart:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DPhased (sector);
+		break;
+
+	case dLight_Flicker:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DLightFlash (sector);
+		break;
+
+	case dLight_StrobeFast:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+			
+	case dLight_StrobeSlow:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, SLOWDARK, false);
+		break;
+
+	case dLight_Strobe_Hurt:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		P_SetupSectorDamage(sector, 20, 32, 5, NAME_Slime, 0);
+		break;
+
+	case dDamage_Hellslime:
+		P_SetupSectorDamage(sector, 10, 32, 0, NAME_Slime, 0);
+		break;
+
+	case dDamage_Nukage:
+		P_SetupSectorDamage(sector, 5, 32, 0, NAME_Slime, 0);
+		break;
+
+	case dLight_Glow:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DGlow (sector);
+		break;
+			
+	case dSector_DoorCloseIn30:
+		P_SpawnDoorCloseIn30 (sector);
+		break;
+			
+	case dDamage_End:
+		P_SetupSectorDamage(sector, 20, 32, 256, NAME_None, SECF_ENDGODMODE|SECF_ENDLEVEL);
+		break;
+
+	case dLight_StrobeSlowSync:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, SLOWDARK, true);
+		break;
+
+	case dLight_StrobeFastSync:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, true);
+		break;
+
+	case dSector_DoorRaiseIn5Mins:
+		P_SpawnDoorRaiseIn5Mins (sector);
+		break;
+
+	case dFriction_Low:
+		// [BC] In client mode, let the server tell us about sectors' friction level.
+		if ( NETWORK_InClientMode() == false )
+		{
+			sector->friction = FRICTION_LOW;
+			sector->movefactor = 0x269;
+			sector->Flags |= SECF_FRICTION;
+		}
+		break;
+
+	case dDamage_SuperHellslime:
+		P_SetupSectorDamage(sector, 20, 32, 5, NAME_Slime, 0);
+		break;
+
+	case dLight_FireFlicker:
+		// [BC] In client mode, light specials may have been shut off by the server.
+		// Therefore, we can't spawn them on our end.
+		if ( NETWORK_InClientMode() == false )
+			if (!nothinkers) new DFireFlicker (sector);
+		break;
+
+	case dDamage_LavaWimpy:
+		P_SetupSectorDamage(sector, 5, 32, 256, NAME_Fire, SECF_DMGTERRAINFX);
+		break;
+
+	case dDamage_LavaHefty:
+		P_SetupSectorDamage(sector, 8, 32, 256, NAME_Fire, SECF_DMGTERRAINFX);
+		break;
+
+	case dScroll_EastLavaDamage:
+
+		// [BC] Damage is server-side.
+		if ( NETWORK_InClientMode() )
+		{
+			break;
+		}
+
+		P_SetupSectorDamage(sector, 5, 32, 256, NAME_Fire, SECF_DMGTERRAINFX);
+		if (!nothinkers)
+		{
+			new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+			new DScroller(DScroller::sc_floor, (-FRACUNIT / 2) << 3,
+				0, -1, int(sector - sectors), 0);
+		}
+		keepspecial = true;
+		break;
+
+	case hDamage_Sludge:
+		P_SetupSectorDamage(sector, 4, 32, 0, NAME_Slime, 0);
+		break;
+
+	case sLight_Strobe_Hurt:
+		P_SetupSectorDamage(sector, 5, 32, 0, NAME_Slime, 0);
+		if (!nothinkers) new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+
+	case sDamage_Hellslime:
+		P_SetupSectorDamage(sector, 2, 32, 0, NAME_Slime, SECF_HAZARD);
+		break;
+
+	case Damage_InstantDeath:
+		// Strife's instant death sector
+		P_SetupSectorDamage(sector, TELEFRAG_DAMAGE, 1, 256, NAME_InstantDeath, 0);
+		break;
+
+	case sDamage_SuperHellslime:
+		P_SetupSectorDamage(sector, 4, 32, 0, NAME_Slime, SECF_HAZARD);
+		break;
+
+	case Sector_Hidden:
+		sector->MoreFlags |= SECF_HIDDEN;
+		break;
+
+	case Sector_Heal:
+		// CoD's healing sector
+		P_SetupSectorDamage(sector, -1, 32, 0, NAME_None, 0);
+		break;
+
+	case Sky2:
+		sector->sky = PL_SKYFLAT;
+		break;
+
+	default:
+
+		// [BC] Don't run any other specials in client mode.
+		if ( NETWORK_InClientMode() )
+		{
+			break;
+		}
+
+		if (sector->special >= Scroll_North_Slow &&
+			sector->special <= Scroll_SouthWest_Fast)
+		{ // Hexen scroll special
+			static const char hexenScrollies[24][2] =
+			{
+				{  0,  1 }, {  0,  2 }, {  0,  4 },
+				{ -1,  0 }, { -2,  0 }, { -4,  0 },
+				{  0, -1 }, {  0, -2 }, {  0, -4 },
+				{  1,  0 }, {  2,  0 }, {  4,  0 },
+				{  1,  1 }, {  2,  2 }, {  4,  4 },
+				{ -1,  1 }, { -2,  2 }, { -4,  4 },
+				{ -1, -1 }, { -2, -2 }, { -4, -4 },
+				{  1, -1 }, {  2, -2 }, {  4, -4 }
+			};
+
+			
+			int i = sector->special - Scroll_North_Slow;
+			fixed_t dx = hexenScrollies[i][0] * (FRACUNIT/2);
+			fixed_t dy = hexenScrollies[i][1] * (FRACUNIT/2);
+			if (!nothinkers) new DScroller (DScroller::sc_floor, dx, dy, -1, int(sector-sectors), 0);
+		}
+		else if (sector->special >= Carry_East5 &&
+					sector->special <= Carry_East35)
+		{ // Heretic scroll special
+			// Only east scrollers also scroll the texture
+			if (!nothinkers) new DScroller (DScroller::sc_floor,
+				(-FRACUNIT/2)<<(sector->special - Carry_East5),
+				0, -1, int(sector-sectors), 0);
+		}
+		keepspecial = true;
+		break;
+	}
+	if (!keepspecial) sector->special = 0;
+}
+
+//
 // P_SpawnSpecials
 //
 // After the map has been loaded, scan for specials that spawn thinkers
@@ -1421,207 +1597,7 @@ void P_SpawnSpecials (void)
 		if (sector->special == 0)
 			continue;
 
-		// [RH] All secret sectors are marked with a BOOM-ish bitfield
-		if (sector->special & SECRET_MASK)
-			level.total_secrets++;
-
-		switch (sector->special & 0xff)
-		{
-			// [RH] Normal DOOM/Hexen specials. We clear off the special for lights
-			//	  here instead of inside the spawners.
-
-		case dLight_Flicker:
-			// FLICKERING LIGHTS
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DLightFlash (sector);
-			}
-			sector->special &= 0xff00;
-			break;
-
-		case dLight_StrobeFast:
-			// STROBE FAST
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
-			}
-			sector->special &= 0xff00;
-			break;
-			
-		case dLight_StrobeSlow:
-			// STROBE SLOW
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DStrobe (sector, STROBEBRIGHT, SLOWDARK, false);
-			}
-			sector->special &= 0xff00;
-			break;
-
-		case dLight_Strobe_Hurt:
-		case sLight_Strobe_Hurt:
-			// STROBE FAST/DEATH SLIME
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
-			}
-			break;
-
-		case dLight_Glow:
-			// GLOWING LIGHT
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DGlow (sector);
-			}
-			sector->special &= 0xff00;
-			break;
-			
-		case dSector_DoorCloseIn30:
-			// DOOR CLOSE IN 30 SECONDS
-			P_SpawnDoorCloseIn30 (sector);
-			break;
-			
-		case dLight_StrobeSlowSync:
-			// SYNC STROBE SLOW
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DStrobe (sector, STROBEBRIGHT, SLOWDARK, true);
-			}
-			sector->special &= 0xff00;
-			break;
-
-		case dLight_StrobeFastSync:
-			// SYNC STROBE FAST
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-				new DStrobe (sector, STROBEBRIGHT, FASTDARK, true);
-			sector->special &= 0xff00;
-			break;
-
-		case dSector_DoorRaiseIn5Mins:
-			// DOOR RAISE IN 5 MINUTES
-			P_SpawnDoorRaiseIn5Mins (sector);
-			break;
-			
-		case dLight_FireFlicker:
-			// fire flickering
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DFireFlicker (sector);
-			}
-			sector->special &= 0xff00;
-			break;
-
-		case dFriction_Low:
-			// [BC] In client mode, let the server tell us about sectors' friction level.
-			if ( NETWORK_InClientMode() == false )
-			{
-				sector->friction = FRICTION_LOW;
-				sector->movefactor = 0x269;
-			}
-			sector->special &= 0xff00;
-			// [BC] In client mode, let the server tell us about sectors' friction level.
-			if ( NETWORK_InClientMode() == false )
-			{
-				sector->special |= FRICTION_MASK;
-			}
-			break;
-
-		  // [RH] Hexen-like phased lighting
-		case LightSequenceStart:
-
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DPhased (sector);
-			}
-			break;
-
-		case Light_Phased:
-
-			// [BC] In client mode, light specials may have been shut off by the server.
-			// Therefore, we can't spawn them on our end.
-			if ( NETWORK_InClientMode() == false )
-			{
-				new DPhased (sector, 48, 63 - (sector->lightlevel & 63));
-			}
-			break;
-
-		case Sky2:
-			sector->sky = PL_SKYFLAT;
-			break;
-
-		case dScroll_EastLavaDamage:
-
-			// [BC] Damage is server-side.
-			if ( NETWORK_InClientMode() )
-			{
-				break;
-			}
-
-			new DStrobe (sector, STROBEBRIGHT, FASTDARK, false);
-			new DScroller (DScroller::sc_floor, (-FRACUNIT/2)<<3,
-				0, -1, int(sector-sectors), 0);
-			break;
-
-		case Sector_Hidden:
-			sector->MoreFlags |= SECF_HIDDEN;
-			sector->special &= 0xff00;
-			break;
-
-		default:
-
-			// [BC] Don't run any other specials in client mode.
-			if ( NETWORK_InClientMode() )
-			{
-				break;
-			}
-
-			if ((sector->special & 0xff) >= Scroll_North_Slow &&
-				(sector->special & 0xff) <= Scroll_SouthWest_Fast)
-			{ // Hexen scroll special
-				static const char hexenScrollies[24][2] =
-				{
-					{  0,  1 }, {  0,  2 }, {  0,  4 },
-					{ -1,  0 }, { -2,  0 }, { -4,  0 },
-					{  0, -1 }, {  0, -2 }, {  0, -4 },
-					{  1,  0 }, {  2,  0 }, {  4,  0 },
-					{  1,  1 }, {  2,  2 }, {  4,  4 },
-					{ -1,  1 }, { -2,  2 }, { -4,  4 },
-					{ -1, -1 }, { -2, -2 }, { -4, -4 },
-					{  1, -1 }, {  2, -2 }, {  4, -4 }
-				};
-
-				int i = (sector->special & 0xff) - Scroll_North_Slow;
-				fixed_t dx = hexenScrollies[i][0] * (FRACUNIT/2);
-				fixed_t dy = hexenScrollies[i][1] * (FRACUNIT/2);
-				new DScroller (DScroller::sc_floor, dx, dy, -1, int(sector-sectors), 0);
-			}
-			else if ((sector->special & 0xff) >= Carry_East5 &&
-					 (sector->special & 0xff) <= Carry_East35)
-			{ // Heretic scroll special
-			  // Only east scrollers also scroll the texture
-				new DScroller (DScroller::sc_floor,
-					(-FRACUNIT/2)<<((sector->special & 0xff) - Carry_East5),
-					0, -1, int(sector-sectors), 0);
-			}
-			break;
-		}
+		P_InitSectorSpecial(sector, sector->special, false);
 	}
 	
 	// Init other misc stuff
@@ -2205,7 +2181,6 @@ static void P_SpawnScrollers(void)
 
 			FSectorTagIterator itr(l->args[0]);
 			while ((s = itr.Next()) >= 0)
-
 			{
 				new DScroller(DScroller::sc_ceiling, -dx, dy, control, s, accel);
 			}
@@ -2275,7 +2250,6 @@ static void P_SpawnScrollers(void)
 			FLineIdIterator itr(l->args[0]);
 			while ((s = itr.Next()) >= 0)
 			{
-
 				if (s != i)
 					new DScroller(dx, dy, lines + s, control, accel);
 			}
@@ -2490,11 +2464,11 @@ void P_SetSectorFriction (int tag, int amount, bool alterFlag)
 			// can be enabled and disabled at will.
 			if (friction == ORIG_FRICTION)
 			{
-				sectors[s].special &= ~FRICTION_MASK;
+				sectors[s].Flags &= ~SECF_FRICTION;
 			}
 			else
 			{
-				sectors[s].special |= FRICTION_MASK;
+				sectors[s].Flags |= SECF_FRICTION;
 			}
 
 			// [BC] If we're the server, update clients about this friction change.
@@ -2618,7 +2592,7 @@ void DPusher::Tick ()
 	// Be sure the special sector type is still turned on. If so, proceed.
 	// Else, bail out; the sector type has been changed on us.
 
-	if (!(sec->special & PUSH_MASK))
+	if (!(sec->Flags & SECF_PUSH))
 		return;
 
 	// For constant pushers (wind/current) there are 3 situations:
