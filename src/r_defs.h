@@ -399,7 +399,7 @@ enum
 	SECF_DRAWN			= 128,	// sector has been drawn at least once
 	SECF_HIDDEN			= 256,	// Do not draw on textured automap
 	SECF_NOFLOORSKYBOX	= 512,	// force use of regular sky 
-	SECF_NOCEILINGSKYBOX	= 1024,	// force use of regular sky 
+	SECF_NOCEILINGSKYBOX	= 1024,	// force use of regular sky (do not separate from NOFLOORSKYBOX!!!)
 	SECF_RETURNZONE		= 2048,	// [BC] Flags should be immediately returned if they're dropped within this sector (lava sectors, unreachable sectors, etc.).
 };
 
@@ -863,7 +863,7 @@ struct sector_t
 
 	// [RH] The sky box to render for this sector. NULL means use a
 	// regular sky.
-	TObjPtr<ASkyViewpoint> FloorSkyBox, CeilingSkyBox;
+	TObjPtr<ASkyViewpoint> SkyBoxes[2];
 
 	int							sectornum;			// for comparing sector copies
 
