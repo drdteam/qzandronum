@@ -39,8 +39,6 @@
 #include <gdk/gdkkeysyms.h>
 #endif
 
-#include "networkheaders.h"
-
 #include "doomerrors.h"
 #include <math.h>
 
@@ -76,12 +74,6 @@
 #ifdef __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
 #endif // __APPLE__
-
-// [BB] New #includes.
-#include "cl_demo.h"
-#include "cl_main.h"
-#include "v_text.h"
-
 
 EXTERN_CVAR (String, language)
 
@@ -171,10 +163,6 @@ void I_Quit (void)
     if (demorecording)
 		G_CheckDemoStatus();
 
-	// [BC] Support for client-side demos.
-	if ( CLIENTDEMO_IsRecording( ))
-		CLIENTDEMO_FinishRecording( );
-
 	C_DeinitConsole();
 
 	I_ShutdownTimer();
@@ -216,11 +204,6 @@ void STACK_ARGS I_FatalError (const char *error, ...)
 			fprintf (Logfile, "\n**** DIED WITH FATAL ERROR:\n%s\n", errortext);
 			fflush (Logfile);
 		}
-
-		// [BB] Tell the server we're leaving the game.
-		if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
-			CLIENT_QuitNetworkGame( NULL );
-
 //		throw CFatalError (errortext);
 		fprintf (stderr, "%s\n", errortext);
 		exit (-1);
@@ -547,8 +530,7 @@ bool I_WriteIniFailed ()
 
 static const char *pattern;
 
-// [BB] Added FreeBSD checks
-#if ( defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080 ) || ( defined ( __FreeBSD__ ) && ( __FreeBSD__ < 8 ) )
+#if defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int matchfile (struct dirent *ent)
 #else
 static int matchfile (const struct dirent *ent)
