@@ -3069,7 +3069,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeIn)
 		if (flags & FTF_CLAMP)
 			self->alpha = (FRACUNIT * 1);
 		if (flags & FTF_REMOVE)
-			self->Destroy();
+			P_RemoveThing(self);
 	}
 
 	// [BB] Inform the clients about the alpha change and possibly about RenderStyle.
@@ -3117,26 +3117,12 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 		SERVERCOMMANDS_SetThingProperty( self, APROP_Alpha );
 	}
 
-	// [BB] Only destroy the actor if it's not needed for a map reset. Otherwise just hide it.
 	if (self->alpha <= 0)
 	{
 		if (flags & FTF_CLAMP)
 			self->alpha = 0;
 		if (flags & FTF_REMOVE)
-		{
-			// [BB] Deleting player bodies is a very bad idea.
-			if ( self->player && ( self->player->mo == self ) )
-			{
-				Printf ( PRINT_BOLD, "Warning: A_FadeOut may not delete player bodies that are still associated to a player!\n" );
-				return;
-			}
-
-			// [BB] Tell clients to destroy the actor.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_DestroyThing( self );
-
-			self->HideOrDestroyIfSafe ();
-		}
+			P_RemoveThing(self);
 	}
 }
 
@@ -3202,19 +3188,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeTo)
 
 	if (self->alpha == target && (flags & FTF_REMOVE))
 	{
-		// [EP] Deleting player bodies is a very bad idea.
-		if ( self->player && ( self->player->mo == self ) )
-		{
-			Printf ( PRINT_BOLD, "Warning: A_FadeTo may not delete player bodies that are still associated to a player!\n" );
-			return;
-		}
-
-		// [EP] Tell clients to destroy the actor.
-		if ( NETWORK_GetState() == NETSTATE_SERVER )
-			SERVERCOMMANDS_DestroyThing( self );
-
-		// [EP] Only destroy the actor if it's not needed for a map reset. Otherwise just hide it.
-		self->HideOrDestroyIfSafe();
+		P_RemoveThing(self);
 	}
 }
 
