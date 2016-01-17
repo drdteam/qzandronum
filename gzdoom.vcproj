@@ -941,6 +941,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\p_portals.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\p_pspr.cpp"
 				>
 			</File>
