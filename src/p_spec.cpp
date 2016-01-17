@@ -63,6 +63,9 @@
 #include "a_keys.h"
 #include "c_dispatch.h"
 #include "r_sky.h"
+#ifndef NO_EDATA
+#include "edata.h"
+#endif
 
 // State.
 #include "r_state.h"
@@ -1644,6 +1647,7 @@ void P_SpawnSpecials (void)
 
 	//	Init special SECTORs.
 	sector = sectors;
+
 	for (i = 0; i < numsectors; i++, sector++)
 	{
 		if (sector->special == 0)
@@ -1651,6 +1655,11 @@ void P_SpawnSpecials (void)
 
 		P_InitSectorSpecial(sector, sector->special, false);
 	}
+
+#ifndef NO_EDATA
+	ProcessEDSectors();
+#endif
+
 	
 	// Init other misc stuff
 

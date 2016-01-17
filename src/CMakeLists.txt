@@ -1107,6 +1107,7 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	dsectoreffect.cpp
 	dthinker.cpp
 	duel.cpp #ST
+	edata.cpp
 	f_wipe.cpp
 	farchive.cpp
 	files.cpp

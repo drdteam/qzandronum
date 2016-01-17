@@ -661,6 +661,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\edata.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\f_wipe.cpp"
 				>
 			</File>
@@ -1466,6 +1470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\edata.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\EnumToString.h"
 				>
 			</File>
@@ -1786,11 +1794,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\SkylineBinPack.h"
+				RelativePath=".\src\skins.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\skins.h"
+				RelativePath=".\src\SkylineBinPack.h"
 				>
 			</File>
 			<File

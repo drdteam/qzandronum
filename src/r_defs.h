@@ -376,7 +376,14 @@ enum
 	PLANEF_ABSLIGHTING	= 1,	// floor/ceiling light is absolute, not relative
 	PLANEF_BLOCKED		= 2,	// can not be moved anymore.
 	PLANEF_ADDITIVE		= 4,	// rendered additive
-	PLANEF_SPRINGPAD		= 8,	// [BC] Floor bounces actors up at the same velocity they landed on it with.	
+
+	// linked portal stuff
+	PLANEF_NORENDER		= 8,
+	PLANEF_NOPASS		= 16,
+	PLANEF_BLOCKSOUND	= 32,
+	PLANEF_DISABLED		= 64,
+
+	PLANEF_SPRINGPAD		= 128,	// [BC] Floor bounces actors up at the same velocity they landed on it with.	
 };
 
 // Internal sector flags
