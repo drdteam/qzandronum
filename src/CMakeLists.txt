@@ -1249,6 +1249,8 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	za_database.cpp #ZA
 	zstrformat.cpp
 	zstring.cpp
+	GuillotineBinPack.cpp
+	SkylineBinPack.cpp
 	cooperative.cpp #ST [BB] This needs to be linked after deathmatch.cpp and team.cpp (see above).
 	# [BL] Huffman is ZAN
 	huffman/bitreader.cpp

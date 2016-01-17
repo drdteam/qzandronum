@@ -518,6 +518,8 @@ xx(damageinterval)
 xx(leakiness)
 xx(damageterraineffect)
 xx(damagehazard)
+xx(floorterrain)
+xx(ceilingterrain)
 
 // USDF keywords
 xx(Amount)

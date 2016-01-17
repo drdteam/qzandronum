@@ -709,6 +709,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\GuillotineBinPack.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\i_net.cpp"
 				>
 			</File>
@@ -1117,6 +1121,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\SkylineBinPack.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\st_stuff.cpp"
 				>
 			</File>
@@ -1510,6 +1518,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\GuillotineBinPack.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\hu_stuff.h"
 				>
 			</File>
@@ -1746,6 +1758,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\Rect.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\s_playlist.h"
 				>
 			</File>
@@ -1767,6 +1783,10 @@
 			</File>
 			<File
 				RelativePath=".\src\sectinfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\SkylineBinPack.h"
 				>
 			</File>
 			<File

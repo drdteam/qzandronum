@@ -47,6 +47,7 @@
 #include "r_data/colormaps.h"
 #include "w_wad.h"
 #include "p_tags.h"
+#include "p_terrain.h"
 // [BB] New #includes.
 #include "g_game.h"
 
@@ -1302,6 +1303,7 @@ public:
 		sec->heightsec = NULL;	// sector used to get floor and ceiling height
 		sec->sectornum = index;
 		sec->damageinterval = 32;
+		sec->terrainnum[sector_t::ceiling] = sec->terrainnum[sector_t::floor] = -1;
 		if (floordrop) sec->Flags = SECF_FLOORDROP;
 		// killough 3/7/98: end changes
 
@@ -1550,6 +1552,14 @@ public:
 
 				case NAME_damagehazard:
 					Flag(sec->Flags, SECF_HAZARD, key);
+					break;
+
+				case NAME_floorterrain:
+					sec->terrainnum[sector_t::floor] = P_FindTerrain(CheckString(key));
+					break;
+
+				case NAME_ceilingterrain:
+					sec->terrainnum[sector_t::ceiling] = P_FindTerrain(CheckString(key));
 					break;
 
 				case NAME_MoreIds:
