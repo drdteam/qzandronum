@@ -595,7 +595,7 @@ sector_t *AActor::LinkToWorldForMapThing ()
 	return ssec->sector;
 }
 
-void AActor::SetOrigin (fixed_t ix, fixed_t iy, fixed_t iz)
+void AActor::SetOrigin (fixed_t ix, fixed_t iy, fixed_t iz, bool moving)
 {
 	UnlinkFromWorld ();
 	x = ix;

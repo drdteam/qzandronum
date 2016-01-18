@@ -2238,13 +2238,13 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 	if (!players[playernum].mo)
 	{ // first spawn of level, before corpses
 		for (i = 0; i < playernum; i++)
-			if (players[i].mo && players[i].mo->x == x && players[i].mo->y == y)
+			if (players[i].mo && players[i].mo->X() == x && players[i].mo->Y() == y)
 				return false;
 		return true;
 	}
 
-	oldz = players[playernum].mo->z;	// [RH] Need to save corpse's z-height
-	players[playernum].mo->z = z;		// [RH] Checks are now full 3-D
+	oldz = players[playernum].mo->Z();	// [RH] Need to save corpse's z-height
+	players[playernum].mo->SetZ(z);		// [RH] Checks are now full 3-D
 
 	// killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
 	// corpse to detect collisions with other players in DM starts
@@ -2256,7 +2256,7 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 	players[playernum].mo->flags |=  MF_SOLID;
 	i = P_CheckPosition(players[playernum].mo, x, y);
 	players[playernum].mo->flags &= ~MF_SOLID;
-	players[playernum].mo->z = oldz;	// [RH] Restore corpse's height
+	players[playernum].mo->SetZ(oldz);	// [RH] Restore corpse's height
 	if (!i)
 		return false;
 

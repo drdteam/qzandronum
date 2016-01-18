@@ -2329,6 +2329,10 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 					else
 					{
 						const AActor *def = GetDefaultByType (typeinfo);
+						fixedvec3 spawnpos = source->Vec3Offset(
+							FixedMul (def->radius * 2 + source->radius, finecosine[source->angle>>ANGLETOFINESHIFT]),
+							FixedMul (def->radius * 2 + source->radius, finesine[source->angle>>ANGLETOFINESHIFT]),
+							8 * FRACUNIT);
 
 						// [BC] In invasion mode, don't increase the number of monsters
 						// for friendly monsters.
@@ -2338,10 +2342,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 							INVASION_SetIncreaseNumMonstersOnSpawn( false );
 						}
 
-						AActor *spawned = Spawn (typeinfo,
-							source->x + FixedMul (def->radius * 2 + source->radius, finecosine[source->angle>>ANGLETOFINESHIFT]),
-							source->y + FixedMul (def->radius * 2 + source->radius, finesine[source->angle>>ANGLETOFINESHIFT]),
-							source->z + 8 * FRACUNIT, ALLOW_REPLACE);
+						AActor *spawned = Spawn (typeinfo, spawnpos, ALLOW_REPLACE);
 
 						// [BC] Go back to counting spawned monsters.
 						if (( invasion ) &&
@@ -2400,8 +2401,8 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 
 			s = ReadString (stream);
 
-			if (Trace (players[player].mo->x, players[player].mo->y,
-				players[player].mo->z + players[player].mo->height - (players[player].mo->height>>2),
+			if (Trace (players[player].mo->X(), players[player].mo->Y(),
+				players[player].mo->Z() + players[player].mo->height - (players[player].mo->height>>2),
 				players[player].mo->Sector,
 				vx, vy, vz, 172*FRACUNIT, 0, ML_BLOCKEVERYTHING, players[player].mo,
 				trace, TRACE_NoSky))
