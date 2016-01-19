@@ -227,7 +227,7 @@ static bool PIT_FindFloorCeiling(line_t *ld, const FBoundingBox &box, FCheckPosi
 		}
 		else if (r >= (1 << 24))
 		{
-			P_LineOpening(open, tmf.thing, ld, sx = ld->v2->x, sy = ld->v2->y, tmf.thing->x, tmf.thing->y, flags);
+			P_LineOpening(open, tmf.thing, ld, sx = ld->v2->x, sy = ld->v2->y, tmf.thing->X(), tmf.thing->Y(), flags);
 		}
 		else
 		{
@@ -325,9 +325,9 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 	FCheckPosition tmf;
 
 	tmf.thing = actor;
-	tmf.x = actor->x;
-	tmf.y = actor->y;
-	tmf.z = actor->z;
+	tmf.x = actor->X();
+	tmf.y = actor->Y();
+	tmf.z = actor->Z();
 
 	if (flags & FFCF_ONLYSPAWNPOS)
 	{
@@ -373,7 +373,7 @@ void P_FindFloorCeiling(AActor *actor, int flags)
 
 	if (tmf.touchmidtex) tmf.dropoffz = tmf.floorz;
 
-	if (!(flags & FFCF_ONLYSPAWNPOS) || (tmf.abovemidtex && (tmf.floorz <= actor->z)))
+	if (!(flags & FFCF_ONLYSPAWNPOS) || (tmf.abovemidtex && (tmf.floorz <= actor->Z())))
 	{
 		actor->floorz = tmf.floorz;
 		actor->dropoffz = tmf.dropoffz;
@@ -441,13 +441,13 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 	line_t *ld;
 
 	// P_LineOpening requires the thing's z to be the destination z in order to work.
-	fixed_t savedz = thing->z;
-	thing->z = z;
+	fixed_t savedz = thing->Z();
+	thing->SetZ(z);
 	while ((ld = it.Next()))
 	{
 		PIT_FindFloorCeiling(ld, box, tmf, 0);
 	}
-	thing->z = savedz;
+	thing->SetZ(savedz);
 
 	if (tmf.touchmidtex) tmf.dropoffz = tmf.floorz;
 
@@ -468,7 +468,7 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 			continue;
 
 		fixed_t blockdist = th->radius + tmf.thing->radius;
-		if (abs(th->x - tmf.x) >= blockdist || abs(th->y - tmf.y) >= blockdist)
+		if (abs(th->X() - tmf.x) >= blockdist || abs(th->Y() - tmf.y) >= blockdist)
 			continue;
 
 		// [RH] Z-Check
@@ -478,8 +478,8 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 		{
 			if (!(th->flags3 & thing->flags3 & MF3_DONTOVERLAP))
 			{
-				if (z > th->z + th->height ||	// overhead
-					z + thing->height < th->z)	// underneath
+				if (z > th->Top() ||	// overhead
+					z + thing->height < th->Z())	// underneath
 					continue;
 			}
 		}
@@ -503,7 +503,7 @@ bool P_TeleportMove(AActor *thing, fixed_t x, fixed_t y, fixed_t z, bool telefra
 	if (modifyactor)
 	{
 		// the move is ok, so link the thing into its new position
-		thing->SetOrigin(x, y, z);
+		thing->SetOrigin(x, y, z, false);
 		thing->floorz = tmf.floorz;
 		thing->ceilingz = tmf.ceilingz;
 		thing->floorsector = tmf.floorsector;
@@ -555,7 +555,7 @@ void P_PlayerStartStomp(AActor *actor)
 		return;
 
 	AActor *th;
-	FBlockThingsIterator it(FBoundingBox(actor->x, actor->y, actor->radius));
+	FBlockThingsIterator it(FBoundingBox(actor->X(), actor->Y(), actor->radius));
 
 	while ((th = it.Next()))
 	{
@@ -573,9 +573,9 @@ void P_PlayerStartStomp(AActor *actor)
 		if (th->player == NULL && !(th->flags3 & MF3_ISMONSTER))
 			continue;
 
-		if (actor->z > th->z + th->height)
+		if (actor->Z() > th->Top())
 			continue;        // overhead
-		if (actor->z + actor->height < th->z)
+		if (actor->Top() < th->Z())
 			continue;        // underneath
 
 		// [BB] ST distinguishes between NAME_SpawnTelefrag and NAME_Telefrag.

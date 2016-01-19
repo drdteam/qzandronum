@@ -52,7 +52,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Fire)
 void A_Fire(AActor *self, int height)
 {
 	AActor *dest;
-	angle_t an;
 				
 	// [BC] Fire movement is server-side.
 	if ( NETWORK_InClientMode() )
@@ -68,11 +67,8 @@ void A_Fire(AActor *self, int height)
 	if (!P_CheckSight (self->target, dest, 0) )
 		return;
 
-	an = dest->angle >> ANGLETOFINESHIFT;
-
-	self->SetOrigin (dest->x + FixedMul (24*FRACUNIT, finecosine[an]),
-					 dest->y + FixedMul (24*FRACUNIT, finesine[an]),
-					 dest->z + height);
+	fixedvec3 newpos = dest->Vec3Angle(24 * FRACUNIT, dest->angle, height);
+	self->SetOrigin(newpos, true);
 
 	// [BC] Tell clients of the fire update.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -102,8 +98,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileTarget)
 
 	A_FaceTarget (self);
 
-	fog = Spawn (fire, self->target->x, self->target->y,
-		self->target->z, ALLOW_REPLACE);
+	fog = Spawn (fire, self->target->X(), self->target->Y(),
+		self->target->Z(), ALLOW_REPLACE);
 	
 	// [BC] If we're the server, tell clients to spawn the thing.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -137,7 +133,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileAttack)
 	ACTION_PARAM_INT(flags,6);
 
 	AActor *fire, *target;
-	angle_t an;
 		
 	if ( NETWORK_InClientMode() )
 	{
@@ -168,15 +163,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileAttack)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( snd ), 1, ATTN_NORM );
 
-	an = self->angle >> ANGLETOFINESHIFT;
 	fire = self->tracer;
 
 	if (fire != NULL)
 	{
 		// move the fire between the vile and the player
-		fire->SetOrigin (target->x - FixedMul (24*FRACUNIT, finecosine[an]),
-						 target->y - FixedMul (24*FRACUNIT, finesine[an]),
-						 target->z);
+		fixedvec3 pos = target->Vec3Angle(-24 * FRACUNIT, self->angle, target->Z());
+		fire->SetOrigin (pos, true);
 		
 		// [BC] Tell clients of the fire update.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
