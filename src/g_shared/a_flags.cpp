@@ -713,7 +713,7 @@ void AFlag::ResetReturnTicks( void )
 
 void AFlag::ReturnFlag( AActor *pReturner )
 {
-	POS_t	FlagOrigin;
+	fixedvec3	FlagOrigin;
 	AFlag	*pActor;
 
 	// Respawn the flag.
@@ -1118,7 +1118,7 @@ void AWhiteFlag::ResetReturnTicks( void )
 
 void AWhiteFlag::ReturnFlag( AActor *pReturner )
 {
-	POS_t	WhiteFlagOrigin;
+	fixedvec3	WhiteFlagOrigin;
 	AActor	*pActor;
 
 	// Respawn the white flag.
@@ -1322,7 +1322,7 @@ void ASkull::ResetReturnTicks( void )
 
 void ASkull::ReturnFlag( AActor *pReturner )
 {
-	POS_t	SkullOrigin;
+	fixedvec3	SkullOrigin;
 	ASkull	*pActor;
 
 	// Respawn the skull.

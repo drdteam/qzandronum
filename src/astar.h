@@ -104,7 +104,7 @@ typedef struct ASTARNODE_s
 	LONG				lYNodeIdx;
 
 	// The XY coordinates of the center of this node.
-	POS_t				Position;
+	fixedvec3			Position;
 
 	// Parent of this node.
 	struct ASTARNODE_s		*pParent[MAX_PATHS];
@@ -188,12 +188,12 @@ void				ASTAR_Construct( void );
 void				ASTAR_BuildNodes( void );
 void				ASTAR_ClearNodes( void );
 bool				ASTAR_IsInitialized( void );
-ASTARRETURNSTRUCT_t	ASTAR_Path( ULONG ulIdx, POS_t GoalPoint, float fMaxSearchNodes, LONG lGiveUpLimit );
-POS_t				ASTAR_GetPosition( ASTARNODE_t *pNode );
-POS_t				ASTAR_GetPositionFromIndex( LONG lXIdx, LONG lYIdx );
+ASTARRETURNSTRUCT_t	ASTAR_Path( ULONG ulIdx, fixedvec3 GoalPoint, float fMaxSearchNodes, LONG lGiveUpLimit );
+fixedvec3			ASTAR_GetPosition( ASTARNODE_t *pNode );
+fixedvec3			ASTAR_GetPositionFromIndex( LONG lXIdx, LONG lYIdx );
 void				ASTAR_ClearVisualizations( void );
-void				ASTAR_ShowCosts( POS_t Position );
+void				ASTAR_ShowCosts( fixedvec3 Position );
 void				ASTAR_ClearPath( LONG lPathIdx );
-void				ASTAR_SelectRandomMapLocation( POS_t *pPos, fixed_t X, fixed_t Y );
+void				ASTAR_SelectRandomMapLocation( fixedvec3 *pPos, fixed_t X, fixed_t Y );
 
 #endif	// __ASTAR_H__

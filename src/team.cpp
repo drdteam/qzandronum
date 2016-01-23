@@ -90,7 +90,7 @@ void	SERVERCONSOLE_UpdateScoreboard( void );
 
 static	bool	g_bSimpleCTFSTMode;
 static	bool	g_bWhiteFlagTaken;
-static	POS_t	g_WhiteFlagOrigin;
+static	fixedvec3	g_WhiteFlagOrigin;
 static	ULONG	g_ulWhiteFlagReturnTicks;
 
 // Are we spawning a temporary flag? If so, ignore return zones.
@@ -472,7 +472,7 @@ ULONG TEAM_ChooseBestTeamForPlayer( const bool bIgnoreTeamStartsAvailability )
 void TEAM_ScoreSkulltagPoint( player_t *pPlayer, ULONG ulNumPoints, AActor *pPillar )
 {
 	char				szString[256];
-	POS_t				SkullOrigin;
+	fixedvec3			SkullOrigin;
 	DHUDMessageFadeOut	*pMsg;
 	AActor				*pActor;
 	AInventory			*pInventory = NULL;
@@ -1420,28 +1420,28 @@ void TEAM_SetWhiteFlagTaken( bool bTaken )
 
 //*****************************************************************************
 //
-POS_t TEAM_GetItemOrigin( ULONG ulTeamIdx )
+fixedvec3 TEAM_GetItemOrigin( ULONG ulTeamIdx )
 {
 	return ( teams[ulTeamIdx].g_Origin );
 }
 
 //*****************************************************************************
 //
-void TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, POS_t Origin )
+void TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, fixedvec3 Origin )
 {
 	teams[ulTeamIdx].g_Origin = Origin;
 }
 
 //*****************************************************************************
 //
-POS_t TEAM_GetWhiteFlagOrigin( void )
+fixedvec3 TEAM_GetWhiteFlagOrigin( void )
 {
 	return ( g_WhiteFlagOrigin );
 }
 
 //*****************************************************************************
 //
-void TEAM_SetWhiteFlagOrigin( POS_t Origin )
+void TEAM_SetWhiteFlagOrigin( fixedvec3 Origin )
 {
 	g_WhiteFlagOrigin = Origin;
 }

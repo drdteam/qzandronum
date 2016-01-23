@@ -157,15 +157,6 @@ enum
 #define PRINT_LOG				5				// only to logfile
 #define PRINT_BOLD				200				// What Printf_Bold used
 
-// [BC] heh, why did I define this here?
-typedef struct
-{
-	fixed_t	x;
-	fixed_t	y;
-	fixed_t	z;
-
-} POS_t;
-
 struct PalEntry
 {
 	PalEntry () {}

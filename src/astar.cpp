@@ -87,7 +87,7 @@ static	bool			g_bIsInitialized;
 //	PROTOTYPES
 
 static	bool			astar_PathNextNode( ASTARPATH_t *pPath );
-static	ASTARNODE_t		*astar_GetNodeFromPoint( POS_t Point );
+static	ASTARNODE_t		*astar_GetNodeFromPoint( fixedvec3 Point );
 static	LONG			astar_GetCostToGoalEstimate( ASTARPATH_t *pPath, ASTARNODE_t *pNode );
 static	void			astar_PushNodeToStack( ASTARNODE_t *pNode, ASTARPATH_t *pPath );
 static	bool			astar_PullNodeFromOpenList( ASTARPATH_t *pPath );
@@ -237,11 +237,11 @@ bool ASTAR_IsInitialized( void )
 
 //*****************************************************************************
 //
-ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, POS_t GoalPoint, float fMaxSearchNodes, LONG lGiveUpLimit )
+ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMaxSearchNodes, LONG lGiveUpLimit )
 {
 //	ASTARNODE_t				*pStartNode;
 	ASTARRETURNSTRUCT_t		ReturnVal;
-	POS_t					StartPoint;
+	fixedvec3				StartPoint;
 	ASTARPATH_t				*pPath;
 
 	g_lCurrentPathIdx = ulPathIdx;
@@ -285,8 +285,8 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, POS_t GoalPoint, float fMaxSear
 	// Has the path has already been built? If so, simply return the next node on the path.
 	if ( pPath->ulFlags & PF_COMPLETE )
 	{
-//		POS_t			CurPos;
-		POS_t			DestPos;
+//		fixedvec3		CurPos;
+		fixedvec3		DestPos;
 //		sector_t		*pSector;
 //		fixed_t			vx;
 //		fixed_t			vy;
@@ -503,9 +503,9 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, POS_t GoalPoint, float fMaxSear
 
 //*****************************************************************************
 //
-POS_t ASTAR_GetPosition( ASTARNODE_t *pNode )
+fixedvec3 ASTAR_GetPosition( ASTARNODE_t *pNode )
 {
-	POS_t	Position;
+	fixedvec3	Position;
 
 //	pNode->lXNodeIdx << ASTAR_NODE_SHIFT + (( g_lMapXMin >> ASTAR_NODE_SHIFT ) << ASTAR_NODE_SHIFT )
 //	Position.x = ( pNode->lXNodeIdx << ASTAR_NODE_SHIFT ) + (((( g_lMapXMin / FRACUNIT ) / 64 ) * 64 ) * FRACUNIT ) + ( 32 << FRACBITS );
@@ -519,9 +519,9 @@ POS_t ASTAR_GetPosition( ASTARNODE_t *pNode )
 
 //*****************************************************************************
 //
-POS_t ASTAR_GetPositionFromIndex( LONG lXIdx, LONG lYIdx )
+fixedvec3 ASTAR_GetPositionFromIndex( LONG lXIdx, LONG lYIdx )
 {
-	POS_t	Position;
+	fixedvec3	Position;
 
 	Position.x = ( lXIdx << ASTAR_NODE_SHIFT ) + (( g_lMapXMin >> ASTAR_NODE_SHIFT ) << ASTAR_NODE_SHIFT ) + ( 32 << FRACBITS );
 	Position.y = ( lYIdx << ASTAR_NODE_SHIFT ) + (( g_lMapYMin >> ASTAR_NODE_SHIFT ) << ASTAR_NODE_SHIFT ) + ( 32 << FRACBITS );
@@ -552,7 +552,7 @@ void ASTAR_ClearVisualizations( void )
 
 //*****************************************************************************
 //
-void ASTAR_ShowCosts( POS_t Position )
+void ASTAR_ShowCosts( fixedvec3 Position )
 {
 	ASTARNODE_t	*pNode;
 
@@ -614,7 +614,7 @@ void ASTAR_ClearPath( LONG lPathIdx )
 
 //*****************************************************************************
 //
-void ASTAR_SelectRandomMapLocation( POS_t *pPos, fixed_t X, fixed_t Y )
+void ASTAR_SelectRandomMapLocation( fixedvec3 *pPos, fixed_t X, fixed_t Y )
 {
 	LONG	lXIdx;
 	LONG	lYIdx;
@@ -774,7 +774,7 @@ static bool astar_PathNextNode( ASTARPATH_t *pPath )
 
 //*****************************************************************************
 //
-static ASTARNODE_t *astar_GetNodeFromPoint( POS_t Point )
+static ASTARNODE_t *astar_GetNodeFromPoint( fixedvec3 Point )
 {
 	LONG	lXNode;
 	LONG	lYNode;
@@ -799,8 +799,8 @@ static LONG astar_GetCostToGoalEstimate( ASTARPATH_t *pPath, ASTARNODE_t *pNode 
 {
 	return ( P_AproxDistance( pNode->Position.x - pPath->pGoalNode->Position.x, pNode->Position.y - pPath->pGoalNode->Position.y ) / FRACUNIT );
 /*
-	POS_t	PosGoal;
-	POS_t	PosNode;
+	fixedvec3	PosGoal;
+	fixedvec3	PosNode;
 
 	PosNode = ASTAR_GetPosition( pNode );
 	PosGoal = ASTAR_GetPosition( pPath->pGoalNode );
@@ -906,8 +906,8 @@ static bool astar_PullNodeFromOpenList( ASTARPATH_t *pPath )
 			ASTARNODE_t		*pNecessaryNodeList[MAX_NODES_IN_PATH];
 			LONG			lListPos;
 			LONG			lStackPos;
-			POS_t			GoalPos;
-			POS_t			NodePos;
+			fixedvec3		GoalPos;
+			fixedvec3		NodePos;
 
 			lListPos = 0;
 			lStackPos = 1;
@@ -967,8 +967,8 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 
 	// Check if it's possible to get to this new node.
 	{
-		POS_t			CurPos;
-		POS_t			DestPos;
+		fixedvec3		CurPos;
+		fixedvec3		DestPos;
 		sector_t		*pSector;
 //		fixed_t			vx;
 //		fixed_t			vy;

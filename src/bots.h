@@ -531,11 +531,11 @@ public:
 	void		HandleAiming( void );
 
 	// Get the current enemy's position. How accurate this will be depends on the bots perception.
-	POS_t		GetEnemyPosition( void );
+	fixedvec3	GetEnemyPosition( void );
 	void		SetEnemyPosition( fixed_t X, fixed_t Y, fixed_t Z );
 
 	// Get the last known enemy position.
-	POS_t		GetLastEnemyPosition( void );
+	fixedvec3	GetLastEnemyPosition( void );
 
 	//*************************
 	// SHOULD BE PRIVATE!!!!!!!
@@ -581,7 +581,7 @@ public:
 	ULONG			m_ulPathType;
 
 	// What is the goal location of the path?
-	POS_t			m_PathGoalPos;
+	fixedvec3		m_PathGoalPos;
 
 	// Set of "botinfo" this bot uses.
 	ULONG			m_ulBotInfoIdx;
@@ -602,10 +602,10 @@ private:
 	player_t		*m_pPlayer;
 
 	// XYZ position of the bot's target.
-	POS_t			m_posTarget;
+	fixedvec3		m_posTarget;
 
 	// Known position of the enemy.
-	POS_t			m_EnemyPosition[MAX_REACTION_TIME];
+	fixedvec3		m_EnemyPosition[MAX_REACTION_TIME];
 
 	// Last tick the enemy position was updated.
 	ULONG			m_ulLastEnemyPositionTick;
@@ -679,8 +679,8 @@ void		BOTSPAWN_SetTeam( ULONG ulIdx, char *pszTeam );
 ULONG		BOTSPAWN_GetTicks( ULONG ulIdx );
 void		BOTSPAWN_SetTicks( ULONG ulIdx, ULONG usTicks );
 
-FArchive &operator<< ( FArchive &arc, POS_t *pPos );
-FArchive &operator>> ( FArchive &arc, POS_t *pPos );
+FArchive &operator<< ( FArchive &arc, fixedvec3 *pPos );
+FArchive &operator>> ( FArchive &arc, fixedvec3 *pPos );
 
 //FArchive &operator<< ( FArchive &arc, CSkullBot *bot );
 //FArchive &operator>> ( FArchive &arc, CSkullBot *bot );

@@ -1241,7 +1241,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 //
 static void botcmd_PathToGoal( CSkullBot *pBot )
 {
-	POS_t				GoalPos;
+	fixedvec3			GoalPos;
 	angle_t				Angle;
 	ULONG				ulFlags;
 	float				fSpeed;
@@ -1359,7 +1359,7 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 //
 static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 {
-	POS_t				GoalPos;
+	fixedvec3			GoalPos;
 	angle_t				Angle;
 	ULONG				ulFlags;
 	float				fSpeed;
@@ -1487,7 +1487,7 @@ static void botcmd_PathToLastHeardSound( CSkullBot *pBot )
 //
 static void botcmd_Roam( CSkullBot *pBot )
 {
-	POS_t				GoalPos;
+	fixedvec3			GoalPos;
 	angle_t				Angle;
 	ULONG				ulFlags;
 	float				fSpeed;
@@ -1608,7 +1608,7 @@ static void botcmd_Roam( CSkullBot *pBot )
 static void botcmd_GetPathingCostToItem( CSkullBot *pBot )
 {
 	LONG				lItem;
-	POS_t				GoalPos;
+	fixedvec3			GoalPos;
 	ASTARRETURNSTRUCT_t	ReturnVal;
 
 	lItem = pBot->m_ScriptData.alStack[pBot->m_ScriptData.lStackPosition - 1];
@@ -1846,7 +1846,7 @@ static void botcmd_GetDistanceToEnemy( CSkullBot *pBot )
 {
 	if (( pBot->m_ulPlayerEnemy != MAXPLAYERS ) && ( players[pBot->m_ulPlayerEnemy].mo > 0 ))
 	{
-		POS_t	EnemyPos;
+		fixedvec3	EnemyPos;
 
 		EnemyPos = pBot->GetEnemyPosition( );
 		g_iReturnInt = P_AproxDistance( pBot->GetPlayer( )->mo->x - EnemyPos.x, 

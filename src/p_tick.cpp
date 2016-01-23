@@ -166,7 +166,7 @@ void P_Ticker (void)
 
 	if (( botdebug_showcosts ) && ( players[consoleplayer].camera ))
 	{
-		POS_t	Position;
+		fixedvec3	Position;
 
 		Position.x = players[consoleplayer].camera->x;
 		Position.y = players[consoleplayer].camera->y;

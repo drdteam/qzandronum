@@ -3349,7 +3349,7 @@ void CSkullBot::HandleAiming( void )
 		fixed_t	ShootZ;
 		SDWORD	lTopPitch;
 		SDWORD	lBottomPitch;
-		POS_t	EnemyPos;
+		fixedvec3	EnemyPos;
 
 		// Get the current enemy position.
 		EnemyPos = this->GetEnemyPosition( );
@@ -3586,12 +3586,12 @@ void CSkullBot::HandleAiming( void )
 
 //*****************************************************************************
 //
-POS_t CSkullBot::GetEnemyPosition( void )
+fixedvec3 CSkullBot::GetEnemyPosition( void )
 {
 	LONG		lTicks;
-	POS_t		Pos1;
-	POS_t		Pos2;
-	POS_t		PosFinal;
+	fixedvec3	Pos1;
+	fixedvec3	Pos2;
+	fixedvec3	PosFinal;
 	BOTSKILL_e	Skill;
 
 	Skill = BOTS_AdjustSkill( this, BOTINFO_GetPerception( m_ulBotInfoIdx ));
@@ -3651,7 +3651,7 @@ POS_t CSkullBot::GetEnemyPosition( void )
 	default:
 
 		{
-			POS_t	ZeroPos;
+			fixedvec3	ZeroPos;
 		
 			I_Error( "GetEnemyPosition: Unknown bot skill level, %d!", Skill );
 
@@ -3683,7 +3683,7 @@ void CSkullBot::SetEnemyPosition( fixed_t X, fixed_t Y, fixed_t Z )
 
 //*****************************************************************************
 //
-POS_t CSkullBot::GetLastEnemyPosition( void )
+fixedvec3 CSkullBot::GetLastEnemyPosition( void )
 {
 	return ( m_EnemyPosition[m_ulLastEnemyPositionTick % MAX_REACTION_TIME] );
 }

@@ -3061,7 +3061,7 @@ void GAME_CheckMode( void )
 					{
 						if ( pItem->GetClass( ) == TEAM_GetItem( i ))
 						{
-							POS_t	Origin;
+							fixedvec3	Origin;
 
 							Origin.x = pItem->x;
 							Origin.y = pItem->y;
@@ -3073,7 +3073,7 @@ void GAME_CheckMode( void )
 
 					if ( pItem->IsKindOf( PClass::FindClass( "WhiteFlag" )))
 					{
-						POS_t	Origin;
+						fixedvec3	Origin;
 
 						Origin.x = pItem->x;
 						Origin.y = pItem->y;
@@ -3094,7 +3094,7 @@ void GAME_CheckMode( void )
 					{
 						if ( pItem->GetClass( ) == TEAM_GetItem( i ))
 						{
-							POS_t	Origin;
+							fixedvec3	Origin;
 
 							Origin.x = pItem->x;
 							Origin.y = pItem->y;
@@ -3106,7 +3106,7 @@ void GAME_CheckMode( void )
 
 					if ( pItem->IsKindOf( PClass::FindClass( "BlueSkull" )))
 					{
-						POS_t	Origin;
+						fixedvec3	Origin;
 
 						// Replace this skull with skulltag mode's version of the skull.
 						pNewSkull = Spawn( PClass::FindClass( "BlueSkullST" ), pItem->x, pItem->y, pItem->z, NO_REPLACE );
@@ -3130,7 +3130,7 @@ void GAME_CheckMode( void )
 
 					if ( pItem->IsKindOf( PClass::FindClass( "RedSkull" )))
 					{
-						POS_t	Origin;
+						fixedvec3	Origin;
 
 						// Replace this skull with skulltag mode's version of the skull.
 						pNewSkull = Spawn( PClass::FindClass( "RedSkullST" ), pItem->x, pItem->y, pItem->z, NO_REPLACE );
