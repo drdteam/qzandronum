@@ -581,14 +581,13 @@ void FireMacePL1B (AActor *actor)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		ball = Spawn("MaceFX2", actor->x, actor->y, actor->z + 28*FRACUNIT 
-			- actor->floorclip, ALLOW_REPLACE);
+		ball = Spawn("MaceFX2", actor->PosPlusZ(28*FRACUNIT - actor->floorclip), ALLOW_REPLACE);
 		ball->velz = 2*FRACUNIT+/*((player->lookdir)<<(FRACBITS-5))*/
 			finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)];
 		angle = actor->angle + ( ANGLE_45 / 3 );
 		ball->target = actor;
 		ball->angle = angle;
-		ball->z += 2*finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)];
+		ball->AddZ(2*finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)]);
 		angle >>= ANGLETOFINESHIFT;
 		ball->velx = (actor->velx>>1)+FixedMul(ball->Speed, finecosine[angle]);
 		ball->vely = (actor->vely>>1)+FixedMul(ball->Speed, finesine[angle]);
@@ -601,14 +600,13 @@ void FireMacePL1B (AActor *actor)
 			SERVERCOMMANDS_SoundActor( ball, CHAN_BODY, "weapons/maceshoot", 1, ATTN_NORM );
 		}
 
-		ball = Spawn("MaceFX2", actor->x, actor->y, actor->z + 28*FRACUNIT 
-			- actor->floorclip, ALLOW_REPLACE);
+		ball = Spawn("MaceFX2", actor->PosPlusZ(28*FRACUNIT - actor->floorclip), ALLOW_REPLACE);
 		ball->velz = 2*FRACUNIT+/*((player->lookdir)<<(FRACBITS-5))*/
 			finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)];
 		angle = actor->angle - ( ANGLE_45 / 3 );
 		ball->target = actor;
 		ball->angle = angle;
-		ball->z += 2*finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)];
+		ball->AddZ(2*finetangent[FINEANGLES/4-(actor->pitch>>ANGLETOFINESHIFT)]);
 		angle >>= ANGLETOFINESHIFT;
 		ball->velx = (actor->velx>>1)+FixedMul(ball->Speed, finecosine[angle]);
 		ball->vely = (actor->vely>>1)+FixedMul(ball->Speed, finesine[angle]);
@@ -810,8 +808,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_MaceBallImpact2)
 		// We need to make sure the ball doesn't temporary go into it's death frame.
 		if ( self->flags & MF_INBOUNCE )
 		{
-			fixed_t floordist = self->z - self->floorz;
-			fixed_t ceildist = self->ceilingz - self->z;
+			fixed_t floordist = self->Z() - self->floorz;
+			fixed_t ceildist = self->ceilingz - self->Z();
 			fixed_t vel;
 
 			if (floordist <= ceildist)
@@ -1018,8 +1016,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 		// We need to make sure the self doesn't temporary go into it's death frame.
 		if ( self->flags & MF_INBOUNCE )
 		{
-			fixed_t floordist = self->z - self->floorz;
-			fixed_t ceildist = self->ceilingz - self->z;
+			fixed_t floordist = self->Z() - self->floorz;
+			fixed_t ceildist = self->ceilingz - self->Z();
 			fixed_t vel;
 
 			if (floordist <= ceildist)

@@ -277,6 +277,10 @@ void	SERVERCOMMANDS_Sound( LONG lChannel, const char *pszSound, float fVolume, f
 void	SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0, bool bRespectActorPlayingSomething = false );
 void	SERVERCOMMANDS_SoundSector( sector_t *sector, int channel, const char *sound, float volume, float attenuation, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SoundPoint( LONG lX, LONG lY, LONG lZ, LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+inline void SERVERCOMMANDS_SoundPoint( const fixedvec3 &pos, LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 )
+{
+	SERVERCOMMANDS_SoundPoint( pos.x, pos.y, pos.z, lChannel, pszSound, fVolume, fAttenuation, ulPlayerExtra, flags );
+}
 void	SERVERCOMMANDS_AnnouncerSound( const char *pszSound, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 
 // Sector sequence commands. These handle sector sound sequences.

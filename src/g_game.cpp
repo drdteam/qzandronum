@@ -2309,8 +2309,7 @@ static fixed_t TeamLMSPlayersRangeFromSpot( ULONG ulPlayer, FPlayerStart *spot )
 			continue;
 
 		ulNumSpots++;
-		distance += P_AproxDistance (players[i].mo->x - spot->x,
-									players[i].mo->y - spot->y);
+		distance += players[i].mo->AproxDistance( spot->x, spot->y );
 	}
 
 	if ( ulNumSpots )
@@ -3109,7 +3108,7 @@ void GAME_CheckMode( void )
 						fixedvec3	Origin;
 
 						// Replace this skull with skulltag mode's version of the skull.
-						pNewSkull = Spawn( PClass::FindClass( "BlueSkullST" ), pItem->x, pItem->y, pItem->z, NO_REPLACE );
+						pNewSkull = Spawn( PClass::FindClass( "BlueSkullST" ), pItem->Pos(), NO_REPLACE );
 						if ( pNewSkull )
 						{
 							pNewSkull->flags &= ~MF_DROPPED;

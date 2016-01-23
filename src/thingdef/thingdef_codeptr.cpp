@@ -4728,7 +4728,7 @@ DEFINE_ACTION_FUNCTION_PARAMS (AActor, A_FaceConsolePlayer) {
 		return;
 
 	// Find the angle between the actor and the console player.
-	Angle = R_PointToAngle2( self->x, self->y, pConsolePlayer->x, pConsolePlayer->y );
+	Angle = self->AngleTo ( pConsolePlayer );
 	DeltaAngle = Angle - self->angle;
 
 	if (( MaxTurnAngle == 0 ) || ( DeltaAngle < MaxTurnAngle ) || ( DeltaAngle > (unsigned)-MaxTurnAngle ))
