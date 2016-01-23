@@ -126,8 +126,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 			baseFire->SetState (baseFire->FindState("NoGrow"));
 			for (i = 0; i < 5; i++)
 			{
-				fire = Spawn("HeadFX3", baseFire->x, baseFire->y,
-					baseFire->z, ALLOW_REPLACE);
+				fire = Spawn("HeadFX3", baseFire->Pos(), ALLOW_REPLACE);
 				if (i == 0)
 				{
 					S_Sound (self, CHAN_BODY, "ironlich/attack1", 1, ATTN_NORM);
@@ -158,7 +157,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 		mo = P_SpawnMissile (self, target, RUNTIME_CLASS(AWhirlwind));
 		if (mo != NULL)
 		{
-			mo->z -= 32*FRACUNIT;
+			mo->AddZ(-32*FRACUNIT, false);
 			mo->tracer = target;
 			mo->special1 = 60;
 			mo->special2 = 50; // Timer for active sound
@@ -217,7 +216,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichIceImpact)
 
 	for (i = 0; i < 8; i++)
 	{
-		shard = Spawn("HeadFX2", self->x, self->y, self->z, ALLOW_REPLACE);
+		shard = Spawn("HeadFX2", self->Pos(), ALLOW_REPLACE);
 		angle = i*ANG45;
 		shard->target = self->target;
 		shard->angle = angle;
@@ -244,7 +243,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichFireGrow)
 	}
 
 	self->health--;
-	self->z += 9*FRACUNIT;
+	self->AddZ(9*FRACUNIT);
 
 	// [BB] Tell clients of the changed z coord.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

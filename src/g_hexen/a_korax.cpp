@@ -107,7 +107,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxChase)
 		spot = iterator.Next ();
 		if (spot != NULL)
 		{
-			P_Teleport (self, spot->x, spot->y, ONFLOORZ, spot->angle, true, true, false);
+			P_Teleport (self, spot->X(), spot->Y(), ONFLOORZ, spot->angle, true, true, false);
 		}
 
 		P_StartScript (self, NULL, 249, NULL, NULL, 0, 0);
@@ -150,7 +150,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxChase)
 			self->tracer = spot;
 			if (spot)
 			{
-				P_Teleport (self, spot->x, spot->y, ONFLOORZ, spot->angle, true, true, false);
+				P_Teleport (self, spot->X(), spot->Y(), ONFLOORZ, spot->angle, true, true, false);
 			}
 		}
 	}
@@ -302,7 +302,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxMissile)
 
 DEFINE_ACTION_FUNCTION(AActor, A_KoraxCommand)
 {
-	fixed_t x,y,z;
 	angle_t ang;
 	int numcommands;
 	// [BC]
@@ -318,10 +317,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxCommand)
 
 	// Shoot stream of lightning to ceiling
 	ang = (self->angle - ANGLE_90) >> ANGLETOFINESHIFT;
-	x = self->x + KORAX_COMMAND_OFFSET * finecosine[ang];
-	y = self->y + KORAX_COMMAND_OFFSET * finesine[ang];
-	z = self->z + KORAX_COMMAND_HEIGHT*FRACUNIT;
-	pBolt = Spawn("KoraxBolt", x, y, z, ALLOW_REPLACE);
+	fixedvec3 pos = self->Vec3Offset(
+		KORAX_COMMAND_OFFSET * finecosine[ang],
+		KORAX_COMMAND_OFFSET * finesine[ang],
+		KORAX_COMMAND_HEIGHT*FRACUNIT);
+	pBolt = Spawn("KoraxBolt", pos, ALLOW_REPLACE);
 
 	// [BC] Spawn the bolt to clients.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
@@ -379,7 +379,6 @@ void KoraxFire (AActor *actor, const PClass *type, int arm)
 	};
 
 	angle_t ang;
-	fixed_t x,y,z;
 
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
@@ -387,12 +386,12 @@ void KoraxFire (AActor *actor, const PClass *type, int arm)
 		return;
 	}
 
-	ang = (actor->angle + (arm < 3 ? -KORAX_DELTAANGLE : KORAX_DELTAANGLE))
-		>> ANGLETOFINESHIFT;
-	x = actor->x + extension[arm] * finecosine[ang];
-	y = actor->y + extension[arm] * finesine[ang];
-	z = actor->z - actor->floorclip + armheight[arm];
-	P_SpawnKoraxMissile (x, y, z, actor, actor->target, type);
+	ang = (actor->angle + (arm < 3 ? -KORAX_DELTAANGLE : KORAX_DELTAANGLE)) >> ANGLETOFINESHIFT;
+	fixedvec3 pos = actor->Vec3Offset(
+		extension[arm] * finecosine[ang],
+		extension[arm] * finesine[ang],
+		-actor->floorclip + armheight[arm]);
+	P_SpawnKoraxMissile (pos.x, pos.y, pos.z, actor, actor->target, type);
 }
 
 //============================================================================
@@ -453,11 +452,11 @@ void A_KSpiritSeeker (AActor *actor, angle_t thresh, angle_t turnMax)
 	actor->vely = FixedMul (actor->Speed, finesine[angle]);
 
 	if (!(level.time&15) 
-		|| actor->z > target->z+(target->GetDefault()->height)
-		|| actor->z+actor->height < target->z)
+		|| actor->Z() > target->Z()+(target->GetDefault()->height)
+		|| actor->Top() < target->Z())
 	{
-		newZ = target->z+((pr_kspiritseek()*target->GetDefault()->height)>>8);
-		deltaZ = newZ-actor->z;
+		newZ = target->Z()+((pr_kspiritseek()*target->GetDefault()->height)>>8);
+		deltaZ = newZ-actor->Z();
 		if (abs(deltaZ) > 15*FRACUNIT)
 		{
 			if(deltaZ > 0)
@@ -573,11 +572,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_KBoltRaise)
 	}
 
 	// Spawn a child upward
-	z = self->z + KORAX_BOLT_HEIGHT;
+	z = self->Z() + KORAX_BOLT_HEIGHT;
 
 	if ((z + KORAX_BOLT_HEIGHT) < self->ceilingz)
 	{
-		mo = Spawn("KoraxBolt", self->x, self->y, z, ALLOW_REPLACE);
+		mo = Spawn("KoraxBolt", self->X(), self->Y(), z, ALLOW_REPLACE);
 		if (mo)
 		{
 			mo->special1 = KORAX_BOLT_LIFETIME;
@@ -629,7 +628,7 @@ AActor *P_SpawnKoraxMissile (fixed_t x, fixed_t y, fixed_t z,
 	{
 		dist = 1;
 	}
-	th->velz = (dest->z-z+(30*FRACUNIT))/dist;
+	th->velz = (dest->Z()-z+(30*FRACUNIT))/dist;
 
 	// [BC] Spawn this missile to clients.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

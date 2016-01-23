@@ -56,7 +56,7 @@ void A_SkullAttack(AActor *self, fixed_t speed)
 	
 	if (dist < 1)
 		dist = 1;
-	self->velz = (dest->z + (dest->height>>1) - self->z) / dist;
+	self->velz = (dest->Z() + (dest->height>>1) - self->Z()) / dist;
 
 	// [BC] Update the lost soul's momentum.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

@@ -98,8 +98,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileTarget)
 
 	A_FaceTarget (self);
 
-	fog = Spawn (fire, self->target->X(), self->target->Y(),
-		self->target->Z(), ALLOW_REPLACE);
+	fog = Spawn (fire, self->target->Pos(), ALLOW_REPLACE);
 	
 	// [BC] If we're the server, tell clients to spawn the thing.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
