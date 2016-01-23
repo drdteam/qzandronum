@@ -36,7 +36,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelBob)
 	{
 		minz = maxz;
 	}
-	if (minz < self->z)
+	if (minz < self->Z())
 	{
 		self->velz -= FRACUNIT;
 	}
@@ -44,7 +44,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelBob)
 	{
 		self->velz += FRACUNIT;
 	}
-	self->reactiontime = (minz >= self->z) ? 4 : 0;
+	self->reactiontime = (minz >= self->Z()) ? 4 : 0;
 
 	// [CW] Moving the actor is server side.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -64,7 +64,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 	// [CW] If we aren't a client, spawn the missile.
 	if ( NETWORK_InClientMode() == false )
 	{
-		missile = P_SpawnMissileZAimed (self, self->z + 32*FRACUNIT, self->target, PClass::FindClass("SentinelFX2"));
+		missile = P_SpawnMissileZAimed (self, self->Z() + 32*FRACUNIT, self->target, PClass::FindClass("SentinelFX2"));
 
 		// [CW] Spawn the missile server side.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -76,9 +76,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 		for (int i = 8; i > 1; --i)
 		{
 			trail = Spawn("SentinelFX1",
-				self->x + FixedMul (missile->radius * i, finecosine[missile->angle >> ANGLETOFINESHIFT]),
-				self->y + FixedMul (missile->radius * i, finesine[missile->angle >> ANGLETOFINESHIFT]),
-				missile->z + (missile->velz / 4 * i), ALLOW_REPLACE);
+				self->Vec3Angle(missile->radius*i, missile->angle, (missile->velz / 4 * i)), ALLOW_REPLACE);
 			if (trail != NULL)
 			{
 				trail->target = self;
@@ -88,7 +86,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 				P_CheckMissileSpawn (trail, self->radius);
 			}
 		}
-		missile->z += missile->velz >> 2;
+		missile->AddZ(missile->velz >> 2);
 	}
 }
 
