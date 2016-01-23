@@ -176,9 +176,9 @@ void UNLAGGED_Reconcile( AActor *actor )
 	{
 		if (playeringame[i] && players[i].mo && !players[i].bSpectating)
 		{
-			players[i].restoreX = players[i].mo->x;
-			players[i].restoreY = players[i].mo->y;
-			players[i].restoreZ = players[i].mo->z;
+			players[i].restoreX = players[i].mo->X();
+			players[i].restoreY = players[i].mo->Y();
+			players[i].restoreZ = players[i].mo->Z();
 
 			//Work around limitations of SetOrigin to prevent players
 			//from getting stuck in ledges
@@ -205,17 +205,17 @@ void UNLAGGED_Reconcile( AActor *actor )
 				fixed_t serverCeilingZ = actor->ceilingz;
 
 				// [BB] Try to reset floorz/ceilingz to account for the fact that the sector the actor is in was possibly reconciled.
-				actor->floorz = actor->Sector->floorplane.ZatPoint (actor->x, actor->y);
-				actor->ceilingz = actor->Sector->ceilingplane.ZatPoint (actor->x, actor->y);
+				actor->floorz = actor->Sector->floorplane.ZatPoint (actor);
+				actor->ceilingz = actor->Sector->ceilingplane.ZatPoint (actor);
 				P_FindFloorCeiling(actor, false);
 
 				//force the shooter out of the floor/ceiling - a client has to mispredict in this case,
 				//because not mispredicting would mean the client would think he's inside the floor/ceiling
-				if (actor->z + actor->height > actor->ceilingz)
-					actor->z = actor->ceilingz - actor->height;
+				if (actor->Top() > actor->ceilingz)
+					actor->SetZ ( actor->ceilingz - actor->height );
 
-				if (actor->z < actor->floorz)
-					actor->z = actor->floorz;
+				if (actor->Z() < actor->floorz)
+					actor->SetZ( actor->floorz );
 
 				//floor moved up - a client might have mispredicted himself too low due to gravity
 				//and the client thinking the floor is lower than it actually is
@@ -224,8 +224,8 @@ void UNLAGGED_Reconcile( AActor *actor )
 				{
 					//shooter was standing on the floor, let's pull him down to his floor if
 					//he wasn't falling
-					if ( (actor->z == serverFloorZ) && (actor->velz >= 0) )
-						actor->z = actor->floorz;
+					if ( (actor->Z() == serverFloorZ) && (actor->velz >= 0) )
+						actor->SetZ( actor->floorz );
 
 					//todo: more correction for floor moving up
 				}
@@ -297,9 +297,9 @@ void UNLAGGED_RecordPlayer( player_t *player )
 	const int unlaggedIndex = gametic % UNLAGGEDTICS;
 
 	//record the player
-	player->unlaggedX[unlaggedIndex] = player->mo->x;
-	player->unlaggedY[unlaggedIndex] = player->mo->y;
-	player->unlaggedZ[unlaggedIndex] = player->mo->z;
+	player->unlaggedX[unlaggedIndex] = player->mo->X();
+	player->unlaggedY[unlaggedIndex] = player->mo->Y();
+	player->unlaggedZ[unlaggedIndex] = player->mo->Z();
 }
 
 
@@ -317,9 +317,9 @@ void UNLAGGED_ResetPlayer( player_t *player )
 
 	for (int unlaggedIndex = 0; unlaggedIndex < UNLAGGEDTICS; ++unlaggedIndex)
 	{
-		player->unlaggedX[unlaggedIndex] = player->mo->x;
-		player->unlaggedY[unlaggedIndex] = player->mo->y;
-		player->unlaggedZ[unlaggedIndex] = player->mo->z;
+		player->unlaggedX[unlaggedIndex] = player->mo->X();
+		player->unlaggedY[unlaggedIndex] = player->mo->Y();
+		player->unlaggedZ[unlaggedIndex] = player->mo->Z();
 	}
 }
 
@@ -433,9 +433,9 @@ void UNLAGGED_SpawnDebugActors ( )
 				if ( ( ulPlayer == ulIdx ) || ( PLAYER_IsValidPlayer ( ulIdx ) == false ) || players[ulIdx].bSpectating )
 					continue;
 
-				pActor->x = players[ulIdx].unlaggedX[unlaggedIndex];
-				pActor->y = players[ulIdx].unlaggedY[unlaggedIndex];
-				pActor->z = players[ulIdx].unlaggedZ[unlaggedIndex];
+				pActor->SetXYZ ( players[ulIdx].unlaggedX[unlaggedIndex],
+				                 players[ulIdx].unlaggedY[unlaggedIndex],
+				                 players[ulIdx].unlaggedZ[unlaggedIndex] );
 
 				SERVERCOMMANDS_SpawnThingNoNetID( pActor, ulPlayer, SVCF_ONLYTHISCLIENT );
 			}

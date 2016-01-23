@@ -168,8 +168,8 @@ void P_Ticker (void)
 	{
 		fixedvec3	Position;
 
-		Position.x = players[consoleplayer].camera->x;
-		Position.y = players[consoleplayer].camera->y;
+		Position.x = players[consoleplayer].camera->X();
+		Position.y = players[consoleplayer].camera->Y();
 		ASTAR_ShowCosts( Position );
 	}
 
@@ -184,11 +184,11 @@ void P_Ticker (void)
 			ULONG				ulFlags;
 			DHUDMessageFadeOut	*pMsg;
 
-			DestX = players[consoleplayer].camera->x + ( botdebug_walktest * finecosine[players[consoleplayer].camera->angle >> ANGLETOFINESHIFT] );
-			DestY = players[consoleplayer].camera->y + ( botdebug_walktest * finesine[players[consoleplayer].camera->angle >> ANGLETOFINESHIFT] );
+			DestX = players[consoleplayer].camera->X() + ( botdebug_walktest * finecosine[players[consoleplayer].camera->angle >> ANGLETOFINESHIFT] );
+			DestY = players[consoleplayer].camera->Y() + ( botdebug_walktest * finesine[players[consoleplayer].camera->angle >> ANGLETOFINESHIFT] );
 
 			szString[0] = 0;
-			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->x, players[consoleplayer].camera->y, players[consoleplayer].camera->z, DestX, DestY );
+			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->Pos(), DestX, DestY );
 			if ( ulFlags > 0 )
 			{
 				bool	bNeedMark;
@@ -371,7 +371,7 @@ void P_Ticker (void)
 			{
 				// Also, if they have an enemy, and can see it, update their known enemy position.
 				if (( players[ulIdx].pSkullBot->m_ulPlayerEnemy != MAXPLAYERS ) && ( P_CheckSight( players[ulIdx].mo, players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo, SF_SEEPASTBLOCKEVERYTHING )))
-					players[ulIdx].pSkullBot->SetEnemyPosition( players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->x, players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->y, players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->z );
+					players[ulIdx].pSkullBot->SetEnemyPosition( players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->Pos() );
 
 				// Now that all the players have moved to their final location for this tick,
 				// we can properly aim at them.

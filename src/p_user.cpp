@@ -2080,7 +2080,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 					SCOREBOARD_RefreshHUD( );
 
 				// Spawn a new flag.
-				pTeamItem = Spawn( TEAM_GetItem( i ), x, y, z, NO_REPLACE );
+				pTeamItem = Spawn( TEAM_GetItem( i ), Pos(), NO_REPLACE );
 
 				if ( pTeamItem )
 				{
@@ -2133,7 +2133,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 				SCOREBOARD_RefreshHUD( );
 
 			// Spawn a new flag.
-			pTeamItem = Spawn( PClass::FindClass( "WhiteFlag" ), x, y, ONFLOORZ, NO_REPLACE );
+			pTeamItem = Spawn( PClass::FindClass( "WhiteFlag" ), X(), Y(), ONFLOORZ, NO_REPLACE );
 			if ( pTeamItem )
 			{
 				pTeamItem->flags |= MF_DROPPED;

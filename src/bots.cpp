@@ -728,14 +728,14 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 //	vy = FixedMul( pSource->y, Distance );
 	vz = finesine[Pitch];
 
-	sz = pSource->z - pSource->floorclip + pSource->height;// + (fixed_t)(chase_height * FRACUNIT);
+	sz = pSource->Top() - pSource->floorclip;// + (fixed_t)(chase_height * FRACUNIT);
 
 //	if ( P_PathTraverse( CurPos.x, CurPos.y, DestPos.x, DestPos.y, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false )
 //	return ( P_PathTraverse( pSource->x, pSource->y, vx, vy, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false );
-	if ( Trace( pSource->x,	// Source X
-				pSource->y,		// Source Y
+	if ( Trace( pSource->X(),	// Source X
+				pSource->Y(),		// Source Y
 				// [BB] gameinfo.StepHeight seems to be gone from ZDoom, but even before the removal it was always 0.
-				pSource->z /*+ gameinfo.StepHeight*/,//sz,				// Source Z
+				pSource->Z() /*+ gameinfo.StepHeight*/,//sz,				// Source Z
 				pSource->Sector,// Source sector
 				vx,
 				vy,
@@ -796,10 +796,7 @@ bool BOTS_IsVisible( AActor *pActor1, AActor *pActor2 )
 	if ( P_CheckSight( pActor1, pActor2, SF_SEEPASTBLOCKEVERYTHING ) == false )
 		return ( false );
 
-	Angle = R_PointToAngle2( pActor1->x,
-					  pActor1->y, 
-					  pActor2->x,
-					  pActor2->y );
+	Angle = pActor1->AngleTo ( pActor2 );
 
 	Angle -= pActor1->angle;
 
@@ -3358,10 +3355,7 @@ void CSkullBot::HandleAiming( void )
 //			( EnemyPos.y - players[m_ulPlayerEnemy].mo->y ) / FRACUNIT, 
 //			( EnemyPos.z - players[m_ulPlayerEnemy].mo->z ) / FRACUNIT );
 
-		m_pPlayer->mo->angle = R_PointToAngle2( m_pPlayer->mo->x,
-											m_pPlayer->mo->y, 
-											EnemyPos.x,
-											EnemyPos.y );
+		m_pPlayer->mo->angle = m_pPlayer->mo->AngleTo ( EnemyPos.x, EnemyPos.y );
 
 		m_pPlayer->mo->angle += m_AngleDesired;
 		m_AngleOffBy -= m_AngleDelta;
@@ -3370,8 +3364,8 @@ void CSkullBot::HandleAiming( void )
 		else
 			m_pPlayer->mo->angle += m_AngleOffBy;
 
-		ShootZ = m_pPlayer->mo->z - m_pPlayer->mo->floorclip + ( m_pPlayer->mo->height >> 1 ) + ( 8 * FRACUNIT );
-		Distance = P_AproxDistance( m_pPlayer->mo->x - EnemyPos.x, m_pPlayer->mo->y - EnemyPos.y );
+		ShootZ = m_pPlayer->mo->Z() - m_pPlayer->mo->floorclip + ( m_pPlayer->mo->height >> 1 ) + ( 8 * FRACUNIT );
+		Distance = m_pPlayer->mo->AproxDistance ( EnemyPos.x, EnemyPos.y );
 //		m_pPlayer->mo->pitch = R_PointToAngle( Distance, ( EnemyPos.z + ( players[m_ulPlayerEnemy].mo->height / 2 )) - m_pPlayer->mo->z );
 		lTopPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z + players[m_ulPlayerEnemy].mo->height );
 		lBottomPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z );
@@ -3419,10 +3413,7 @@ void CSkullBot::HandleAiming( void )
 				angle_t		AngleFinal;
 
 				// Get the exact angle between us and the enemy.
-				Angle = R_PointToAngle2( m_pPlayer->mo->x,
-										  m_pPlayer->mo->y, 
-										  EnemyPos.x,
-										  EnemyPos.y );
+				Angle = m_pPlayer->mo->AngleTo ( EnemyPos.x, EnemyPos.y );
 
 				// The greater the difference between the angle between ourselves and the enemy, and our
 				// current angle, the more inaccurate it is likely to be.
@@ -3670,11 +3661,11 @@ fixedvec3 CSkullBot::GetEnemyPosition( void )
 
 //*****************************************************************************
 //
-void CSkullBot::SetEnemyPosition( fixed_t X, fixed_t Y, fixed_t Z )
+void CSkullBot::SetEnemyPosition( const fixedvec3 &pos )
 {
-	m_EnemyPosition[gametic % MAX_REACTION_TIME].x = X;
-	m_EnemyPosition[gametic % MAX_REACTION_TIME].y = Y;
-	m_EnemyPosition[gametic % MAX_REACTION_TIME].z = Z;
+	m_EnemyPosition[gametic % MAX_REACTION_TIME].x = pos.x;
+	m_EnemyPosition[gametic % MAX_REACTION_TIME].y = pos.y;
+	m_EnemyPosition[gametic % MAX_REACTION_TIME].z = pos.z;
 
 	m_ulLastEnemyPositionTick = gametic;
 	if ( m_ulPathType == BOTPATHTYPE_ENEMYPOSITION )

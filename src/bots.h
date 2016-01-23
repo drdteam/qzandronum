@@ -532,7 +532,7 @@ public:
 
 	// Get the current enemy's position. How accurate this will be depends on the bots perception.
 	fixedvec3	GetEnemyPosition( void );
-	void		SetEnemyPosition( fixed_t X, fixed_t Y, fixed_t Z );
+	void		SetEnemyPosition( const fixedvec3 &pos );
 
 	// Get the last known enemy position.
 	fixedvec3	GetLastEnemyPosition( void );

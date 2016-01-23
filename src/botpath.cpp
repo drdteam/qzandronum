@@ -365,15 +365,15 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 					// other things in the blocks and see if we hit something that is
 					// definitely blocking. Otherwise, we need to check the lines, or we
 					// could end up stuck inside a wall.
-					if (( g_pBlockingActor->player == NULL ) && (( g_pBlockingActor->z + g_pBlockingActor->height - pActor->z ) <= 0 /*gameinfo.StepHeight*/ ))
+					if (( g_pBlockingActor->player == NULL ) && (( g_pBlockingActor->Top() - pActor->Z() ) <= 0 /*gameinfo.StepHeight*/ ))
 					{
-						if (( pThingBlocker == NULL ) || ( g_pBlockingActor->z > pThingBlocker->z ))
+						if (( pThingBlocker == NULL ) || ( g_pBlockingActor->Z() > pThingBlocker->Z() ))
 							pThingBlocker = g_pBlockingActor;
 
 						pRobin = g_pBlockingActor;
 						g_pBlockingActor = NULL;
 					}
-					else if ((( pActor->z + pActor->height ) - g_pBlockingActor->z ) <= 0 /*gameinfo.StepHeight*/ )
+					else if ((( pActor->Top() ) - g_pBlockingActor->Z() ) <= 0 /*gameinfo.StepHeight*/ )
 					{
 						if ( pThingBlocker )
 						{
@@ -495,13 +495,13 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 				return ( ulFlags );
 			}
 
-			if ((( g_pBlockingActor->z + g_pBlockingActor->height ) - StartZ ) > 0 )
+			if ((( g_pBlockingActor->Top() ) - StartZ ) > 0 )
 			{
-				if ((( g_pBlockingActor->z + g_pBlockingActor->height ) - StartZ ) <= 0 /*gameinfo.StepHeight*/ )
+				if ((( g_pBlockingActor->Top() ) - StartZ ) <= 0 /*gameinfo.StepHeight*/ )
 					ulFlags |= BOTPATH_STAIRS;
-				else if ((( g_pBlockingActor->z + g_pBlockingActor->height ) - StartZ ) <= 36 * FRACUNIT )
+				else if ((( g_pBlockingActor->Top() ) - StartZ ) <= 36 * FRACUNIT )
 					ulFlags |= BOTPATH_JUMPABLELEDGE;
-				else if (( g_pBlockingActor->player == NULL ) && ((( g_pBlockingActor->z + g_pBlockingActor->height ) - StartZ ) <= 60 * FRACUNIT ))
+				else if (( g_pBlockingActor->player == NULL ) && ((( g_pBlockingActor->Top() ) - StartZ ) <= 60 * FRACUNIT ))
 					ulFlags |= BOTPATH_JUMPABLELEDGE;
 				else
 				{
@@ -538,7 +538,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 		// If we can't fit into this sector because the ceiling is too low, or the sector's 
 		// ceiling is below our top, potentially flag the path as being obstructed.
 //		bObstructingIfNotDoor = false;
-		if ((( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->height ) || (( g_PathSectorCeilingZ - pActor->z ) < pActor->height ))
+		if ((( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->height ) || (( g_PathSectorCeilingZ - pActor->Z() ) < pActor->height ))
 		{
 			LONG	lIdx;
 
@@ -560,7 +560,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 			}
 		}
 
-		lHeightChange = g_PathSectorFloorZ - pActor->z;
+		lHeightChange = g_PathSectorFloorZ - pActor->Z();
 		if ( lHeightChange > 0 )
 		{
 			if ( lHeightChange <= 0 /*gameinfo.StepHeight*/ )
@@ -665,8 +665,8 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 					if ( P_GetMidTexturePosition( pLine, lLineSide, &mid3d_top, &mid3d_bot )) {
 						// If the 3d midtexture top is of appropriate height,
 						// it is a railing. Jump over it.
-						if ( mid3d_top > pActor->z + pActor->MaxStepHeight &&
-							mid3d_top <= pActor->z + jumpheight )
+						if ( mid3d_top > pActor->Z() + pActor->MaxStepHeight &&
+							mid3d_top <= pActor->Z() + jumpheight )
 						{
 							// If the ceiling is too low, we can't jump there
 							// and the path is obstructed.
@@ -675,8 +675,8 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 
 							ulFlags |= BOTPATH_JUMPABLELEDGE;
 						}
-						else if ( mid3d_top > pActor->z + pActor->MaxStepHeight &&
-							mid3d_bot < pActor->z + pActor->height )
+						else if ( mid3d_top > pActor->Z() + pActor->MaxStepHeight &&
+							mid3d_bot < pActor->Top() )
 						{
 							// 3d midtex blocks the path and we can't jump over it.
 							return ( ulFlags | BOTPATH_OBSTRUCTED );
@@ -833,7 +833,7 @@ static bool botpath_CheckThing( AActor *pThing )
 		return ( true );
 
 	blockdist = pThing->radius + g_pPathActor->radius;
-	if (( abs( pThing->x - g_PathX ) >= blockdist ) || ( abs( pThing->y - g_PathY ) >= blockdist ))
+	if (( abs( pThing->X() - g_PathX ) >= blockdist ) || ( abs( pThing->Y() - g_PathY ) >= blockdist ))
 	{
 		// Didn't come into contact with the thing.
 		return ( true );
@@ -844,7 +844,7 @@ static bool botpath_CheckThing( AActor *pThing )
 	// Check if the item is above or below the thing.
 	if (( i_compatflags & COMPATF_NO_PASSMOBJ ) == false )
 	{
-		if (( g_pPathActor->z >= ( pThing->z + pThing->height )) || (( g_pPathActor->z + g_pPathActor->height ) <= pThing->z ))
+		if (( g_pPathActor->Z() >= ( pThing->Top() )) || (( g_pPathActor->Top() ) <= pThing->Z() ))
 			return ( true );
 	}
 
@@ -934,7 +934,7 @@ static bool botpath_CheckLine( line_t *pLine )
 		}
 		else if (r >= (1<<24))
 		{
-			BOTPATH_LineOpening( pLine, sx = pLine->v2->x, sy = pLine->v2->y, g_pPathActor->x, g_pPathActor->y );
+			BOTPATH_LineOpening( pLine, sx = pLine->v2->x, sy = pLine->v2->y, g_pPathActor->X(), g_pPathActor->Y() );
 		}
 		else
 		{
