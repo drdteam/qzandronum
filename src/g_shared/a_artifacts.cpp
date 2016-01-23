@@ -1025,7 +1025,7 @@ void APowerFlight::InitEffect ()
 	Super::InitEffect();
 	Owner->flags2 |= MF2_FLY;
 	Owner->flags |= MF_NOGRAVITY;
-	if (Owner->z <= Owner->floorz)
+	if (Owner->Z() <= Owner->floorz)
 	{
 		Owner->velz = 4*FRACUNIT;	// thrust the player in the air a bit
 	}
@@ -1072,7 +1072,7 @@ void APowerFlight::EndEffect ()
 
 	if (!(Owner->flags7 & MF7_FLYCHEAT))
 	{
-		if (Owner->z != Owner->floorz)
+		if (Owner->Z() != Owner->floorz)
 		{
 			Owner->player->centering = true;
 		}
@@ -1321,7 +1321,7 @@ void APowerSpeed::DoEffect ()
 		return;
 	}
 
-	AActor *speedMo = Spawn<APlayerSpeedTrail> (Owner->x, Owner->y, Owner->z, NO_REPLACE);
+	AActor *speedMo = Spawn<APlayerSpeedTrail> (Owner->Pos(), NO_REPLACE);
 	if (speedMo)
 	{
 		speedMo->angle = Owner->angle;
