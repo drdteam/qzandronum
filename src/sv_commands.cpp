@@ -301,11 +301,11 @@ bool EnsureActorHasNetID( const AActor *pActor )
 // [BB] Check if the actor already was updated during this tic, and alters ulBits accorindly.
 void RemoveUnnecessaryPositionUpdateFlags( AActor *pActor, ULONG &ulBits )
 {
-	if ( (pActor->lastNetXUpdateTic == gametic) && (pActor->lastX == pActor->x) )
+	if ( (pActor->lastNetXUpdateTic == gametic) && (pActor->lastX == pActor->X()) )
 		ulBits  &= ~CM_X;
-	if ( (pActor->lastNetYUpdateTic == gametic) && (pActor->lastY == pActor->y) )
+	if ( (pActor->lastNetYUpdateTic == gametic) && (pActor->lastY == pActor->Y()) )
 		ulBits  &= ~CM_Y;
-	if ( (pActor->lastNetZUpdateTic == gametic) && (pActor->lastZ == pActor->z) )
+	if ( (pActor->lastNetZUpdateTic == gametic) && (pActor->lastZ == pActor->Z()) )
 		ulBits  &= ~CM_Z;
 	if ( (pActor->lastNetMomXUpdateTic == gametic) && (pActor->lastMomx == pActor->velx) )
 		ulBits  &= ~CM_MOMX;
@@ -426,17 +426,17 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 	if ( ulBits & CM_X )
 	{
 		pActor->lastNetXUpdateTic = gametic;
-		pActor->lastX = pActor->x;
+		pActor->lastX = pActor->X();
 	}
 	if ( ulBits & CM_Y )
 	{
 		pActor->lastNetYUpdateTic = gametic;
-		pActor->lastY = pActor->y;
+		pActor->lastY = pActor->Y();
 	}
 	if ( ulBits & CM_Z )
 	{
 		pActor->lastNetZUpdateTic = gametic;
-		pActor->lastZ = pActor->z;
+		pActor->lastZ = pActor->Z();
 	}
 	if ( ulBits & CM_MOMX )
 	{
@@ -464,17 +464,17 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 // [BB/WS] Tell clients to re-use their last updated position. This saves a lot of bandwidth.
 void CheckPositionReuse( AActor *pActor, ULONG &ulBits )
 {
-	if ( ulBits & CM_X && pActor->lastX == pActor->x )
+	if ( ulBits & CM_X && pActor->lastX == pActor->X() )
 	{
 		ulBits &= ~CM_X;
 		ulBits |= CM_REUSE_X;
 	}
-	if ( ulBits & CM_Y && pActor->lastY == pActor->y )
+	if ( ulBits & CM_Y && pActor->lastY == pActor->Y() )
 	{
 		ulBits &= ~CM_Y;
 		ulBits |= CM_REUSE_Y;
 	}
-	if ( ulBits & CM_Z && pActor->lastZ == pActor->z )
+	if ( ulBits & CM_Z && pActor->lastZ == pActor->Z() )
 	{
 		ulBits &= ~CM_Z;
 		ulBits |= CM_REUSE_Z;
@@ -547,9 +547,9 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	command.addByte( players[ulPlayer].bDeadSpectator );
 	command.addShort( players[ulPlayer].mo->lNetID );
 	command.addLong( players[ulPlayer].mo->angle );
-	command.addLong( players[ulPlayer].mo->x );
-	command.addLong( players[ulPlayer].mo->y );
-	command.addLong( players[ulPlayer].mo->z );
+	command.addLong( players[ulPlayer].mo->X() );
+	command.addLong( players[ulPlayer].mo->Y() );
+	command.addLong( players[ulPlayer].mo->Z() );
 	command.addShort( players[ulPlayer].CurrentPlayerClass );
 	// command.addByte( players[ulPlayer].userinfo.GetPlayerClassNum() );
 
@@ -587,9 +587,9 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	fullCommand.addByte( PLAYER_VISIBLE | ulPlayerAttackFlags );
 	// [BB] The x/y position has to be sent at full precision, otherwise the player may be rounded to a neighboring sector
 	// on the clients, potentially completely changing its Z position.
-	fullCommand.addLong( players[ulPlayer].mo->x );
-	fullCommand.addLong( players[ulPlayer].mo->y );
-	fullCommand.addShort( players[ulPlayer].mo->z >> FRACBITS );
+	fullCommand.addLong( players[ulPlayer].mo->X() );
+	fullCommand.addLong( players[ulPlayer].mo->Y() );
+	fullCommand.addShort( players[ulPlayer].mo->Z() >> FRACBITS );
 	fullCommand.addLong( players[ulPlayer].mo->angle );
 	fullCommand.addShort( players[ulPlayer].mo->velx >> FRACBITS );
 	fullCommand.addShort( players[ulPlayer].mo->vely >> FRACBITS );
@@ -1241,9 +1241,9 @@ void SERVERCOMMANDS_MoveLocalPlayer( ULONG ulPlayer )
 	command.addLong( gametic );
 
 	// Write position.
-	command.addLong( players[ulPlayer].mo->x );
-	command.addLong( players[ulPlayer].mo->y );
-	command.addLong( players[ulPlayer].mo->z );
+	command.addLong( players[ulPlayer].mo->X() );
+	command.addLong( players[ulPlayer].mo->Y() );
+	command.addLong( players[ulPlayer].mo->Z() );
 
 	// Write velocity.
 	command.addLong( players[ulPlayer].mo->velx );
@@ -1468,9 +1468,9 @@ void SERVERCOMMANDS_SpawnThing( AActor *pActor, ULONG ulPlayerExtra, ServerComma
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHING );
-	command.addShort( pActor->x >> FRACBITS );
-	command.addShort( pActor->y >> FRACBITS );
-	command.addShort( pActor->z >> FRACBITS );
+	command.addShort( pActor->X() >> FRACBITS );
+	command.addShort( pActor->Y() >> FRACBITS );
+	command.addShort( pActor->Z() >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.addShort( pActor->lNetID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
@@ -1491,9 +1491,9 @@ void SERVERCOMMANDS_SpawnThingNoNetID( AActor *pActor, ULONG ulPlayerExtra, Serv
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGNONETID );
-	command.addShort( pActor->x >> FRACBITS );
-	command.addShort( pActor->y >> FRACBITS );
-	command.addShort( pActor->z >> FRACBITS );
+	command.addShort( pActor->X() >> FRACBITS );
+	command.addShort( pActor->Y() >> FRACBITS );
+	command.addShort( pActor->Z() >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
@@ -1517,9 +1517,9 @@ void SERVERCOMMANDS_SpawnThingExact( AActor *pActor, ULONG ulPlayerExtra, Server
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGEXACT );
-	command.addLong( pActor->x );
-	command.addLong( pActor->y );
-	command.addLong( pActor->z );
+	command.addLong( pActor->X() );
+	command.addLong( pActor->Y() );
+	command.addLong( pActor->Z() );
 	command.addShort( usActorNetworkIndex );
 	command.addShort( pActor->lNetID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
@@ -1537,9 +1537,9 @@ void SERVERCOMMANDS_SpawnThingExactNoNetID( AActor *pActor, ULONG ulPlayerExtra,
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGEXACTNONETID );
-	command.addLong( pActor->x );
-	command.addLong( pActor->y );
-	command.addLong( pActor->z );
+	command.addLong( pActor->X() );
+	command.addLong( pActor->Y() );
+	command.addLong( pActor->Z() );
 	command.addShort( usActorNetworkIndex );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
@@ -1570,11 +1570,11 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write position.
 	if ( ulBits & CM_X )
-		command.addShort( pActor->x >> FRACBITS );
+		command.addShort( pActor->X() >> FRACBITS );
 	if ( ulBits & CM_Y )
-		command.addShort( pActor->y >> FRACBITS );
+		command.addShort( pActor->Y() >> FRACBITS );
 	if ( ulBits & CM_Z )
-		command.addShort( pActor->z >> FRACBITS );
+		command.addShort( pActor->Z() >> FRACBITS );
 
 	// Write last position.
 	if ( ulBits & CM_LAST_X )
@@ -1637,11 +1637,11 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write position.
 	if ( ulBits & CM_X )
-		command.addLong( pActor->x );
+		command.addLong( pActor->X() );
 	if ( ulBits & CM_Y )
-		command.addLong( pActor->y );
+		command.addLong( pActor->Y() );
 	if ( ulBits & CM_Z )
-		command.addLong( pActor->z );
+		command.addLong( pActor->Z() );
 
 	// Write last position.
 	if ( ulBits & CM_LAST_X )
@@ -2208,9 +2208,9 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 
 	NetCommand command( SVC_TELEPORTTHING );
 	command.addShort( pActor->lNetID );
-	command.addShort( pActor->x >> FRACBITS );
-	command.addShort( pActor->y >> FRACBITS );
-	command.addShort( pActor->z >> FRACBITS );
+	command.addShort( pActor->X() >> FRACBITS );
+	command.addShort( pActor->Y() >> FRACBITS );
+	command.addShort( pActor->Z() >> FRACBITS );
 	command.addShort( pActor->velx >> FRACBITS );
 	command.addShort( pActor->vely >> FRACBITS );
 	command.addShort( pActor->velz >> FRACBITS );
@@ -2326,9 +2326,9 @@ void SERVERCOMMANDS_SpawnPuff( AActor *pActor, ULONG ulState, bool bSendTranslat
 	USHORT usActorNetworkIndex = pActor->GetClass()->getActorNetworkIndex();
 
 	NetCommand command( SVC_SPAWNPUFF );
-	command.addShort( pActor->x >> FRACBITS );
-	command.addShort( pActor->y >> FRACBITS );
-	command.addShort( pActor->z >> FRACBITS );
+	command.addShort( pActor->X() >> FRACBITS );
+	command.addShort( pActor->Y() >> FRACBITS );
+	command.addShort( pActor->Z() >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.addByte( ulState );
 	command.addByte( !!bSendTranslation );
@@ -2754,9 +2754,9 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 		return;
 
 	NetCommand command( SVC_SPAWNMISSILE );
-	command.addShort( pMissile->x >> FRACBITS );
-	command.addShort( pMissile->y >> FRACBITS );
-	command.addShort( pMissile->z >> FRACBITS );
+	command.addShort( pMissile->X() >> FRACBITS );
+	command.addShort( pMissile->Y() >> FRACBITS );
+	command.addShort( pMissile->Z() >> FRACBITS );
 	command.addLong( pMissile->velx );
 	command.addLong( pMissile->vely );
 	command.addLong( pMissile->velz );
@@ -2784,9 +2784,9 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 		return;
 
 	NetCommand command( SVC_SPAWNMISSILEEXACT );
-	command.addLong( pMissile->x );
-	command.addLong( pMissile->y );
-	command.addLong( pMissile->z );
+	command.addLong( pMissile->X() );
+	command.addLong( pMissile->Y() );
+	command.addLong( pMissile->Z() );
 	command.addLong( pMissile->velx );
 	command.addLong( pMissile->vely );
 	command.addLong( pMissile->velz );
@@ -2821,9 +2821,9 @@ void SERVERCOMMANDS_MissileExplode( AActor *pMissile, line_t *pLine, ULONG ulPla
 	else
 		command.addShort( -1 );
 
-	command.addShort( pMissile->x >> FRACBITS );
-	command.addShort( pMissile->y >> FRACBITS );
-	command.addShort( pMissile->z >> FRACBITS );
+	command.addShort( pMissile->X() >> FRACBITS );
+	command.addShort( pMissile->Y() >> FRACBITS );
+	command.addShort( pMissile->Z() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3520,7 +3520,7 @@ void SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSo
 	// [BB] If the actor doesn't have a NetID, we have to instruct the clients differently how to play the sound.
 	if ( pActor->lNetID == -1 )
 	{
-		SERVERCOMMANDS_SoundPoint( pActor->x, pActor->y, pActor->z, lChannel, pszSound, fVolume, fAttenuation, ulPlayerExtra, flags );
+		SERVERCOMMANDS_SoundPoint( pActor->Pos(), lChannel, pszSound, fVolume, fAttenuation, ulPlayerExtra, flags );
 		return;
 	}
 

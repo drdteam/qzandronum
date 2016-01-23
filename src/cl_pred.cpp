@@ -271,7 +271,7 @@ void CLIENT_PREDICT_PlayerTeleported( void )
 	for ( ulIdx = 0; ulIdx < CLIENT_PREDICTION_TICS; ulIdx++ )
 	{
 		memset( &g_SavedTiccmd[ulIdx], 0, sizeof( ticcmd_t ));
-		g_SavedFloorZ[ulIdx] = players[consoleplayer].mo->z;
+		g_SavedFloorZ[ulIdx] = players[consoleplayer].mo->Z();
 		g_bSavedOnFloor[ulIdx] = false;
 	}
 }
@@ -304,13 +304,13 @@ static void client_predict_SaveOnGroundStatus( const player_t *pPlayer, const UL
 	// [BB] Standing on an actor (like a bridge) needs special treatment.
 	const AActor *pActor = (pPlayer->mo->flags2 & MF2_ONMOBJ) ? P_CheckOnmobj ( pPlayer->mo ) : NULL;
 	if ( pActor == NULL ) {
-		g_bSavedOnFloor[tickIndex] = pPlayer->mo->z == pPlayer->mo->floorz;
+		g_bSavedOnFloor[tickIndex] = pPlayer->mo->Z() == pPlayer->mo->floorz;
 		g_SavedFloorZ[tickIndex] = pPlayer->mo->floorz;
 	}
 	else
 	{
-		g_bSavedOnFloor[tickIndex] = ( pPlayer->mo->z == pActor->z + pActor->height );
-		g_SavedFloorZ[tickIndex] = pActor->z + pActor->height;
+		g_bSavedOnFloor[tickIndex] = ( pPlayer->mo->Z() == pActor->Top() );
+		g_SavedFloorZ[tickIndex] = pActor->Top();
 	}
 
 	// [BB] Remember whether the player was standing on another actor.
@@ -342,7 +342,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 
 	// [BB] The server moved us to a postion above the floor and into a sector without a moving floor,
 	// so don't glue us to the floor for this tic.
-	if ( ( g_bSavedOnMobj[lTick % CLIENT_PREDICTION_TICS] == false ) && ( pPlayer->mo->z > pPlayer->mo->floorz )
+	if ( ( g_bSavedOnMobj[lTick % CLIENT_PREDICTION_TICS] == false ) && ( pPlayer->mo->Z() > pPlayer->mo->floorz )
 		&& pPlayer->mo->Sector && !pPlayer->mo->Sector->floordata )
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 
@@ -359,7 +359,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 	else
 		pPlayer->mo->flags2 &= ~MF2_ONMOBJ;
 	if ( g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] )
-		pPlayer->mo->z = client_predict_GetPredictedFloorZ ( pPlayer, lTick );
+		pPlayer->mo->SetZ ( client_predict_GetPredictedFloorZ ( pPlayer, lTick ) );
 
 	while ( ulTicks )
 	{

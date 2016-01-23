@@ -3358,7 +3358,7 @@ void CLIENT_MoveThing( AActor *pActor, fixed_t X, fixed_t Y, fixed_t Z )
 		// [BB] An actor can't be below its floorz, if the value is correct.
 		// In this case, P_OldAdjustFloorCeil apparently didn't work, so revert to the old value.
 		// [BB] But don't do this for the console player, it messes up the prediction.
-		if ( ( NETWORK_IsConsolePlayer ( pActor ) == false ) && ( pActor->floorz > pActor->z ) )
+		if ( ( NETWORK_IsConsolePlayer ( pActor ) == false ) && ( pActor->floorz > pActor->Z() ) )
 			pActor->floorz = oldfloorz;
 	}
 }
@@ -3487,7 +3487,7 @@ void CLIENT_RestoreSpecialDoomThing( AActor *pActor, bool bFog )
 		if ( bFog )
 		{
 			S_Sound( pActor, CHAN_VOICE, "misc/spawn", 1, ATTN_IDLE );
-			Spawn( "ItemFog", pActor->x, pActor->y, pActor->z, ALLOW_REPLACE );
+			Spawn( "ItemFog", pActor->Pos(), ALLOW_REPLACE );
 		}
 	}
 }
@@ -4276,9 +4276,9 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		unsigned an = pActor->angle >> ANGLETOFINESHIFT;
 		// [CK] Don't spawn fog for facing west spawners online, if compatflag is on.
 		if (!(pActor->angle == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
-			Spawn( "TeleportFog", pActor->x + 20 * finecosine[an],
-				pActor->y + 20 * finesine[an],
-				pActor->z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			Spawn( "TeleportFog", pActor->X() + 20 * finecosine[an],
+				pActor->Y() + 20 * finesine[an],
+				pActor->Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
 	}
 
 	pPlayer->playerstate = PST_LIVE;
@@ -4321,7 +4321,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	// If this is the consoleplayer, set the realorigin and ServerXYZMom.
 	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
 	{
-		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z );
+		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->X(), pPlayer->mo->Y(), pPlayer->mo->Z() );
 
 		pPlayer->ServerXYZMom[0] = 0;
 		pPlayer->ServerXYZMom[1] = 0;
@@ -4434,7 +4434,7 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 
 	if (( players[ulPlayer].crouchdir == 1 ) &&
 		( players[ulPlayer].crouchfactor < FRACUNIT ) &&
-		(( players[ulPlayer].mo->z + players[ulPlayer].mo->height ) < players[ulPlayer].mo->ceilingz ))
+		(( players[ulPlayer].mo->Top() ) < players[ulPlayer].mo->ceilingz ))
 	{
 		P_CrouchMove( &players[ulPlayer], 1 );
 	}
@@ -6123,9 +6123,9 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->x;
-	Y = pActor->y;
-	Z = pActor->z;
+	X = pActor->X();
+	Y = pActor->Y();
+	Z = pActor->Z();
 
 	// Read in the position data.
 	if ( lBits & CM_X )
@@ -6244,9 +6244,9 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->x;
-	Y = pActor->y;
-	Z = pActor->z;
+	X = pActor->X();
+	Y = pActor->Y();
+	Z = pActor->Z();
 
 	// Read in the position data.
 	if ( lBits & CM_X )
@@ -7411,7 +7411,7 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 
 	// Spawn teleport fog at the source.
 	if ( bSourceFog )
-		Spawn<ATeleportFog>( pActor->x, pActor->y, pActor->z + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ), ALLOW_REPLACE );
+		Spawn<ATeleportFog>( pActor->PosPlusZ ( ( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 	// Set the thing's new position.
 	CLIENT_MoveThing( pActor, NewX, NewY, NewZ );
@@ -7422,9 +7422,9 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 		// Spawn the fog slightly in front of the thing's destination.
 		Angle = NewAngle >> ANGLETOFINESHIFT;
 
-		Spawn<ATeleportFog>( pActor->x + ( 20 * finecosine[Angle] ),
-			pActor->y + ( 20 * finesine[Angle] ),
-			pActor->z + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ),
+		Spawn<ATeleportFog>( pActor->X() + ( 20 * finecosine[Angle] ),
+			pActor->Y() + ( 20 * finesine[Angle] ),
+			pActor->Z() + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ),
 			ALLOW_REPLACE );
 	}
 

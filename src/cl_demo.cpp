@@ -964,7 +964,7 @@ CCMD( demo_spectatefreely )
 		player_t *p = &g_demoCameraPlayer;
 		p->bSpectating = true;
 		p->cls = PlayerClasses[p->CurrentPlayerClass].Type;
-		p->mo = static_cast<APlayerPawn *> (Spawn (p->cls, pCamera->x, pCamera->y, pCamera->z + pCamera->height , NO_REPLACE));
+		p->mo = static_cast<APlayerPawn *> (Spawn (p->cls, pCamera->PosPlusZ ( pCamera->height ), NO_REPLACE));
 		p->mo->angle = pCamera->angle;
 		p->mo->flags |= (MF_NOGRAVITY);
 		p->mo->player = p;
