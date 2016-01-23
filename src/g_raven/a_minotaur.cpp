@@ -524,7 +524,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk3)
 DEFINE_ACTION_FUNCTION(AActor, A_MntrFloorFire)
 {
 	AActor *mo;
-	fixed_t x, y;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
