@@ -3060,25 +3060,13 @@ void GAME_CheckMode( void )
 					{
 						if ( pItem->GetClass( ) == TEAM_GetItem( i ))
 						{
-							fixedvec3	Origin;
-
-							Origin.x = pItem->x;
-							Origin.y = pItem->y;
-							Origin.z = pItem->z;
-
-							TEAM_SetTeamItemOrigin( i, Origin );
+							TEAM_SetTeamItemOrigin( i, pItem->Pos() );
 						}
 					}
 
 					if ( pItem->IsKindOf( PClass::FindClass( "WhiteFlag" )))
 					{
-						fixedvec3	Origin;
-
-						Origin.x = pItem->x;
-						Origin.y = pItem->y;
-						Origin.z = pItem->z;
-
-						TEAM_SetWhiteFlagOrigin( Origin );
+						TEAM_SetWhiteFlagOrigin( pItem->Pos() );
 					}
 				}
 			}
@@ -3093,20 +3081,12 @@ void GAME_CheckMode( void )
 					{
 						if ( pItem->GetClass( ) == TEAM_GetItem( i ))
 						{
-							fixedvec3	Origin;
-
-							Origin.x = pItem->x;
-							Origin.y = pItem->y;
-							Origin.z = pItem->z;
-
-							TEAM_SetTeamItemOrigin( i, Origin );
+							TEAM_SetTeamItemOrigin( i, pItem->Pos() );
 						}
 					}
 
 					if ( pItem->IsKindOf( PClass::FindClass( "BlueSkull" )))
 					{
-						fixedvec3	Origin;
-
 						// Replace this skull with skulltag mode's version of the skull.
 						pNewSkull = Spawn( PClass::FindClass( "BlueSkullST" ), pItem->Pos(), NO_REPLACE );
 						if ( pNewSkull )
@@ -3119,20 +3099,14 @@ void GAME_CheckMode( void )
 								pNewSkull->ulSTFlags |= STFL_LEVELSPAWNED ;
 						}
 
-						Origin.x = pItem->x;
-						Origin.y = pItem->y;
-						Origin.z = pItem->z;
-
-						TEAM_SetTeamItemOrigin( 0, Origin );
+						TEAM_SetTeamItemOrigin( 0, pItem->Pos() );
 						pItem->Destroy( );
 					}
 
 					if ( pItem->IsKindOf( PClass::FindClass( "RedSkull" )))
 					{
-						fixedvec3	Origin;
-
 						// Replace this skull with skulltag mode's version of the skull.
-						pNewSkull = Spawn( PClass::FindClass( "RedSkullST" ), pItem->x, pItem->y, pItem->z, NO_REPLACE );
+						pNewSkull = Spawn( PClass::FindClass( "RedSkullST" ), pItem->Pos(), NO_REPLACE );
 						if ( pNewSkull )
 						{
 							pNewSkull->flags &= ~MF_DROPPED;
@@ -3143,11 +3117,7 @@ void GAME_CheckMode( void )
 								pNewSkull->ulSTFlags |= STFL_LEVELSPAWNED ;
 						}
 
-						Origin.x = pItem->x;
-						Origin.y = pItem->y;
-						Origin.z = pItem->z;
-
-						TEAM_SetTeamItemOrigin( 1, Origin );
+						TEAM_SetTeamItemOrigin( 1, pItem->Pos() );
 						pItem->Destroy( );
 					}
 				}
@@ -3215,25 +3185,25 @@ bool GAME_ZPositionMatchesOriginal( AActor *pActor )
 
 	// Determine the Z position to spawn this actor in.
 	if ( pActor->flags & MF_SPAWNCEILING )
-		return ( pActor->z == ( pActor->Sector->ceilingplane.ZatPoint( pActor->x, pActor->y ) - pActor->height - ( pActor->SpawnPoint[2] )));
+		return ( pActor->Z() == ( pActor->Sector->ceilingplane.ZatPoint( pActor ) - pActor->height - ( pActor->SpawnPoint[2] )));
 	else if ( pActor->flags2 & MF2_SPAWNFLOAT )
 	{
-		Space = pActor->Sector->ceilingplane.ZatPoint( pActor->x, pActor->y ) - pActor->height - pActor->Sector->floorplane.ZatPoint( pActor->x, pActor->y );
+		Space = pActor->Sector->ceilingplane.ZatPoint( pActor ) - pActor->height - pActor->Sector->floorplane.ZatPoint( pActor );
 		if ( Space > ( 48 * FRACUNIT ))
 		{
 			Space -= ( 40 * FRACUNIT );
-			if (( pActor->z >= MulScale8( Space, 0 ) + ( pActor->Sector->floorplane.ZatPoint( pActor->x, pActor->y ) + 40 * FRACUNIT )) ||
-				( pActor->z <= MulScale8( Space, INT_MAX ) + ( pActor->Sector->floorplane.ZatPoint( pActor->x, pActor->y ) + 40 * FRACUNIT )))
+			if (( pActor->Z() >= MulScale8( Space, 0 ) + ( pActor->Sector->floorplane.ZatPoint( pActor ) + 40 * FRACUNIT )) ||
+				( pActor->Z() <= MulScale8( Space, INT_MAX ) + ( pActor->Sector->floorplane.ZatPoint( pActor ) + 40 * FRACUNIT )))
 			{
 				return ( true );
 			}
 			return ( false );
 		}
 		else
-			return ( pActor->z == pActor->Sector->floorplane.ZatPoint( pActor->x, pActor->y ));
+			return ( pActor->Z() == pActor->Sector->floorplane.ZatPoint( pActor ));
 	}
 	else
-		return ( pActor->z == ( pActor->Sector->floorplane.ZatPoint( pActor->x, pActor->y ) + ( pActor->SpawnPoint[2] )));
+		return ( pActor->Z() == ( pActor->Sector->floorplane.ZatPoint( pActor ) + ( pActor->SpawnPoint[2] )));
 }
 
 //*****************************************************************************
@@ -3810,9 +3780,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 
 				// Adjust the Z position after it's spawned.
 				if ( Z == ONFLOORZ )
-					pNewActor->z += pActor->SpawnPoint[2];
+					pNewActor->AddZ ( pActor->SpawnPoint[2] );
 				else if ( Z == ONCEILINGZ )
-					pNewActor->z -= pActor->SpawnPoint[2];
+					pNewActor->AddZ ( -pActor->SpawnPoint[2] );
 
 				// Inherit attributes from the old actor.
 				pNewActor->SpawnPoint[0] = pActor->SpawnPoint[0];
@@ -3907,9 +3877,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		// we just move the PointPusher/PointPuller to its original location.
 		if ( ( pActor->GetClass()->TypeName == NAME_PointPusher ) || ( pActor->GetClass()->TypeName == NAME_PointPuller ) )
 		{
-			if ( ( pActor->x != pActor->SpawnPoint[0] )
-				|| ( pActor->y != pActor->SpawnPoint[1] )
-				|| ( pActor->z != pActor->SpawnPoint[2] ) )
+			if ( ( pActor->X() != pActor->SpawnPoint[0] )
+				|| ( pActor->Y() != pActor->SpawnPoint[1] )
+				|| ( pActor->Z() != pActor->SpawnPoint[2] ) )
 			{
 				pActor->SetOrigin ( pActor->SpawnPoint[0], pActor->SpawnPoint[1], pActor->SpawnPoint[2] );
 
@@ -3941,9 +3911,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		if( pNewActor != NULL ){
 			// Adjust the Z position after it's spawned.
 			if ( Z == ONFLOORZ )
-				pNewActor->z += pActor->SpawnPoint[2];
+				pNewActor->AddZ ( pActor->SpawnPoint[2] );
 			else if ( Z == ONCEILINGZ )
-				pNewActor->z -= pActor->SpawnPoint[2];
+				pNewActor->AddZ ( -pActor->SpawnPoint[2] );
 
 			// Inherit attributes from the old actor.
 			pNewActor->SpawnPoint[0] = pActor->SpawnPoint[0];
@@ -4012,7 +3982,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SpawnThing( pNewActor );
 				// [BB] The clients assume that the current Z position of the actor is SpawnPoint[2].
 				// If it's not, we need to inform them about the actual SpawnPoint.
-				if ( pNewActor->z != pActor->SpawnPoint[2] )
+				if ( pNewActor->Z() != pActor->SpawnPoint[2] )
 					SERVERCOMMANDS_SetThingSpawnPoint( pNewActor, MAXPLAYERS, 0 );
 
 				// Check and see if it's important that the client know the angle of the object.

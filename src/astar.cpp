@@ -249,8 +249,8 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 	pPath = &g_aPaths[ulPathIdx];
 	pPath->pActor = players[ulPathIdx % MAXPLAYERS].mo;
 
-	StartPoint.x = pPath->pActor->x;
-	StartPoint.y = pPath->pActor->y;
+	StartPoint.x = pPath->pActor->X();
+	StartPoint.y = pPath->pActor->Y();
 
 	pPath->pGoalNode = astar_GetNodeFromPoint( GoalPoint );
 	if ( pPath->pGoalNode == NULL )
@@ -328,7 +328,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			pPath->pActor,
 			TraceResults ))
 */
-		ulResults = BOTPATH_TryWalk( pPath->pActor, pPath->pActor->x, pPath->pActor->y, pPath->pActor->z, DestPos.x, DestPos.y );
+		ulResults = BOTPATH_TryWalk( pPath->pActor, pPath->pActor->Pos(), DestPos.x, DestPos.y );
 		if ( ulResults & BOTPATH_OBSTRUCTED )
 		{
 			// If this is a roaming path, just pick another roam location. Otherwise, try to
@@ -435,13 +435,13 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 
 		// The VERY first thing we can do is test to see if there's a straight path betwen the
 		// bot and his goal.
-		if (( BOTPATH_TryWalk( pPath->pActor, pPath->pActor->x, pPath->pActor->y, pPath->pActor->z, GoalPoint.x, GoalPoint.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR)) == false )
+		if (( BOTPATH_TryWalk( pPath->pActor, pPath->pActor->Pos(), GoalPoint.x, GoalPoint.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR)) == false )
 		{
 			pPath->ulFlags |= PF_COMPLETE|PF_SUCCESS;
 			astar_PushNodeToStack( pPath->pGoalNode, pPath );
 
 			ReturnVal.bIsGoal = true;
-			ReturnVal.lTotalCost = P_AproxDistance( pPath->pActor->x - GoalPoint.x, pPath->pActor->y - GoalPoint.y );
+			ReturnVal.lTotalCost = pPath->pActor->AproxDistance ( GoalPoint.x, GoalPoint.y );
 			ReturnVal.pNode = pPath->pGoalNode;
 			ReturnVal.ulFlags = pPath->ulFlags;
 
@@ -918,7 +918,7 @@ static bool astar_PullNodeFromOpenList( ASTARPATH_t *pPath )
 				NodePos = ASTAR_GetPositionFromIndex( pNode->lXNodeIdx, pNode->lYNodeIdx );
 				pNecessaryNodeList[lListPos++] = pNode;
 
-				if ( BOTPATH_TryWalk( pPath->pActor, NodePos.x, NodePos.y, pPath->pActor->z, GoalPos.x, GoalPos.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR) )
+				if ( BOTPATH_TryWalk( pPath->pActor, NodePos.x, NodePos.y, pPath->pActor->Z(), GoalPos.x, GoalPos.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR) )
 				{
 					lStackPos++;
 					pNode = pPath->pNodeStack[pPath->lStackPos - lStackPos];
@@ -981,8 +981,8 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 
 		if ( pPath->pCurrentNode == pPath->pStartNode )
 		{
-			CurPos.x = pPath->pActor->x;
-			CurPos.y = pPath->pActor->y;
+			CurPos.x = pPath->pActor->X();
+			CurPos.y = pPath->pActor->Y();
 		}
 		else
 			CurPos = pPath->pCurrentNode->Position;

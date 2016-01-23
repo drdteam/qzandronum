@@ -30,7 +30,7 @@ void AFloatyIcon::Tick( )
 	}
 
 	// Make the icon float directly above the player's head.
-	SetOrigin( tracer->x, tracer->y, tracer->z + tracer->height + ( 4 * FRACUNIT ));
+	SetOrigin( tracer->PosPlusZ ( tracer->height + ( 4 * FRACUNIT ) ), false);
 
 	this->alpha = OPAQUE;
 	this->RenderStyle = STYLE_Normal;
@@ -71,7 +71,7 @@ void AFloatyIcon::SetTracer( AActor *pTracer )
 		return;
 
 	// Make the icon float directly above the tracer's head.
-	SetOrigin( tracer->x, tracer->y, tracer->z + tracer->height + ( 4 * FRACUNIT ));
+	SetOrigin( tracer->PosPlusZ ( tracer->height + ( 4 * FRACUNIT ) ), false );
 
 	// If the tracer has some type of visibility affect, apply it to the icon.
 	if ( !(tracer->RenderStyle == LegacyRenderStyles[STYLE_Normal]) || tracer->alpha != OPAQUE )

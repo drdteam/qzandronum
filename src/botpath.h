@@ -70,6 +70,10 @@
 
 bool		BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY );
 ULONG		BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t StartZ, fixed_t DestX, fixed_t DestY );
+inline ULONG BOTPATH_TryWalk( AActor *pActor, const fixedvec3 &startPos, fixed_t DestX, fixed_t DestY )
+{
+	return BOTPATH_TryWalk( pActor, startPos.x, startPos.y, startPos.z, DestX, DestY );
+}
 void		BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fixed_t RefY );
 sector_t	*BOTPATH_GetDoorSector( void );
 

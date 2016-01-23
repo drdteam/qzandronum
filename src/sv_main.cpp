@@ -2579,9 +2579,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		{
 			SERVERCOMMANDS_SpawnThing( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 			// [BB] If the thing is not at its spawn point, let the client know about the spawn point.
-			if ( ( pActor->x != pActor->SpawnPoint[0] )
-				|| ( pActor->y != pActor->SpawnPoint[1] )
-				|| ( pActor->z != pActor->SpawnPoint[2] )
+			if ( ( pActor->X() != pActor->SpawnPoint[0] )
+				|| ( pActor->Y() != pActor->SpawnPoint[1] )
+				|| ( pActor->Z() != pActor->SpawnPoint[2] )
 				)
 			{
 				SERVERCOMMANDS_SetThingSpawnPoint( pActor, ulClient, SVCF_ONLYTHISCLIENT );
@@ -5951,9 +5951,9 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 		{
 			const AActor	 *pDef = GetDefaultByType( pType );
 					
-			pActor = Spawn( pType, pSource->x + FixedMul( pDef->radius * 2 + pSource->radius, finecosine[pSource->angle>>ANGLETOFINESHIFT] ),
-						pSource->y + FixedMul( pDef->radius * 2 + pSource->radius, finesine[pSource->angle>>ANGLETOFINESHIFT] ),
-						pSource->z + 8 * FRACUNIT, ALLOW_REPLACE );
+			pActor = Spawn( pType, pSource->X() + FixedMul( pDef->radius * 2 + pSource->radius, finecosine[pSource->angle>>ANGLETOFINESHIFT] ),
+						pSource->Y() + FixedMul( pDef->radius * 2 + pSource->radius, finesine[pSource->angle>>ANGLETOFINESHIFT] ),
+						pSource->Z() + 8 * FRACUNIT, ALLOW_REPLACE );
 
 			// [BB] If this is the summonfriend cheat, we have to make the monster friendly.
 			if (pActor != NULL && lType != CLC_SUMMONCHEAT)
