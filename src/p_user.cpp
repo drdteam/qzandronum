@@ -839,10 +839,10 @@ void APlayerPawn::PostBeginPlay()
 	// Voodoo dolls: restore original floorz/ceilingz logic
 	if (player == NULL || player->mo != this)
 	{
-		dropoffz = floorz = Sector->floorplane.ZatPoint(x, y);
-		ceilingz = Sector->ceilingplane.ZatPoint(x, y);
+		dropoffz = floorz = Sector->floorplane.ZatPoint(this);
+		ceilingz = Sector->ceilingplane.ZatPoint(this);
 		P_FindFloorCeiling(this, FFCF_ONLYSPAWNPOS);
-		z = floorz;
+		SetZ(floorz);
 	}
 	else
 	{
@@ -2436,7 +2436,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 	}
 
 	self->flags &= ~MF_SOLID;
-	mo = (APlayerPawn *)Spawn (spawntype, self->x, self->y, self->z + 48*FRACUNIT, NO_REPLACE);
+	mo = (APlayerPawn *)Spawn (spawntype, self->PosPlusZ(48*FRACUNIT), NO_REPLACE);
 	//mo->target = self;
 	mo->velx = pr_skullpop.Random2() << 9;
 	mo->vely = pr_skullpop.Random2() << 9;
@@ -2697,7 +2697,7 @@ void P_CalcHeight (player_t *player)
 
 	if (player->cheats & CF_NOVELOCITY)
 	{
-		player->viewz = player->mo->z + defaultviewheight;
+		player->viewz = player->mo->Z() + defaultviewheight;
 
 		if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
 			player->viewz = player->mo->ceilingz-4*FRACUNIT;
@@ -2757,9 +2757,9 @@ void P_CalcHeight (player_t *player)
 	{
 		bob = 0;
 	}
-	player->viewz = player->mo->z + player->viewheight + bob;
+	player->viewz = player->mo->Z() + player->viewheight + bob;
 	if (player->mo->floorclip && player->playerstate != PST_DEAD
-		&& player->mo->z <= player->mo->floorz)
+		&& player->mo->Z() <= player->mo->floorz)
 	{
 		player->viewz -= player->mo->floorclip;
 	}
@@ -2822,7 +2822,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 	if ( GAME_GetEndLevelDelay( ) && ( player->bSpectating == false ))
 		memset( cmd, 0, sizeof( ticcmd_t ));
 
-	player->onground = (mo->z <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (player->cheats & CF_NOCLIP2);
+	player->onground = (mo->Z() <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (player->cheats & CF_NOCLIP2);
 
 	// killough 10/98:
 	//
@@ -2888,7 +2888,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 		{
 			fprintf (debugfile, "move player for pl %d%c: (%d,%d,%d) (%d,%d) %d %d w%d [", int(player-players),
 				player->cheats&CF_PREDICTING?'p':' ',
-				player->mo->x, player->mo->y, player->mo->z,forwardmove, sidemove, movefactor, friction, player->mo->waterlevel);
+				player->mo->X(), player->mo->Y(), player->mo->Z(),forwardmove, sidemove, movefactor, friction, player->mo->waterlevel);
 			msecnode_t *n = player->mo->touching_sectorlist;
 			while (n != NULL)
 			{
@@ -3079,7 +3079,7 @@ void P_DeathThink (player_t *player)
 
 	P_MovePsprites (player);
 
-	player->onground = (player->mo->z <= player->mo->floorz);
+	player->onground = (player->mo->Z() <= player->mo->floorz);
 	if (player->mo->IsKindOf (RUNTIME_CLASS(APlayerChunk)))
 	{ // Flying bloody skull or flying ice chunk
 		player->viewheight = 6 * FRACUNIT;
@@ -3334,7 +3334,7 @@ void P_CrouchMove(player_t * player, int direction)
 
 	// check whether the move is ok
 	player->mo->height = FixedMul(defaultheight, player->crouchfactor);
-	if (!P_TryMove(player->mo, player->mo->x, player->mo->y, false, NULL))
+	if (!P_TryMove(player->mo, player->mo->X(), player->mo->Y(), false, NULL))
 	{
 		player->mo->height = savedheight;
 		if (direction > 0)
@@ -3351,7 +3351,7 @@ void P_CrouchMove(player_t * player, int direction)
 	player->crouchviewdelta = player->viewheight - player->mo->ViewHeight;
 
 	// Check for eyes going above/below fake floor due to crouching motion.
-	P_CheckFakeFloorTriggers(player->mo, player->mo->z + oldheight, true);
+	P_CheckFakeFloorTriggers(player->mo, player->mo->Z() + oldheight, true);
 }
 
 //----------------------------------------------------------------------------
@@ -3402,7 +3402,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	if (debugfile && !(player->cheats & CF_PREDICTING))
 	{
 		fprintf (debugfile, "tic %d for pl %td: (%d, %d, %d, %u) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
-			gametic, player-players, player->mo->x, player->mo->y, player->mo->z,
+			gametic, player-players, player->mo->X(), player->mo->Y(), player->mo->Z(),
 			player->mo->angle>>ANGLETOFINESHIFT, player->cmd.ucmd.buttons,
 			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
 			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
@@ -3560,7 +3560,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 					player->crouching = 0;
 				}
 				if (crouchdir == 1 && player->crouchfactor < FRACUNIT &&
-					player->mo->z + player->mo->height < player->mo->ceilingz)
+					player->mo->Top() < player->mo->ceilingz)
 				{
 					P_CrouchMove(player, 1);
 				}
@@ -3769,8 +3769,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		P_PlayerOnSpecial3DFloor (player);
 		P_PlayerInSpecialSector (player);
 
-		if (player->mo->z <= player->mo->Sector->floorplane.ZatPoint(
-			player->mo->x, player->mo->y) ||
+		if (player->mo->Z() <= player->mo->Sector->floorplane.ZatPoint(player->mo) ||
 			player->mo->waterlevel)
 		{
 			// Player must be touching the floor
@@ -3950,7 +3949,7 @@ void P_PredictPlayer (player_t *player)
 	PredictionPlayerBackup = *player;
 
 	APlayerPawn *act = player->mo;
-	memcpy(PredictionActorBackup, &act->x, sizeof(APlayerPawn) - ((BYTE *)&act->x - (BYTE *)act));
+	memcpy(PredictionActorBackup, &act->snext, sizeof(APlayerPawn) - ((BYTE *)&act->snext - (BYTE *)act));
 
 	act->flags &= ~MF_PICKUP;
 	act->flags2 &= ~MF2_PUSHWALL;
@@ -4022,16 +4021,16 @@ void P_PredictPlayer (player_t *player)
 		{
 			// Z is not compared as lifts will alter this with no apparent change
 			// Make lerping less picky by only testing whole units
-			DoLerp = ((PredictionLast.x >> 16) != (player->mo->x >> 16) ||
-				(PredictionLast.y >> 16) != (player->mo->y >> 16));
+			DoLerp = ((PredictionLast.x >> 16) != (player->mo->X() >> 16) ||
+				(PredictionLast.y >> 16) != (player->mo->Y() >> 16));
 
 			// Aditional Debug information
 			if (developer && DoLerp)
 			{
 				DPrintf("Lerp! Ltic (%d) && Ptic (%d) | Lx (%d) && Px (%d) | Ly (%d) && Py (%d)\n",
 					PredictionLast.gametic, i,
-					(PredictionLast.x >> 16), (player->mo->x >> 16),
-					(PredictionLast.y >> 16), (player->mo->y >> 16));
+					(PredictionLast.x >> 16), (player->mo->X() >> 16),
+					(PredictionLast.y >> 16), (player->mo->Y() >> 16));
 			}
 		}
 	}
@@ -4049,9 +4048,9 @@ void P_PredictPlayer (player_t *player)
 		}
 
 		PredictionLast.gametic = maxtic - 1;
-		PredictionLast.x = player->mo->x;
-		PredictionLast.y = player->mo->y;
-		PredictionLast.z = player->mo->z;
+		PredictionLast.x = player->mo->X();
+		PredictionLast.y = player->mo->Y();
+		PredictionLast.z = player->mo->Z();
 
 		if (PredictionLerptics > 0)
 		{
@@ -4059,9 +4058,7 @@ void P_PredictPlayer (player_t *player)
 				P_LerpCalculate(PredictionLerpFrom, PredictionLast, PredictionLerpResult, (float)PredictionLerptics * cl_predict_lerpscale))
 			{
 				PredictionLerptics++;
-				player->mo->x = PredictionLerpResult.x;
-				player->mo->y = PredictionLerpResult.y;
-				player->mo->z = PredictionLerpResult.z;
+				player->mo->SetXYZ(PredictionLerpResult.x, PredictionLerpResult.y, PredictionLerpResult.z);
 			}
 			else
 			{
@@ -4095,7 +4092,7 @@ void P_UnPredictPlayer ()
 		player->camera = savedcamera;
 
 		act->UnlinkFromWorld();
-		memcpy(&act->x, PredictionActorBackup, sizeof(APlayerPawn) - ((BYTE *)&act->x - (BYTE *)act));
+		memcpy(&act->snext, PredictionActorBackup, sizeof(APlayerPawn) - ((BYTE *)&act->snext - (BYTE *)act));
 
 		// The blockmap ordering needs to remain unchanged, too.
 		// Restore sector links and refrences.
@@ -4382,7 +4379,7 @@ void player_t::Serialize (FArchive &arc)
 	}
 	else
 	{
-		onground = (mo->z <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (cheats & CF_NOCLIP2);
+		onground = (mo->Z() <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (cheats & CF_NOCLIP2);
 	}
 
 	/* [BB]

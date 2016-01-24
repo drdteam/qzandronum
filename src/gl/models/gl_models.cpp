@@ -855,12 +855,12 @@ void gl_RenderFrameModels( const FSpriteModelFrame *smf,
 // [BB] Small helper function for MDL_ROLLAGAINSTANGLE.
 float gl_RollAgainstAngleHelper ( const AActor *actor )
 {
-	float angleDiff = ANGLE_TO_FLOAT ( R_PointToAngle ( actor->x, actor->y ) ) - ANGLE_TO_FLOAT ( actor->angle );
+	float angleDiff = ANGLE_TO_FLOAT ( R_PointToAngle ( actor->X(), actor->Y() ) ) - ANGLE_TO_FLOAT ( actor->angle );
 	if ( angleDiff > 180 )
 		angleDiff -= 360;
 	else if ( angleDiff < -180 )
 		angleDiff += 360;
-	if ( actor->z > viewz )
+	if ( actor->Z() > viewz )
 		angleDiff *= -1;
 	if ( ( angleDiff < 90 ) && ( angleDiff > - 90 ) )
 		angleDiff *= -1;
@@ -939,13 +939,13 @@ void gl_RenderModel(GLSprite * spr)
 		gl_RenderState.mModelMatrix.rotate(-angle, 0, 1, 0);
 	// [BB] Change the angle so that the object is exactly facing the camera in the x/y plane.
 	else
-		gl_RenderState.mModelMatrix.rotate( -ANGLE_TO_FLOAT ( R_PointToAngle ( spr->actor->x, spr->actor->y ) ), 0, 1, 0);
+		gl_RenderState.mModelMatrix.rotate( -ANGLE_TO_FLOAT ( R_PointToAngle ( spr->actor->X(), spr->actor->Y() ) ), 0, 1, 0);
 
 	// [BB] Change the pitch so that the object is vertically facing the camera (only makes sense combined with MDL_ALIGNANGLE).
 	if ( (smf->flags & MDL_ALIGNPITCH) )
 	{
-		const fixed_t distance = R_PointToDist2( spr->actor->x - viewx, spr->actor->y - viewy );
-		const float pitch = RAD2DEG ( atan2( FIXED2FLOAT ( spr->actor->z - viewz ), FIXED2FLOAT ( distance ) ) );
+		const fixed_t distance = R_PointToDist2( spr->actor->X() - viewx, spr->actor->Y() - viewy );
+		const float pitch = RAD2DEG ( atan2( FIXED2FLOAT ( spr->actor->Z() - viewz ), FIXED2FLOAT ( distance ) ) );
 		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 	}
 	else
