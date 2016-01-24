@@ -2890,6 +2890,16 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				break;
 
 			// [EP]
+			case SVC2_SETMUGSHOTSTATE:
+				{
+					const char *statename = NETWORK_ReadString( pByteStream );
+					if ( StatusBar != NULL)
+					{
+						StatusBar->SetMugShotState( statename );
+					}
+				}
+				break;
+
 			case SVC2_SETTHINGSCALE:
 				client_SetThingScale( pByteStream );
 				break;
