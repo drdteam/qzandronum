@@ -70,7 +70,7 @@
 -	- Fixed sidedef related problems with map resets on UDMF maps. [Torr Samaho]
 -	- Fixed: Clients were not properly informed about the effects of SetAmmoCapacity after a changemap map change. [Torr Samaho]
 -	- Fixed: sv_forcegldefaults 1 didn't cover gl_distfog changes. [Edward-san, Torr Samaho]
--	- Fixed: The ACS function SetMugshotState was not handled properly online. [Edward-san]
+-	- Fixed: The ACS function SetMugshotState was not handled properly online. [Edward-san, Torr Samaho]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]

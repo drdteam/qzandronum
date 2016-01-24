@@ -10562,14 +10562,9 @@ scriptwait:
 		case PCD_SETMUGSHOTSTATE:
 			// [EP] Server doesn't have a status bar, but should inform the clients about it
 			if ( NETWORK_GetState() == NETSTATE_SERVER )
-			{
 				SERVERCOMMANDS_SetMugShotState(FBehavior::StaticLookupString(STACK(1)));
-			}
-			else
-			{
-				if (( NETWORK_InClientMode() == false ) && ( StatusBar != NULL ))
-					StatusBar->SetMugShotState(FBehavior::StaticLookupString(STACK(1)));
-			}
+			else if ( StatusBar != NULL )
+				StatusBar->SetMugShotState(FBehavior::StaticLookupString(STACK(1)));
 			sp--;
 			break;
 
