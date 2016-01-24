@@ -989,7 +989,7 @@ void medal_TriggerMedal( ULONG ulPlayer, ULONG ulMedal )
 			pPlayer->pIcon->Destroy( );
 
 		// Spawn the medal as an icon above the player and set its properties.
-		pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z, NO_REPLACE );
+		pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->Pos(), NO_REPLACE );
 		if ( pPlayer->pIcon )
 		{
 			pPlayer->pIcon->SetState( pPlayer->pIcon->SpawnState + g_Medals[ulMedal].usFrame );
@@ -1309,7 +1309,7 @@ void medal_SelectIcon( ULONG ulPlayer )
 			{
 				if ( pPlayer->pIcon == NULL )
 				{
-					pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->x, pPlayer->mo->y, pPlayer->mo->z + pPlayer->mo->height + ( 4 * FRACUNIT ), NO_REPLACE );
+					pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->PosPlusZ ( pPlayer->mo->height + ( 4 * FRACUNIT ) ), NO_REPLACE );
 					if ( pTeamItem )
 					{
 						pPlayer->pIcon->bTeamItemFloatyIcon = true;

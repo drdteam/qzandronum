@@ -774,9 +774,9 @@ static int untouched(line_t *ld, FCheckPosition &tm)
 {
   fixed_t x, y, tmbbox[4];
   return 
-    (tmbbox[BOXRIGHT] = (x=tm.thing->x)+tm.thing->radius) <= ld->bbox[BOXLEFT] ||
+    (tmbbox[BOXRIGHT] = (x=tm.thing->X())+tm.thing->radius) <= ld->bbox[BOXLEFT] ||
     (tmbbox[BOXLEFT] = x-tm.thing->radius) >= ld->bbox[BOXRIGHT] ||
-    (tmbbox[BOXTOP] = (y=tm.thing->y)+tm.thing->radius) <= ld->bbox[BOXBOTTOM] ||
+    (tmbbox[BOXTOP] = (y=tm.thing->Y())+tm.thing->radius) <= ld->bbox[BOXBOTTOM] ||
     (tmbbox[BOXBOTTOM] = y-tm.thing->radius) >= ld->bbox[BOXTOP] ||
     P_BoxOnLineSide(tmbbox, ld) != -1;
 }
@@ -2423,10 +2423,10 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 		if (tm.ceilingz - tm.floorz < thing->height ||     // doesn't fit
 			// mobj must lower to fit
 			(tm.floatok = true, !(thing->flags & MF_TELEPORT) &&
-			tm.ceilingz - thing->z < thing->height) ||
+			tm.ceilingz - thing->Z() < thing->height) ||
 			// too big a step up
 			(!(thing->flags & MF_TELEPORT) && 
-			tm.floorz - thing->z > 24*FRACUNIT))
+			tm.floorz - thing->Z() > 24*FRACUNIT))
 		{	
 			return tmunstuck 
 				&& !(tm.ceilingline && untouched(tm.ceilingline, tm));
@@ -2453,7 +2453,7 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 				// [BB] dropoff is a bool, it can't be equal to 2
 				if (!dropoff || (/*dropoff==2 &&*/ // large jump down (e.g. dogs)
 					(tm.floorz-tm.dropoffz > 128*FRACUNIT || 
-					!thing->target || thing->target->z >tm.dropoffz)))
+					!thing->target || thing->target->Z() >tm.dropoffz)))
 				{
 					if (/*!monkeys ||*/ /*!mbf_features*/ 1 ?
 						( tm.floorz - tm.dropoffz > 24*FRACUNIT ) :
@@ -2472,7 +2472,7 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 
 			if (thing->BounceFlags &&    // killough 8/13/98
 			!(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
-			/*!sentient(thing) &&*/ tm.floorz - thing->z > 16*FRACUNIT)
+			/*!sentient(thing) &&*/ tm.floorz - thing->Z() > 16*FRACUNIT)
 				return false; // too big a step up for bouncers under gravity
 /*
 			// killough 11/98: prevent falling objects from going up too many steps
@@ -2490,13 +2490,12 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 
 	thing->UnlinkFromWorld( );
 
-	oldx = thing->x;
-	oldy = thing->y;
+	oldx = thing->X();
+	oldy = thing->Y();
 	thing->floorz = tm.floorz;
 	thing->ceilingz = tm.ceilingz;
 	thing->dropoffz = tm.dropoffz;      // killough 11/98: keep track of dropoffs
-	thing->x = x;
-	thing->y = y;
+	thing->SetXY ( x, y );
 
 	thing->LinkToWorld( );
 
@@ -2506,7 +2505,7 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 		while (spechit.Pop (ld))
 		{
 			// see if the line was crossed
-			side = P_PointOnLineSide (thing->x, thing->y, ld);
+			side = P_PointOnLineSide (thing->X(), thing->Y(), ld);
 			oldside = P_PointOnLineSide (oldx, oldy, ld);
 			if (side != oldside && ld->special)
 			{
@@ -2881,7 +2880,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 	// The wall is angled. Bounce if the angle of approach is         // phares
 	// less than 45 degrees.                                          // phares
 
-	side = P_PointOnLineSide (slidemo->x, slidemo->y, ld);
+	side = P_PointOnLineSide (slidemo->X(), slidemo->Y(), ld);
 
 	lineangle = R_PointToAngle2 (0,0, ld->dx, ld->dy);
 	if (side == 1)
@@ -3033,7 +3032,7 @@ void FSlide::OldSlideTraverse (fixed_t startx, fixed_t starty, fixed_t endx, fix
 
 		if ( ! (li->flags & ML_TWOSIDED) )
 		{
-			if (P_PointOnLineSide (slidemo->x, slidemo->y, li))
+			if (P_PointOnLineSide (slidemo->X(), slidemo->Y(), li))
 				continue; // don't hit the back side
 			goto isblocking;
 		}
@@ -3049,10 +3048,10 @@ void FSlide::OldSlideTraverse (fixed_t startx, fixed_t starty, fixed_t endx, fix
 		if (open.range < slidemo->height)
 			goto isblocking;  // doesn't fit
 
-		if (open.top - slidemo->z < slidemo->height)
+		if (open.top - slidemo->Z() < slidemo->height)
 			goto isblocking;  // mobj is too high
 
-		if (open.bottom - slidemo->z > 24*FRACUNIT )
+		if (open.bottom - slidemo->Z() > 24*FRACUNIT )
 			goto isblocking;  // too big a step up
 
 		// this line doesn't block movement
@@ -3231,14 +3230,14 @@ void FSlide::OldSlideMove (AActor *mo)
 		// trace along the three leading corners
 
 		if (mo->velx > 0)
-			leadx = mo->x + mo->radius, trailx = mo->x - mo->radius;
+			leadx = mo->X() + mo->radius, trailx = mo->X() - mo->radius;
 		else
-			leadx = mo->x - mo->radius, trailx = mo->x + mo->radius;
+			leadx = mo->X() - mo->radius, trailx = mo->X() + mo->radius;
 
 		if (mo->vely > 0)
-			leady = mo->y + mo->radius, traily = mo->y - mo->radius;
+			leady = mo->Y() + mo->radius, traily = mo->Y() - mo->radius;
 		else
-			leady = mo->y - mo->radius, traily = mo->y + mo->radius;
+			leady = mo->Y() - mo->radius, traily = mo->Y() + mo->radius;
 
 		bestslidefrac = FRACUNIT+1;
 
@@ -3265,8 +3264,8 @@ stairstep:
 			* cph 2000/09//23: buggy code was only in Boom v2.01
 			*/
 
-			if (!P_OldTryMove(mo, mo->x, mo->y + mo->vely, true))
-				if (!P_OldTryMove(mo, mo->x + mo->velx, mo->y, true))
+			if (!P_OldTryMove(mo, mo->X(), mo->Y() + mo->vely, true))
+				if (!P_OldTryMove(mo, mo->X() + mo->velx, mo->Y(), true))
 					if (0)//compatibility_level == boom_201_compatibility)
 						mo->velx = mo->vely = 0;
 
@@ -3282,7 +3281,7 @@ stairstep:
 
 			// killough 3/15/98: Allow objects to drop off ledges
 
-			if (!P_OldTryMove(mo, mo->x+newx, mo->y+newy, true))
+			if (!P_OldTryMove(mo, mo->X()+newx, mo->Y()+newy, true))
 				goto stairstep;
 		}
 
@@ -3315,7 +3314,7 @@ stairstep:
 				mo->player->vely = tmymove;
 		}
 	}  // killough 3/15/98: Allow objects to drop off ledges:
-	while (!P_OldTryMove(mo, mo->x+tmxmove, mo->y+tmymove, true));
+	while (!P_OldTryMove(mo, mo->X()+tmxmove, mo->Y()+tmymove, true));
 }
 
 //*****************************************************************************
@@ -5567,10 +5566,10 @@ player_t *P_PlayerScan( AActor *pSource )
 	vy = FixedMul (finecosine[pitch], finesine[angle]);
 	vz = -finesine[pitch];
 
-	shootz = pSource->z - pSource->floorclip + (pSource->height>>1) + 8*FRACUNIT;
+	shootz = pSource->Z() - pSource->floorclip + (pSource->height>>1) + 8*FRACUNIT;
 
-	if ( Trace( pSource->x,	// Actor x
-		pSource->y, // Actor y
+	if ( Trace( pSource->X(),	// Actor x
+		pSource->Y(), // Actor y
 		shootz,	// Actor z
 		pSource->Sector,
 		vx,
@@ -5878,8 +5877,8 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 							// [BB] Potentially use the horizontal thrust of old ZDoom versions.
 							if ( zacompatflags & ZACOMPATF_OLD_EXPLOSION_THRUST )
 							{
-								thing->velx = origmomx + static_cast<fixed_t>((thing->x - bombspot->x) * thrust);
-								thing->vely = origmomy + static_cast<fixed_t>((thing->y - bombspot->y) * thrust);
+								thing->velx = origmomx + static_cast<fixed_t>((thing->X() - bombspot->X()) * thrust);
+								thing->vely = origmomy + static_cast<fixed_t>((thing->Y() - bombspot->Y()) * thrust);
 							}
 							else
 							{
@@ -6031,7 +6030,7 @@ bool P_AdjustFloorCeil(AActor *thing, FChangePosition *cpos)
 bool P_OldAdjustFloorCeil (AActor *thing)
 {
 	FCheckPosition tm;
-	bool isgood = P_CheckPosition (thing, thing->x, thing->y, tm);
+	bool isgood = P_CheckPosition (thing, thing->X(), thing->Y(), tm);
 	thing->floorz = tm.floorz;
 	thing->ceilingz = tm.ceilingz;
 	thing->dropoffz = tm.dropoffz;		// killough 11/98: remember dropoffs
@@ -6416,7 +6415,7 @@ void PIT_FloorRaise(AActor *thing, FChangePosition *cpos)
 	// [BB] Unfortunately, P_AdjustFloorCeil fails to calculate floorz properly under
 	// some circumstances on the client. An actor's floorz should never be bigger
 	// than the z-position of sector we assume the actor to be in.
-	if ( NETWORK_InClientMode() && ( NETWORK_IsConsolePlayer ( thing ) == false ) && ( thing->Sector->floorplane.ZatPoint (thing->x, thing->y) < thing->floorz ) )
+	if ( NETWORK_InClientMode() && ( NETWORK_IsConsolePlayer ( thing ) == false ) && ( thing->Sector->floorplane.ZatPoint (thing) < thing->floorz ) )
 		thing->floorz = oldfloorz;
 
 	if (oldfloorz == thing->floorz) return;

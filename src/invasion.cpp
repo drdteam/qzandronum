@@ -157,7 +157,7 @@ void ABaseMonsterInvasionSpot::Tick( void )
 	{
 		// Spawn the item.
 		g_bIncreaseNumMonstersOnSpawn = false;
-		pActor = Spawn( GetSpawnName( ), x, y, z, ALLOW_REPLACE );
+		pActor = Spawn( GetSpawnName( ), Pos(), ALLOW_REPLACE );
 		g_bIncreaseNumMonstersOnSpawn = true;
 
 		// If the item spawned in a "not so good" location, delete it and try again next tick.
@@ -200,7 +200,7 @@ void ABaseMonsterInvasionSpot::Tick( void )
 		pActor->angle = angle;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( x, y, z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -346,7 +346,7 @@ void ABasePickupInvasionSpot::Tick( void )
 	if ( lNextSpawnTick == 0 )
 	{
 		// Spawn the item.
-		pActor = Spawn( GetSpawnName( ), x, y, z, ALLOW_REPLACE );
+		pActor = Spawn( GetSpawnName( ), Pos(), ALLOW_REPLACE );
 
 		// Since the actor successfully spawned, tell clients.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -370,7 +370,7 @@ void ABasePickupInvasionSpot::Tick( void )
 		pActor->angle = angle;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( x, y, z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -520,7 +520,7 @@ void ABaseWeaponInvasionSpot::Tick( void )
 	if ( lNextSpawnTick == 0 )
 	{
 		// Spawn the item.
-		pActor = Spawn( GetSpawnName( ), x, y, z, ALLOW_REPLACE );
+		pActor = Spawn( GetSpawnName( ), Pos(), ALLOW_REPLACE );
 
 		// Make this item stick around in multiplayer games.
 		pActor->flags &= ~MF_DROPPED;
@@ -536,7 +536,7 @@ void ABaseWeaponInvasionSpot::Tick( void )
 		pActor->angle = angle;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( x, y, z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -973,7 +973,7 @@ void INVASION_BeginWave( ULONG ulWave )
 
 		// Spawn the item.
 		ulNumMonstersLeft = g_ulNumMonstersLeft;
-		pActor = Spawn( pMonsterSpot->GetSpawnName( ), pMonsterSpot->x, pMonsterSpot->y, pMonsterSpot->z, ALLOW_REPLACE );
+		pActor = Spawn( pMonsterSpot->GetSpawnName( ), pMonsterSpot->Pos(), ALLOW_REPLACE );
 		g_ulNumMonstersLeft = ulNumMonstersLeft;
 
 		// If the item spawned in a "not so good" location, delete it and try again next tick.
@@ -1017,7 +1017,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		pActor->angle = pMonsterSpot->angle;
 		if (( pMonsterSpot->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( pMonsterSpot->x, pMonsterSpot->y, pMonsterSpot->z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( pMonsterSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1083,7 +1083,7 @@ void INVASION_BeginWave( ULONG ulWave )
 			continue;
 
 		// Spawn the item.
-		pActor = Spawn( pPickupSpot->GetSpawnName( ), pPickupSpot->x, pPickupSpot->y, pPickupSpot->z, ALLOW_REPLACE );
+		pActor = Spawn( pPickupSpot->GetSpawnName( ), pPickupSpot->Pos(), ALLOW_REPLACE );
 
 		// Since the actor successfully spawned, tell clients.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1098,7 +1098,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		pActor->angle = pPickupSpot->angle;
 		if (( pPickupSpot->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( pPickupSpot->x, pPickupSpot->y, pPickupSpot->z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( pPickupSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1132,7 +1132,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		}
 
 		// Spawn the item.
-		pActor = Spawn( pWeaponSpot->GetSpawnName( ), pWeaponSpot->x, pWeaponSpot->y, pWeaponSpot->z, ALLOW_REPLACE );
+		pActor = Spawn( pWeaponSpot->GetSpawnName( ), pWeaponSpot->Pos(), ALLOW_REPLACE );
 
 		// Make this item stick around in multiplayer games.
 		pActor->flags &= ~MF_DROPPED;
@@ -1147,7 +1147,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		pActor->angle = pWeaponSpot->angle;
 		if (( pWeaponSpot->flags & MF_AMBUSH ) == false )
 		{
-			pFog = Spawn<ATeleportFog>( pWeaponSpot->x, pWeaponSpot->y, pWeaponSpot->z + TELEFOGHEIGHT, ALLOW_REPLACE );
+			pFog = Spawn<ATeleportFog>( pWeaponSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
 
 			// If we're the server, tell clients to spawn the fog.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )

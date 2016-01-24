@@ -183,11 +183,11 @@ bool P_MoveThing(AActor *source, fixed_t x, fixed_t y, fixed_t z, bool fog)
 		}
 
 		ULONG ulFlags = 0;
-		if ( oldx != source->x )
+		if ( oldx != source->X() )
 			ulFlags |= CM_X;
-		if ( oldy != source->y )
+		if ( oldy != source->Y() )
 			ulFlags |= CM_Y;
-		if ( oldz != source->z )
+		if ( oldz != source->Z() )
 			ulFlags |= CM_Z;
 
 		// [BC] If we're the server, tell clients to move the object.

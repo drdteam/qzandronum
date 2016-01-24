@@ -2810,13 +2810,13 @@ fixed_t P_OldXYMovement( AActor *mo )
 */
 		if (xmove > maxmove || ymove > maxmove)
 		{
-			ptryx = mo->x + (xmove >>= 1);
-			ptryy = mo->y + (ymove >>= 1);
+			ptryx = mo->X() + (xmove >>= 1);
+			ptryy = mo->Y() + (ymove >>= 1);
 		}
 		else
 		{
-			ptryx = mo->x + xmove;
-			ptryy = mo->y + ymove;
+			ptryx = mo->X() + xmove;
+			ptryy = mo->Y() + ymove;
 			xmove = ymove = 0;
 		}
 
@@ -2904,7 +2904,7 @@ fixed_t P_OldXYMovement( AActor *mo )
 	// slow down
 
 	/* no friction for missiles or skulls ever, no friction when airborne */
-	if (mo->flags & (MF_MISSILE | MF_SKULLFLY) || mo->z > mo->floorz)
+	if (mo->flags & (MF_MISSILE | MF_SKULLFLY) || mo->Z() > mo->floorz)
 		return oldfloorz; 
 
 	if (mo->flags & MF_CORPSE)
@@ -2912,7 +2912,7 @@ fixed_t P_OldXYMovement( AActor *mo )
 		if (mo->velx > FRACUNIT/4 || mo->velx < -FRACUNIT/4
 			|| mo->vely > FRACUNIT/4 || mo->vely < -FRACUNIT/4)
 		{
-			if (mo->floorz > mo->Sector->floorplane.ZatPoint (mo->x, mo->y))
+			if (mo->floorz > mo->Sector->floorplane.ZatPoint (mo))
 				return oldfloorz;
 		}
 	}
@@ -3130,10 +3130,10 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 
 	// [W/BB] Apply the old ZDoom gravity here instead
 	if ((zacompatflags & ZACOMPATF_OLD_ZDOOM_ZMOVEMENT))
-		mo->z += mo->velz;
+		mo->AddZ ( mo->velz );
 
 	// [BC] Mark this item as having moved.
-	if ( mo->z != oldz )
+	if ( mo->Z() != oldz )
 		mo->ulSTFlags |= STFL_POSITIONCHANGED;
 //
 // adjust height
@@ -3279,7 +3279,7 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 			if ( mo->floorsector->GetFlags(sector_t::floor) & PLANEF_SPRINGPAD )
 			{
 				mo->velz = -mo->velz;
-				mo->z = mo->floorz;
+				mo->SetZ ( mo->floorz );
 				return;
 			}
 
@@ -5035,9 +5035,9 @@ AActor *AActor::StaticSpawn (const PClass *type, fixed_t ix, fixed_t iy, fixed_t
 	// [CK] Desync issues occur due to not having marked spawning actors with
 	// the proper lastX/Y/Z, this will hopefully fix the floating glitch where
 	// desync's between the server and client are fixed.
-	actor->lastX = actor->x;
-	actor->lastY = actor->y;
-	actor->lastZ = actor->z;
+	actor->lastX = actor->X();
+	actor->lastY = actor->Y();
+	actor->lastZ = actor->Z();
 
 	actor->picnum.SetInvalid();
 	actor->health = actor->SpawnHealth();
@@ -7070,7 +7070,7 @@ foundone:
 
 		// [BC] Tell clients to play the sound.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundPoint( thing->x, thing->y, thing->z, CHAN_ITEM, smallsplash ? S_GetName( splash->SmallSplashSound ) : S_GetName( splash->NormalSplashSound ), 1, ATTN_IDLE );
+			SERVERCOMMANDS_SoundPoint( thing->Pos(), CHAN_ITEM, smallsplash ? S_GetName( splash->SmallSplashSound ) : S_GetName( splash->NormalSplashSound ), 1, ATTN_IDLE );
 	}
 
 	// Don't let deep water eat missiles
