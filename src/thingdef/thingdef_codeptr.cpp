@@ -3421,6 +3421,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckSight)
 		{
 			if (playeringame[i])
 			{
+				// [TP] Spectators do not count.
+				if (players[i].bSpectating)
+					continue;
+
 				// Always check sight from each player.
 				if (P_CheckSight(players[i].mo, self, SF_IGNOREVISIBILITY))
 				{

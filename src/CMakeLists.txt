@@ -1151,6 +1151,7 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	networkshared.cpp #ST
 	network/cl_auth.cpp #ZA
 	network/nettraffic.cpp #ST
+	network/packetarchive.cpp #ZA
 	network/srp.cpp #ZA
 	network/sv_auth.cpp #ZA
 	nodebuild.cpp

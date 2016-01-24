@@ -4718,6 +4718,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\network\packetarchive.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\network\packetarchive.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\network\srp.cpp"
 				>
 				<FileConfiguration

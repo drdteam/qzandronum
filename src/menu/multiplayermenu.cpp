@@ -70,6 +70,10 @@
 #include "g_game.h"
 #include "callvote.h"
 #include "g_shared/pwo.h"
+#include "deathmatch.h"
+#include "duel.h"
+#include "invasion.h"
+#include "lastmanstanding.h"
 
 static void M_StartSkirmishGame();
 static void M_ClearBotSlots();
@@ -134,8 +138,14 @@ CVAR ( Int, menu_ignoreduration, 0, 0 )
 CVAR ( Bool, menu_ignoreaction, false, 0 )
 CVAR ( String, menu_authusername, 0, 0 )
 CVAR ( String, menu_authpassword, 0, 0 )
-CVAR ( Int, menu_skirmishskill, 0, 0 )
-CVAR ( Int, menu_skirmishbotskill, 0, 0 )
+CVAR ( Int, menu_skirmishskill, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishbotskill, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishtimelimit, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishfraglimit, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishpointlimit, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishduellimit, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishwinlimit, 0, CVAR_ARCHIVE )
+CVAR ( Int, menu_skirmishwavelimit, 0, CVAR_ARCHIVE )
 
 CUSTOM_CVAR ( Int, menu_textsizescalar, 0, 0 )
 {
@@ -271,6 +281,13 @@ static void M_StartSkirmishGame()
 		vval.Int = menu_skirmishbotskill;
 		botskill.ForceSet( vval, CVAR_Int );
 	}
+
+	timelimit = menu_skirmishtimelimit;
+	fraglimit = menu_skirmishfraglimit;
+	pointlimit = menu_skirmishpointlimit;
+	duellimit = menu_skirmishduellimit;
+	winlimit = menu_skirmishwinlimit;
+	wavelimit = menu_skirmishwavelimit;
 
 	// [TP] Set default dmflags so that the gameplay is okay. ZDoom changed the gameplay settings
 	// to set dmflags directly, so we cannot rely on that anymore.

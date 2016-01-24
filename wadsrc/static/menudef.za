@@ -124,12 +124,12 @@ OptionMenu ZA_SkirmishMenu
 	Option		"Game Mode",			"menu_skirmishgamemode",		"ZA_Gamemode"
 	Option		"Modifier",				"menu_skirmishmodifier",		"ZA_Modifier"
 	StaticText	" "
-	NumberField	"Timelimit",			"timelimit"
-	NumberField	"Fraglimit",			"fraglimit"
-	NumberField	"Pointlimit",			"pointlimit"
-	NumberField	"Duellimit",			"duellimit"
-	NumberField	"Winlimit",				"winlimit"
-	NumberField	"Wavelimit",			"wavelimit", 0, 10
+	NumberField	"Timelimit",			"menu_skirmishtimelimit"
+	NumberField	"Fraglimit",			"menu_skirmishfraglimit"
+	NumberField	"Pointlimit",			"menu_skirmishpointlimit"
+	NumberField	"Duellimit",			"menu_skirmishduellimit"
+	NumberField	"Winlimit",				"menu_skirmishwinlimit"
+	NumberField	"Wavelimit",			"menu_skirmishwavelimit", 0, 10
 	StaticText	" "
 	NumberField	"Skill",				"menu_skirmishskill", 0, 4
 	NumberField	"Botskill",				"menu_skirmishbotskill", 0, 4

@@ -120,6 +120,7 @@
 #include "network_enums.h"
 #include "d_protocol.h"
 #include "p_enemy.h"
+#include "network/packetarchive.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -435,8 +436,7 @@ void SERVER_Construct( void )
 		NETWORK_ClearBuffer( &g_aClients[ulIdx].PacketBuffer );
 
 		// Initialize the saved packet buffer.
-		NETWORK_InitBuffer( &g_aClients[ulIdx].SavedPacketBuffer, g_ulMaxPacketSize * PACKET_BUFFER_SIZE, BUFFERTYPE_WRITE );
-		NETWORK_ClearBuffer( &g_aClients[ulIdx].SavedPacketBuffer );
+		g_aClients[ulIdx].SavedPackets.Initialize( g_ulMaxPacketSize );
 
 		// Initialize the unreliable packet buffer.
 		NETWORK_InitBuffer( &g_aClients[ulIdx].UnreliablePacketBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
@@ -530,8 +530,8 @@ void SERVER_Destruct( void )
 		}
 
 		NETWORK_FreeBuffer( &g_aClients[ulIdx].PacketBuffer );
-		NETWORK_FreeBuffer( &g_aClients[ulIdx].SavedPacketBuffer );
 		NETWORK_FreeBuffer( &g_aClients[ulIdx].UnreliablePacketBuffer );
+		g_aClients[ulIdx].SavedPackets.Free();
 	}
 
 #ifdef CREATE_PACKET_LOG
@@ -814,31 +814,11 @@ void SERVER_SendClientPacket( ULONG ulClient, bool bReliable )
 	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
 	if ( bReliable )
 	{
-		pClient->SavedPacketBuffer.ulCurrentSize = NETWORK_CalcBufferSize( &pClient->SavedPacketBuffer );
-
-		// If we've reached the end of our reliable packets buffer, start writing at the beginning.
-		if (( pClient->SavedPacketBuffer.ulCurrentSize + pClient->PacketBuffer.ulCurrentSize ) >= pClient->SavedPacketBuffer.ulMaxSize )
-		{
-			pClient->SavedPacketBuffer.ByteStream.pbStream = pClient->SavedPacketBuffer.pbData;
-			pClient->SavedPacketBuffer.ulCurrentSize = 0;
-		}
-
-		// Save where the beginning is and the size of each packet within the reliable packets
-		// buffer.
-		pClient->lPacketBeginning[( pClient->ulPacketSequence ) % PACKET_BUFFER_SIZE] = pClient->SavedPacketBuffer.ulCurrentSize;
-		pClient->lPacketSize[( pClient->ulPacketSequence ) % PACKET_BUFFER_SIZE] = pClient->PacketBuffer.ulCurrentSize;
-		pClient->lPacketSequence[( pClient->ulPacketSequence ) % PACKET_BUFFER_SIZE] = pClient->ulPacketSequence;
-
-		// Write what we want to send out to our reliable packets buffer, so that it can be
-		// retransmitted later if necessary.
-		if ( pClient->PacketBuffer.ulCurrentSize )
-			NETWORK_WriteBuffer( &pClient->SavedPacketBuffer.ByteStream, pClient->PacketBuffer.pbData, pClient->PacketBuffer.ulCurrentSize );
+		int sequenceNumber = pClient->SavedPackets.StorePacket( *pBuffer );
 
 		// Write the header to our temporary buffer.
 		NETWORK_WriteByte( &TempBuffer.ByteStream, SVC_HEADER );
-		NETWORK_WriteLong( &TempBuffer.ByteStream, pClient->ulPacketSequence );
-
-		pClient->ulPacketSequence++;
+		NETWORK_WriteLong( &TempBuffer.ByteStream, sequenceNumber );
 	}
 	else
 	{
@@ -1926,16 +1906,9 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	// Read in the client's network game version.
 	lClientNetworkGameVersion = NETWORK_ReadByte( pByteStream );
 
+	g_aClients[lClient].SavedPackets.Clear();
 	NETWORK_ClearBuffer( &g_aClients[lClient].PacketBuffer );
-	NETWORK_ClearBuffer( &g_aClients[lClient].SavedPacketBuffer );
 	NETWORK_ClearBuffer( &g_aClients[lClient].UnreliablePacketBuffer );
-	for ( ulIdx = 0; ulIdx < PACKET_BUFFER_SIZE; ulIdx++ )
-	{
-		g_aClients[lClient].lPacketBeginning[ulIdx] = 0;
-		g_aClients[lClient].lPacketSize[ulIdx] = 0;
-		g_aClients[lClient].lPacketSequence[ulIdx] = 0;
-	}
-	g_aClients[lClient].ulPacketSequence = 0;
 
 	// Who is connecting?
 	Printf( "Connect (v%s): %s\n", clientVersion.GetChars(), NETWORK_GetFromAddress().ToString() );
@@ -3009,7 +2982,7 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
 	// Clear the client's buffers.
 	NETWORK_ClearBuffer( &g_aClients[ulClient].PacketBuffer );
 	NETWORK_ClearBuffer( &g_aClients[ulClient].UnreliablePacketBuffer );
-	NETWORK_ClearBuffer( &g_aClients[ulClient].SavedPacketBuffer );
+	g_aClients[ulClient].SavedPackets.Clear();
 
 	// Tell the join queue module that a player has left the game.
 	JOINQUEUE_PlayerLeftGame( ulClient, true );
@@ -5245,10 +5218,8 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 //
 static bool server_MissingPacket( BYTESTREAM_s *pByteStream )
 {
-	ULONG	ulIdx;
 	LONG	lPacket;
 	LONG	lLastPacket;
-	bool	bFullUpdateRequired;
 
 	// If this client just requested missing packets, ignore the request.
 	if ( gametic <= ( g_aClients[g_lCurrentClient].lLastPacketLossTick + ( TICRATE / 4 )))
@@ -5275,25 +5246,14 @@ static bool server_MissingPacket( BYTESTREAM_s *pByteStream )
 		}
 		lLastPacket = lPacket;
 
-		// Search through all PACKET_BUFFER_SIZE of the stored packets. We're looking for the packet that
-		// that we want to send to the client by matching the sequences. If we cannot find
-		// the packet, then we much send a full update to the client.
-		bFullUpdateRequired = true;
-		for ( ulIdx = 0; ulIdx < PACKET_BUFFER_SIZE; ulIdx++ )
-		{
-			if ( g_aClients[g_lCurrentClient].lPacketSequence[ulIdx] == lPacket )
-			{
-				bFullUpdateRequired = false;
-				break;
-			}
-		}
+		// Find the packet from the saved packet archive.
+		const BYTE* packetData;
+		size_t packetSize;
+		bool found = g_aClients[g_lCurrentClient].SavedPackets.FindPacket( lPacket, packetData, packetSize );
 
-		// We could not find the correct packet to resend to the client. We must send him
-		// a full update.
-		if  ( bFullUpdateRequired )
+		// We could not find the correct packet to resend to the client, so there's nothing we can do to save him.
+		if ( found == false )
 		{
-			// Do we really need to print this? Nah.
-//			Printf( "*** Sequence screwed for client %d, %s!\n", g_lCurrentClient, players[g_lCurrentClient].userinfo.GetName() );
 			SERVER_KickPlayer( g_lCurrentClient, "Too many missed packets." );
 			return ( true );
 		}
@@ -5303,14 +5263,8 @@ static bool server_MissingPacket( BYTESTREAM_s *pByteStream )
 		NETWORK_ClearBuffer( &g_PacketLossBuffer );
 		NETWORK_WriteHeader( &g_PacketLossBuffer.ByteStream, SVC_HEADER );
 		NETWORK_WriteLong( &g_PacketLossBuffer.ByteStream, lPacket );
-		if ( g_aClients[g_lCurrentClient].lPacketSize[ulIdx] )
-		{
-			NETWORK_WriteBuffer( &g_PacketLossBuffer.ByteStream,
-				g_aClients[g_lCurrentClient].SavedPacketBuffer.pbData + g_aClients[g_lCurrentClient].lPacketBeginning[ulIdx],
-				g_aClients[g_lCurrentClient].lPacketSize[ulIdx] );
-		}
-//		else
-//			Printf( "server_MissingPacket: WARNING! Packet %d has no size!\n", ulIdx );
+		if ( packetSize > 0 )
+			NETWORK_WriteBuffer( &g_PacketLossBuffer.ByteStream, packetData, packetSize );
 		NETWORK_LaunchPacket( &g_PacketLossBuffer, g_aClients[g_lCurrentClient].Address );
 	}
 
