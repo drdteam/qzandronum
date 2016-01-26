@@ -1010,7 +1010,7 @@ angle_t P_BulletSlope (AActor *mo, AActor **pLineTarget)
 		AUTOAIM_MINANGLE * -1, AUTOAIM_MINANGLE * 1, AUTOAIM_MINANGLE * -2, AUTOAIM_MINANGLE * 2,
 		AUTOAIM_MINANGLE * -3, AUTOAIM_MINANGLE * 3, AUTOAIM_MINANGLE * -4, AUTOAIM_MINANGLE * 4,
 		AUTOAIM_MINANGLE * -5, AUTOAIM_MINANGLE * 5, AUTOAIM_MINANGLE * -6, AUTOAIM_MINANGLE * 6,
-		-1<<26, 1<<26, 0 }; // [CK] New angles
+		-(1<<26), 1<<26, 0 }; // [CK] New angles
 	int i;
 	angle_t an;
 	angle_t pitch;

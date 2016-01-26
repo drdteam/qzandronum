@@ -1250,6 +1250,11 @@ void WI_End ()
 */
 }
 
+bool WI_autoSkip()
+{
+	return wi_autoadvance > 0 && bcnt > (wi_autoadvance * TICRATE);
+}
+
 void WI_initNoState ()
 {
 	state = NoState;
@@ -1268,7 +1273,7 @@ void WI_updateNoState ()
 	else
 	{
 		bool noauto = noautostartmap;
-		bool autoskip = (wi_autoadvance > 0 && bcnt > (wi_autoadvance * TICRATE));
+		bool autoskip = WI_autoSkip();
 
 		for (int i = 0; !noauto && i < MAXPLAYERS; ++i)
 		{
@@ -1778,7 +1783,7 @@ void WI_updateDeathmatchStats ()
 	int i;
 	bool stillticking;
 */
-	bool autoskip = (wi_autoadvance > 0 && bcnt > (wi_autoadvance * TICRATE));
+	bool autoskip = WI_autoSkip();
 
 	WI_updateAnimatedBack();
 
@@ -2041,7 +2046,7 @@ void WI_updateNetgameStats ()
 	int fsum;
 	bool stillticking;
 */
-	bool autoskip = (wi_autoadvance > 0 && bcnt > (wi_autoadvance * TICRATE));
+	bool autoskip = WI_autoSkip();
 
 	WI_updateAnimatedBack ();
 

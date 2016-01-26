@@ -1065,7 +1065,9 @@ void FSingleLumpFont::LoadTranslations()
 			break;
 
 		default:
-			break;
+			// Should be unreachable.
+			I_Error("Unknown font type in FSingleLumpFont::LoadTranslation.");
+			return;
 	}
 
 	for(unsigned int i = 0;i < count;++i)

@@ -4867,7 +4867,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetAngle)
 	ACTION_PARAM_INT(ptr, 2);
 
 	AActor *ref = COPY_AAPTR(self, ptr);
-	if (ref != NULL)
+	if (ref == NULL)
 	{
 		ACTION_SET_RESULT(false);
 		return;
