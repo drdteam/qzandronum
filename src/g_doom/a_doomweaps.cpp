@@ -42,7 +42,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 	if (self->player != NULL)
 	{
 		AWeapon *weapon = self->player->ReadyWeapon;
-		if (weapon != NULL && !(weapon->WeaponFlags & WIF_DEHAMMO))
+		if (weapon != NULL && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire))
 				return;
@@ -104,6 +104,7 @@ void A_CustomFireBullets( AActor *self,
 						  int NumberOfBullets,
 						  int DamagePerBullet,
 						  const PClass * PuffType,
+						  const bool fromweapon,
 						  const char *AttackSound = NULL,
 						  int Flags = 1,
 						  fixed_t Range = 0,
@@ -112,7 +113,7 @@ void A_CustomFireBullets( AActor *self,
 DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 {
 	// [BB] A_FirePistol is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), "weapons/pistol", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/pistol", true, 0, false );
 	A_GunFlash ( self );
 /*
 	bool accurate;
@@ -120,7 +121,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	if (self->player != NULL)
 	{
 		AWeapon *weapon = self->player->ReadyWeapon;
-		if (weapon != NULL)
+		if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 				return;
@@ -246,7 +247,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if ((weapon != NULL) && !(Flags & SF_NOUSEAMMO) && !(!linetarget && (Flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO))
+	if ((weapon != NULL) && !(Flags & SF_NOUSEAMMO) && !(!linetarget && (Flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
 			return;
@@ -382,7 +383,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 {
 	// [BB] A_FireShotgun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 7, 5, PClass::FindClass("BulletPuff"), "weapons/shotgf", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 7, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/shotgf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int i;
@@ -399,7 +400,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 
 	S_Sound (self, CHAN_WEAPON,  "weapons/shotgf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
@@ -456,7 +457,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 {
 	// [BB] A_FireShotgun2 is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 11.2 * ANGLE_1), angle_t( 7.1 * ANGLE_1), 20, 5, PClass::FindClass("BulletPuff"), "weapons/sshotf", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 11.2 * ANGLE_1), angle_t( 7.1 * ANGLE_1), 20, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/sshotf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int 		i;
@@ -475,7 +476,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 
 	S_Sound (self, CHAN_WEAPON, "weapons/sshotf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 2))
 			return;
@@ -660,7 +661,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 		}
 	}
 	// [BB] A_FireCGun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), "weapons/chngun" );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/chngun" );
 //	A_GunFlash( self );
 /*
 	player_t *player;
@@ -671,7 +672,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 	}
 
 	AWeapon *weapon = player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
@@ -750,7 +751,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMissile)
 		return;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
@@ -825,7 +826,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 		return;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
 			return;
@@ -867,7 +868,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 		return;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
@@ -902,7 +903,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 // [RH] A_FireRailgun
 // [TP] Now takes a puff class
 //
-static void FireRailgun(AActor *self, int offset_xy, const PClass* puffType = NULL )
+static void FireRailgun(AActor *self, int offset_xy, bool fromweapon, const PClass* puffType = NULL )
 {
 	int damage;
 	player_t *player;
@@ -913,7 +914,7 @@ static void FireRailgun(AActor *self, int offset_xy, const PClass* puffType = NU
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && fromweapon)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
@@ -955,17 +956,17 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireRailgun)
 {
 	ACTION_PARAM_START( 1 )
 	ACTION_PARAM_CLASS( puffType, 0 );
-	FireRailgun(self, 0, puffType );
+	FireRailgun(self, 0, ACTION_CALL_FROM_WEAPON(), puffType );
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunRight)
 {
-	FireRailgun(self, 10);
+	FireRailgun(self, 10, ACTION_CALL_FROM_WEAPON());
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunLeft)
 {
-	FireRailgun(self, -10);
+	FireRailgun(self, -10, ACTION_CALL_FROM_WEAPON());
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_RailWait)
@@ -1005,7 +1006,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL)
+	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, deh.BFGCells))
 			return;
@@ -1157,6 +1158,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 	AActor * mo = NULL;
 
 	player_t *player;
+	bool doesautoaim = false;
 
 	if (NULL == (player = self->player))
 	{
@@ -1164,18 +1166,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
+	if (!ACTION_CALL_FROM_WEAPON()) weapon = NULL;
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return;
+
+		doesautoaim = !(weapon->WeaponFlags & WIF_NOAUTOAIM);
+		weapon->WeaponFlags |= WIF_NOAUTOAIM; // No autoaiming that gun
 	}
 	self->player->extralight = 2;
 
 	// Save values temporarily
 	angle_t SavedPlayerAngle = self->angle;
 	fixed_t SavedPlayerPitch = self->pitch;
-	bool doesautoaim = !(self->player->ReadyWeapon->WeaponFlags & WIF_NOAUTOAIM);
-	self->player->ReadyWeapon->WeaponFlags |= WIF_NOAUTOAIM; // No autoaiming that gun
 	for (int i = 0; i < 2; i++) // Spawn two plasma balls in sequence
     {
 		self->angle += ((pr_oldbfg()&127) - 64) * (ANG90/768);
@@ -1185,5 +1189,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 		self->angle = SavedPlayerAngle;
 		self->pitch = SavedPlayerPitch;
     }
-	if (doesautoaim) self->player->ReadyWeapon->WeaponFlags &= ~WIF_NOAUTOAIM; // Restore autoaim setting
+	if (doesautoaim && weapon != NULL) weapon->WeaponFlags &= ~WIF_NOAUTOAIM; // Restore autoaim setting
 }

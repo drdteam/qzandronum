@@ -36,6 +36,7 @@
 #include "templates.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "d_event.h"
 #include "gstrings.h"
 
 #include "i_system.h"
@@ -245,8 +246,7 @@ bool CheckIfExitIsGood (AActor *self, level_info_t *info)
 	// [BC] Instead of displaying this message in deathmatch only, display it any
 	// time we're not in single player mode (it can be annoying when people exit
 	// the map in cooperative, and it's nice to know who's doing it).
-//	if (deathmatch || teamgame)
-	if ( NETWORK_GetState( ) != NETSTATE_SINGLE )
+	if ( ( NETWORK_GetState( ) != NETSTATE_SINGLE ) && gameaction != ga_completed)
 	{
 		// [BB] It's possible, that a monster exits the level, so self->player can be 0.
 		// [TP] A voodoo doll may also exit.
