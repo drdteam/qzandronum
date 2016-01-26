@@ -4209,7 +4209,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 		else return;
 
 		angle >>= ANGLETOFINESHIFT;
-		pitch = (0-pitch)>>ANGLETOFINESHIFT;
+		pitch >>= ANGLETOFINESHIFT;
 
 		vx = FixedMul (finecosine[pitch], finecosine[angle]);
 		vy = FixedMul (finecosine[pitch], finesine[angle]);
