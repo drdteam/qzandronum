@@ -1099,22 +1099,24 @@ static void PrintPickupMessage (const char *str)
 
 void AInventory::Touch (AActor *toucher)
 {
+	player_t *player = toucher->player;
+
 	AInventory	*pInventory;
 
 	// [BC] If this item was a bot's goal item, and it's reaching it, let the bot know that.
-	if ( toucher->player && toucher->player->pSkullBot )
+	if ( player && player->pSkullBot )
 	{
-		if ( toucher->player->pSkullBot->m_pGoalActor == this )
+		if ( player->pSkullBot->m_pGoalActor == this )
 		{
-			toucher->player->pSkullBot->m_pGoalActor = NULL;
-			toucher->player->pSkullBot->PostEvent( BOTEVENT_REACHED_GOAL );
-			toucher->player->pSkullBot->m_ulPathType = BOTPATHTYPE_NONE;
-//			ASTAR_ClearPath( toucher->player - players );
+			player->pSkullBot->m_pGoalActor = NULL;
+			player->pSkullBot->PostEvent( BOTEVENT_REACHED_GOAL );
+			player->pSkullBot->m_ulPathType = BOTPATHTYPE_NONE;
+//			ASTAR_ClearPath( player - players );
 		}
 	}
 
 	// [BB] When an unassigned voodoo doll touches something, pretend all players are touching it.
-	if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( toucher->player == COOP_GetVoodooDollDummyPlayer() ) )
+	if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( player == COOP_GetVoodooDollDummyPlayer() ) )
 	{
 		bool bPlayerTouchedItem = false;
 		for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
@@ -1150,9 +1152,9 @@ void AInventory::Touch (AActor *toucher)
 	}
 
 	// If a voodoo doll touches something, pretend the real player touched it instead.
-	if (toucher->player != NULL)
+	if (player != NULL)
 	{
-		toucher = toucher->player->mo;
+		toucher = player->mo;
 	}
 
 	bool localview = toucher->CheckLocalView(consoleplayer);
@@ -1167,16 +1169,16 @@ void AInventory::Touch (AActor *toucher)
 
 	// [BC] Tell the client that he successfully picked up the item.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-		( toucher->player ) &&
+		( player ) &&
 		// [BB] Special handling for RandomPowerup, formerly done with NETFL_SPECIALPICKUP.
 		(( this->GetClass( )->IsDescendantOf( PClass::FindClass( "RandomPowerup" ) ) ) == false ) &&
 		( this->GetClass( )->IsDescendantOf( PClass::FindClass( "DehackedPickup" )) == false ))
 	{
 		pInventory = toucher->FindInventory( this->GetClass( ));
 		if ( pInventory )
-			SERVERCOMMANDS_GiveInventory( ULONG( toucher->player - players ), pInventory );
+			SERVERCOMMANDS_GiveInventory( ULONG( player - players ), pInventory );
 		else
-			SERVERCOMMANDS_GiveInventory( ULONG( toucher->player - players ), this );
+			SERVERCOMMANDS_GiveInventory( ULONG( player - players ), this );
 	}
 
 	if (!(ItemFlags & IF_QUIET))
@@ -1185,12 +1187,12 @@ void AInventory::Touch (AActor *toucher)
 		// to do it ourselves.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
-			if (( toucher->player ) &&
+			if (( player ) &&
 				// [BB] Special handling for RandomPowerup, formerly done with NETFL_SPECIALPICKUP.
 				(( this->GetClass( )->IsDescendantOf( PClass::FindClass( "RandomPowerup" ) ) ) == false ) &&
 				( this->GetClass( )->IsDescendantOf( PClass::FindClass( "DehackedPickup" )) == false ))
 			{
-				SERVERCOMMANDS_DoInventoryPickup( ULONG( toucher->player - players ), this->GetClass( )->TypeName.GetChars( ), this->PickupMessage( ));
+				SERVERCOMMANDS_DoInventoryPickup( ULONG( player - players ), this->GetClass( )->TypeName.GetChars( ), this->PickupMessage( ));
 			}
 		}
 		else
@@ -1208,13 +1210,13 @@ void AInventory::Touch (AActor *toucher)
 
 			// Special check so voodoo dolls picking up items cause the
 			// real player to make noise.
-			if (toucher->player != NULL)
+			if (player != NULL)
 			{
-				PlayPickupSound (toucher->player->mo);
-			if (!(ItemFlags & IF_NOSCREENFLASH))
-			{
-				toucher->player->bonuscount = BONUSADD;
-			}
+				PlayPickupSound (player->mo);
+				if (!(ItemFlags & IF_NOSCREENFLASH))
+				{
+					player->bonuscount = BONUSADD;
+				}
 			}
 			else
 			{
@@ -1233,9 +1235,9 @@ void AInventory::Touch (AActor *toucher)
 
 	if (flags & MF_COUNTITEM)
 	{
-		if (toucher->player != NULL)
+		if (player != NULL)
 		{
-			toucher->player->itemcount++;
+			player->itemcount++;
 		}
 		level.found_items++;
 
@@ -1246,7 +1248,7 @@ void AInventory::Touch (AActor *toucher)
 
 	if (flags5 & MF5_COUNTSECRET)
 	{
-		P_GiveSecret(toucher, true, true, -1);
+		P_GiveSecret(player != NULL? (AActor*)player->mo : toucher, true, true, -1);
 	}
 
 	// [BC] If the item has an announcer sound, play it.
@@ -1282,7 +1284,7 @@ void AInventory::Touch (AActor *toucher)
 	// them when sv_sharekeys is toggled on.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
 		( IsKindOf( RUNTIME_CLASS( AKey ))) &&
-		( toucher->player != NULL ))
+		( player != NULL ))
 	{
 		// [Dusk] Check if the key has not been picked up yet.
 		bool pickedup = false;
@@ -1307,7 +1309,7 @@ void AInventory::Touch (AActor *toucher)
 			{
 				// [Dusk] Announcement message
 				SERVER_Printf( PRINT_HIGH, TEXTCOLOR_GREEN "%s" TEXTCOLOR_NORMAL " has found the " TEXTCOLOR_GOLD "%s!\n",
-					toucher->player->userinfo.GetName(), GetTag() );
+					player->userinfo.GetName(), GetTag() );
 
 				// [Dusk] Audio cue - skip the player picking the key because he
 				// hears the pickup sound from the original key. The little *bloop*
@@ -1316,7 +1318,7 @@ void AInventory::Touch (AActor *toucher)
 				if ( S_FindSound( "misc/k_pkup" ))
 				{
 					SERVERCOMMANDS_Sound( CHAN_AUTO, "misc/k_pkup", 1.0, ATTN_NONE,
-						toucher->player - players, SVCF_SKIPTHISCLIENT );
+						player - players, SVCF_SKIPTHISCLIENT );
 				}
 
 				SERVER_SyncSharedKeys( MAXPLAYERS, false );
