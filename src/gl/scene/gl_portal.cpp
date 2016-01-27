@@ -291,7 +291,6 @@ bool GLPortal::Start(bool usestencil, bool doquery)
 	planestack.Push(gl_RenderState.GetClipHeightTop());
 	planestack.Push(gl_RenderState.GetClipHeightBottom());
 	glDisable(GL_CLIP_DISTANCE0);
-	glDisable(GL_CLIP_DISTANCE1);
 	gl_RenderState.SetClipHeightBottom(-65536.f);
 	gl_RenderState.SetClipHeightTop(65536.f);
 
@@ -360,7 +359,7 @@ void GLPortal::End(bool usestencil)
 	if (f > -65535.f) glEnable(GL_CLIP_DISTANCE0);
 	planestack.Pop(f);
 	gl_RenderState.SetClipHeightTop(f);
-	if (f < 65535.f) glEnable(GL_CLIP_DISTANCE1);
+	if (f < 65535.f) glEnable(GL_CLIP_DISTANCE0);
 
 	if (usestencil)
 	{
@@ -750,7 +749,6 @@ void GLSectorStackPortal::DrawContents()
 	viewx += origin->xDisplacement;
 	viewy += origin->yDisplacement;
 	GLRenderer->mViewActor = NULL;
-	GLRenderer->mCurrentPortal = this;
 
 
 	validcount++;
@@ -809,17 +807,17 @@ void GLPlaneMirrorPortal::DrawContents()
 	if (PlaneMirrorMode < 0)
 	{
 		gl_RenderState.SetClipHeightTop(f);	// ceiling mirror: clip everything with a z lower than the portal's ceiling
-		glEnable(GL_CLIP_DISTANCE1);
+		gl_RenderState.SetClipHeightBottom(-65536.f);
 	}
 	else
 	{
 		gl_RenderState.SetClipHeightBottom(f);	// floor mirror: clip everything with a z higher than the portal's floor
-		glEnable(GL_CLIP_DISTANCE0);
+		gl_RenderState.SetClipHeightTop(65536.f);
 	}
 
+	glEnable(GL_CLIP_DISTANCE0);
 	GLRenderer->DrawScene();
 	glDisable(GL_CLIP_DISTANCE0);
-	glDisable(GL_CLIP_DISTANCE1);
 	gl_RenderState.SetClipHeightBottom(-65536.f);
 	gl_RenderState.SetClipHeightTop(65536.f);
 	PlaneMirrorFlag--;
@@ -937,13 +935,23 @@ void GLMirrorPortal::DrawContents()
 
 int GLMirrorPortal::ClipSeg(seg_t *seg) 
 { 
-	// this seg is completely behind the mirror!
+	// this seg is completely behind the mirror.
 	if (P_PointOnLineSide(seg->v1->x, seg->v1->y, linedef) &&
 		P_PointOnLineSide(seg->v2->x, seg->v2->y, linedef)) 
 	{
 		return PClip_InFront;
 	}
 	return PClip_Inside; 
+}
+
+int GLMirrorPortal::ClipSubsector(subsector_t *sub) 
+{ 
+	// this seg is completely behind the mirror!
+	for(int i=0;i<sub->numlines;i++)
+	{
+		if (P_PointOnLineSide(sub->firstline[i].v1->x, sub->firstline[i].v1->y, linedef) == 0) return PClip_Inside;
+	}
+	return PClip_InFront; 
 }
 
 int GLMirrorPortal::ClipPoint(fixed_t x, fixed_t y) 
