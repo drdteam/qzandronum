@@ -980,6 +980,14 @@ public:
 	{
 		return mMaxValid >= 0;
 	}
+
+	void Ticker()
+	{
+		if (Selectable() && mSelection > mMaxValid)
+		{
+			mSelection = mMaxValid;
+		}
+	}
 };
 
 
