@@ -168,6 +168,7 @@ static	bool	server_CheckForClientMinorCommandFlood( ULONG ulClient );
 static	bool	server_CheckJoinPassword( const FString& clientPassword );
 static	bool	server_InfoCheat( BYTESTREAM_s* pByteStream );
 static	bool	server_CheckLogin( const ULONG ulClient );
+static	void	server_PrintWithIP( FString message, const NETADDRESS_s &address );
 
 // [RC]
 #ifdef CREATE_PACKET_LOG
@@ -1590,10 +1591,11 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 		if ( NETWORK_IsGeoIPAvailable() && ( SERVER_GetClient( g_lCurrentClient )->bWantHideCountry == false ) )
 			countryInfo.AppendFormat ( " (from: %s)", NETWORK_GetCountryCodeFromAddress ( SERVER_GetClient( g_lCurrentClient )->Address ).GetChars() );
 
-		if ( players[g_lCurrentClient].bSpectating )
-			SERVER_Printf( PRINT_HIGH, "%s \\c-has connected.%s\n", players[g_lCurrentClient].userinfo.GetName(), countryInfo.GetChars() );
-		else
-			SERVER_Printf( PRINT_HIGH, "%s \\c-entered the game.%s\n", players[g_lCurrentClient].userinfo.GetName(), countryInfo.GetChars() );
+		FString message;
+		message.Format( "%s\\c-{ip} %s.%s\n", players[g_lCurrentClient].userinfo.GetName(),
+			players[g_lCurrentClient].bSpectating ? "has connected" : "entered the game",
+			countryInfo.GetChars() );
+		server_PrintWithIP( message, g_aClients[g_lCurrentClient].Address );
 	}
 
 	BOTCMD_SetLastJoinedPlayer( players[g_lCurrentClient].userinfo.GetName() );
@@ -2884,14 +2886,7 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
 			else
 				message.Format( "client %s\\c-{ip} disconnected.\n", players[ulClient].userinfo.GetName() );
 
-			// [TP] First print locally a version of this message with the IP address shown.
-			FString localmessage = message;
-			localmessage.Substitute( "{ip}", FString( " (" ) + g_aClients[ulClient].Address.ToString() + ")" );
-			Printf( "%s", localmessage.GetChars() );
-
-			// [TP] Then print a version of the message without the IP address to clients.
-			message.Substitute( "{ip}", "" );
-			SERVERCOMMANDS_Print( message, PRINT_HIGH );
+			server_PrintWithIP( message, g_aClients[ulClient].Address );
 		}
 		else
 			Printf( "%s \\c-disconnected.\n", g_aClients[ulClient].Address.ToString() );
@@ -6503,6 +6498,23 @@ static bool server_InfoCheat( BYTESTREAM_s *pByteStream )
 	}
 
 	return false;
+}
+
+//*****************************************************************************
+//
+// [TP] Prints a message, with the IP substituted in for the local server and with it
+// removed broadcasted to clients.
+//
+static void server_PrintWithIP( FString message, const NETADDRESS_s &address )
+{
+	// [TP] First print locally a version of this message with the IP address shown.
+	FString localmessage = message;
+	localmessage.Substitute( "{ip}", FString( " (" ) + address.ToString() + ")" );
+	Printf( "%s", localmessage.GetChars() );
+
+	// [TP] Then print a version of the message without the IP address to clients.
+	message.Substitute( "{ip}", "" );
+	SERVERCOMMANDS_Print( message, PRINT_HIGH );
 }
 
 //*****************************************************************************
