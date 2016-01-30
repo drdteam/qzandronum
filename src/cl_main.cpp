@@ -4242,6 +4242,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 
 	pPlayer->attacker = NULL;
 	pPlayer->BlendR = pPlayer->BlendG = pPlayer->BlendB = pPlayer->BlendA = 0.f;
+	pPlayer->mo->ResetAirSupply(false);
 	pPlayer->cheats = 0;
 	pPlayer->Uncrouch( );
 
@@ -5209,7 +5210,7 @@ static void client_SetPlayerAmmoCapacity( BYTESTREAM_s *pByteStream )
 	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
 
 	// Read in the amount of this inventory type the player has.
-	lMaxAmount = NETWORK_ReadShort( pByteStream );
+	lMaxAmount = NETWORK_ReadLong( pByteStream );
 
 	// Check to make sure everything is valid. If not, break out.
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
@@ -9955,7 +9956,7 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 	{
 		switch (( argheader >> ( 2 * i )) & 3 )
 		{
-			case 1: args[i] = NETWORK_ReadByte( pByteStream ); break;
+			case 1: args[i] = static_cast<SBYTE>( NETWORK_ReadByte( pByteStream )); break;
 			case 2: args[i] = NETWORK_ReadShort( pByteStream ); break;
 			case 3: args[i] = NETWORK_ReadLong( pByteStream ); break;
 			default: break;

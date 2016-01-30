@@ -999,7 +999,7 @@ void SERVERCOMMANDS_SetPlayerAmmoCapacity( ULONG ulPlayer, AInventory *pAmmo, UL
 	NetCommand command( SVC_SETPLAYERAMMOCAPACITY );
 	command.addByte( ulPlayer );
 	command.addShort( pAmmo->GetClass( )->getActorNetworkIndex() );
-	command.addShort( pAmmo->MaxAmount );
+	command.addLong( pAmmo->MaxAmount );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
