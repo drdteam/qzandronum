@@ -2642,7 +2642,8 @@ void G_CooperativeSpawnPlayer( ULONG ulPlayer, bool bClientUpdate, bool bTempPla
 //
 FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 {
-	if ((level.flags2 & LEVEL2_RANDOMPLAYERSTARTS) || (flags & PPS_FORCERANDOM))
+	if ((level.flags2 & LEVEL2_RANDOMPLAYERSTARTS) || (flags & PPS_FORCERANDOM) ||
+		playerstarts[playernum].type == 0)
 	{
 		if (!(flags & PPS_NOBLOCKINGCHECK))
 		{
@@ -2661,7 +2662,7 @@ FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 			{ // Pick an open spot at random.
 				return good_starts[pr_pspawn(good_starts.Size())];
 			}
-	}
+		}
 		// Pick a spot at random, whether it's open or not.
 		return &AllPlayerStarts[pr_pspawn(AllPlayerStarts.Size())];
 	}
@@ -2754,16 +2755,17 @@ void G_DoReborn (int playernum, bool freshbot)
 		}
 
 		if (!(level.flags2 & LEVEL2_RANDOMPLAYERSTARTS) &&
+			playerstarts[playernum].type != 0 &&
 			G_CheckSpot (playernum, &playerstarts[playernum]))
 		{
 			AActor *mo = P_SpawnPlayer(&playerstarts[playernum], playernum);
-			if (mo != NULL) P_PlayerStartStomp(mo);
+			if (mo != NULL) P_PlayerStartStomp(mo, true);
 		}
 		else
 		{ // try to spawn at any random player's spot
 			FPlayerStart *start = G_PickPlayerStart(playernum, PPS_FORCERANDOM);
 			AActor *mo = P_SpawnPlayer(start, playernum);
-			if (mo != NULL) P_PlayerStartStomp(mo);
+			if (mo != NULL) P_PlayerStartStomp(mo, true);
 		}
 		*/
 

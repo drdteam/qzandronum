@@ -827,23 +827,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_MaceBallImpact2)
 		return;
 	}
 
+	if ((self->Z() <= self->floorz) && P_HitFloor (self))
+	{ // Landed in some sort of liquid
+		// [BB]
+		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			SERVERCOMMANDS_DestroyThing( self );
+
+		self->Destroy ();
+		return;
+	}
 	if (self->flags & MF_INBOUNCE)
 	{
-		fixed_t floordist = self->Z() - self->floorz;
-		fixed_t ceildist = self->ceilingz - self->Z();
-		fixed_t vel;
-
-		// NOTE: The assumptions being made here about the plane to use for bouncing off are dead wrong.
-		// http://forum.zdoom.org/viewtopic.php?f=2&t=50449
-		if (floordist <= ceildist)
-		{
-			vel = MulScale32 (self->velz, self->Sector->floorplane.c);
-		}
-		else
-		{
-			vel = MulScale32 (self->velz, self->Sector->ceilingplane.c);
-		}
-		if (vel < 2)
+		if (self->velz < 2*FRACUNIT)
 		{
 			goto boom;
 		}
@@ -1042,21 +1037,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 	}
 	if (self->flags & MF_INBOUNCE)
 	{
-		fixed_t floordist = self->Z() - self->floorz;
-		fixed_t ceildist = self->ceilingz - self->Z();
-		fixed_t vel;
-
-		// NOTE: The assumptions being made here about the plane to use for bouncing off are dead wrong.
-		// http://forum.zdoom.org/viewtopic.php?f=2&t=50449
-		if (floordist <= ceildist)
-		{
-			vel = MulScale32 (self->velz, self->Sector->floorplane.c);
-		}
-		else
-		{
-			vel = MulScale32 (self->velz, self->Sector->ceilingplane.c);
-		}
-		if (vel < 2)
+		if (self->velz < 2*FRACUNIT)
 		{
 			goto boom;
 		}

@@ -443,7 +443,6 @@ void P_SerializeWorld (FArchive &arc)
 			short secretsector;
 			arc << secretsector;
 			if (secretsector) sec->Flags |= SECF_WASSECRET;
-			sec->special &= ~(SECRET_MASK|FRICTION_MASK|PUSH_MASK);
 			P_InitSectorSpecial(sec, sec->special, true);
 		}
 		arc	<< sec->interpolations[0]

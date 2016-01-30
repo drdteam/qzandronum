@@ -1052,9 +1052,9 @@ CUSTOM_CVAR(Int, r_fakecontrast, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 //
 //==========================================================================
 
-int side_t::GetLightLevel (bool foggy, int baselight, bool noabsolute, int *pfakecontrast) const
+int side_t::GetLightLevel (bool foggy, int baselight, bool is3dlight, int *pfakecontrast) const
 {
-	if (!noabsolute && (Flags & WALLF_ABSLIGHTING))
+	if (!is3dlight && (Flags & WALLF_ABSLIGHTING))
 	{
 		baselight = Light;
 	}
@@ -1094,7 +1094,7 @@ int side_t::GetLightLevel (bool foggy, int baselight, bool noabsolute, int *pfak
 			}
 		}
 	}
-	if (!(Flags & WALLF_ABSLIGHTING) && (!foggy || (Flags & WALLF_LIGHT_FOG)))
+	if (!is3dlight && !(Flags & WALLF_ABSLIGHTING) && (!foggy || (Flags & WALLF_LIGHT_FOG)))
 	{
 		baselight = clamp(baselight + this->Light, 0, 255);
 	}
