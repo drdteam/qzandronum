@@ -42,6 +42,7 @@
 #include "g_level.h"
 #include "thingdef/thingdef.h"
 #include "i_system.h"
+#include "templates.h"
 
 // [BB] New #includes.
 #include "network.h"
@@ -370,7 +371,7 @@ void ADynamicLight::UpdateLocation()
 
 		if (lighttype == FlickerLight || lighttype == RandomFlickerLight) 
 		{
-			intensity = float(m_intensity[1]);
+			intensity = float(MAX(m_intensity[0], m_intensity[1]));
 		}
 		else
 		{
