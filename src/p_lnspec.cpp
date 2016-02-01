@@ -890,19 +890,38 @@ FUNC(LS_Teleport_NewMap)
 FUNC(LS_Teleport)
 // Teleport (tid, sectortag, bNoSourceFog)
 {
-	return EV_Teleport (arg0, arg1, ln, backSide, it, true, !arg2, false);
+	int flags = TELF_DESTFOG;
+	if (!arg2)
+	{
+		flags |= TELF_SOURCEFOG;
+	}
+	return EV_Teleport (arg0, arg1, ln, backSide, it, flags);
 }
 
 FUNC( LS_Teleport_NoStop )
 // Teleport_NoStop (tid, sectortag, bNoSourceFog)
 {
-	return EV_Teleport( arg0, arg1, ln, backSide, it, true, !arg2, false, false );
+	int flags = TELF_DESTFOG | TELF_KEEPVELOCITY;
+	if (!arg2)
+	{
+		flags |= TELF_SOURCEFOG;
+	}
+	return EV_Teleport( arg0, arg1, ln, backSide, it, flags);
 }
 
 FUNC(LS_Teleport_NoFog)
 // Teleport_NoFog (tid, useang, sectortag, keepheight)
 {
-	return EV_Teleport (arg0, arg2, ln, backSide, it, false, false, !arg1, true, !!arg3);
+	int flags = 0;
+	if (arg1)
+	{
+		flags |= TELF_KEEPORIENTATION;
+	}
+	if (arg3)
+	{
+		flags |= TELF_KEEPHEIGHT;
+	}
+	return EV_Teleport (arg0, arg2, ln, backSide, it, flags);
 }
 
 FUNC(LS_Teleport_ZombieChanger)
@@ -911,7 +930,7 @@ FUNC(LS_Teleport_ZombieChanger)
 	// This is practically useless outside of Strife, but oh well.
 	if (it != NULL)
 	{
-		EV_Teleport (arg0, arg1, ln, backSide, it, false, false, false);
+		EV_Teleport (arg0, arg1, ln, backSide, it, 0);
 
 		// [BC] If we're the server, tell clients to put this thing in its pain state.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

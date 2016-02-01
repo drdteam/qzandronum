@@ -1161,6 +1161,15 @@ bool EV_DoChange (line_t *line, EChange changetype, int tag);
 //
 // P_TELEPT
 //
+enum
+{
+	TELF_DESTFOG			= 1,
+	TELF_SOURCEFOG			= 2,
+	TELF_KEEPORIENTATION	= 4,
+	TELF_KEEPVELOCITY		= 8,
+	TELF_KEEPHEIGHT			= 16,
+};
+
 // [BB] Added spawnOnClient
 void P_SpawnTeleportFog(AActor *mobj, fixed_t x, fixed_t y, fixed_t z, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false); //Spawns teleport fog. Pass the actor to pluck TeleFogFromType and TeleFogToType. 'from' determines if this is the fog to spawn at the old position (true) or new (false).
 // [BB] Added spawnOnClient
@@ -1168,8 +1177,8 @@ inline void P_SpawnTeleportFog(AActor *mobj, const fixedvec3 &pos, bool beforeTe
 {
 	P_SpawnTeleportFog(mobj, pos.x, pos.y, pos.z, beforeTele, setTarget, spawnOnClient);
 }
-bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle, bool useFog, bool sourceFog, bool keepOrientation, bool haltVelocity = true, bool keepHeight = false);
-bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, bool fog, bool sourceFog, bool keepOrientation, bool haltVelocity = true, bool keepHeight = false);
+bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int flags); // bool useFog, bool sourceFog, bool keepOrientation, bool haltVelocity = true, bool keepHeight = false
+bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, int flags);
 bool EV_SilentLineTeleport (line_t *line, int side, AActor *thing, int id, INTBOOL reverse);
 bool EV_TeleportOther (int other_tid, int dest_tid, bool fog);
 bool EV_TeleportGroup (int group_tid, AActor *victim, int source_tid, int dest_tid, bool moveSource, bool fog);

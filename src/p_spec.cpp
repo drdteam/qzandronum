@@ -210,7 +210,7 @@ bool CheckIfExitIsGood (AActor *self, level_info_t *info)
 				FPlayerStart *pSpot = SelectRandomCooperativeSpot( ulPlayer );
 				if ( bSolidFlag )
 					players[ulPlayer].mo->flags |=  MF_SOLID;
-				P_Teleport (self, pSpot->x, pSpot->y, ONFLOORZ, ANG45 * (pSpot->angle/45), true, true, false);
+				P_Teleport (self, pSpot->x, pSpot->y, ONFLOORZ, ANG45 * (pSpot->angle/45), TELF_SOURCEFOG | TELF_DESTFOG);
 
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "You need to kill %d percent of the monsters before exiting the level.\n", sv_killallmonsters_percentage.GetGenericRep( CVAR_Int ).Int );

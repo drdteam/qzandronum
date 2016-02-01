@@ -359,7 +359,7 @@ void R_DrawVisSprite (vissprite_t *vis)
 		else	 // DoDraw1
 		{
 			// Up to four columns at a time
-			stop4 = (vis->x2 + 1) & ~3;
+			stop4 = vis->x2 & ~3;
 		}
 
 		tex = vis->pic;
@@ -373,7 +373,7 @@ void R_DrawVisSprite (vissprite_t *vis)
 		sprtopscreen = centeryfrac - FixedMul (dc_texturemid, spryscale);
 
 		dc_x = vis->x1;
-		x2 = vis->x2 + 1;
+		x2 = vis->x2;
 
 		if (dc_x < x2)
 		{
@@ -419,7 +419,7 @@ void R_DrawWallSprite(vissprite_t *spr)
 	fixed_t yscale;
 
 	x1 = MAX<int>(spr->x1, spr->wallc.sx1);
-	x2 = MIN<int>(spr->x2 + 1, spr->wallc.sx2 + 1);
+	x2 = MIN<int>(spr->x2, spr->wallc.sx2);
 	if (x1 >= x2)
 		return;
 	WallT.InitFromWallCoords(&spr->wallc);
@@ -890,7 +890,7 @@ void R_ProjectSprite (AActor *thing, int fakeside, F3DFloor *fakefloor, F3DFloor
 		x1 = centerx + MulScale32 (tx, xscale);
 
 		// off the right side?
-		if (x1 > WindowRight)
+		if (x1 >= WindowRight)
 			return;
 
 		tx += tex->GetWidth() * thingxscalemul;
@@ -902,7 +902,6 @@ void R_ProjectSprite (AActor *thing, int fakeside, F3DFloor *fakefloor, F3DFloor
 
 		xscale = FixedDiv(FixedMul(spritescaleX, xscale), tex->xScale);
 		iscale = (tex->GetWidth() << FRACBITS) / (x2 - x1);
-		x2--;
 
 		fixed_t yscale = SafeDivScale16(spritescaleY, tex->yScale);
 
@@ -1088,7 +1087,7 @@ static void R_ProjectWallSprite(AActor *thing, fixed_t fx, fixed_t fy, fixed_t f
 	if (wallc.Init(lx1, ly1, lx2, ly2, TOO_CLOSE_Z))
 		return;
 	
-	if (wallc.sx1 > WindowRight || wallc.sx2 <= WindowLeft)
+	if (wallc.sx1 >= WindowRight || wallc.sx2 <= WindowLeft)
 		return;
 
 	// Sprite sorting should probably treat these as walls, not sprites,
@@ -1102,7 +1101,7 @@ static void R_ProjectWallSprite(AActor *thing, fixed_t fx, fixed_t fy, fixed_t f
 
 	vis = R_NewVisSprite();
 	vis->x1 = wallc.sx1 < WindowLeft ? WindowLeft : wallc.sx1;
-	vis->x2 = wallc.sx2 >= WindowRight ? WindowRight : wallc.sx2-1;
+	vis->x2 = wallc.sx2 >= WindowRight ? WindowRight : wallc.sx2;
 	vis->yscale = yscale;
 	vis->idepth = (unsigned)DivScale32(1, tz) >> 1;
 	vis->depth = tz;
@@ -1239,10 +1238,10 @@ void R_DrawPSprite (pspdef_t* psp, int pspnum, AActor *owner, fixed_t sx, fixed_
 		return; 
 
 	tx += tex->GetScaledWidth() << FRACBITS;
-	x2 = ((centerxfrac + FixedMul (tx, pspritexscale)) >>FRACBITS) - 1;
+	x2 = ((centerxfrac + FixedMul (tx, pspritexscale)) >>FRACBITS);
 
 	// off the left side
-	if (x2 < 0)
+	if (x2 <= 0)
 		return;
 	
 	// store information in a vissprite
@@ -1281,7 +1280,7 @@ void R_DrawPSprite (pspdef_t* psp, int pspnum, AActor *owner, fixed_t sx, fixed_
 		vis->texturemid -= BaseRatioSizes[WidescreenRatio][2];
 	}
 	vis->x1 = x1 < 0 ? 0 : x1;
-	vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
+	vis->x2 = x2 >= viewwidth ? viewwidth : x2;
 	vis->xscale = DivScale16(pspritexscale, tex->xScale);
 	vis->yscale = DivScale16(pspriteyscale, tex->yScale);
 	vis->Translation = 0;		// [RH] Use default colors
@@ -1834,7 +1833,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 	x2 = spr->x2;
 
 	// [RH] Quickly reject sprites with bad x ranges.
-	if (x1 > x2)
+	if (x1 >= x2)
 		return;
 
 	// [RH] Sprites split behind a one-sided line can also be discarded.
@@ -2077,7 +2076,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 		return;
 	}
 
-	i = x2 - x1 + 1;
+	i = x2 - x1;
 	clip1 = clipbot + x1;
 	clip2 = cliptop + x1;
 	do
@@ -2100,7 +2099,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 		// kg3D - no clipping on fake segs
 		if(ds->fake) continue;
 		// determine if the drawseg obscures the sprite
-		if (ds->x1 > x2 || ds->x2 < x1 ||
+		if (ds->x1 >= x2 || ds->x2 <= x1 ||
 			(!(ds->silhouette & SIL_BOTH) && ds->maskedtexturecol == -1 &&
 			 !ds->bFogBoundary) )
 		{
@@ -2143,7 +2142,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 		{
 			clip1 = clipbot + r1;
 			clip2 = openings + ds->sprbottomclip + r1 - ds->x1;
-			i = r2 - r1 + 1;
+			i = r2 - r1;
 			do
 			{
 				if (*clip1 > *clip2)
@@ -2157,7 +2156,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 		{
 			clip1 = cliptop + r1;
 			clip2 = openings + ds->sprtopclip + r1 - ds->x1;
-			i = r2 - r1 + 1;
+			i = r2 - r1;
 			do
 			{
 				if (*clip1 < *clip2)
@@ -2209,7 +2208,7 @@ void R_DrawSprite (vissprite_t * /*dummyArg*/, vissprite_t *spr)
 		}
 		if (x2 < viewwidth - 1)
 		{
-			clearbufshort(cliptop + x2 + 1, viewwidth - x2 - 1, viewheight);
+			clearbufshort(cliptop + x2, viewwidth - x2, viewheight);
 		}
 		int minvoxely = spr->gzt <= hzt ? 0 : (spr->gzt - hzt) / spr->yscale;
 		int maxvoxely = spr->gzb > hzb ? INT_MAX : (spr->gzt - hzb) / spr->yscale;
@@ -2496,13 +2495,13 @@ static void R_DrawMaskedSegsBehindParticle (const vissprite_t *vis)
 		drawseg_t *ds = &drawsegs[InterestingDrawsegs[p]];
 		// kg3D - no fake segs
 		if(ds->fake) continue;
-		if (ds->x1 >= x2 || ds->x2 < x1)
+		if (ds->x1 >= x2 || ds->x2 <= x1)
 		{
 			continue;
 		}
 		if (Scale (ds->siz2 - ds->siz1, (x2 + x1)/2 - ds->sx1, ds->sx2 - ds->sx1) + ds->siz1 < vis->idepth)
 		{
-			R_RenderMaskedSegRange (ds, MAX<int> (ds->x1, x1), MIN<int> (ds->x2, x2-1));
+			R_RenderMaskedSegRange (ds, MAX<int>(ds->x1, x1), MIN<int>(ds->x2, x2));
 		}
 	}
 }
@@ -2517,7 +2516,7 @@ void R_DrawParticle (vissprite_t *vis)
 	int yl = vis->gzb;
 	int ycount = vis->gzt - yl + 1;
 	int x1 = vis->x1;
-	int countbase = vis->x2 - x1 + 1;
+	int countbase = vis->x2 - x1;
 
 	R_DrawMaskedSegsBehindParticle (vis);
 
