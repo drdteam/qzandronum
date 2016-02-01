@@ -1571,7 +1571,9 @@ void APowerTimeFreezer::InitEffect()
 	}
 	else
 	{
-		EffectTics++;
+		// Compensate for skipped tic, but beware of overflow.
+		if(EffectTics < INT_MAX)
+			EffectTics++;
 	}
 }
 

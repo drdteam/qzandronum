@@ -1861,6 +1861,8 @@ void G_FinishTravel ()
 	TThinkerIterator<APlayerPawn> it (STAT_TRAVELLING);
 	APlayerPawn *pawn, *pawndup, *oldpawn, *next;
 	AInventory *inv;
+	FPlayerStart *start;
+	int pnum;
 	// [BC]
 	LONG	lSavedNetID;
 
@@ -1868,93 +1870,100 @@ void G_FinishTravel ()
 	while ( (pawn = next) != NULL)
 	{
 		next = it.Next ();
+		pnum = int(pawn->player - players);
 		pawn->ChangeStatNum (STAT_PLAYER);
 		pawndup = pawn->player->mo;
+		start = NULL;
 		assert (pawn != pawndup);
 		if (pawndup == NULL)
 		{ // Oh no! there was no start for this player!
-			pawn->flags |= MF_NOSECTOR|MF_NOBLOCKMAP;
-			pawn->Destroy ();
+			start = G_PickPlayerStart(pnum, PPS_FORCERANDOM); 
+			if (start != NULL) pawndup = P_SpawnPlayer(start, pnum, (level.flags2 & LEVEL2_PRERAISEWEAPON) ? SPF_WEAPONFULLYUP : 0);
+			if (pawndup == NULL)
+			{
+				pawn->flags |= MF_NOSECTOR | MF_NOBLOCKMAP;
+				pawn->Destroy();
+				continue;
+			}
 		}
-		else
+
+		if (start == NULL) start = G_PickPlayerStart(pnum, 0);
+		oldpawn = pawndup;
+
+		// [BB] On a map with fewer player starts than players, some player already
+		// will be telefragged here. To ensure that they can respawn properly
+		// and don't end up in a zombie state, let them be reborn when respawn
+		// the next time.
+		if ( pawn->player->health <= 0 )
+			pawn->player->playerstate = PST_REBORN;
+
+		// [TP] Unlike P_SpawnPlayer, G_CooperativeSpawnPlayer causes the dummy player to eat
+		// items that occupy its spawn spot and and we don't want that.
+		pawndup->flags &= ~MF_PICKUP;
+
+		// The player being spawned here is a short lived dummy and
+		// must not start any ENTER script or big problems will happen.
+		//pawndup = P_SpawnPlayer(start, pnum, SPF_TEMPPLAYER);
+		G_CooperativeSpawnPlayer( pnum, false, true );
+
+		// [BC]
+		lSavedNetID = pawndup->lNetID;
+		pawndup = pawn->player->mo;
+		if (!(changeflags & CHANGELEVEL_KEEPFACING))
 		{
-			oldpawn = pawndup;
+			pawn->angle = pawndup->angle;
+			pawn->pitch = pawndup->pitch;
+		}
+		pawn->SetXYZ(pawndup->X(), pawndup->Y(), pawndup->Z());
+		pawn->velx = pawndup->velx;
+		pawn->vely = pawndup->vely;
+		pawn->velz = pawndup->velz;
+		pawn->Sector = pawndup->Sector;
+		pawn->floorz = pawndup->floorz;
+		pawn->ceilingz = pawndup->ceilingz;
+		pawn->dropoffz = pawndup->dropoffz;
+		pawn->floorsector = pawndup->floorsector;
+		pawn->floorpic = pawndup->floorpic;
+		pawn->floorterrain = pawndup->floorterrain;
+		pawn->ceilingsector = pawndup->ceilingsector;
+		pawn->ceilingpic = pawndup->ceilingpic;
+		pawn->floorclip = pawndup->floorclip;
+		pawn->waterlevel = pawndup->waterlevel;
+		pawn->target = NULL;
+		pawn->lastenemy = NULL;
+		pawn->player->mo = pawn;
+		pawn->player->camera = pawn;
+		pawn->player->viewheight = pawn->ViewHeight;
+		pawn->flags2 &= ~MF2_BLASTED;
+		DObject::StaticPointerSubstitution (oldpawn, pawn);
+		oldpawn->Destroy();
+		pawndup->Destroy ();
+		pawn->LinkToWorld ();
+		pawn->AddToHash ();
+		pawn->SetState(pawn->SpawnState);
+		pawn->player->SendPitchLimits();
 
-			// [BB] On a map with fewer player starts than players, some player already
-			// will be telefragged here. To ensure that they can respawn properly
-			// and don't end up in a zombie state, let them be reborn when respawn
-			// the next time.
-			if ( pawn->player->health <= 0 )
-				pawn->player->playerstate = PST_REBORN;
+		// [BC]
+		pawn->lNetID = lSavedNetID;
+		g_NetIDList.useID ( pawn->lNetID, pawn );
 
-			// [TP] Unlike P_SpawnPlayer, G_CooperativeSpawnPlayer causes the dummy player to eat
-			// items that occupy its spawn spot and and we don't want that.
-			pawndup->flags &= ~MF_PICKUP;
-
-			// The player being spawned here is a short lived dummy and
-			// must not start any ENTER script or big problems will happen.
-			//pawndup = P_SpawnPlayer (&playerstarts[pawn->player - players], int(pawn->player - players), SPF_TEMPPLAYER);
-			G_CooperativeSpawnPlayer( pawn->player - players, false, true );
-
-			// [BC]
-			lSavedNetID = pawndup->lNetID;
-			pawndup = pawn->player->mo;
-			if (!(changeflags & CHANGELEVEL_KEEPFACING))
-			{
-				pawn->angle = pawndup->angle;
-				pawn->pitch = pawndup->pitch;
-			}
-			pawn->SetXYZ(pawndup->X(), pawndup->Y(), pawndup->Z());
-			pawn->velx = pawndup->velx;
-			pawn->vely = pawndup->vely;
-			pawn->velz = pawndup->velz;
-			pawn->Sector = pawndup->Sector;
-			pawn->floorz = pawndup->floorz;
-			pawn->ceilingz = pawndup->ceilingz;
-			pawn->dropoffz = pawndup->dropoffz;
-			pawn->floorsector = pawndup->floorsector;
-			pawn->floorpic = pawndup->floorpic;
-			pawn->floorterrain = pawndup->floorterrain;
-			pawn->ceilingsector = pawndup->ceilingsector;
-			pawn->ceilingpic = pawndup->ceilingpic;
-			pawn->floorclip = pawndup->floorclip;
-			pawn->waterlevel = pawndup->waterlevel;
-			pawn->target = NULL;
-			pawn->lastenemy = NULL;
-			pawn->player->mo = pawn;
-			pawn->player->camera = pawn;
-			pawn->player->viewheight = pawn->ViewHeight;
-			pawn->flags2 &= ~MF2_BLASTED;
-			DObject::StaticPointerSubstitution (oldpawn, pawn);
-			oldpawn->Destroy();
-			pawndup->Destroy ();
-			pawn->LinkToWorld ();
-			pawn->AddToHash ();
-			pawn->SetState(pawn->SpawnState);
-			pawn->player->SendPitchLimits();
-
-			// [BC]
-			pawn->lNetID = lSavedNetID;
-			g_NetIDList.useID ( pawn->lNetID, pawn );
-
-			for (inv = pawn->Inventory; inv != NULL; inv = inv->Inventory)
-			{
-				inv->ChangeStatNum (STAT_INVENTORY);
-				inv->LinkToWorld ();
-				inv->Travelled ();
-				// [BC] This is necessary, otherwise all the sector links for the inventory
-				// end up being off. This is a problem if the object tries to move or
-				// something, which is the case with bobbing objects.
-				P_OldAdjustFloorCeil( inv );
-			}
-			if (ib_compatflags & BCOMPATF_RESETPLAYERSPEED)
-			{
-				pawn->Speed = pawn->GetDefault()->Speed;
-			}
-			if (level.FromSnapshot)
-			{
-				FBehavior::StaticStartTypedScripts (SCRIPT_Return, pawn, true);
-			}
+		for (inv = pawn->Inventory; inv != NULL; inv = inv->Inventory)
+		{
+			inv->ChangeStatNum (STAT_INVENTORY);
+			inv->LinkToWorld ();
+			inv->Travelled ();
+			// [BC] This is necessary, otherwise all the sector links for the inventory
+			// end up being off. This is a problem if the object tries to move or
+			// something, which is the case with bobbing objects.
+			P_OldAdjustFloorCeil( inv );
+		}
+		if (ib_compatflags & BCOMPATF_RESETPLAYERSPEED)
+		{
+			pawn->Speed = pawn->GetDefault()->Speed;
+		}
+		if (level.FromSnapshot)
+		{
+			FBehavior::StaticStartTypedScripts (SCRIPT_Return, pawn, true);
 		}
 	}
 
