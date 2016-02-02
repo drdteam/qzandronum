@@ -2940,10 +2940,12 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			// [Dusk] Exported this into a function as I need it elsewhere as well.
 			JumpMomz = player->mo->CalcJumpMomz( );
 
-			// [BB] In ZDoom revision 2970 changed the jumping behavior.
-			// We'll keep the old behavior for now.
 			// Set base jump ticks.
-			ulJumpTicks = 18 * TICRATE / 35;
+			// [BB] In ZDoom revision 2970 changed the jumping behavior.
+			if ( zacompatflags & ZACOMPATF_SKULLTAG_JUMPING )
+				ulJumpTicks = 18 * TICRATE / 35;
+			else
+				ulJumpTicks = -1;
 
 			// [BB] We may not play the sound while predicting, otherwise it'll stutter.
 			if ( CLIENT_PREDICT_IsPredicting( ) == false )
