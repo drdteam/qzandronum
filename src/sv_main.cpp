@@ -121,6 +121,7 @@
 #include "d_protocol.h"
 #include "p_enemy.h"
 #include "network/packetarchive.h"
+#include "p_lnspec.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -4576,6 +4577,33 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			}
 		}
 		break;
+	case CLC_SPECIALCHEAT:
+
+		// [TP] Client wishes to execute a special.
+		{
+			unsigned int special = NETWORK_ReadByte( pByteStream );
+			unsigned int argsSent = NETWORK_ReadByte( pByteStream );
+			int args[5] = { 0, 0, 0, 0, 0 };
+
+			for ( unsigned int i = 0; i < argsSent; ++i )
+				args[i] = NETWORK_ReadLong( pByteStream );
+
+			if ( sv_cheats )
+			{
+				if ( PLAYER_IsValidPlayerWithMo( g_lCurrentClient ))
+				{
+					P_ExecuteSpecial( special, NULL, players[g_lCurrentClient].mo, false,
+						args[0], args[1], args[2], args[3], args[4] );
+				}
+			}
+			else
+			{
+				SERVER_KickPlayer( g_lCurrentClient, "Attempted to cheat with sv_cheats being false!" );
+				return true;
+			}
+		}
+		break;
+
 	default:
 
 		Printf( PRINT_HIGH, "SERVER_ParseCommands: Unknown client message: %d\n", static_cast<int> (lCommand) );

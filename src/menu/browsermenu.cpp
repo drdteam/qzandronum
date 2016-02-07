@@ -609,7 +609,7 @@ CCMD ( menu_join_selected_server )
 	if ( missingWadfiles.Size() > 0 )
 	{
 		FString errorMessage = "Can't find the following files:\n";
-		for ( int i = 0; i < missingWadfiles.Size(); ++i )
+		for ( unsigned int i = 0; i < missingWadfiles.Size(); ++i )
 		{
 			errorMessage += missingWadfiles[i];
 			errorMessage += "\n";

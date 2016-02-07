@@ -98,5 +98,6 @@ void	CLIENTCOMMANDS_FullUpdateReceived ( void );
 void	CLIENTCOMMANDS_InfoCheat( AActor* mobj, bool extended );
 void	CLIENTCOMMANDS_WarpCheat( fixed_t x, fixed_t y );
 void	CLIENTCOMMANDS_KillCheat( const char* what );
+void	CLIENTCOMMANDS_SpecialCheat( int special, const TArray<int>& args );
 
 #endif	// __CL_COMMANDS_H__

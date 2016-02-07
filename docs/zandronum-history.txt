@@ -44,6 +44,7 @@
 !	- The CVARINFO error message triggered when an existing CVAR in the ini conflicts with CVARINFO now instructs the user to clean the ini. [Torr Samaho]
 !	- The server now displays the IP address of the player upon connection and disconnection in log messages. [Dusk]
 !	- ZDoom changed the jumping physics in ZDoom SVN revisions 2238 and 2970. The old jumping behavior known from Skulltag can be restored with the new CVAR compat_skulltagjumping. [Torr Samaho]
+!	- con_virtualwidth and con_virtualheight now default to 640 and 480, respectively. [Dusk]
 
 
 2.2

@@ -61,9 +61,6 @@
 #define	CONNECTION_RESEND_TIME		( 3 * TICRATE )
 #define	GAMESTATE_RESEND_TIME		( 3 * TICRATE )
 
-// Display "couldn't find thing" messages.
-//#define	CLIENT_WARNING_MESSAGES
-
 //*****************************************************************************
 typedef enum 
 {

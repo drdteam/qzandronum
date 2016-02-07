@@ -267,6 +267,7 @@ ListMenu "LoadGameMenu"
 
 ListMenu "SaveGameMenu"
 {
+	NetgameMessage "$SAVENET" // [TP] Zandronum doesn't allow the client to save the game.
 	IfGame(Doom, Strife, Chex)
 	{
 		StaticPatchCentered 160, -20, "M_SAVEG"

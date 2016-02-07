@@ -653,3 +653,15 @@ void CLIENTCOMMANDS_KillCheat( const char* what )
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_KILLCHEAT );
 	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, what );
 }
+
+//*****************************************************************************
+// [TP]
+void CLIENTCOMMANDS_SpecialCheat( int special, const TArray<int> &args )
+{
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_SPECIALCHEAT );
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, special );
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, args.Size() );
+
+	for ( unsigned int i = 0; i < args.Size(); ++i )
+		NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, args[i] );
+}

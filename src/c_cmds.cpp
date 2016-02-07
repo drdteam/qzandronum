@@ -914,6 +914,17 @@ CCMD (special)
 				return;
 			}
 		}
+
+		// [TP] Online handling for this cheat
+		if ( NETWORK_GetState() == NETSTATE_CLIENT )
+		{
+			TArray<int> args;
+			for ( int i = 2; i < argc; ++i )
+				args.Push( atoi( argv[i] ));
+			CLIENTCOMMANDS_SpecialCheat( specnum, args );
+			return;
+		}
+
 		Net_WriteByte(DEM_RUNSPECIAL);
 		Net_WriteByte(specnum);
 		Net_WriteByte(argc - 2);

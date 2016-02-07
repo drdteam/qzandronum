@@ -575,8 +575,9 @@ class FOptionMenuSliderBase : public FOptionMenuItem
 	int mSliderShort;
 
 public:
-	FOptionMenuSliderBase(const char *label, double min, double max, double step, int showval)
-		: FOptionMenuItem(label, NAME_None)
+	// [TP] Now takes menu as well
+	FOptionMenuSliderBase(const char *label, double min, double max, double step, int showval, FName menu = NAME_None)
+		: FOptionMenuItem(label, menu)
 	{
 		mMin = min;
 		mMax = max;
@@ -701,6 +702,20 @@ public:
 		return true;
 	}
 
+	// [TP]
+	enum { SLIDER_MAXIMUM = 0x40001 };
+	bool SetValue( int i, int value )
+	{
+		if ( i == SLIDER_MAXIMUM )
+		{
+			mMax = value;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 };
 
 //=============================================================================
@@ -714,7 +729,7 @@ class FOptionMenuSliderCVar : public FOptionMenuSliderBase
 	FBaseCVar *mCVar;
 public:
 	FOptionMenuSliderCVar(const char *label, const char *menu, double min, double max, double step, int showval)
-		: FOptionMenuSliderBase(label, min, max, step, showval)
+		: FOptionMenuSliderBase(label, min, max, step, showval, menu) // [TP] Added menu parameter
 	{
 		mCVar = FindCVar(menu, NULL);
 	}
