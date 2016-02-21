@@ -45,6 +45,7 @@
 !	- The server now displays the IP address of the player upon connection and disconnection in log messages. [Dusk]
 !	- ZDoom changed the jumping physics in ZDoom SVN revisions 2238 and 2970. The old jumping behavior known from Skulltag can be restored with the new CVAR compat_skulltagjumping. [Torr Samaho]
 !	- con_virtualwidth and con_virtualheight now default to 640 and 480, respectively. [Dusk]
+!	- kickfromgame and kickfromgame_idx have been renamed to forcespec and forcespec_idx, respectively, though the old names still exist for compatibility with e.g. aliases. Same also with the ACS function KickFromGame, whose new name is ForceToSpectate.
 
 
 2.2

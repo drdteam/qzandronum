@@ -160,7 +160,7 @@ void CALLVOTE_Tick( void )
 						if ( strncmp( g_VoteCommand, "kick", 4 ) == 0 )
 							g_VoteCommand.Format( "addban %s 10min \"Vote kick", g_KickVoteVictimAddress.ToString() );
 						else
-							g_VoteCommand.Format( "kickfromgame_idx %d \"Vote forcespec", static_cast<int>(SERVER_FindClientByAddress ( g_KickVoteVictimAddress )) );
+							g_VoteCommand.Format( "forcespec_idx %d \"Vote forcespec", static_cast<int>(SERVER_FindClientByAddress ( g_KickVoteVictimAddress )) );
 						g_VoteCommand.AppendFormat( ", %d to %d", static_cast<int>(callvote_CountPlayersWhoVotedYes( )), static_cast<int>(callvote_CountPlayersWhoVotedNo( )) );
 						if ( g_VoteReason.IsNotEmpty() )
 							g_VoteCommand.AppendFormat ( " (%s)", g_VoteReason.GetChars( ) );
@@ -735,7 +735,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 	switch ( ulVoteCmd )
 	{
 	case VOTECMD_KICK:
-	case VOTECMD_KICKFROMGAME:
+	case VOTECMD_FORCETOSPECTATE:
 		{
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
@@ -840,7 +840,7 @@ static ULONG callvote_GetVoteType( const char *pszCommand )
 	if ( stricmp( "kick", pszCommand ) == 0 )
 		return VOTECMD_KICK;
 	else if ( stricmp( "forcespec", pszCommand ) == 0 )
-		return VOTECMD_KICKFROMGAME;
+		return VOTECMD_FORCETOSPECTATE;
 	else if ( stricmp( "map", pszCommand ) == 0 )
 		return VOTECMD_MAP;
 	else if ( stricmp( "changemap", pszCommand ) == 0 )
@@ -863,7 +863,7 @@ static ULONG callvote_GetVoteType( const char *pszCommand )
 //
 static bool callvote_IsKickVote( const ULONG ulVoteType )
 {
-	return ( ( ulVoteType == VOTECMD_KICK ) || ( ulVoteType == VOTECMD_KICKFROMGAME ) );
+	return ( ( ulVoteType == VOTECMD_KICK ) || ( ulVoteType == VOTECMD_FORCETOSPECTATE ) );
 }
 
 //*****************************************************************************

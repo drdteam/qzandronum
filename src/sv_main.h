@@ -421,7 +421,7 @@ void		SERVER_ReconnectNewLevel( const char *pszMapName );
 void		SERVER_LoadNewLevel( const char *pszMapName );
 void		SERVER_KickAllPlayers( const char *pszReason );
 void		SERVER_KickPlayer( ULONG ulPlayer, const char *pszReason );
-void		SERVER_KickPlayerFromGame( ULONG ulPlayer, const char *pszReason );
+void		SERVER_ForceToSpectate( ULONG ulPlayer, const char *pszReason );
 void		SERVER_AddCommand( const char *pszCommand );
 void		SERVER_DeleteCommand( void );
 bool		SERVER_IsEveryoneReadyToGoOn( void );

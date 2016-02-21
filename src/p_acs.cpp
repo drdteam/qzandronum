@@ -5114,7 +5114,7 @@ enum EACSFunctions
 	ACSF_GetTeamProperty, // [Dusk]
 	ACSF_GetPlayerLivesLeft,
 	ACSF_SetPlayerLivesLeft,
-	ACSF_KickFromGame,
+	ACSF_ForceToSpectate,
 	ACSF_GetGamemodeState,
 	ACSF_SetDBEntry,
 	ACSF_GetDBEntry,
@@ -6787,12 +6787,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 					return 0;
 			}
 
-		case ACSF_KickFromGame:
+		case ACSF_ForceToSpectate:
 			{
 				const ULONG ulPlayer = static_cast<ULONG> ( args[0] );
 				if ( ( NETWORK_InClientMode() == false ) && PLAYER_IsValidPlayer ( ulPlayer ) && ( PLAYER_IsTrueSpectator ( &players[ulPlayer] ) == false ) )
 				{
-					SERVER_KickPlayerFromGame ( ulPlayer, FBehavior::StaticLookupString ( args[1] ) );
+					SERVER_ForceToSpectate ( ulPlayer, FBehavior::StaticLookupString ( args[1] ) );
 					return 1;
 				}
 				else
