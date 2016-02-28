@@ -81,12 +81,14 @@
 -	- Fixed: The player drowning code was not handled properly online. [Edward-san]
 -	- Fixed: Clients did not receive the correct MaxAmount value for AmmoCapacity inventories if it was greater than 32767 after a map change. [Edward-san]
 -	- Fixed: Server-to-client ACS script calls would corrupt arguments within the range [-128, -1]. [Dusk]
+-	- Fixed: The client could change the value of sv_limitcommands for itself, allowing it to skip some sanity checks. [Dusk]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
 !	- Since the only purpose of the CVAR sv_useticbuffer is to debug problems with the client movement buffer, it is now restricted to testing binaries. [Torr Samaho]
 !	- 'SR50 + turning' movement commands are now clamped to 'SR50' on client and server. [Circunei Z]
 !	- Joypad strafing movements are now capped at SR40 speed. [Leonard]
+!	- Dropping is now allowed in competitive gamemodes, unless sv_nodrop explicitly disallows it. [Dusk]
 
 
 2.1.2
