@@ -729,8 +729,16 @@ FName FMapInfoParser::ParseEndGame()
 FName FMapInfoParser::CheckEndSequence()
 {
 	// [BB] In multiplayer games end sequences are not supported. So just ignore them.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	// [TP] We still have to parse it, though, or MAPINFO containing an endgame block won't be parsed correctly by the
+	// server. So, we recurse back to execute the method, but ignore the result value and return NAME_None instead.
+	static bool recursing = false;
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( recursing == false ))
+	{
+		recursing = true;
+		CheckEndSequence();
+		recursing = false;
 		return NAME_None;
+	}
 
 	const char *seqname = NULL;
 
