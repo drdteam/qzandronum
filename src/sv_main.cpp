@@ -2458,6 +2458,10 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 
 		// [WS] Update the player's properties if they changed.
 		SERVER_UpdateActorProperties( players[ulIdx].mo, ulClient );
+
+		// [TP] Update the player's TID, if there is one.
+		if ( players[ulIdx].mo->tid )
+			SERVERCOMMANDS_SetThingTID( players[ulIdx].mo, ulClient, SVCF_ONLYTHISCLIENT );
 	}
 
 	// Server may have already picked a team for the incoming player. If so, tell him!

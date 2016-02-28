@@ -82,6 +82,7 @@
 -	- Fixed: Clients did not receive the correct MaxAmount value for AmmoCapacity inventories if it was greater than 32767 after a map change. [Edward-san]
 -	- Fixed: Server-to-client ACS script calls would corrupt arguments within the range [-128, -1]. [Dusk]
 -	- Fixed: The client could change the value of sv_limitcommands for itself, allowing it to skip some sanity checks. [Dusk]
+-	- Fixed: Player TIDs were not synced to newly connecting clients. [Dusk]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
