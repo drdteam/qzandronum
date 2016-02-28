@@ -373,7 +373,21 @@ void SCOREBOARD_Render( ULONG ulDisplayPlayer )
 			g_BottomString += " IN LINE";
 		}
 		else
-			g_BottomString += "\\cdSPECTATING - SPACE TO JOIN";
+		{
+			int key1 = 0;
+			int key2 = 0;
+			Bindings.GetKeysForCommand( "menu_join", &key1, &key2 );
+			g_BottomString += "\\cdSPECTATING - PRESS \'";
+
+			if ( key2 )
+				g_BottomString = g_BottomString + KeyNames[key1] + "\' OR \'" + KeyNames[key2];
+			else if ( key1 )
+				g_BottomString += KeyNames[key1];
+			else
+				g_BottomString += G_DescribeJoinMenuKey();
+
+			g_BottomString += "\' TO JOIN";
+		}
 	}
 
 	if ( CALLVOTE_ShouldShowVoteScreen( ))

@@ -79,6 +79,7 @@
 #include "i_system.h"
 #include "r_data/colormaps.h"
 #include "network_enums.h"
+#include "decallib.h"
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
@@ -241,6 +242,19 @@ public:
 		for ( int i = 0; i < len; ++i )
 			addByte( pszString[i] );
 		addByte( 0 );
+	}
+
+	void addName ( FName name )
+	{
+		if ( name.IsPredefined() )
+		{
+			addShort( name );
+		}
+		else
+		{
+			addShort( -1 );
+			addString( name );
+		}
 	}
 
 	void writeCommandToStream ( BYTESTREAM_s &ByteStream ) const {
@@ -729,15 +743,13 @@ void SERVERCOMMANDS_SetPlayerArmor( ULONG ulPlayer, ULONG ulPlayerExtra, ServerC
 		return;
 
 	AInventory *pArmor = players[ulPlayer].mo->FindInventory< ABasicArmor >( );
-	ULONG ulArmorPoints = ( pArmor != NULL ) ? pArmor->Amount : 0;
 
-	// [BB] This check ensures ( pArmor != NULL ) below.
-	if ( ulArmorPoints == 0 )
+	if ( pArmor == NULL )
 		return;
 
 	NetCommand command ( SVC_SETPLAYERARMOR );
 	command.addByte( ulPlayer );
-	command.addShort( ulArmorPoints );
+	command.addShort( pArmor->Amount );
 	command.addString( pArmor->Icon.isValid() ? TexMan( pArmor->Icon )->Name : "" );
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
@@ -5011,6 +5023,23 @@ void SERVERCOMMANDS_SRPUserVerifySession ( const ULONG ulClient )
 	for ( unsigned int i = 0; i < pClient->bytesHAMK.Size(); ++i )
 		command.addByte ( pClient->bytesHAMK[i] );
 	command.sendCommandToClients ( ulClient, SVCF_ONLYTHISCLIENT );
+}
+
+ //*****************************************************************************
+void SERVERCOMMANDS_ShootDecal ( const FDecalTemplate* tpl, AActor* actor, fixed_t z, angle_t angle, fixed_t tracedist,
+	bool permanent, ULONG ulPlayerExtra, ServerCommandFlags flags )
+{
+	if ( EnsureActorHasNetID( actor ) == false )
+		return;
+
+	NetCommand command ( SVC2_SHOOTDECAL );
+	command.addName( tpl->GetName() );
+	command.addShort( actor->lNetID );
+	command.addShort( z >> FRACBITS );
+	command.addShort( angle >> FRACBITS );
+	command.addLong( tracedist );
+	command.addByte( permanent );
+	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************

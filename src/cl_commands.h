@@ -80,6 +80,7 @@ void	CLIENTCOMMANDS_ChangeTeam( const char *pszJoinPassword, LONG lDesiredTeam )
 void	CLIENTCOMMANDS_SpectateInfo( void );
 void	CLIENTCOMMANDS_GenericCheat( LONG lCheat );
 void	CLIENTCOMMANDS_GiveCheat( char *pszItem, LONG lAmount );
+void	CLIENTCOMMANDS_TakeCheat( const char *item, LONG amount );
 void	CLIENTCOMMANDS_SummonCheat( const char *pszItem, LONG lType, const bool bSetAngle, const SHORT sAngle );
 void	CLIENTCOMMANDS_ReadyToGoOn( void );
 void	CLIENTCOMMANDS_ChangeDisplayPlayer( LONG lDisplayPlayer );

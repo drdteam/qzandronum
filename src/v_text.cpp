@@ -585,8 +585,8 @@ bool v_IsCharAcceptableInNames ( char c )
 	if ( c == '%' )
 		return false;
 
-	// Pound is hard to type on USA boards.
-	if ( c == 38 )
+	// Ampersands aren't very distinguishable in Heretic
+	if ( c == '&' )
 		return false;
 
 	// No escape codes (\c is handled differently).

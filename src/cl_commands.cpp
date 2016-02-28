@@ -450,6 +450,15 @@ void CLIENTCOMMANDS_GiveCheat( char *pszItem, LONG lAmount )
 
 //*****************************************************************************
 //
+void CLIENTCOMMANDS_TakeCheat( const char *item, LONG amount )
+{
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_TAKECHEAT );
+	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, item );
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, amount );
+}
+
+//*****************************************************************************
+//
 void CLIENTCOMMANDS_SummonCheat( const char *pszItem, LONG lType, const bool bSetAngle, const SHORT sAngle )
 {
 	int commandtype = 0;

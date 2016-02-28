@@ -538,16 +538,18 @@ CCMD( getIP_idx )
 		return;
 	}
 
-	ULONG ulIdx = atoi( argv[1] );
-
-	// Make sure the target is valid.
-	if (( ulIdx >= MAXPLAYERS ) || ( !playeringame[ulIdx] ))
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
 		return;
 
-	if ( players[ulIdx].bIsBot )
-		Printf( "%s\\c- is a bot.\n", players[ulIdx].userinfo.GetName() );
+	// Make sure the target is valid.
+	if (( playerIndex >= MAXPLAYERS ) || ( !playeringame[playerIndex] ))
+		return;
+
+	if ( players[playerIndex].bIsBot )
+		Printf( "%s\\c- is a bot.\n", players[playerIndex].userinfo.GetName() );
 	else
-		Printf( "%s\\c-'s IP is: %s\n", players[ulIdx].userinfo.GetName(), SERVER_GetClient( ulIdx )->Address.ToString() );
+		Printf( "%s\\c-'s IP is: %s\n", players[playerIndex].userinfo.GetName(), SERVER_GetClient( playerIndex )->Address.ToString() );
 }
 
 //*****************************************************************************
@@ -564,9 +566,11 @@ CCMD( ban_idx )
 		return;
 	}
 
-	ULONG ulIdx = atoi(argv[1]);
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
+		return;
 
-	SERVERBAN_BanPlayer( ulIdx, argv[2], (argv.argc( ) >= 4) ? argv[3] : NULL );
+	SERVERBAN_BanPlayer( playerIndex, argv[2], (argv.argc( ) >= 4) ? argv[3] : NULL );
 
 }
 

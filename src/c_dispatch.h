@@ -50,6 +50,9 @@ public:
 	const char *args () { return cmd; }
 	void Shift();
 
+	// [TP]
+	bool SafeGetNumber( int i, int &value, const char *errormessage = "That is not a valid player index" );
+
 private:
 	const char *cmd;
 	int _argc;

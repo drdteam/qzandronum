@@ -697,8 +697,6 @@ DMenu *StartPickerMenu(DMenu *parent, const char *name, FColorCVar *cvar);
 void M_RefreshModesList ();
 void M_InitVideoModesMenu ();
 
-// [TP]
-void M_JoinMenu();
 
 
 #endif

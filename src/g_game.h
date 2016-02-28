@@ -144,4 +144,8 @@ extern const AInventory *SendItemUse, *SendItemDrop;
 // [BB] Exported G_QueueBody.
 void G_QueueBody (AActor *body);
 
+// [TP]
+const char* G_DescribeJoinMenuKey();
+int G_GetJoinMenuKey();
+
 #endif

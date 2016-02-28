@@ -943,6 +943,28 @@ char *FCommandLine::operator[] (int i)
 	return _argv[i];
 }
 
+// [TP] Utility function for console commands to read in a number
+bool FCommandLine::SafeGetNumber( int i, int &value, const char *errormessage )
+{
+	if ( i >= argc() )
+		return false;
+
+	char* end;
+	int index = static_cast<int>( strtol(( *this )[i], &end, 10 ));
+
+	if ( *end != '\0' )
+	{
+		if ( errormessage )
+			Printf( "%s.\n", errormessage );
+		return false;
+	}
+	else
+	{
+		value = index;
+		return true;
+	}
+}
+
 static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *name, size_t namelen, FConsoleCommand **prev)
 {
 	int comp;

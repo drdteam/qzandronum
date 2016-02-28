@@ -115,6 +115,7 @@
 #include "r_data/colormaps.h"
 #include "r_main.h"
 #include "network_enums.h"
+#include "decallib.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -2944,6 +2945,21 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 						mobj->alpha = OPAQUE;
 						mobj->visdir = -1;
 					}
+				}
+				break;
+
+			case SVC2_SHOOTDECAL:
+				{
+					FName decalName = NETWORK_ReadName( pByteStream );
+					AActor* actor = CLIENT_FindThingByNetID( NETWORK_ReadShort( pByteStream ));
+					fixed_t z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+					angle_t angle = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+					fixed_t tracedist = NETWORK_ReadLong( pByteStream );
+					bool permanent = !!NETWORK_ReadByte( pByteStream );
+					const FDecalTemplate* tpl = DecalLibrary.GetDecalByName( decalName );
+
+					if ( actor && tpl )
+						ShootDecal( tpl, actor, actor->Sector, actor->X(), actor->Y(), z, angle, tracedist, permanent );
 				}
 				break;
 
@@ -10429,25 +10445,32 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 	// Try to find this object within the player's personal inventory.
 	pInventory = players[ulPlayer].mo->FindInventory( pType );
 
-	// If the player doesn't have this type, give it to him.
-	if ( pInventory == NULL )
-		pInventory = players[ulPlayer].mo->GiveInventoryType( pType );
-
-	// If he still doesn't have the object after trying to give it to him... then YIKES!
-	if ( pInventory == NULL )
+	// [TP] If we're trying to set the item amount to 0, then destroy the item if the player has it.
+	if ( lAmount <= 0 )
 	{
-		client_PrintWarning( "client_TakeInventory: Failed to give inventory type, %s!\n", pszName );
-		return;
+		if ( pInventory )
+		{
+			if ( pInventory->ItemFlags & IF_KEEPDEPLETED )
+				pInventory->Amount = 0;
+			else
+				pInventory->Destroy( );
+		}
 	}
-
-	// Set the new amount of the inventory object.
-	pInventory->Amount = lAmount;
-	if ( pInventory->Amount <= 0 )
+	else if ( lAmount > 0 )
 	{
-		if ( pInventory->ItemFlags & IF_KEEPDEPLETED )
-			pInventory->Amount = 0;
-		else
-			pInventory->Destroy( );
+		// If the player doesn't have this type, give it to him.
+		if ( pInventory == NULL )
+			pInventory = players[ulPlayer].mo->GiveInventoryType( pType );
+
+		// If he still doesn't have the object after trying to give it to him... then YIKES!
+		if ( pInventory == NULL )
+		{
+			client_PrintWarning( "client_TakeInventory: Failed to give inventory type, %s!\n", pszName );
+			return;
+		}
+
+		// Set the new amount of the inventory object.
+		pInventory->Amount = lAmount;
 	}
 
 	// Since an item displayed on the HUD may have been taken away, refresh the HUD.

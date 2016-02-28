@@ -877,12 +877,14 @@ CCMD( ignore )
 
 CCMD( ignore_idx )
 {
-	const ULONG ulPlayer = ( argv.argc( ) >= 2 ) ? atoi( argv[1] ) : MAXPLAYERS;
-
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false ) 
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
 		return;
 
-	chat_IgnorePlayer( argv, ulPlayer );
+	if ( PLAYER_IsValidPlayer( playerIndex ) == false )
+		return;
+
+	chat_IgnorePlayer( argv, playerIndex );
 }
 
 //*****************************************************************************
@@ -931,12 +933,14 @@ CCMD( unignore )
 
 CCMD( unignore_idx )
 {
-	const ULONG ulPlayer = ( argv.argc( ) >= 2 ) ? atoi( argv[1] ) : MAXPLAYERS;
-
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false ) 
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
 		return;
 
-	chat_UnignorePlayer( argv, ulPlayer );
+	if ( PLAYER_IsValidPlayer( playerIndex ) == false )
+		return;
+
+	chat_UnignorePlayer( argv, playerIndex );
 }
 
 // [TP]

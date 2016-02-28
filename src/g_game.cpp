@@ -1236,6 +1236,32 @@ CCMD (spycancel)
 	ChangeSpy (SPY_CANCEL);
 }
 
+// [TP]
+enum { JOINMENUKEY_Space, JOINMENUKEY_Enter };
+CVAR( Int, joinmenukey, JOINMENUKEY_Space, CVAR_ARCHIVE );
+
+int G_GetJoinMenuKey()
+{
+	switch ( joinmenukey )
+	{
+	default:
+	case JOINMENUKEY_Space:
+		return KEY_SPACE;
+
+	case JOINMENUKEY_Enter:
+		return KEY_ENTER;
+	}
+}
+
+const char* G_DescribeJoinMenuKey()
+{
+	const char* names[] = { "Space", "Enter" };
+	if ( static_cast<unsigned>( joinmenukey ) < countof( names ))
+		return names[joinmenukey];
+	else
+		return names[0];
+}
+
 //
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
@@ -1291,9 +1317,9 @@ bool G_Responder (event_t *ev)
 
 		// [RC] If the player hits the spacebar, and they aren't in the game, ask them if they'd like to join.
 		// [BB] This "eats" the key, therefore we must return true here.
-		if ( ( ev->type == EV_KeyDown ) && ( ev->data1 == KEY_SPACE ) && players[consoleplayer].bSpectating )
+		if ( ( ev->type == EV_KeyDown ) && ( ev->data1 == G_GetJoinMenuKey() ) && players[consoleplayer].bSpectating )
 		{
-			M_JoinMenu();
+			C_DoCommand( "menu_join" );
 			return true;
 		}
 	}

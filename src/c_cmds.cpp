@@ -685,6 +685,16 @@ CCMD (take)
 	if (CheckCheatmode () || argv.argc() < 2)
 		return;
 
+	// [TP] Handle take cheat online
+	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
+	{
+		if ( argv.argc( ) > 2 )
+			CLIENTCOMMANDS_TakeCheat( argv[1], clamp( atoi( argv[2]), 1, 255 ));
+		else
+			CLIENTCOMMANDS_TakeCheat( argv[1], 0 );
+		return;
+	}
+
 	Net_WriteByte (DEM_TAKECHEAT);
 	Net_WriteString (argv[1]);
 	if (argv.argc() > 2)

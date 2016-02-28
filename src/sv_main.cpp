@@ -154,7 +154,7 @@ static	bool	server_Suicide( BYTESTREAM_s *pByteStream );
 static	bool	server_ChangeTeam( BYTESTREAM_s *pByteStream );
 static	bool	server_SpectateInfo( BYTESTREAM_s *pByteStream );
 static	bool	server_GenericCheat( BYTESTREAM_s *pByteStream );
-static	bool	server_GiveCheat( BYTESTREAM_s *pByteStream );
+static	bool	server_GiveCheat( BYTESTREAM_s *pByteStream, bool take );
 static	bool	server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType );
 static	bool	server_ReadyToGoOn( BYTESTREAM_s *pByteStream );
 static	bool	server_ChangeDisplayPlayer( BYTESTREAM_s *pByteStream );
@@ -4443,9 +4443,10 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		// Client is attempting to use a cheat. Only legal if sv_cheats is enabled.
 		return ( server_GenericCheat( pByteStream ));
 	case CLC_GIVECHEAT:
+	case CLC_TAKECHEAT:
 
 		// Client is attempting to use the give cheat. Only legal if sv_cheats is enabled.
-		return ( server_GiveCheat( pByteStream ));
+		return ( server_GiveCheat( pByteStream, lCommand == CLC_TAKECHEAT ));
 	case CLC_SUMMONCHEAT:
 	case CLC_SUMMONFRIENDCHEAT:
 	case CLC_SUMMONFOECHEAT:
@@ -5824,7 +5825,7 @@ static bool server_GenericCheat( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static bool server_GiveCheat( BYTESTREAM_s *pByteStream )
+static bool server_GiveCheat( BYTESTREAM_s *pByteStream, bool take )
 {
 	const char	*pszItemName;
 	ULONG		ulAmount;
@@ -5838,26 +5839,7 @@ static bool server_GiveCheat( BYTESTREAM_s *pByteStream )
 	// If it's legal, do the cheat.
 	if ( sv_cheats )
 	{
-		cht_Give( &players[g_lCurrentClient], pszItemName, ulAmount );
-/*
-		// Tell clients about this cheat.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		{
-			ULONG	ulIdx;
-
-			for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
-			{
-				if ( SERVER_IsValidClient( ulIdx ) == false )
-					continue;
-
-				NETWORK_CheckBuffer( ulIdx, 3 + strlen( pszItemName ));
-				NETWORK_WriteHeader( &g_aClients[ulIdx].PacketBuffer, SVC_GIVECHEAT );
-				NETWORK_WriteByte( &g_aClients[ulIdx].PacketBuffer, g_lCurrentClient );
-				NETWORK_WriteString( &g_aClients[ulIdx].PacketBuffer, pszItemName );
-				NETWORK_WriteByte( &g_aClients[ulIdx].PacketBuffer, ulAmount );
-			}
-		}
-*/
+		( take ? cht_Take : cht_Give )( &players[g_lCurrentClient], pszItemName, ulAmount );
 	}
 	// If not, boot their ass!
 	else
@@ -6542,14 +6524,16 @@ CCMD( kick_idx )
 		return;
 	}
 
-	ULONG ulIdx =  atoi(argv[1]);
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
+		return;
 
 	// [BB] Validity checks are done in SERVER_KickPlayer.
 	// If we provided a reason, give it.
 	if ( argv.argc( ) >= 3 )
-		SERVER_KickPlayer( ulIdx, argv[2] );
+		SERVER_KickPlayer( playerIndex, argv[2] );
 	else
-		SERVER_KickPlayer( ulIdx, "None given." );
+		SERVER_KickPlayer( playerIndex, "None given." );
 	return;
 }
 
@@ -6633,14 +6617,16 @@ CCMD( forcespec_idx )
 		return;
 	}
 
-	ULONG ulIdx =  atoi(argv[1]);
+	int playerIndex;
+	if ( argv.SafeGetNumber( 1, playerIndex ) == false )
+		return;
 
 	// [BB] Validity checks are done in SERVER_KickPlayerFromGame.
 	// If we provided a reason, give it.
 	if ( argv.argc( ) >= 3 )
-		SERVER_ForceToSpectate( ulIdx, argv[2] );
+		SERVER_ForceToSpectate( playerIndex, argv[2] );
 	else
-		SERVER_ForceToSpectate( ulIdx, "None given." );
+		SERVER_ForceToSpectate( playerIndex, "None given." );
 	return;
 }
 

@@ -255,6 +255,8 @@ enum { NO_SCRIPT_NETID = -1 };
 int				NETWORK_ACSScriptFromNetID( int netid );
 int				NETWORK_ACSScriptToNetID( int script );
 void			NETWORK_MakeScriptNameIndex();
+FName			NETWORK_ReadName( BYTESTREAM_s* bytestream );
+void			NETWORK_WriteName( BYTESTREAM_s* bytestream, FName name );
 
 const char		*NETWORK_GetClassNameFromIdentification( USHORT usActorNetworkIndex );
 const PClass	*NETWORK_GetClassFromIdentification( USHORT usActorNetworkIndex );

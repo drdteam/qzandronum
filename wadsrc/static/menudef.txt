@@ -428,6 +428,12 @@ ListMenu "PlayerMenu"
 //
 //-------------------------------------------------------------------------------------------
 
+OptionValue JoinMenuKeys
+{
+	0.0, "Space"
+	1.0, "Enter"
+}
+
 OptionMenu "CustomizeControls"
 {
 	Title "CUSTOMIZE CONTROLS"
@@ -509,6 +515,8 @@ OptionMenu "CustomizeControls"
 	Control 	"Screenshot",			"screenshot"
 	Control		"Spectate",				"spectate" // [TP]
 	Control		"Taunt",				"taunt" // [TP]
+	Option		"Join the game",		"joinmenukey", "JoinMenuKeys" // [TP]
+	Control		"Join the game (custom)", "menu_join" // [TP]
 	Control  	"Open console",			"toggleconsole"
 	StaticText 	""
 	StaticText 	"Strife Popup Screens", 1

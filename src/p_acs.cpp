@@ -5388,6 +5388,22 @@ static int SetCVar(AActor *activator, const char *cvarname, int value, bool is_s
 
 static bool DoSpawnDecal(AActor *actor, const FDecalTemplate *tpl, int flags, angle_t angle, fixed_t zofs, fixed_t distance)
 {
+	// [TP] Override ShootDecal with a local struct so that the server can inform the clients of this call
+	// without duplicating the values of the parameters.
+	struct
+	{
+		DBaseDecal* operator() ( const FDecalTemplate *tpl, AActor *basisactor, sector_t *sec, fixed_t x, fixed_t y,
+			fixed_t z, angle_t angle, fixed_t tracedist, bool permanent )
+		{
+			DBaseDecal* decal = ::ShootDecal( tpl, basisactor, sec, x, y, z, angle, tracedist, permanent );
+
+			if ( decal && NETWORK_GetState() == NETSTATE_SERVER )
+				SERVERCOMMANDS_ShootDecal( tpl, basisactor, z, angle, tracedist, permanent );
+
+			return decal;
+		}
+	} ShootDecal;
+
 	if (!(flags & SDF_ABSANGLE))
 	{
 		angle += actor->angle;

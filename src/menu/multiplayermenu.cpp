@@ -82,6 +82,7 @@ static void M_CallKickVote();
 static void M_CallMapVote();
 static void M_CallLimitVote();
 static void M_ExecuteIgnore();
+static void M_JoinMenu();
 static void M_JoinFromMenu();
 static void M_DoJoinFromMenu();
 
@@ -670,7 +671,7 @@ static void M_ExecuteIgnore()
 //
 //=============================================================================
 
-void M_JoinMenu()
+static void M_JoinMenu()
 {
 	if ( GAMEMODE_GetCurrentFlags() & GMF_DEADSPECTATORS
 		&& players[consoleplayer].bDeadSpectator )
@@ -812,6 +813,17 @@ CCMD ( menu_spectate )
 		C_DoCommand( "spectate" );
 	else
 		M_StartMessage( "You must be in a game to spectate.\n\npress a key.", 1 );
+}
+
+CCMD ( menu_join )
+{
+	if ( players[consoleplayer].bSpectating == false )
+	{
+		M_StartMessage( "You must be a spectator to join.\n\npress a key.", 1 );
+		return;
+	}
+
+	M_JoinMenu();
 }
 
 // [RC] Moved switch team to the Multiplayer menu

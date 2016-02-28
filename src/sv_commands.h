@@ -413,5 +413,6 @@ void	SERVERCOMMANDS_SetDefaultSkybox ( ULONG ulPlayerExtra = MAXPLAYERS, ServerC
 void	SERVERCOMMANDS_SRPUserStartAuthentication ( const ULONG ulClient );
 void	SERVERCOMMANDS_SRPUserProcessChallenge ( const ULONG ulClient );
 void	SERVERCOMMANDS_SRPUserVerifySession ( const ULONG ulClient );
+void	SERVERCOMMANDS_ShootDecal ( const FDecalTemplate* tpl, AActor* actor, fixed_t z, angle_t angle, fixed_t tracedist, bool permanent, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 
 #endif	// __SV_COMMANDS_H__

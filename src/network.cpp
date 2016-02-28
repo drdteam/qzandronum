@@ -1147,6 +1147,36 @@ int NETWORK_ACSScriptToNetID( int script )
 }
 
 //*****************************************************************************
+//
+FName NETWORK_ReadName( BYTESTREAM_s* bytestream )
+{
+	SDWORD index = NETWORK_ReadShort( bytestream );
+
+	if ( index == -1 )
+		return FName( NETWORK_ReadString( bytestream ));
+	else
+		return FName( static_cast<ENamedName>( index ));
+}
+
+//*****************************************************************************
+//
+void NETWORK_WriteName( BYTESTREAM_s* bytestream, FName name )
+{
+	// Predefined names are the same on both the server and client in any case, so we can index those
+	// with a short instead of a string. However, the ones that don't eat up 2 more bytes.
+	// So, use this if most of the time the name is predefined.
+	if ( name.IsPredefined() )
+	{
+		NETWORK_WriteShort( bytestream, name );
+	}
+	else
+	{
+		NETWORK_WriteShort( bytestream, -1 );
+		NETWORK_WriteString( bytestream, name );
+	}
+}
+
+//*****************************************************************************
 // [TP]
 CCMD( dumpacsnetids )
 {
