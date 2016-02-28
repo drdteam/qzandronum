@@ -1777,10 +1777,7 @@ void G_Ticker ()
 					// If we've reached the duel limit, exit the level.
 					else if (( duellimit > 0 ) && ( static_cast<signed> (DUEL_GetNumDuels( )) >= duellimit ))
 					{
-						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-							SERVER_Printf( PRINT_HIGH, "Duellimit hit.\n" );
-						else
-							Printf( "Duellimit hit.\n" );
+						NETWORK_Printf( "Duellimit hit.\n" );
 						G_ExitLevel( 0, false );
 
 						// When the level loads, start the next duel.
@@ -1823,10 +1820,7 @@ void G_Ticker ()
 
 						if ( bLimitHit )
 						{
-							if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-								SERVER_Printf( PRINT_HIGH, "Winlimit hit.\n" );
-							else
-								Printf( "Winlimit hit.\n" );
+							NETWORK_Printf( "Winlimit hit.\n" );
 							G_ExitLevel( 0, false );
 
 							// When the level loads, start the next match.

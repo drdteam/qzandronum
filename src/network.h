@@ -273,6 +273,9 @@ bool			NETWORK_IsClientPredictedSpecial( const int Special );
 // [BB] Generate a checksum from a ticcmd_t.
 SDWORD			NETWORK_Check ( ticcmd_t *pCmd );
 
+// [TP] Announce something to all clients if the server or just print if not
+void STACK_ARGS NETWORK_Printf( const char* format, ... );
+
 // [BB] Sound attenuation is a float, but we only want to sent a byte for the 
 // attenuation to instructs clients to play a sound. The enum is used for the
 // conversion of the neccessary attenuation values.

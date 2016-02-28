@@ -2788,7 +2788,7 @@ CUSTOM_CVAR (Float, sv_aircontrol, 0.00390625f, CVAR_SERVERINFO|CVAR_NOSAVE)
 	// [BB] Let the clients know about the change.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %f\n", self.GetName( ), (float)self );
+		SERVER_Printf( "%s changed to: %f\n", self.GetName( ), (float)self );
 		SERVERCOMMANDS_SetGameModeLimits( );
 	}
 }

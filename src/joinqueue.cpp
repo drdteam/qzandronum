@@ -175,15 +175,10 @@ void JOINQUEUE_PlayerLeftGame( int player, bool pop )
 			lWinner = LASTMANSTANDING_GetLastManStanding( );
 			if ( lWinner != -1 )
 			{
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
-				else
-				{
-					Printf( "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
+				NETWORK_Printf( "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
 
-					if ( lWinner == consoleplayer )
-						ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
-				}
+				if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && ( lWinner == consoleplayer ))
+					ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 
 				// Give the winner a win.
 				PLAYER_SetWins( &players[lWinner], players[lWinner].ulWins + 1 );
@@ -211,14 +206,13 @@ void JOINQUEUE_PlayerLeftGame( int player, bool pop )
 			lWinner = LASTMANSTANDING_TeamGetLastManStanding( );
 			if ( lWinner != -1 )
 			{
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", TEAM_GetName( lWinner ));
-				else
-				{
-					Printf( "%s \\c-wins!\n", TEAM_GetName( lWinner ));
+				NETWORK_Printf( "%s \\c-wins!\n", TEAM_GetName( lWinner ));
 
-					if ( players[consoleplayer].bOnTeam && ( lWinner == (LONG)players[consoleplayer].ulTeam ))
-						ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
+				if ( NETWORK_GetState() != NETSTATE_SERVER
+					&& players[consoleplayer].bOnTeam
+					&& lWinner == (LONG)players[consoleplayer].ulTeam )
+				{
+					ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 				}
 
 				// Give the team a win.
@@ -322,10 +316,7 @@ void JOINQUEUE_PopQueue( int slotCount )
 			}
 			else
 			{
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_Printf( PRINT_HIGH, "%s \\c-joined the game.\n", player->userinfo.GetName() );
-				else
-					Printf( "%s \\c-joined the game.\n", player->userinfo.GetName() );
+				NETWORK_Printf( "%s \\c-joined the game.\n", player->userinfo.GetName() );
 			}
 
 			JOINQUEUE_RemovePlayerAtPosition ( i );

@@ -614,24 +614,17 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 				if ( fraglimit <= D_GetFragCount( source->player )
 					 && ( NETWORK_InClientMode() == false ) )
 				{
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					{
-						SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_FRAGLIMIT" ));
-						if ( teamplay && ( source->player->bOnTeam ))
-							SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", TEAM_GetName( source->player->ulTeam ));
-						else
-							SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", source->player->userinfo.GetName() );
-					}
+					NETWORK_Printf( "%s\n", GStrings( "TXT_FRAGLIMIT" ));
+					if ( teamplay && ( source->player->bOnTeam ))
+						NETWORK_Printf( "%s \\c-wins!\n", TEAM_GetName( source->player->ulTeam ));
 					else
-					{
-						Printf( "%s\n", GStrings( "TXT_FRAGLIMIT" ));
-						if ( teamplay && ( source->player->bOnTeam ))
-							Printf( "%s \\c-wins!\n", TEAM_GetName( source->player->ulTeam ));
-						else
-							Printf( "%s \\c-wins!\n", source->player->userinfo.GetName() );
+						NETWORK_Printf( "%s \\c-wins!\n", source->player->userinfo.GetName() );
 
-						if (( duel == false ) && ( source->player - players == consoleplayer ))
-							ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
+					if (( NETWORK_GetState( ) != NETSTATE_SERVER )
+						&& ( duel == false )
+						&& ( source->player - players == consoleplayer ))
+					{
+						ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 					}
 
 					// Pause for five seconds for the win sequence.
@@ -1159,7 +1152,7 @@ CUSTOM_CVAR (Float, sv_coop_damagefactor, 1.0f, CVAR_SERVERINFO)
 
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %.2f\n", self.GetName( ), (float)self );
+		SERVER_Printf( "%s changed to: %.2f\n", self.GetName( ), (float)self );
 		SERVERCOMMANDS_SetGameModeLimits( );
 		SERVERCONSOLE_UpdateScoreboard();
 	}
@@ -2383,19 +2376,10 @@ void PLAYER_GivePossessionPoint( player_t *pPlayer )
 	{
 		if ( possession && ( pPlayer->lPointCount >= pointlimit ))
 		{
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				SERVER_Printf( PRINT_HIGH, "Pointlimit hit.\n" );
-				SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", pPlayer->userinfo.GetName() );
-			}
-			else
-			{
-				Printf( "Pointlimit hit.\n" );
-				Printf( "%s \\c-wins!\n", pPlayer->userinfo.GetName() );
+			NETWORK_Printf( "Pointlimit hit.\n%s \\c-wins!\n", pPlayer->userinfo.GetName() );
 
-				if ( pPlayer->mo->CheckLocalView( consoleplayer ))
-					ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
-			}
+			if (( NETWORK_GetState() != NETSTATE_SERVER ) && pPlayer->mo->CheckLocalView( consoleplayer ))
+				ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 
 			// Just print "YOU WIN!" in single player.
 			if (( NETWORK_GetState( ) == NETSTATE_SINGLE_MULTIPLAYER ) && ( pPlayer->mo->CheckLocalView( consoleplayer )))
@@ -2428,19 +2412,10 @@ void PLAYER_GivePossessionPoint( player_t *pPlayer )
 		}
 		else if ( teampossession && ( TEAM_GetScore( pPlayer->ulTeam ) >= pointlimit ))
 		{
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				SERVER_Printf( PRINT_HIGH, "Pointlimit hit.\n" );
-				SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", TEAM_GetName( pPlayer->ulTeam ));
-			}
-			else
-			{
-				Printf( "Pointlimit hit.\n" );
-				Printf( "%s \\c-wins!\n", TEAM_GetName( pPlayer->ulTeam ));
+			NETWORK_Printf( "Pointlimit hit.\n%s \\c-wins!\n", TEAM_GetName( pPlayer->ulTeam ));
 
-				if ( pPlayer->mo->IsTeammate( players[consoleplayer].camera ))
-					ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
-			}
+			if (( NETWORK_GetState() != NETSTATE_SERVER ) && pPlayer->mo->IsTeammate( players[consoleplayer].camera ))
+				ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 
 			sprintf( szString, "\\c%c%s WINS!", V_GetColorChar( TEAM_GetTextColor( pPlayer->ulTeam )), TEAM_GetName( pPlayer->ulTeam ));
 			V_ColorizeString( szString );
@@ -2537,7 +2512,7 @@ void PLAYER_SetTeam( player_t *pPlayer, ULONG ulTeam, bool bNoBroadcast )
 		// Player has changed his team! Tell clients.
 		if ( bBroadcastChange )
 		{
-			SERVER_Printf( PRINT_HIGH, "%s \\c-joined the \\c%c%s \\c-team.\n", pPlayer->userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( ulTeam ) ), TEAM_GetName( ulTeam )); 
+			SERVER_Printf( "%s \\c-joined the \\c%c%s \\c-team.\n", pPlayer->userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( ulTeam ) ), TEAM_GetName( ulTeam )); 
 		}		
 	}
 
@@ -2630,10 +2605,7 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 				if ( bBroadcast )
 				{
 					// Send out a message saying this player joined the spectators.
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVER_Printf( PRINT_HIGH, "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
-					else
-						Printf( "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
+					NETWORK_Printf( "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
 				}
 
 				// This player no longer has a team affiliation.
@@ -2739,10 +2711,7 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 		if (( bDeadSpectator == false ) && bBroadcast )
 		{
 			// Send out a message saying this player joined the spectators.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVER_Printf( PRINT_HIGH, "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
-			else
-				Printf( "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
+			NETWORK_Printf( "%s \\c-joined the spectators.\n", pPlayer->userinfo.GetName() );
 		}
 	}
 

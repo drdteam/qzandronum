@@ -518,12 +518,7 @@ void POSSESSION_ScorePossessionPoint( player_t *pPlayer )
 
 	// If the pointlimit has been reached, then display it in the console.
 	if ( bPointLimitReached )
-	{
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVER_Printf( PRINT_HIGH, "Pointlimit hit.\n" );
-		else
-			Printf( "Pointlimit hit.\n" );
-	}
+		NETWORK_Printf( "Pointlimit hit.\n" );
 
 	// Display the score info.
 	possession_DisplayScoreInfo( ULONG( pPlayer - players ));
@@ -685,11 +680,7 @@ void POSSESSION_TimeExpired( void )
 	if ( teampossession && g_pPossessionArtifactCarrier->bOnTeam )
 		TEAM_SetScore( g_pPossessionArtifactCarrier->ulTeam, TEAM_GetScore( g_pPossessionArtifactCarrier->ulTeam ) + 1, true );
 
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_TIMELIMIT" ));
-	else
-		Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
-
+	NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 	GAME_SetEndLevelDelay( 5 * TICRATE );
 }
 

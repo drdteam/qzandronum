@@ -206,12 +206,12 @@ bool ARaiseAlarm::SpecialDropAction (AActor *dropper)
 			// [CW] Send this message to the activator.
 			if ( ulIdx == static_cast<unsigned> (dropper->target->player - players) )
 			{
-				SERVER_PrintfPlayer( PRINT_HIGH, ulIdx, "You Fool!  You've set off the alarm.\n" );
+				SERVER_PrintfPlayer( ulIdx, "You Fool!  You've set off the alarm.\n" );
 				continue;
 			}
 
 			// [CW] Tell other clients who set the alarm off!
-			SERVER_PrintfPlayer( PRINT_HIGH, ulIdx, "%s\\c- set off the alarm!\n", dropper->target->player->userinfo.GetName() );
+			SERVER_PrintfPlayer( ulIdx, "%s\\c- set off the alarm!\n", dropper->target->player->userinfo.GetName() );
 		}
 
 		// [CW] Tell the server who set the alarm off!

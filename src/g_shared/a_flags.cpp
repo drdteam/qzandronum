@@ -516,9 +516,9 @@ bool AFlag::HandlePickup( AInventory *pItem )
 				SERVERCOMMANDS_PrintHUDMessageFadeOut( szString, 1.5f, TEAM_MESSAGE_Y_AXIS_SUB, 0, 0, CR_UNTRANSLATED, 3.0f, 0.5f, "SmallFont", false, MAKE_ID( 'S','U','B','S' ));
 
 				if( ( bAssisted ) && ( ! selfAssist ) )
-					SERVER_Printf( PRINT_HIGH, "%s \\c-and %s \\c-scored for the \\c%c%s \\c-team!\n", Owner->player->userinfo.GetName(), players[TEAM_GetAssistPlayer( Owner->player->ulTeam )].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( Owner->player->ulTeam )), TEAM_GetName( Owner->player->ulTeam ));
+					SERVER_Printf( "%s \\c-and %s \\c-scored for the \\c%c%s \\c-team!\n", Owner->player->userinfo.GetName(), players[TEAM_GetAssistPlayer( Owner->player->ulTeam )].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( Owner->player->ulTeam )), TEAM_GetName( Owner->player->ulTeam ));
 				else
-					SERVER_Printf( PRINT_HIGH, "%s \\c-scored for the \\c%c%s \\c-team!\n", Owner->player->userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( Owner->player->ulTeam )), TEAM_GetName( Owner->player->ulTeam ));
+					SERVER_Printf( "%s \\c-scored for the \\c%c%s \\c-team!\n", Owner->player->userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( Owner->player->ulTeam )), TEAM_GetName( Owner->player->ulTeam ));
 			}
 
 			

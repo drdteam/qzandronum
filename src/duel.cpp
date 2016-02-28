@@ -377,11 +377,7 @@ void DUEL_TimeExpired( void )
 	// If for some reason we don't have two duelers, just end the map like normal.
 	if (( lDueler1 == -1 ) || ( lDueler2 == -1 ))
 	{
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_TIMELIMIT" ));
-		else
-			Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
-
+		NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 		GAME_SetEndLevelDelay( 5 * TICRATE );
 		return;
 	}
@@ -436,12 +432,7 @@ void DUEL_TimeExpired( void )
 
 	// Give the winner a win.
 	PLAYER_SetWins( &players[lWinner], players[lWinner].ulWins + 1 );
-
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_TIMELIMIT" ));
-	else
-		Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
-
+	NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 	GAME_SetEndLevelDelay( 5 * TICRATE );
 }
 
@@ -559,7 +550,7 @@ CUSTOM_CVAR( Int, duellimit, 0, CVAR_CAMPAIGNLOCK )
 
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %d\n", self.GetName( ), (int)self );
+		SERVER_Printf( "%s changed to: %d\n", self.GetName( ), (int)self );
 		SERVERCOMMANDS_SetGameModeLimits( );
 
 		// Update the scoreboard.

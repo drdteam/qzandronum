@@ -1344,7 +1344,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	SERVERCOMMANDS_BeginSnapshot( g_lCurrentClient );
 
 	// Send welcome message.
-	SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "Version %s Server\n", DOTVERSIONSTR );
+	SERVER_PrintfPlayer( g_lCurrentClient, "Version %s Server\n", DOTVERSIONSTR );
 
 	// Send consoleplayer number.
 	SERVERCOMMANDS_SetConsolePlayer( g_lCurrentClient );
@@ -2136,7 +2136,7 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 
 			if ( stricmp( szPlayerNameNoColor, szOldPlayerNameNoColor ) != 0 )
 			{
-				SERVER_Printf( PRINT_HIGH, "%s \\c-is now known as %s\n", szOldPlayerName, pPlayer->userinfo.GetName() );
+				SERVER_Printf( "%s \\c-is now known as %s\n", szOldPlayerName, pPlayer->userinfo.GetName() );
 
 				// [RC] Update clients using the RCON utility.
 				SERVER_RCON_UpdateInfo( SVRCU_PLAYERDATA );
@@ -2212,7 +2212,7 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 		// [TP] If the client isn't fully in yet, send an error and disconnect him.
 		if ( g_aClients[g_lCurrentClient].State != CLS_SPAWNED )
 		{
-			SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "\n%s\n", kickReason.GetChars() );
+			SERVER_PrintfPlayer( g_lCurrentClient, "\n%s\n", kickReason.GetChars() );
 			SERVER_ClientError( g_lCurrentClient, NETWORK_ERRORCODE_USERINFOREJECTED );
 			return ( false );
 		}
@@ -2836,7 +2836,7 @@ void SERVER_WriteCommands( void )
 				{
 					const int secondsToKick = ( afkKickTick - gametic ) / TICRATE;
 					if ( secondsToKick > 1 )
-						SERVER_PrintfPlayer( PRINT_HIGH, ulIdx, "Warning: In %d seconds you will be forced to spectate due to inactivity!\n", secondsToKick );
+						SERVER_PrintfPlayer( ulIdx, "Warning: In %d seconds you will be forced to spectate due to inactivity!\n", secondsToKick );
 				}
 			}
 		}
@@ -3046,41 +3046,68 @@ void SERVER_SendHeartBeat( void )
 //
 void STACK_ARGS SERVER_Printf( ULONG ulPrintLevel, const char *pszString, ... )
 {
-	va_list		argptr;
-	char		szStringBuf[1024];
-
+	va_list	 argptr;
 	va_start( argptr, pszString );
-#ifdef _MSC_VER
-	_vsnprintf( szStringBuf, 1024 - 1, pszString, argptr );
-#else
-	vsnprintf( szStringBuf, 1024 - 1, pszString, argptr );
-#endif
+	SERVER_VPrintf( ulPrintLevel, pszString, argptr, MAXPLAYERS );
 	va_end( argptr );
+}
 
-	// Print message locally in console window.
-	Printf( "%s", szStringBuf );
-
-	// Send the message out to clients for them to print.
-	SERVERCOMMANDS_Print( szStringBuf, ulPrintLevel );
+//*****************************************************************************
+//
+void STACK_ARGS SERVER_Printf( const char *pszString, ... )
+{
+	va_list	 argptr;
+	va_start( argptr, pszString );
+	SERVER_VPrintf( PRINT_HIGH, pszString, argptr, MAXPLAYERS );
+	va_end( argptr );
 }
 
 //*****************************************************************************
 //
 void STACK_ARGS SERVER_PrintfPlayer( ULONG ulPrintLevel, ULONG ulPlayer, const char *pszString, ... )
 {
-	va_list		argptr;
-	char		szStringBuf[1024];
-
+	va_list	 argptr;
 	va_start( argptr, pszString );
-#ifdef _MSC_VER
-	_vsnprintf( szStringBuf, 1024 - 1, pszString, argptr );
-#else
-	vsnprintf( szStringBuf, 1024 - 1, pszString, argptr );
-#endif
+	SERVER_VPrintf( ulPrintLevel, pszString, argptr, ulPlayer );
 	va_end( argptr );
+}
 
-	// Send the message out to the player to print.
-	SERVERCOMMANDS_Print( szStringBuf, ulPrintLevel, ulPlayer, SVCF_ONLYTHISCLIENT );
+//*****************************************************************************
+//
+void STACK_ARGS SERVER_PrintfPlayer( ULONG ulPlayer, const char *pszString, ... )
+{
+	va_list	 argptr;
+	va_start( argptr, pszString );
+	SERVER_VPrintf( PRINT_HIGH, pszString, argptr, ulPlayer );
+	va_end( argptr );
+}
+
+//*****************************************************************************
+//
+void SERVER_VPrintf( int printlevel, const char* format, va_list argptr, int playerToPrintTo )
+{
+	char buffer[1024];
+
+#ifdef _MSC_VER
+	_vsnprintf( buffer, sizeof buffer - 1, format, argptr );
+#else
+	vsnprintf( buffer, sizeof buffer - 1, format, argptr );
+#endif
+
+	ServerCommandFlags flags = 0;
+
+	if ( playerToPrintTo != MAXPLAYERS )
+	{
+		flags |= SVCF_ONLYTHISCLIENT;
+	}
+	else
+	{
+		// Print message locally in console window.
+		Printf( "%s", buffer );
+	}
+
+	// Send the message out to clients for them to print.
+	SERVERCOMMANDS_Print( buffer, printlevel, playerToPrintTo, flags );
 }
 
 //*****************************************************************************
@@ -4088,9 +4115,9 @@ void SERVER_SyncSharedKeys( int playerToSync, bool withmessage )
 			message = "No keys found yet.\n";
 
 		if ( playerToSync != MAXPLAYERS )
-			SERVER_PrintfPlayer( PRINT_HIGH, playerToSync, "%s", message.GetChars() );
+			SERVER_PrintfPlayer( playerToSync, "%s", message.GetChars() );
 		else
-			SERVER_Printf( PRINT_HIGH, "%s", message.GetChars() );
+			SERVER_Printf( "%s", message.GetChars() );
 	}
 }
 
@@ -4123,7 +4150,7 @@ void SERVER_KillCheat( const char* what )
 	if ( stricmp( what, "monsters" ) == 0 )
 	{
 		const int killcount = P_Massacre ();
-		SERVER_Printf( PRINT_HIGH, "%d Monster%s Killed\n", killcount, killcount==1 ? "" : "s" );
+		SERVER_Printf( "%d Monster%s Killed\n", killcount, killcount==1 ? "" : "s" );
 	}
 	else
 	{
@@ -4136,7 +4163,7 @@ void SERVER_KillCheat( const char* what )
 		stream = &data[0]; // Reset the bytestream for reading
 		C_StartCapture(); // Capture the output so we can print it to clients
 		Net_DoCommand( DEM_KILLCLASSCHEAT, &stream, 0 );
-		SERVER_Printf( PRINT_HIGH, "%s", C_EndCapture() );
+		SERVER_Printf( "%s", C_EndCapture() );
 	}
 }
 
@@ -4797,7 +4824,7 @@ static bool server_CheckForClientCommandFlood( ULONG ulClient )
 	if ( g_aClients[ulClient].commandInstances.getOldestEntry( 1 ) > 0 )
 	{
 		if ( ( gametic - g_aClients[ulClient].commandInstances.getOldestEntry( 1 ) ) <= floodWindowLength * TICRATE )
-			SERVER_PrintfPlayer( PRINT_HIGH, ulClient, "Stop flooding the server with commands or you will be temporarily banned.\n" );
+			SERVER_PrintfPlayer( ulClient, "Stop flooding the server with commands or you will be temporarily banned.\n" );
 	}
 	g_aClients[ulClient].commandInstances.put ( gametic );
 
@@ -4931,7 +4958,7 @@ static bool server_Say( BYTESTREAM_s *pByteStream )
 		}
 		message += ".\n";
 
-		SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "%s", message.GetChars() );
+		SERVER_PrintfPlayer( ulPlayer, "%s", message.GetChars() );
 		return ( false );
 	}
 
@@ -4940,7 +4967,7 @@ static bool server_Say( BYTESTREAM_s *pByteStream )
 	{
 		players[ulPlayer].bIgnoreChat = true;
 		players[ulPlayer].lIgnoreChatTicks = 15 * TICRATE;
-		SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "Please refrain from chatting so much. You've been muted for 15 seconds.\n" );
+		SERVER_PrintfPlayer( ulPlayer, "Please refrain from chatting so much. You've been muted for 15 seconds.\n" );
 		return ( false );
 	}
 	// Or, relay the chat message onto clients.
@@ -5431,7 +5458,7 @@ static bool server_Spectate( BYTESTREAM_s *pByteStream )
 		// [BB] If the client is already a spectator but in the join queue he wants to leave the queue.
 		if ( JOINQUEUE_GetPositionInLine ( g_lCurrentClient ) != -1 )
 		{
-			SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "You have been removed from the join queue.\n" );
+			SERVER_PrintfPlayer( g_lCurrentClient, "You have been removed from the join queue.\n" );
 			JOINQUEUE_RemovePlayerFromQueue ( g_lCurrentClient );
 		}
 		return ( false );
@@ -5515,7 +5542,7 @@ static bool server_RequestJoin( BYTESTREAM_s *pByteStream )
 			SERVERCOMMANDS_SetPlayerTeam( g_lCurrentClient );
 	}
 
-	SERVER_Printf( PRINT_HIGH, "%s \\c-joined the game.\n", players[g_lCurrentClient].userinfo.GetName() );
+	SERVER_Printf( "%s \\c-joined the game.\n", players[g_lCurrentClient].userinfo.GetName() );
 
 	// Update this player's info on the scoreboard.
 	SERVERCONSOLE_UpdatePlayerInfo( g_lCurrentClient, UDF_FRAGS );
@@ -5543,13 +5570,13 @@ static bool server_RequestRCON( BYTESTREAM_s *pByteStream )
 	if (( strlen( Val.String )) && ( strcmp( Val.String, pszUserPassword ) == 0 ))
 	{
 		g_aClients[g_lCurrentClient].bRCONAccess = true;
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "RCON access granted.\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "RCON access granted.\n" );
 		Printf( "RCON access for %s is granted!\n", players[g_lCurrentClient].userinfo.GetName() );
 	}
 	else
 	{
 		g_aClients[g_lCurrentClient].bRCONAccess = false;
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "Incorrect RCON password.\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "Incorrect RCON password.\n" );
 		Printf( "Incorrect RCON password attempt from %s.\n", players[g_lCurrentClient].userinfo.GetName() );
 	}
 
@@ -5664,14 +5691,14 @@ static bool server_ChangeTeam( BYTESTREAM_s *pByteStream )
 	// If the desired team matches our current team, break out.
 	if (( players[g_lCurrentClient].bOnTeam ) && ( lDesiredTeam == static_cast<signed> (players[g_lCurrentClient].ulTeam) ))
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "You are already on the %s team!\n", TEAM_GetName( lDesiredTeam ));
+		SERVER_PrintfPlayer( g_lCurrentClient, "You are already on the %s team!\n", TEAM_GetName( lDesiredTeam ));
 		return ( false );
 	}
 
 	// [BB] Don't allow players to switch teams in the middle of a game with limited lives.
 	if ( ( players[g_lCurrentClient].bSpectating == false ) && GAMEMODE_AreLivesLimited() && GAMEMODE_IsGameInProgressOrResultSequence() )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "You cannot switch teams in the middle of a match!\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "You cannot switch teams in the middle of a match!\n" );
 		return ( false );
 	}
 
@@ -5711,12 +5738,12 @@ static bool server_ChangeTeam( BYTESTREAM_s *pByteStream )
 	// Player was on a team, so tell everyone that he's changing teams.
 	if ( bOnTeam )
 	{
-		SERVER_Printf( PRINT_HIGH, "%s \\c-defected to the \\c%c%s \\c-team.\n", players[g_lCurrentClient].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( players[g_lCurrentClient].ulTeam )), TEAM_GetName( players[g_lCurrentClient].ulTeam ));
+		SERVER_Printf( "%s \\c-defected to the \\c%c%s \\c-team.\n", players[g_lCurrentClient].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( players[g_lCurrentClient].ulTeam )), TEAM_GetName( players[g_lCurrentClient].ulTeam ));
 	}
 	// Otherwise, tell everyone he's joining a team.
 	else
 	{
-		SERVER_Printf( PRINT_HIGH, "%s \\c-joined the \\c%c%s \\c-team.\n", players[g_lCurrentClient].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( players[g_lCurrentClient].ulTeam )), TEAM_GetName( players[g_lCurrentClient].ulTeam ));
+		SERVER_Printf( "%s \\c-joined the \\c%c%s \\c-team.\n", players[g_lCurrentClient].userinfo.GetName(), V_GetColorChar( TEAM_GetTextColor( players[g_lCurrentClient].ulTeam )), TEAM_GetName( players[g_lCurrentClient].ulTeam ));
 	}
 
 	if ( players[g_lCurrentClient].mo )
@@ -6200,28 +6227,28 @@ static bool server_CallVote( BYTESTREAM_s *pByteStream )
 	// Don't allow votes if the server has them disabled.
 	if ( sv_nocallvote == 1 )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "This server has disabled voting.\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "This server has disabled voting.\n" );
 		return false;
 	}
 
 	// Also, don't allow spectator votes if the server has them disabled.
 	if ( sv_nocallvote == 2 && players[g_lCurrentClient].bSpectating )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "This server requires spectators to join the game to vote.\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "This server requires spectators to join the game to vote.\n" );
 		return false;
 	}
 
 	// Make sure we have the required number of voters.
 	if ( static_cast<int>( CALLVOTE_CountNumEligibleVoters( )) < sv_minvoters )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "This server requires at least %d eligible voters to call a vote.\n", static_cast<int>( sv_minvoters ));
+		SERVER_PrintfPlayer( g_lCurrentClient, "This server requires at least %d eligible voters to call a vote.\n", static_cast<int>( sv_minvoters ));
 		return false;
 	}
 
 	// [BB] Further no votes, when not in a level, e.g. during intermission.
 	if ( gamestate != GS_LEVEL )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "You can only vote during the game.\n" );
+		SERVER_PrintfPlayer( g_lCurrentClient, "You can only vote during the game.\n" );
 		return false;
 	}
 
@@ -6285,7 +6312,7 @@ static bool server_CallVote( BYTESTREAM_s *pByteStream )
 	if ( bVoteAllowed )
 		CALLVOTE_BeginVote( szCommand, Parameters, Reason, g_lCurrentClient );
 	else
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "%s votes are disabled on this server.\n", szCommand );
+		SERVER_PrintfPlayer( g_lCurrentClient, "%s votes are disabled on this server.\n", szCommand );
 
 	return ( false );
 }
@@ -6406,7 +6433,7 @@ static bool server_MorphCheat( BYTESTREAM_s *pByteStream )
 	{
 		const char *msg = cht_Morph (players + g_lCurrentClient, PClass::FindClass (pszMorphClass), false);
 		FString messageString = *msg != '\0' ? msg : "Morph failed.";
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "%s", messageString.GetChars() );
+		SERVER_PrintfPlayer( g_lCurrentClient, "%s", messageString.GetChars() );
 	}
 	// If not, boot their ass!
 	else
@@ -6427,7 +6454,7 @@ static bool server_CheckJoinPassword( const FString& clientPassword )
 		if ( clientPassword.CompareNoCase( sv_joinpassword ) != 0 )
 		{
 			// Tell the client that the password didn't match.
-			SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "Incorrect join password.\n" );
+			SERVER_PrintfPlayer( g_lCurrentClient, "Incorrect join password.\n" );
 			return false;
 		}
 	}
@@ -6441,7 +6468,7 @@ static bool server_CheckLogin ( const ULONG ulClient )
 {
 	if ( sv_forcelogintojoin && ( g_aClients[ulClient].loggedIn == false ) )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, ulClient, "You need to login before joining.\n" );
+		SERVER_PrintfPlayer( ulClient, "You need to login before joining.\n" );
 		return ( false );
 	}
 
@@ -6469,12 +6496,12 @@ static bool server_InfoCheat( BYTESTREAM_s *pByteStream )
 
 	if ( linetarget == NULL )
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient,
+		SERVER_PrintfPlayer( g_lCurrentClient,
 			"The server couldn't find the actor you're pointing at! netid: %ld\n", lID );
 		return false;
 	}
 
-	SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "Target=%s, Health=%d, Spawnhealth=%d\n",
+	SERVER_PrintfPlayer( g_lCurrentClient, "Target=%s, Health=%d, Spawnhealth=%d\n",
 		linetarget->GetClass()->TypeName.GetChars(),
 		linetarget->health,
 		linetarget->GetDefault()->health);
@@ -6486,7 +6513,7 @@ static bool server_InfoCheat( BYTESTREAM_s *pByteStream )
 	{
 		C_StartCapture();
 		PrintMiscActorInfo( linetarget );
-		SERVER_PrintfPlayer( PRINT_HIGH, g_lCurrentClient, "%s", C_EndCapture() );
+		SERVER_PrintfPlayer( g_lCurrentClient, "%s", C_EndCapture() );
 	}
 
 	return false;

@@ -172,15 +172,10 @@ void LASTMANSTANDING_Tick( void )
 				lWinner = LASTMANSTANDING_GetLastManStanding( );
 				if ( lWinner != -1 )
 				{
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
-					else
-					{
-						Printf( "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
+					NETWORK_Printf( "%s \\c-wins!\n", players[lWinner].userinfo.GetName() );
 
-						if ( lWinner == consoleplayer )
-							ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
-					}
+					if (( NETWORK_GetState() != NETSTATE_SERVER ) && ( lWinner == consoleplayer ))
+						ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 
 					// Give the winner a win.
 					PLAYER_SetWins( &players[lWinner], players[lWinner].ulWins + 1 );
@@ -203,10 +198,7 @@ void LASTMANSTANDING_Tick( void )
 
 				if ( ulIdx != MAXPLAYERS )
 				{
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVER_Printf( PRINT_HIGH, "DRAW GAME!\n" );
-					else
-						Printf( "DRAW GAME!\n" );
+					NETWORK_Printf( "DRAW GAME!\n" );
 
 					// Pause for five seconds for the win sequence.
 					LASTMANSTANDING_DoWinSequence( MAXPLAYERS );
@@ -225,14 +217,13 @@ void LASTMANSTANDING_Tick( void )
 				lWinner = LASTMANSTANDING_TeamGetLastManStanding( );
 				if ( lWinner != -1 )
 				{
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVER_Printf( PRINT_HIGH, "%s \\c-wins!\n", TEAM_GetName( lWinner ));
-					else
-					{
-						Printf( "%s \\c-wins!\n", TEAM_GetName( lWinner ));
+					NETWORK_Printf( "%s \\c-wins!\n", TEAM_GetName( lWinner ));
 
-						if ( players[consoleplayer].bOnTeam && ( lWinner == (LONG)players[consoleplayer].ulTeam ))
-							ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
+					if ( NETWORK_GetState() != NETSTATE_SERVER
+						&& players[consoleplayer].bOnTeam
+						&& lWinner == (LONG)players[consoleplayer].ulTeam )
+					{
+						ANNOUNCER_PlayEntry( cl_announcer, "YouWin" );
 					}
 
 					// Give the team a win.
@@ -262,10 +253,7 @@ void LASTMANSTANDING_Tick( void )
 
 					if ( ulIdx != MAXPLAYERS )
 					{
-						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-							SERVER_Printf( PRINT_HIGH, "DRAW GAME!\n" );
-						else
-							Printf( "DRAW GAME!\n" );
+						NETWORK_Printf( "DRAW GAME!\n" );
 
 						// Pause for five seconds for the win sequence.
 						LASTMANSTANDING_DoWinSequence( teams.Size( ) );
@@ -603,11 +591,7 @@ void LASTMANSTANDING_TimeExpired( void )
 	// If for some reason we don't have any players, just end the map like normal.
 	if ( lWinner == -1 )
 	{
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_TIMELIMIT" ));
-		else
-			Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
-
+		NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 		GAME_SetEndLevelDelay( 5 * TICRATE );
 		return;
 	}
@@ -654,11 +638,7 @@ void LASTMANSTANDING_TimeExpired( void )
 	if ( teamlms )
 		TEAM_SetWinCount( lWinner, TEAM_GetWinCount( lWinner ) + 1, false );
 
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVER_Printf( PRINT_HIGH, "%s\n", GStrings( "TXT_TIMELIMIT" ));
-	else
-		Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
-
+	NETWORK_Printf( "%s\n", GStrings( "TXT_TIMELIMIT" ));
 	GAME_SetEndLevelDelay( 5 * TICRATE );
 }
 
@@ -815,7 +795,7 @@ CUSTOM_CVAR( Int, winlimit, 0, CVAR_SERVERINFO | CVAR_CAMPAIGNLOCK )
 
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %d\n", self.GetName( ), (int)self );
+		SERVER_Printf( "%s changed to: %d\n", self.GetName( ), (int)self );
 		SERVERCOMMANDS_SetGameModeLimits( );
 
 		// Update the scoreboard.
@@ -827,7 +807,7 @@ CUSTOM_CVAR( Int, lmsallowedweapons, LMS_AWF_ALLALLOWED, CVAR_SERVERINFO )
 {
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %d\n", self.GetName( ), (int)self );
+		SERVER_Printf( "%s changed to: %d\n", self.GetName( ), (int)self );
 		if ( lastmanstanding || teamlms )
 			SERVERCOMMANDS_SetLMSAllowedWeapons( );
 	}
@@ -847,7 +827,7 @@ CUSTOM_CVAR( Int, lmsspectatorsettings, LMS_SPF_VIEW, CVAR_SERVERINFO )
 {
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( gamestate != GS_STARTUP ))
 	{
-		SERVER_Printf( PRINT_HIGH, "%s changed to: %d\n", self.GetName( ), (int)self );
+		SERVER_Printf( "%s changed to: %d\n", self.GetName( ), (int)self );
 		// [BB] Due to ZADF_ALWAYS_APPLY_LMS_SPECTATORSETTINGS, this is necessary in all game modes.
 		SERVERCOMMANDS_SetLMSSpectatorSettings( );
 	}

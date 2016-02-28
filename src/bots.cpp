@@ -610,7 +610,7 @@ void BOTS_RemoveBot( ULONG ulPlayerIdx, bool bExitMsg )
 		if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 			Printf( PRINT_HIGH, "%s \\c-left the game.\n", players[ulPlayerIdx].userinfo.GetName() );
 		else
-			SERVER_Printf( PRINT_HIGH, "%s \\c-left the game.\n", players[ulPlayerIdx].userinfo.GetName() );
+			SERVER_Printf( "%s \\c-left the game.\n", players[ulPlayerIdx].userinfo.GetName() );
 	}
 
 	// [BB] Morphed bots need to be unmorphed before disconnecting.
@@ -1916,7 +1916,7 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	else
 	{
 		// Let the other players know that this bot has entered the game.
-		SERVER_Printf( PRINT_HIGH, "%s \\c-entered the game.\n", players[ulPlayerNum].userinfo.GetName() );
+		SERVER_Printf( "%s \\c-entered the game.\n", players[ulPlayerNum].userinfo.GetName() );
 
 		// Redo the scoreboard.
 		SERVERCONSOLE_ReListPlayers( );

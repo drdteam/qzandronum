@@ -381,7 +381,7 @@ void SERVER_AUTH_ParsePacket( BYTESTREAM_s *pByteStream )
 				{
 					// [BB] Since the authentication failed, clear all authentication related data of this client.
 					SERVER_InitClientSRPData ( clientID );
-					SERVER_PrintfPlayer( PRINT_HIGH, clientID, "User authentication failed! %s", errorMessage.GetChars() );
+					SERVER_PrintfPlayer( clientID, "User authentication failed! %s", errorMessage.GetChars() );
 				}
 				else
 					Printf ( "AUTH_SERVER_NEGOTIATE: Can't find client with client session id %u.\n", clientSessionID );
@@ -418,7 +418,7 @@ void SERVER_AUTH_ParsePacket( BYTESTREAM_s *pByteStream )
 				{
 					// [BB] Since the authentication failed, clear all authentication related data of this client.
 					SERVER_InitClientSRPData ( clientID );
-					SERVER_PrintfPlayer( PRINT_HIGH, clientID, "Session error: %s", errorMessage.GetChars() );
+					SERVER_PrintfPlayer( clientID, "Session error: %s", errorMessage.GetChars() );
 				}
 			}
 			break;
@@ -539,7 +539,7 @@ bool SERVER_ProcessSRPClientCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				{
 					SERVER_InitClientSRPData ( SERVER_GetCurrentClient() );
 					Printf ( "User authentication failed!\n" );
-					SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient(), "User authentication failed!\n" );
+					SERVER_PrintfPlayer( SERVER_GetCurrentClient(), "User authentication failed!\n" );
 				}
 				else
 				{

@@ -1308,7 +1308,7 @@ void AInventory::Touch (AActor *toucher)
 			if ( zadmflags & ZADF_SHARE_KEYS )
 			{
 				// [Dusk] Announcement message
-				SERVER_Printf( PRINT_HIGH, TEXTCOLOR_GREEN "%s" TEXTCOLOR_NORMAL " has found the " TEXTCOLOR_GOLD "%s!\n",
+				SERVER_Printf( TEXTCOLOR_GREEN "%s" TEXTCOLOR_NORMAL " has found the " TEXTCOLOR_GOLD "%s!\n",
 					player->userinfo.GetName(), GetTag() );
 
 				// [Dusk] Audio cue - skip the player picking the key because he

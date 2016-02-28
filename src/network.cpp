@@ -69,6 +69,7 @@
 #include <list>
 #include "../GeoIP/GeoIP.h"
 
+#include "c_console.h"
 #include "c_dispatch.h"
 #include "cl_demo.h"
 #include "cl_main.h"
@@ -1174,6 +1175,21 @@ void NETWORK_WriteName( BYTESTREAM_s* bytestream, FName name )
 		NETWORK_WriteShort( bytestream, -1 );
 		NETWORK_WriteString( bytestream, name );
 	}
+}
+
+//*****************************************************************************
+// [TP]
+void STACK_ARGS NETWORK_Printf( const char* format, ... )
+{
+	va_list argptr;
+	va_start( argptr, format );
+
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
+		SERVER_VPrintf( PRINT_HIGH, format, argptr, MAXPLAYERS );
+	else
+		VPrintf( PRINT_HIGH, format, argptr );
+
+	va_end( argptr );
 }
 
 //*****************************************************************************

@@ -185,7 +185,7 @@ void CALLVOTE_BeginVote( FString Command, FString Parameters, FString Reason, UL
 	if ( g_VoteState != VOTESTATE_NOVOTE )
 	{
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "Another vote is already underway.\n" );
+			SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "Another vote is already underway.\n" );
 		return;
 	}
 
@@ -282,7 +282,7 @@ bool CALLVOTE_VoteYes( ULONG ulPlayer )
 	// Also, don't allow spectator votes if the server has them disabled.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( sv_nocallvote == 2 && players[ulPlayer].bSpectating ))
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "This server requires spectators to join the game to vote.\n" );
+		SERVER_PrintfPlayer( ulPlayer, "This server requires spectators to join the game to vote.\n" );
 		return false;
 	}
 
@@ -372,7 +372,7 @@ bool CALLVOTE_VoteNo( ULONG ulPlayer )
 		// [BB] If a player canceled his own vote, don't prevent others from making this type of vote again.
 		g_PreviousVotes.back( ).ulVoteType = NUM_VOTECMDS;
 
-		SERVER_Printf( PRINT_HIGH, "Vote caller cancelled the vote.\n" );
+		SERVER_Printf( "Vote caller cancelled the vote.\n" );
 		g_bVoteCancelled = true;
 		g_bVotePassed = false;
 		callvote_EndVote( );
@@ -382,7 +382,7 @@ bool CALLVOTE_VoteNo( ULONG ulPlayer )
 	// Also, don't allow spectator votes if the server has them disabled.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( sv_nocallvote == 2 && players[ulPlayer].bSpectating ))
 	{
-		SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "This server requires spectators to join the game to vote.\n" );
+		SERVER_PrintfPlayer( ulPlayer, "This server requires spectators to join the game to vote.\n" );
 		return false;
 	}
 
@@ -669,7 +669,7 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 		if ( !( callvote_IsKickVote ( i->ulVoteType ) && i->bPassed ) && i->Address.CompareNoPort( Address ) && ( ulVoteType == i->ulVoteType ) && (( tNow - i->tTimeCalled ) < VOTER_VOTETYPE_INTERVAL * MINUTE ))
 		{
 			int iMinutesLeft = static_cast<int>( 1 + ( i->tTimeCalled + VOTER_VOTETYPE_INTERVAL * MINUTE - tNow ) / MINUTE );
-			SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "You must wait %d minute%s to call another %s vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ), Command.GetChars() );
+			SERVER_PrintfPlayer( ulPlayer, "You must wait %d minute%s to call another %s vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ), Command.GetChars() );
 			return false;
 		}
 
@@ -677,7 +677,7 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 		if ( i->Address.CompareNoPort( Address ) && (( tNow - i->tTimeCalled ) < VOTER_NEWVOTE_INTERVAL * MINUTE ))
 		{
 			int iMinutesLeft = static_cast<int>( 1 + ( i->tTimeCalled + VOTER_NEWVOTE_INTERVAL * MINUTE - tNow ) / MINUTE );
-			SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "You must wait %d minute%s to call another vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
+			SERVER_PrintfPlayer( ulPlayer, "You must wait %d minute%s to call another vote.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 			return false;
 		}
 
@@ -689,14 +689,14 @@ static bool callvote_CheckForFlooding( FString &Command, FString &Parameters, UL
 			// Kickvotes (can't give the IP to clients!).
 			if ( callvote_IsKickVote ( i->ulVoteType ) && ( !i->bPassed ) && i->KickAddress.CompareNoPort( g_KickVoteVictimAddress ))
 			{
-				SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "That specific player was recently on voted to be kicked or forced to spectate, but the vote failed. You must wait %d minute%s to call it again.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
+				SERVER_PrintfPlayer( ulPlayer, "That specific player was recently on voted to be kicked or forced to spectate, but the vote failed. You must wait %d minute%s to call it again.\n", iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 				return false;
 			}
 
 			// Other votes.
 			if ( ( callvote_IsKickVote ( i->ulVoteType ) == false ) && ( stricmp( i->fsParameter.GetChars(), Parameters.GetChars() ) == 0 ))
 			{
-				SERVER_PrintfPlayer( PRINT_HIGH, ulPlayer, "That specific vote (\"%s %s\") was recently called, and failed. You must wait %d minute%s to call it again.\n", Command.GetChars(), Parameters.GetChars(), iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
+				SERVER_PrintfPlayer( ulPlayer, "That specific vote (\"%s %s\") was recently called, and failed. You must wait %d minute%s to call it again.\n", Command.GetChars(), Parameters.GetChars(), iMinutesLeft, ( iMinutesLeft == 1 ? "" : "s" ));
 				return false;
 			}
 		}
@@ -723,7 +723,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 			if ( Parameters.GetChars()[i] == ';' || Parameters.GetChars()[i] == ' ' )
 			{
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "That vote command contained illegal characters.\n" );
+					SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That vote command contained illegal characters.\n" );
   				return ( false );
 			}
 			i++;
@@ -745,14 +745,14 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 				{
 					if ( static_cast<LONG>(ulIdx) == SERVER_GetCurrentClient( ))
 					{
-						SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "You cannot call a vote to kick or to force to spectate yourself!\n" );
+						SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "You cannot call a vote to kick or to force to spectate yourself!\n" );
   						return ( false );
 					}
 					// [BB] Don't allow anyone to kick somebody who is on the admin list. [K6] ...or is logged into RCON.
 					if ( SERVER_GetAdminList()->isIPInList( SERVER_GetClient( ulIdx )->Address )
 						|| SERVER_GetClient( ulIdx )->bRCONAccess )
 					{
-						SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "This player is a server admin and thus can't be kicked or forced to spectate!\n" );
+						SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "This player is a server admin and thus can't be kicked or forced to spectate!\n" );
   						return ( false );
 					}
 					g_KickVoteVictimAddress = SERVER_GetClient( ulIdx )->Address;
@@ -760,7 +760,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 				}
 				else
 				{
-					SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "That player doesn't exist.\n" );
+					SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That player doesn't exist.\n" );
 					return ( false );
 				}
 			}
@@ -773,7 +773,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 		if ( !P_CheckIfMapExists( Parameters.GetChars( )))
 		{
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "That map does not exist.\n" );
+				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That map does not exist.\n" );
 			return ( false );
 		}
 		
@@ -784,7 +784,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 			// assume players are restricted to these maps.
 			if ( ( MAPROTATION_GetNumEntries() > 0 ) && ( MAPROTATION_IsMapInRotation( Parameters.GetChars( ) ) == false ) )
 			{
-				SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "That map is not in the map rotation.\n" );
+				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "That map is not in the map rotation.\n" );
 				return ( false );
 			}
 		}
@@ -797,7 +797,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 		if (( parameterInt < 0 ) || ( parameterInt >= 256 ))
 		{
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "%s parameters must be between 0 and 255.\n", Command.GetChars() );
+				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "%s parameters must be between 0 and 255.\n", Command.GetChars() );
 			return ( false );
 		}
 		else if ( parameterInt == 0 )
@@ -814,7 +814,7 @@ static bool callvote_CheckValidity( FString &Command, FString &Parameters )
 		if (( parameterInt < 0 ) || ( parameterInt >= 65536 ))
 		{
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVER_PrintfPlayer( PRINT_HIGH, SERVER_GetCurrentClient( ), "%s parameters must be between 0 and 65535.\n", Command.GetChars() );
+				SERVER_PrintfPlayer( SERVER_GetCurrentClient( ), "%s parameters must be between 0 and 65535.\n", Command.GetChars() );
 			return ( false );
 		}
 		else if ( parameterInt == 0 )
@@ -989,7 +989,7 @@ CCMD ( cancelvote )
 
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
-		SERVER_Printf( PRINT_HIGH, "Server cancelled the vote.\n" );
+		SERVER_Printf( "Server cancelled the vote.\n" );
 		g_bVoteCancelled = true;
 		g_bVotePassed = false;
 		callvote_EndVote( );
