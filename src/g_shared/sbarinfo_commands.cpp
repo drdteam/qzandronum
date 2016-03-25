@@ -863,6 +863,10 @@ class CommandDrawString : public SBarInfoCommand
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
+			// [BB] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			switch(strValue)
 			{
 				case LEVELNAME:
@@ -1315,6 +1319,10 @@ class CommandDrawNumber : public CommandDrawString
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
+			// [BB] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			if(usePrefix)
 			{
 				cache = -1; // Disable the cache since we are using the same variables.
