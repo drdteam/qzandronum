@@ -126,7 +126,7 @@ public:
 	const char *GetSoundClass () const;
 
 	// [Dusk]
-	fixed_t CalcJumpMomz( );
+	fixed_t CalcJumpVelz();
 	fixed_t CalcJumpHeight( bool bAddStep = true );
 
 	enum EInvulState
@@ -679,8 +679,8 @@ public:
 	// True XYZ position as told to us by the server.
 	fixed_t		ServerXYZ[3];
 
-	// True XYZ momentum as told to us by the server.
-	fixed_t		ServerXYZMom[3];
+	// True XYZ velocity as told to us by the server.
+	fixed_t		ServerXYZVel[3];
 
 	// Ping of the player to the server he's playing on.
 	ULONG		ulPing;

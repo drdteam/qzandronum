@@ -1238,11 +1238,11 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			target->velx = target->vely = target->velz = 0;
 
 			// [BC] If we're the server, tell clients to update this thing's tics and
-			// momentum.
+			// velocity.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				SERVERCOMMANDS_SetThingTics( target );
-				SERVERCOMMANDS_MoveThing( target, CM_MOMX|CM_MOMY|CM_MOMZ );
+				SERVERCOMMANDS_MoveThing( target, CM_VELX|CM_VELY|CM_VELZ );
 			}
 		}
 		return -1;
@@ -1306,9 +1306,9 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	{
 		target->velx = target->vely = target->velz = 0;
 
-		// [BC] If we're the server, tell clients to update this thing's momentum
+		// [BC] If we're the server, tell clients to update this thing's velocity
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThing( target, CM_MOMX|CM_MOMY|CM_MOMZ );
+			SERVERCOMMANDS_MoveThing( target, CM_VELX|CM_VELY|CM_VELZ );
 	}
 
 	player = target->player;
@@ -1461,8 +1461,8 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 
 		if (kickback)
 		{
-			// [BB] Safe the original z-momentum of the target. This way we can check if we need to update it.
-			const fixed_t oldTargetMomz = target->velz;
+			// [BB] Safe the original z-velocity of the target. This way we can check if we need to update it.
+			const fixed_t oldTargetVelz = target->velz;
 
 			AActor *origin = (source && (flags & DMG_INFLICTOR_IS_PUFF))? source : inflictor;
 
@@ -1525,11 +1525,11 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				target->vely += FixedMul (thrust, finesine[ang]);
 			}
 
-			// [BC] Set the thing's momentum.
+			// [BC] Set the thing's velocity.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
-				// [BB] Only update z-momentum if it has changed.
-				SERVER_UpdateThingMomentum ( target, oldTargetMomz != target->velz );
+				// [BB] Only update z-velocity if it has changed.
+				SERVER_UpdateThingVelocity ( target, oldTargetVelz != target->velz );
 			}
 		}
 	}

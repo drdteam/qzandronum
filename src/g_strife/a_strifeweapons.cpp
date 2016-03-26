@@ -505,9 +505,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireFlamer)
 	{
 		self->velz += 5*FRACUNIT;
 
-		// [BC] If we're the server, update the thing's momentum.
+		// [BC] If we're the server, update the thing's velocity.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThingExact( self, CM_MOMZ );
+			SERVERCOMMANDS_MoveThingExact( self, CM_VELZ );
 	}
 }
 
@@ -749,16 +749,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_BurnArea)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Burnination)
 {
-	// [Dusk] The server manages the momentum
+	// [Dusk] The server manages the velocity
 	if ( NETWORK_InClientMode() == false )
 	{
 		self->velz -= 8*FRACUNIT;
 		self->velx += (pr_phburn.Random2 (3)) << FRACBITS;
 		self->vely += (pr_phburn.Random2 (3)) << FRACBITS;
 
-		// [Dusk] Update momentum to clients
+		// [Dusk] Update velocity to clients
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThingExact( self, CM_MOMX | CM_MOMY | CM_MOMZ );
+			SERVERCOMMANDS_MoveThingExact( self, CM_VELX | CM_VELY | CM_VELZ );
 	}
 
 	S_Sound (self, CHAN_VOICE, "world/largefire", 1, ATTN_NORM);
@@ -812,7 +812,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Burnination)
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				SERVERCOMMANDS_SpawnThing( drop );
-				SERVERCOMMANDS_MoveThingExact( drop, CM_MOMX | CM_MOMY | CM_MOMZ );
+				SERVERCOMMANDS_MoveThingExact( drop, CM_VELX | CM_VELY | CM_VELZ );
 				SERVERCOMMANDS_SetThingFlags( drop, FLAGSET_FLAGS );
 			}
 		}
@@ -887,7 +887,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireGrenade)
 		grenade->SetOrigin(newpos.x, newpos.y, grenade->Z(), false);
 
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThingExact( grenade, CM_X|CM_Y|CM_MOMZ );
+			SERVERCOMMANDS_MoveThingExact( grenade, CM_X|CM_Y|CM_VELZ );
 	}
 }
 

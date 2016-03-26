@@ -321,12 +321,12 @@ void RemoveUnnecessaryPositionUpdateFlags( AActor *pActor, ULONG &ulBits )
 		ulBits  &= ~CM_Y;
 	if ( (pActor->lastNetZUpdateTic == gametic) && (pActor->lastZ == pActor->Z()) )
 		ulBits  &= ~CM_Z;
-	if ( (pActor->lastNetMomXUpdateTic == gametic) && (pActor->lastMomx == pActor->velx) )
-		ulBits  &= ~CM_MOMX;
-	if ( (pActor->lastNetMomYUpdateTic == gametic) && (pActor->lastMomy == pActor->vely) )
-		ulBits  &= ~CM_MOMY;
-	if ( (pActor->lastNetMomZUpdateTic == gametic) && (pActor->lastMomz == pActor->velz) )
-		ulBits  &= ~CM_MOMZ;
+	if ( (pActor->lastNetVelXUpdateTic == gametic) && (pActor->lastVelx == pActor->velx) )
+		ulBits  &= ~CM_VELX;
+	if ( (pActor->lastNetVelYUpdateTic == gametic) && (pActor->lastVely == pActor->vely) )
+		ulBits  &= ~CM_VELY;
+	if ( (pActor->lastNetVelZUpdateTic == gametic) && (pActor->lastVelz == pActor->velz) )
+		ulBits  &= ~CM_VELZ;
 	if ( (pActor->lastNetMovedirUpdateTic == gametic) && (pActor->lastMovedir == pActor->movedir) )
 		ulBits  &= ~CM_MOVEDIR;
 }
@@ -452,20 +452,20 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 		pActor->lastNetZUpdateTic = gametic;
 		pActor->lastZ = pActor->Z();
 	}
-	if ( ulBits & CM_MOMX )
+	if ( ulBits & CM_VELX )
 	{
-		pActor->lastNetMomXUpdateTic = gametic;
-		pActor->lastMomx = pActor->velx;
+		pActor->lastNetVelXUpdateTic = gametic;
+		pActor->lastVelx = pActor->velx;
 	}
-	if ( ulBits & CM_MOMY )
+	if ( ulBits & CM_VELY )
 	{
-		pActor->lastNetMomYUpdateTic = gametic;
-		pActor->lastMomy = pActor->vely;
+		pActor->lastNetVelYUpdateTic = gametic;
+		pActor->lastVely = pActor->vely;
 	}
-	if ( ulBits & CM_MOMZ )
+	if ( ulBits & CM_VELZ )
 	{
-		pActor->lastNetMomZUpdateTic = gametic;
-		pActor->lastMomz = pActor->velz;
+		pActor->lastNetVelZUpdateTic = gametic;
+		pActor->lastVelz = pActor->velz;
 	}
 	if ( ulBits & CM_MOVEDIR )
 	{
@@ -1601,11 +1601,11 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 		command.addLong( pActor->angle );
 
 	// Write velocity.
-	if ( ulBits & CM_MOMX )
+	if ( ulBits & CM_VELX )
 		command.addShort( pActor->velx >> FRACBITS );
-	if ( ulBits & CM_MOMY )
+	if ( ulBits & CM_VELY )
 		command.addShort( pActor->vely >> FRACBITS );
-	if ( ulBits & CM_MOMZ )
+	if ( ulBits & CM_VELZ )
 		command.addShort( pActor->velz >> FRACBITS );
 
 	// Write pitch.
@@ -1668,11 +1668,11 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 		command.addLong( pActor->angle );
 
 	// Write velocity.
-	if ( ulBits & CM_MOMX )
+	if ( ulBits & CM_VELX )
 		command.addLong( pActor->velx );
-	if ( ulBits & CM_MOMY )
+	if ( ulBits & CM_VELY )
 		command.addLong( pActor->vely );
-	if ( ulBits & CM_MOMZ )
+	if ( ulBits & CM_VELZ )
 		command.addLong( pActor->velz );
 
 	// Write pitch.
@@ -2782,7 +2782,7 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
-	// [BB] It's possible that the angle can't be derived from the momentum
+	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
  	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->velx, pMissile->vely ))
 		SERVERCOMMANDS_SetThingAngle( pMissile, ulPlayerExtra, flags );
@@ -2812,7 +2812,7 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
-	// [BB] It's possible that the angle can't be derived from the momentum
+	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
  	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->velx, pMissile->vely ) )
 		SERVERCOMMANDS_SetThingAngleExact( pMissile, ulPlayerExtra, flags );

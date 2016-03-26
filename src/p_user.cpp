@@ -392,7 +392,7 @@ player_t::player_t()
 	// [BC] Initialize additonal ST properties.
 	memset( &ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
 	memset( &ServerXYZ, 0, sizeof( fixed_t ) * 3 );
-	memset( &ServerXYZMom, 0, sizeof( fixed_t ) * 3 );
+	memset( &ServerXYZVel, 0, sizeof( fixed_t ) * 3 );
 }
 
 player_t &player_t::operator=(const player_t &p)
@@ -519,7 +519,7 @@ player_t &player_t::operator=(const player_t &p)
 	bIgnoreChat = p.bIgnoreChat;
 	lIgnoreChatTicks = p.lIgnoreChatTicks;
 	memcpy(ServerXYZ, &p.ServerXYZ, sizeof( ServerXYZ ));
-	memcpy(ServerXYZMom, &p.ServerXYZMom, sizeof( ServerXYZMom ));
+	memcpy(ServerXYZVel, &p.ServerXYZVel, sizeof( ServerXYZVel ));
 	ulPing = p.ulPing;
 	ulPingAverages = p.ulPingAverages;
 	bReadyToGoOn = p.bReadyToGoOn;
@@ -2288,7 +2288,7 @@ void APlayerPawn::Destroy( void )
 // [Dusk] This is in a separate function now.
 //
 //===========================================================================
-fixed_t APlayerPawn::CalcJumpMomz( )
+fixed_t APlayerPawn::CalcJumpVelz()
 {
 	fixed_t z = JumpZ * 35 / TICRATE;
 
@@ -2313,7 +2313,7 @@ fixed_t APlayerPawn::CalcJumpHeight( bool bAddStepZ )
 	// To get the jump height we simulate a jump with the player's jumpZ with
 	// the environment's gravity. The grav equation was copied from p_mobj.cpp.
 	// Should it be made a function?
-	fixed_t velz = CalcJumpMomz( ),
+	fixed_t velz = CalcJumpVelz(),
 	        grav = (fixed_t)(level.gravity * Sector->gravity * FIXED2FLOAT(gravity) * 81.92),
 	        z = 0;
 
@@ -2933,12 +2933,12 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 		// [Leo] Spectators shouldn't be limited by the server settings.
 		else if ((player->bSpectating || level.IsJumpingAllowed()) && player->onground && player->jumpTics == 0)
 		{
-			fixed_t	JumpMomz;
+			fixed_t	JumpVelz;
 			ULONG	ulJumpTicks;
 
 			// Set base jump velocity.
 			// [Dusk] Exported this into a function as I need it elsewhere as well.
-			JumpMomz = player->mo->CalcJumpMomz( );
+			JumpVelz = player->mo->CalcJumpVelz();
 
 			// Set base jump ticks.
 			// [BB] In ZDoom revision 2970 changed the jumping behavior.
@@ -2960,7 +2960,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			if ( player->mo->floorsector->GetFlags(sector_t::floor) & PLANEF_SPRINGPAD )
 				ulJumpTicks = 0;
 
-			player->mo->velz += JumpMomz;
+			player->mo->velz += JumpVelz;
 			player->jumpTics = ulJumpTicks;
 		}
 	}

@@ -1473,9 +1473,9 @@ bool PIT_CheckThing(AActor *thing, FCheckPosition &tm)
 		}
 
 		// [BC] If we're the server, tell clients to update the thing's position and
-		// momentum.
+		// velocity.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThingExact( thing, CM_X|CM_Y|CM_Z|CM_MOMX|CM_MOMY|CM_MOMZ );
+			SERVERCOMMANDS_MoveThingExact( thing, CM_X|CM_Y|CM_Z|CM_VELX|CM_VELY|CM_VELZ );
 	}
 	solid = (thing->flags & MF_SOLID) &&
 		!(thing->flags & MF_NOCLIP) &&
@@ -3747,7 +3747,7 @@ bool P_BounceActor(AActor *mo, AActor *BlockingMobj, bool ontop)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
 			SERVERCOMMANDS_PlayBounceSound( mo, true );
-			// [BB] We need to inform the clients about the new momentum and sync the position,
+			// [BB] We need to inform the clients about the new velocity and sync the position,
 			// but can only do this after calling P_ZMovement. Mark the actor accordingly.
 			mo->ulNetworkFlags |= NETFL_BOUNCED_OFF_ACTOR;
 		}
@@ -5825,8 +5825,8 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 				double velz;
 				double thrust;
 				// [BB] We need to store these values for ZACOMPATF_OLD_EXPLOSION_THRUST.
-				const fixed_t origmomx = thing->velx;
-				const fixed_t origmomy = thing->vely;
+				const fixed_t origvelx = thing->velx;
+				const fixed_t origvely = thing->vely;
 				int damage = abs((int)points);
 				int newdam = damage;
 
@@ -5887,8 +5887,8 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 							// [BB] Potentially use the horizontal thrust of old ZDoom versions.
 							if ( zacompatflags & ZACOMPATF_OLD_EXPLOSION_THRUST )
 							{
-								thing->velx = origmomx + static_cast<fixed_t>((thing->X() - bombspot->X()) * thrust);
-								thing->vely = origmomy + static_cast<fixed_t>((thing->Y() - bombspot->Y()) * thrust);
+								thing->velx = origvelx + static_cast<fixed_t>((thing->X() - bombspot->X()) * thrust);
+								thing->vely = origvely + static_cast<fixed_t>((thing->Y() - bombspot->Y()) * thrust);
 							}
 							else
 							{
@@ -5897,7 +5897,7 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 								thing->vely += fixed_t(finesine[ang] * thrust);
 							}
 
-							// [BB] If ZADF_NO_ROCKET_JUMPING is on, don't give players any z-momentum if the attack was made by a player.
+							// [BB] If ZADF_NO_ROCKET_JUMPING is on, don't give players any z-velocity if the attack was made by a player.
 							if ( ( (zadmflags & ZADF_NO_ROCKET_JUMPING) == false ) ||
 								( bombsource == NULL ) || ( bombsource->player == NULL ) || ( thing->player == NULL ) )
 							{
@@ -5907,10 +5907,10 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 							}
 						}
 
-						// [BC] If we're the server, update the thing's momentum.
-						// [BB] Use SERVER_UpdateThingMomentum to prevent sync problems.
+						// [BC] If we're the server, update the thing's velocity.
+						// [BB] Use SERVER_UpdateThingVelocity to prevent sync problems.
 						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-							SERVER_UpdateThingMomentum( thing, true );
+							SERVER_UpdateThingVelocity( thing, true );
 					}
 				}
 			}

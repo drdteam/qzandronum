@@ -1731,7 +1731,7 @@ void A_FireCustomMissileHelper ( AActor * self,
 								 AActor *&linetarget )
 {
 	// [BB] Don't tell the clients to spawn the missile yet. This is done later
-	// after we are done manipulating angle and momentum.
+	// after we are done manipulating angle and velocity.
 	AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &linetarget,	NULL, false, (Flags & FPF_NOAUTOAIM) != 0, true, false);
 
 	// automatic handling of seeker missiles
@@ -2750,8 +2750,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItemEx)
 		{
 			SERVERCOMMANDS_SpawnThing( mo );
 
-			// [BB] Set the angle and momentum if necessary.
-			SERVER_SetThingNonZeroAngleAndMomentum( mo );
+			// [BB] Set the angle and velocity if necessary.
+			SERVER_SetThingNonZeroAngleAndVelocity( mo );
 
 			if ( mo->Translation )
 				SERVERCOMMANDS_SetThingTranslation( mo );
@@ -2875,9 +2875,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Recoil)
 	self->velx += FixedMul(xyvel, finecosine[angle]);
 	self->vely += FixedMul(xyvel, finesine[angle]);
 
-	// [BB] Set the thing's momentum, also resync the position.
+	// [BB] Set the thing's velocity, also resync the position.
 	if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( self->player == NULL ) )
-		SERVERCOMMANDS_MoveThingExact( self, CM_X|CM_Y|CM_Z|CM_MOMX|CM_MOMY );
+		SERVERCOMMANDS_MoveThingExact( self, CM_X|CM_Y|CM_Z|CM_VELX|CM_VELY );
 }
 
 

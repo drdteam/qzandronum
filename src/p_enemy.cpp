@@ -2720,11 +2720,11 @@ void A_DoChase (AActor *actor, bool fastchase, FState *meleestate, FState *missi
 				}
 			}
 
-			// [BC] If we're the server, update the thing's momentum.
+			// [BC] If we're the server, update the thing's velocity.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				SERVERCOMMANDS_MoveThing( actor, CM_X|CM_Y|CM_Z );
-				SERVERCOMMANDS_MoveThingExact( actor, CM_MOMX|CM_MOMY );
+				SERVERCOMMANDS_MoveThingExact( actor, CM_VELX|CM_VELY );
 			}
 		}
 

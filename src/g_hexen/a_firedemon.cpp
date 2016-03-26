@@ -213,7 +213,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 		// [BC] If we're the server, update the thing's z position.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
-			SERVERCOMMANDS_MoveThingExact( self, CM_MOMX|CM_MOMY );
+			SERVERCOMMANDS_MoveThingExact( self, CM_VELX|CM_VELY );
 			SERVERCOMMANDS_SetThingSpecial2( self );
 		}
 	}

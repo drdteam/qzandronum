@@ -81,7 +81,7 @@ void BlastActor (AActor *victim, fixed_t strength, fixed_t speed, AActor * Owner
 	// [BB] If we're the server, tell clients about all they need to know here.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
-		SERVERCOMMANDS_MoveThingExact( victim, CM_MOMX|CM_MOMY|CM_MOMZ );
+		SERVERCOMMANDS_MoveThingExact( victim, CM_VELX|CM_VELY|CM_VELZ );
 		// [BB] Non-players got the blasted flag above.
 		if ( victim->player == false )
 			SERVERCOMMANDS_SetThingFlags( victim, FLAGSET_FLAGS2 );
@@ -89,8 +89,8 @@ void BlastActor (AActor *victim, fixed_t strength, fixed_t speed, AActor * Owner
 		if ( mo )
 		{
 			SERVERCOMMANDS_SpawnThing( mo );
-			// [BB] Possibly set mo's momentum.
-			SERVER_SetThingNonZeroAngleAndMomentum( mo );
+			// [BB] Possibly set mo's velocity.
+			SERVER_SetThingNonZeroAngleAndVelocity( mo );
 		}
 	}
 }

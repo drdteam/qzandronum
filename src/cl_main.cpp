@@ -3296,7 +3296,7 @@ AActor *CLIENT_SpawnThing( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z,
 
 //*****************************************************************************
 //
-void CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t MomX, fixed_t MomY, fixed_t MomZ, LONG lNetID, LONG lTargetNetID )
+void CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t VelX, fixed_t VelY, fixed_t VelZ, LONG lNetID, LONG lTargetNetID )
 {
 	AActor				*pActor;
 
@@ -3326,13 +3326,13 @@ void CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 		return;
 	}
 
-	// Set the thing's momentum.
-	pActor->velx = MomX;
-	pActor->vely = MomY;
-	pActor->velz = MomZ;
+	// Set the thing's velocity.
+	pActor->velx = VelX;
+	pActor->vely = VelY;
+	pActor->velz = VelZ;
 
-	// Derive the thing's angle from its momentum.
-	pActor->angle = R_PointToAngle2( 0, 0, MomX, MomY );
+	// Derive the thing's angle from its velocity.
+	pActor->angle = R_PointToAngle2( 0, 0, VelX, VelY );
 
 	pActor->lNetID = lNetID;
 	g_NetIDList.useID ( lNetID, pActor );
@@ -3684,7 +3684,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 
 	memset( &pPlayer->ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
 	memset( &pPlayer->ServerXYZ, 0, sizeof( fixed_t ) * 3 );
-	memset( &pPlayer->ServerXYZMom, 0, sizeof( fixed_t ) * 3 );
+	memset( &pPlayer->ServerXYZVel, 0, sizeof( fixed_t ) * 3 );
 }
 
 //*****************************************************************************
@@ -4311,14 +4311,14 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	}
 
 
-	// If this is the consoleplayer, set the realorigin and ServerXYZMom.
+	// If this is the consoleplayer, set the realorigin and ServerXYZVel.
 	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
 	{
 		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->X(), pPlayer->mo->Y(), pPlayer->mo->Z() );
 
-		pPlayer->ServerXYZMom[0] = 0;
-		pPlayer->ServerXYZMom[1] = 0;
-		pPlayer->ServerXYZMom[2] = 0;
+		pPlayer->ServerXYZVel[0] = 0;
+		pPlayer->ServerXYZVel[1] = 0;
+		pPlayer->ServerXYZVel[2] = 0;
 	}
 
 	// [BB] Now that we have our inventory, tell the server the weapon we selected from it.
@@ -4361,9 +4361,9 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	fixed_t		Y = 0;
 	fixed_t		Z = 0;
 	angle_t		Angle = 0;
-	fixed_t		MomX = 0;
-	fixed_t		MomY = 0;
-	fixed_t		MomZ = 0;
+	fixed_t		VelX = 0;
+	fixed_t		VelY = 0;
+	fixed_t		VelZ = 0;
 	bool		bCrouching = false;
 
 	// Read in the player number.
@@ -4386,10 +4386,10 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 		// Read in the player's angle.
 		Angle = NETWORK_ReadLong( pByteStream );
 
-		// Read in the player's XYZ momentum.
-		MomX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		MomY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		MomZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		// Read in the player's XYZ velocity.
+		VelX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		VelY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		VelZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
 		// Read in whether or not the player's crouching.
 		bCrouching = !!NETWORK_ReadByte( pByteStream );
@@ -4417,10 +4417,10 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	// Set the player's angle.
 	players[ulPlayer].mo->angle = Angle;
 
-	// Set the player's XYZ momentum.
-	players[ulPlayer].mo->velx = MomX;
-	players[ulPlayer].mo->vely = MomY;
-	players[ulPlayer].mo->velz = MomZ;
+	// Set the player's XYZ velocity.
+	players[ulPlayer].mo->velx = VelX;
+	players[ulPlayer].mo->vely = VelY;
+	players[ulPlayer].mo->velz = VelZ;
 
 	// Is the player crouching?
 	players[ulPlayer].crouchdir = ( bCrouching ) ? 1 : -1;
@@ -5548,9 +5548,9 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 	fixed_t		X;
 	fixed_t		Y;
 	fixed_t		Z;
-	fixed_t		MomX;
-	fixed_t		MomY;
-	fixed_t		MomZ;
+	fixed_t		VelX;
+	fixed_t		VelY;
+	fixed_t		VelZ;
 
 	pPlayer = &players[consoleplayer];
 	
@@ -5565,10 +5565,10 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 	Y = NETWORK_ReadLong( pByteStream );
 	Z = NETWORK_ReadLong( pByteStream );
 
-	// Get XYZ momentum.
-	MomX = NETWORK_ReadLong( pByteStream );
-	MomY = NETWORK_ReadLong( pByteStream );
-	MomZ = NETWORK_ReadLong( pByteStream );
+	// Get XYZ velocity.
+	VelX = NETWORK_ReadLong( pByteStream );
+	VelY = NETWORK_ReadLong( pByteStream );
+	VelZ = NETWORK_ReadLong( pByteStream );
 
 	// No player object to update.
 	if ( pPlayer->mo == NULL )
@@ -5605,9 +5605,9 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 		pPlayer->ServerXYZ[1] = Y;
 		pPlayer->ServerXYZ[2] = Z;
 
-		pPlayer->ServerXYZMom[0] = MomX;
-		pPlayer->ServerXYZMom[1] = MomY;
-		pPlayer->ServerXYZMom[2] = MomZ;
+		pPlayer->ServerXYZVel[0] = VelX;
+		pPlayer->ServerXYZVel[1] = VelY;
+		pPlayer->ServerXYZVel[2] = VelZ;
 	}
 	else
 	{
@@ -5615,9 +5615,9 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 		// sure that the spectator body doesn't get stuck.
 		CLIENT_MoveThing ( pPlayer->mo, X, Y, Z );
 
-		pPlayer->mo->velx = MomX;
-		pPlayer->mo->vely = MomY;
-		pPlayer->mo->velz = MomZ;
+		pPlayer->mo->velx = VelX;
+		pPlayer->mo->vely = VelY;
+		pPlayer->mo->velz = VelZ;
 	}
 }
 
@@ -6093,9 +6093,9 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 		if ( lBits & CM_LAST_Y ) NETWORK_ReadShort( pByteStream );
 		if ( lBits & CM_LAST_Z ) NETWORK_ReadShort( pByteStream );
 		if ( lBits & CM_ANGLE ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOMX ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_MOMY ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_MOMZ ) NETWORK_ReadShort( pByteStream );
+		if ( lBits & CM_VELX ) NETWORK_ReadShort( pByteStream );
+		if ( lBits & CM_VELY ) NETWORK_ReadShort( pByteStream );
+		if ( lBits & CM_VELZ ) NETWORK_ReadShort( pByteStream );
 		if ( lBits & CM_PITCH ) NETWORK_ReadLong( pByteStream );
 		if ( lBits & CM_MOVEDIR ) NETWORK_ReadByte( pByteStream );
 
@@ -6150,15 +6150,15 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 	if ( lBits & CM_ANGLE )
 		pActor->angle = NETWORK_ReadLong( pByteStream );
 
-	// Read in the momentum data.
-	if ( lBits & CM_MOMX )
+	// Read in the velocity data.
+	if ( lBits & CM_VELX )
 		pActor->velx = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	if ( lBits & CM_MOMY )
+	if ( lBits & CM_VELY )
 		pActor->vely = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	if ( lBits & CM_MOMZ )
+	if ( lBits & CM_VELZ )
 		pActor->velz = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
-	// [Dusk] if the actor that's being moved is a player and his momentum
+	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
 	if ((pActor->player != NULL) && (pActor->velx == 0) && (pActor->vely == 0)) {
@@ -6214,9 +6214,9 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 		if ( lBits & CM_LAST_Y ) NETWORK_ReadLong( pByteStream );
 		if ( lBits & CM_LAST_Z ) NETWORK_ReadLong( pByteStream );
 		if ( lBits & CM_ANGLE ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOMX ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOMY ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOMZ ) NETWORK_ReadLong( pByteStream );
+		if ( lBits & CM_VELX ) NETWORK_ReadLong( pByteStream );
+		if ( lBits & CM_VELY ) NETWORK_ReadLong( pByteStream );
+		if ( lBits & CM_VELZ ) NETWORK_ReadLong( pByteStream );
 		if ( lBits & CM_PITCH ) NETWORK_ReadLong( pByteStream );
 		if ( lBits & CM_MOVEDIR ) NETWORK_ReadByte( pByteStream );
 
@@ -6271,15 +6271,15 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 	if ( lBits & CM_ANGLE )
 		pActor->angle = NETWORK_ReadLong( pByteStream );
 
-	// Read in the momentum data.
-	if ( lBits & CM_MOMX )
+	// Read in the velocity data.
+	if ( lBits & CM_VELX )
 		pActor->velx = NETWORK_ReadLong( pByteStream );
-	if ( lBits & CM_MOMY )
+	if ( lBits & CM_VELY )
 		pActor->vely = NETWORK_ReadLong( pByteStream );
-	if ( lBits & CM_MOMZ )
+	if ( lBits & CM_VELZ )
 		pActor->velz = NETWORK_ReadLong( pByteStream );
 
-	// [Dusk] if the actor that's being moved is a player and his momentum
+	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
 	if ((pActor->player != NULL) && (pActor->velx == 0) && (pActor->vely == 0)) {
@@ -7298,9 +7298,9 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	fixed_t		NewX;
 	fixed_t		NewY;
 	fixed_t		NewZ;
-	fixed_t		NewMomX;
-	fixed_t		NewMomY;
-	fixed_t		NewMomZ;
+	fixed_t		NewVelX;
+	fixed_t		NewVelY;
+	fixed_t		NewVelZ;
 	LONG		lNewReactionTime;
 	angle_t		NewAngle;
 	bool		bSourceFog;
@@ -7317,10 +7317,10 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	NewY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 	NewZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
-	// Read in the thing's new momentum.
-	NewMomX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	NewMomY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	NewMomZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	// Read in the thing's new velocity.
+	NewVelX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	NewVelY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	NewVelZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
 	// Read in the thing's new reaction time.
 	lNewReactionTime = NETWORK_ReadShort( pByteStream );
@@ -7362,16 +7362,16 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 			ALLOW_REPLACE );
 	}
 
-	// Set the thing's new momentum.
-	pActor->velx = NewMomX;
-	pActor->vely = NewMomY;
-	pActor->velz = NewMomZ;
+	// Set the thing's new velocity.
+	pActor->velx = NewVelX;
+	pActor->vely = NewVelY;
+	pActor->velz = NewVelZ;
 
 	// Also, if this is a player, set his bobbing appropriately.
 	if ( pActor->player )
 	{
-		pActor->player->velx = NewMomX;
-		pActor->player->vely = NewMomY;
+		pActor->player->velx = NewVelX;
+		pActor->player->vely = NewVelY;
 
 		// [BB] If the server is teleporting us, don't let our prediction get messed up.
 		if ( pActor == players[consoleplayer].mo )
@@ -8516,9 +8516,9 @@ static void client_SpawnMissile( BYTESTREAM_s *pByteStream )
 	fixed_t				X;
 	fixed_t				Y;
 	fixed_t				Z;
-	fixed_t				MomX;
-	fixed_t				MomY;
-	fixed_t				MomZ;
+	fixed_t				VelX;
+	fixed_t				VelY;
+	fixed_t				VelZ;
 	LONG				lID;
 	LONG				lTargetID;
 
@@ -8527,10 +8527,10 @@ static void client_SpawnMissile( BYTESTREAM_s *pByteStream )
 	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
-	// Read in the XYZ momentum of the missile.
-	MomX = NETWORK_ReadLong( pByteStream );
-	MomY = NETWORK_ReadLong( pByteStream );
-	MomZ = NETWORK_ReadLong( pByteStream );
+	// Read in the XYZ velocity of the missile.
+	VelX = NETWORK_ReadLong( pByteStream );
+	VelY = NETWORK_ReadLong( pByteStream );
+	VelZ = NETWORK_ReadLong( pByteStream );
 
 	// Read in the identification of the missile.
 	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
@@ -8540,7 +8540,7 @@ static void client_SpawnMissile( BYTESTREAM_s *pByteStream )
 	lTargetID = NETWORK_ReadShort( pByteStream );
 
 	// Finally, spawn the missile.
-	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, MomX, MomY, MomZ, lID, lTargetID );
+	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, VelX, VelY, VelZ, lID, lTargetID );
 }
 
 //*****************************************************************************
@@ -8551,9 +8551,9 @@ static void client_SpawnMissileExact( BYTESTREAM_s *pByteStream )
 	fixed_t				X;
 	fixed_t				Y;
 	fixed_t				Z;
-	fixed_t				MomX;
-	fixed_t				MomY;
-	fixed_t				MomZ;
+	fixed_t				VelX;
+	fixed_t				VelY;
+	fixed_t				VelZ;
 	LONG				lID;
 	LONG				lTargetID;
 
@@ -8562,10 +8562,10 @@ static void client_SpawnMissileExact( BYTESTREAM_s *pByteStream )
 	Y = NETWORK_ReadLong( pByteStream );
 	Z = NETWORK_ReadLong( pByteStream );
 
-	// Read in the XYZ momentum of the missile.
-	MomX = NETWORK_ReadLong( pByteStream );
-	MomY = NETWORK_ReadLong( pByteStream );
-	MomZ = NETWORK_ReadLong( pByteStream );
+	// Read in the XYZ velocity of the missile.
+	VelX = NETWORK_ReadLong( pByteStream );
+	VelY = NETWORK_ReadLong( pByteStream );
+	VelZ = NETWORK_ReadLong( pByteStream );
 
 	// Read in the identification of the missile.
 	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
@@ -8575,7 +8575,7 @@ static void client_SpawnMissileExact( BYTESTREAM_s *pByteStream )
 	lTargetID = NETWORK_ReadShort( pByteStream );
 
 	// Finally, spawn the missile.
-	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, MomX, MomY, MomZ, lID, lTargetID );
+	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, VelX, VelY, VelZ, lID, lTargetID );
 }
 
 //*****************************************************************************

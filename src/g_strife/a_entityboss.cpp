@@ -82,7 +82,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpawnEntity)
 		entity->velz = 5*FRACUNIT;
 		entity->tracer = self;
 
-		// [CW] Tell clients to spawn the actor. (Treat it as a missile so it's momentum is sent to the clients.)
+		// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnMissile( entity );
 	}
@@ -112,7 +112,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 	second->velx += FixedMul (finecosine[an], 320000);
 	second->vely += FixedMul (finesine[an], 320000);
 
-	// [CW] Tell clients to spawn the actor. (Treat it as a missile so it's momentum is sent to the clients.)
+	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissile( second );
 
@@ -125,7 +125,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 	second->vely = FixedMul (secondRadius, finesine[an]) << 2;
 	A_FaceTarget (second);
 
-	// [CW] Tell clients to spawn the actor. (Treat it as a missile so it's momentum is sent to the clients.)
+	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissile( second );
 
@@ -137,7 +137,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 	second->velx = FixedMul (secondRadius, finecosine[an]) << 2;
 	second->vely = FixedMul (secondRadius, finesine[an]) << 2;
 
-	// [CW] Tell clients to spawn the actor. (Treat it as a missile so it's momentum is sent to the clients.)
+	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissile( second );
 

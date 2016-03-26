@@ -186,14 +186,14 @@ void CLIENT_PREDICT_PlayerPredict( void )
 			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZ[2], pPlayer->mo->z );
 		}
 
-		if (( pPlayer->ServerXYZMom[0] != pPlayer->mo->velx ) ||
-			( pPlayer->ServerXYZMom[1] != pPlayer->mo->vely ) ||
-			( pPlayer->ServerXYZMom[2] != pPlayer->mo->velz ))
+		if (( pPlayer->ServerXYZVel[0] != pPlayer->mo->velx ) ||
+			( pPlayer->ServerXYZVel[1] != pPlayer->mo->vely ) ||
+			( pPlayer->ServerXYZVel[2] != pPlayer->mo->velz ))
 		{
-			Printf( "(%d) WARNING! ServerXYZMom does not match local origin after 1 tick!\n", static_cast<unsigned int> (g_ulGameTick) );
-			Printf( "     X: %d, %d\n", pPlayer->ServerXYZMom[0], pPlayer->mo->velx );
-			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZMom[1], pPlayer->mo->vely );
-			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZMom[2], pPlayer->mo->velz );
+			Printf( "(%d) WARNING! ServerXYZVel does not match local origin after 1 tick!\n", static_cast<unsigned int> (g_ulGameTick) );
+			Printf( "     X: %d, %d\n", pPlayer->ServerXYZVel[0], pPlayer->mo->velx );
+			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZVel[1], pPlayer->mo->vely );
+			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZVel[2], pPlayer->mo->velz );
 		}
 	}
 #endif
@@ -209,9 +209,9 @@ void CLIENT_PREDICT_PlayerPredict( void )
 		pPlayer->ServerXYZ[2] );
 
 	// Set the player's velocity as told to him by the server.
-	pPlayer->mo->velx = pPlayer->ServerXYZMom[0];
-	pPlayer->mo->vely = pPlayer->ServerXYZMom[1];
-	pPlayer->mo->velz = pPlayer->ServerXYZMom[2];
+	pPlayer->mo->velx = pPlayer->ServerXYZVel[0];
+	pPlayer->mo->vely = pPlayer->ServerXYZVel[1];
+	pPlayer->mo->velz = pPlayer->ServerXYZVel[2];
 
 	// If we don't want to do any prediction, just tick the player and get out.
 	if ( cl_predict_players == false )
@@ -346,7 +346,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		&& pPlayer->mo->Sector && !pPlayer->mo->Sector->floordata )
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 
-	// [BB] The server gave us z-momentum, so don't glue us to a floor or an actor for this tic.
+	// [BB] The server gave us z-velocity, so don't glue us to a floor or an actor for this tic.
 	if ( pPlayer->mo->velz > 0 )
 	{
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;

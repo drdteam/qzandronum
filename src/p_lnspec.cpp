@@ -1013,9 +1013,9 @@ static void ThrustThingHelper (AActor *it, angle_t angle, int force, INTBOOL nol
 		it->vely = clamp<fixed_t> (it->vely, -MAXMOVE, MAXMOVE);
 	}
 
-	// [BC] If we're the server, update the thing's momentum.
-	// [Dusk] Use SERVER_UpdateThingMomentum
-	SERVER_UpdateThingMomentum( it, false );
+	// [BC] If we're the server, update the thing's velocity.
+	// [Dusk] Use SERVER_UpdateThingVelocity
+	SERVER_UpdateThingVelocity( it, false );
 }
 
 FUNC(LS_ThrustThingZ)	// [BC]
@@ -1043,11 +1043,11 @@ FUNC(LS_ThrustThingZ)	// [BC]
 					victim->velz += thrust;
 			}
 
-			// [BC] If we're the server, update the thing's momentum.
+			// [BC] If we're the server, update the thing's velocity.
 			// [BB] Unfortunately there are sync issues, if we don't also update the actual position.
 			// Is there a way to fix this without sending the position?
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_MoveThingExact( victim, CM_Z|CM_MOMZ );
+				SERVERCOMMANDS_MoveThingExact( victim, CM_Z|CM_VELZ );
 		}
 		return true;
 	}
@@ -1062,9 +1062,9 @@ FUNC(LS_ThrustThingZ)	// [BC]
 				it->velz += thrust;
 		}
 
-		// [BC] If we're the server, update the thing's momentum.
+		// [BC] If we're the server, update the thing's velocity.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVER_UpdateThingMomentum ( it, true, false );
+			SERVER_UpdateThingVelocity ( it, true, false );
 
 		return true;
 	}
@@ -1653,7 +1653,7 @@ FUNC(LS_Thing_Stop)
 
 			// [Dusk] tell the clients about this
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_MoveThingExact( it, ( ( it->player == NULL ) ? (CM_X|CM_Y|CM_Z) : 0 )|CM_MOMX|CM_MOMY|CM_MOMZ );
+				SERVERCOMMANDS_MoveThingExact( it, ( ( it->player == NULL ) ? (CM_X|CM_Y|CM_Z) : 0 )|CM_VELX|CM_VELY|CM_VELZ );
 
 			ok = true;
 		}
@@ -1669,7 +1669,7 @@ FUNC(LS_Thing_Stop)
 
 			// [Dusk] tell the clients about this
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_MoveThingExact( target, ( ( target->player == NULL ) ? (CM_X|CM_Y|CM_Z) : 0 )|CM_MOMX|CM_MOMY|CM_MOMZ );
+				SERVERCOMMANDS_MoveThingExact( target, ( ( target->player == NULL ) ? (CM_X|CM_Y|CM_Z) : 0 )|CM_VELX|CM_VELY|CM_VELZ );
 
 			ok = true;
 		}

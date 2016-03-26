@@ -46,7 +46,7 @@ bool AArtiDarkServant::Use (bool pickup)
 
 		// [BC] If we're the server, send clients this missile's updated properties.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_MoveThing( mo, CM_MOMZ );
+			SERVERCOMMANDS_MoveThing( mo, CM_VELZ );
 	}
 	return true;
 }

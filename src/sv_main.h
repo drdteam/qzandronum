@@ -456,11 +456,11 @@ ULONG		SERVER_GetPlayerIndexFromName( const char *pszName, bool bIgnoreColors, b
 LONG		SERVER_GetCurrentClient( void );
 void		SERVER_GiveInventoryToPlayer( const player_t *player, AInventory *pInventory );
 void		SERVER_HandleWeaponStateJump( ULONG ulPlayer, FState *pState, LONG lPosition );
-void		SERVER_SetThingNonZeroAngleAndMomentum( AActor *pActor );
+void		SERVER_SetThingNonZeroAngleAndVelocity( AActor *pActor );
 void		SERVER_IgnoreIP( NETADDRESS_s Address );
 IPList		*SERVER_GetAdminList( void );
 const FString& SERVER_GetMasterBanlistVerificationString( void );
-void		SERVER_UpdateThingMomentum( AActor *pActor, bool updateZ, bool updateXY = true );
+void		SERVER_UpdateThingVelocity( AActor *pActor, bool updateZ, bool updateXY = true );
 void		SERVER_SyncSharedKeys( int playerToSync, bool withmessage );
 void		SERVER_SyncServerModCVars ( const int PlayerToSync );
 void		SERVER_KillCheat( const char* what );
