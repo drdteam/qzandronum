@@ -185,6 +185,19 @@ inline void P_SpawnPlayerMissileWithPossibleSpread (AActor* source, const PClass
 	}
 }
 
+// [BB]
+inline void P_SpawnPlayerMissileWithPossibleSpread (AActor* source, const PClass *type, angle_t angle)
+{
+	P_SpawnPlayerMissile ( source, type, angle );
+
+	// [BB] Apply spread.
+	if ( source && source->player && source->player->cheats2 & CF2_SPREAD )
+	{
+		P_SpawnPlayerMissile( source, type, angle + ( ANGLE_45 / 3 ), false );
+		P_SpawnPlayerMissile( source, type, angle - ( ANGLE_45 / 3 ), false );
+	}
+}
+
 void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheight=false);
 
 //

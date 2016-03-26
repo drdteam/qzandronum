@@ -305,21 +305,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCrossbowPL1)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX1"));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/10));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/10));
-
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX1"), self->angle + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/10) + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/10) + ( ANGLE_45 / 3 ));
-
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX1"), self->angle - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/10) - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/10) - ( ANGLE_45 / 3 ));
-	}
+	// [BB] Spread
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX1"));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/10));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/10));
 }
 
 //----------------------------------------------------------------------------
@@ -350,27 +339,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCrossbowPL2)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle-(ANG45/10));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle+(ANG45/10));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/5));
-	P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/5));
-
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle-(ANG45/10) + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle+(ANG45/10) + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/5) + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/5) + ( ANGLE_45 / 3 ));
-
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle-(ANG45/10) - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX2"), self->angle+(ANG45/10) - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/5) - ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/5) - ( ANGLE_45 / 3 ));
-	}
+	// [BB] Spread
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX2"));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX2"), self->angle-(ANG45/10));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX2"), self->angle+(ANG45/10));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX3"), self->angle-(ANG45/5));
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("CrossbowFX3"), self->angle+(ANG45/5));
 }
 
 //---------------------------------------------------------------------------
