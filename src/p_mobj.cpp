@@ -7296,14 +7296,14 @@ static fixed_t GetDefaultSpeed(const PClass *type)
 //
 //---------------------------------------------------------------------------
 
-AActor *P_SpawnMissile (AActor *source, AActor *dest, const PClass *type, AActor *owner)
+AActor *P_SpawnMissile (AActor *source, AActor *dest, const PClass *type, AActor *owner, const bool bSpawnOnClient ) // [BB] Added bSpawnOnClient.
 {
 	if (source == NULL)
 	{
 		return NULL;
 	}
 	return P_SpawnMissileXYZ (source->X(), source->Y(), source->Z() + 32*FRACUNIT + source->GetBobOffset(),
-		source, dest, type, true, owner);
+		source, dest, type, true, owner, bSpawnOnClient); // [BB] Added bSpawnOnClient.
 }
 
 AActor *P_SpawnMissileZ (AActor *source, fixed_t z, AActor *dest, const PClass *type)
@@ -7316,7 +7316,7 @@ AActor *P_SpawnMissileZ (AActor *source, fixed_t z, AActor *dest, const PClass *
 }
 
 AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z,
-	AActor *source, AActor *dest, const PClass *type, bool checkspawn, AActor *owner)
+	AActor *source, AActor *dest, const PClass *type, bool checkspawn, AActor *owner, const bool bSpawnOnClient ) // [BB] Added bSpawnOnClient.
 {
 	if (source == NULL)
 	{
@@ -7388,7 +7388,14 @@ AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z,
 		th->SetFriendPlayer(owner->player);
 	}
 
-	return (!checkspawn || P_CheckMissileSpawn (th, source->radius)) ? th : NULL;
+	// [BB]
+	AActor *pMissile = (!checkspawn || P_CheckMissileSpawn (th, source->radius)) ? th : NULL;
+
+	// [BB] If we're the server, tell clients to spawn the missile.
+	if ( bSpawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pMissile ))
+		SERVERCOMMANDS_SpawnMissile( pMissile );
+
+	return pMissile;
 }
 
 AActor * P_OldSpawnMissile(AActor * source, AActor * owner, AActor * dest, const PClass *type)

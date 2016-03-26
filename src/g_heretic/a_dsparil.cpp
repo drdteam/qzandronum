@@ -265,8 +265,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Decide)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 {
-	// [BC]
-	AActor	*mo;
 	int chance;
 
 	// [BC] Don't do this in client mode.
@@ -295,7 +293,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 		const PClass *fx = PClass::FindClass("Sorcerer2FX2");
 		if (fx)
 		{
-			mo = P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2);
+			// [BC]
+			AActor *mo = P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2);
 
 			// [BC]
 			if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
@@ -310,12 +309,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 	}
 	else
 	{ // Blue bolt
-		mo = P_SpawnMissile (self, self->target, PClass::FindClass("Sorcerer2FX1"));
-		
-		// [BC]
-		if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-			SERVERCOMMANDS_SpawnMissile( mo );
-
+		P_SpawnMissile (self, self->target, PClass::FindClass("Sorcerer2FX1"), NULL, true); // [BB] Inform clients
 	}
 }
 

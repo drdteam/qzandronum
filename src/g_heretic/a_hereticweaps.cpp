@@ -195,7 +195,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireGoldWandPL2)
 	int damage;
 	fixed_t velz;
 	player_t *player;
-	AActor	*pMissile;
 
 	if (NULL == (player = self->player))
 	{
@@ -219,7 +218,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireGoldWandPL2)
 	angle_t pitch = P_BulletSlope(self);
 	velz = FixedMul (GetDefaultByName("GoldWandFX2")->Speed,
 		finetangent[FINEANGLES/4-((signed)pitch>>ANGLETOFINESHIFT)]);
-	pMissile = P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle-(ANG45/8), velz);
+	// [BB]
+	AActor *pMissile = P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle-(ANG45/8), velz);
 	if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissileExact( pMissile );
 	pMissile = P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle+(ANG45/8), velz);

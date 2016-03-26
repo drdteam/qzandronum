@@ -101,15 +101,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 	randAttack = pr_atk ();
 	if (randAttack < atkResolve1[dist])
 	{ // Ice ball
-		AActor *missile = P_SpawnMissile (self, target, PClass::FindClass("HeadFX1"));
+		P_SpawnMissile (self, target, PClass::FindClass("HeadFX1"), NULL, true); // [BB] Inform clients
 		S_Sound (self, CHAN_BODY, "ironlich/attack2", 1, ATTN_NORM);
 
-		// [BB] If we're the server, tell the clients to spawn this missile and play the sound.
-		if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && missile )
-		{
-			SERVERCOMMANDS_SpawnMissile( missile );
+		// [BB] If we're the server, tell the clients to play the sound.
+		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "ironlich/attack2", 1, ATTN_NORM );
-		}
 	}
 	else if (randAttack < atkResolve2[dist])
 	{ // Fire column

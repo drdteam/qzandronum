@@ -78,16 +78,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack2)
 
 		return;
 	}
-	mo = P_SpawnMissile (self, self->target, PClass::FindClass("BishopFX"));
+	mo = P_SpawnMissile (self, self->target, PClass::FindClass("BishopFX"), NULL, true); // [BB] Inform clients
 	if (mo != NULL)
 	{
 		mo->tracer = self->target;
-
-		// [BB] If we're the server, tell the clients to spawn this missile.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		{
-			SERVERCOMMANDS_SpawnMissile( mo );
-		}
 	}
 	self->special1--;
 }

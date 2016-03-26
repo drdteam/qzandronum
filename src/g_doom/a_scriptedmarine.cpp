@@ -625,9 +625,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_M_FireCGun)
 
 DEFINE_ACTION_FUNCTION(AActor, A_M_FireMissile)
 {
-	// [BC]
-	AActor	*pMissile;
-
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
@@ -644,11 +641,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_M_FireMissile)
 	else
 	{
 		A_FaceTarget (self);
-		pMissile = P_SpawnMissile (self, self->target, PClass::FindClass("Rocket"));
-
-		// [BC] If we're the server, tell clients to spawn this missile.
-		if (( pMissile ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-			SERVERCOMMANDS_SpawnMissile( pMissile );
+		P_SpawnMissile (self, self->target, PClass::FindClass("Rocket"), NULL, true); // [BB] Inform clients
 	}
 }
 
@@ -681,9 +674,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_M_FireRailgun)
 
 DEFINE_ACTION_FUNCTION(AActor, A_M_FirePlasma)
 {
-	// [BC]
-	AActor	*pMissile;
-
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
@@ -694,12 +684,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_M_FirePlasma)
 		return;
 
 	A_FaceTarget (self);
-	pMissile = P_SpawnMissile (self, self->target, PClass::FindClass("PlasmaBall"));
+	P_SpawnMissile (self, self->target, PClass::FindClass("PlasmaBall"), NULL, true); // [BB] Inform clients
 	self->special1 = level.maptime + 20;
-
-	// [BC] If we're the server, tell clients to spawn this missile.
-	if (( pMissile ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
 }
 
 //============================================================================
@@ -749,8 +735,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_M_BFGsound)
 
 DEFINE_ACTION_FUNCTION(AActor, A_M_FireBFG)
 {
-	AActor	*pMissile;
-
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
@@ -761,13 +745,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_M_FireBFG)
 		return;
 
 	A_FaceTarget (self);
-	pMissile = P_SpawnMissile (self, self->target, PClass::FindClass("BFGBall"));
+	P_SpawnMissile (self, self->target, PClass::FindClass("BFGBall"), NULL, true); // [BB] Inform clients
 	self->special1 = level.maptime + 30;
 	self->PainChance = MARINE_PAIN_CHANCE;
-
-	// [BC] If we're the server, tell clients to spawn this missile.
-	if (( pMissile ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
 }
 
 //---------------------------------------------------------------------------

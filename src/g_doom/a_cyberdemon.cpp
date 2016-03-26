@@ -9,17 +9,11 @@
 
 DEFINE_ACTION_FUNCTION(AActor, A_CyberAttack)
 {
-	AActor	*pMissile;
-
 	if (!self->target)
 		return;
 				
 	A_FaceTarget (self);
-	pMissile = P_SpawnMissile (self, self->target, PClass::FindClass("Rocket"));
-
-	// [BC] If we're the server, tell clients to spawn the missile.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pMissile ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
+	P_SpawnMissile (self, self->target, PClass::FindClass("Rocket"), NULL, true); // [BB] Inform clients
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_Hoof)

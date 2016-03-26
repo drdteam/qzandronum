@@ -17,8 +17,6 @@ static FRandom pr_troopattack ("TroopAttack");
 //
 DEFINE_ACTION_FUNCTION(AActor, A_TroopAttack)
 {
-	AActor	*pMissile;
-
 	if (!self->target)
 		return;
 				
@@ -38,9 +36,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_TroopAttack)
 	}
 	
 	// launch a missile
-	pMissile = P_SpawnMissile (self, self->target, PClass::FindClass("DoomImpBall"));
-
-	// [BC] If we're the server, tell clients to spawn the missile.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pMissile ))
-		SERVERCOMMANDS_SpawnMissile( pMissile );
+	P_SpawnMissile (self, self->target, PClass::FindClass("DoomImpBall"), NULL, true); // [BB] Inform clients
 }

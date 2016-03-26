@@ -154,9 +154,9 @@ void	P_RipperBlood (AActor *mo, AActor *bleeder);
 int		P_GetThingFloorType (AActor *thing);
 void	P_ExplodeMissile (AActor *missile, line_t *explodeline, AActor *target);
 
-AActor *P_SpawnMissile (AActor* source, AActor* dest, const PClass *type, AActor* owner = NULL);
+AActor *P_SpawnMissile (AActor* source, AActor* dest, const PClass *type, AActor* owner = NULL, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
 AActor *P_SpawnMissileZ (AActor* source, fixed_t z, AActor* dest, const PClass *type);
-AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z, AActor *source, AActor *dest, const PClass *type, bool checkspawn = true, AActor *owner = NULL);
+AActor *P_SpawnMissileXYZ (fixed_t x, fixed_t y, fixed_t z, AActor *source, AActor *dest, const PClass *type, bool checkspawn = true, AActor *owner = NULL, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
 inline AActor *P_SpawnMissileXYZ(const fixedvec3 &pos, AActor *source, AActor *dest, const PClass *type, bool checkspawn = true, AActor *owner = NULL)
 {
 	return P_SpawnMissileXYZ(pos.x, pos.y, pos.z, source, dest, type, checkspawn, owner);
