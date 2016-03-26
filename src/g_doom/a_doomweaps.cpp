@@ -212,7 +212,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	{
 		return;
 	}
-	
+
 	ACTION_PARAM_START(11);
 	ACTION_PARAM_SOUND(fullsound, 0);
 	ACTION_PARAM_SOUND(hitsound, 1);
@@ -225,8 +225,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	ACTION_PARAM_FIXED(LifeSteal, 8);
 	ACTION_PARAM_INT(lifestealmax, 9);
 	ACTION_PARAM_CLASS(armorbonustype, 10);
-
-
 
 	if (NULL == (player = self->player))
 	{
@@ -244,7 +242,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 
 	angle = self->angle + (pr_saw.Random2() * (Spread_XY / 255));
 	slope = P_AimLineAttack (self, angle, Range, &linetarget) + (pr_saw.Random2() * (Spread_Z / 255));
-
 
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if ((weapon != NULL) && !(Flags & SF_NOUSEAMMO) && !(!linetarget && (Flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
@@ -1073,11 +1070,12 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 				if (spray->flags3 & MF3_FOILINVUL) dmgFlags |= DMG_FOILINVUL;
 				if (spray->flags7 & MF7_FOILBUDDHA) dmgFlags |= DMG_FOILBUDDHA;
 				dmgType = spray->DamageType;
+
+				// [BC] Tell clients to spawn the tracers.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SpawnThing( spray );
 			}
-		
-		// [BC] Tell clients to spawn the tracers.
-		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( spray ))
-			SERVERCOMMANDS_SpawnThing( spray );
+
 			if (defdamage == 0)
 			{
 				damage = 0;
