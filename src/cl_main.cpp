@@ -10421,15 +10421,15 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 {
 	const PClass	*pType;
 	ULONG			ulPlayer;
-	const char		*pszName;
+	USHORT			actorNetworkIndex;
 	LONG			lAmount;
 	AInventory		*pInventory;
 
 	// Read in the player ID.
 	ulPlayer = NETWORK_ReadByte( pByteStream );
 
-	// Read in the name of the type of item to take away.
-	pszName = NETWORK_ReadString( pByteStream );
+	// Read in the identification of the type of item to take away.
+	actorNetworkIndex = NETWORK_ReadShort( pByteStream );
 
 	// Read in the new amount of this inventory type the player has.
 	lAmount = NETWORK_ReadLong( pByteStream );
@@ -10438,8 +10438,11 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
 		return;
 
-	pType = PClass::FindClass( pszName );
+	pType = NETWORK_GetClassFromIdentification( actorNetworkIndex );
 	if ( pType == NULL )
+		return;
+
+	if ( pType->IsDescendantOf( RUNTIME_CLASS( AInventory )) == false )
 		return;
 
 	// Try to find this object within the player's personal inventory.
@@ -10465,7 +10468,7 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 		// If he still doesn't have the object after trying to give it to him... then YIKES!
 		if ( pInventory == NULL )
 		{
-			client_PrintWarning( "client_TakeInventory: Failed to give inventory type, %s!\n", pszName );
+			client_PrintWarning( "client_TakeInventory: Failed to give inventory type, %s!\n", pType->TypeName.GetChars());
 			return;
 		}
 

@@ -933,7 +933,7 @@ DEFINE_ACTION_FUNCTION(AInventory, A_Raise)
 
 			// If we're the server, tell clients to take this player's powerup away.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( ULONG( player - players ), "PowerInvulnerable", 0 );
+				SERVERCOMMANDS_TakeInventory( ULONG( player - players ), RUNTIME_CLASS( APowerInvulnerable ), 0 );
 		}
 	}
 }

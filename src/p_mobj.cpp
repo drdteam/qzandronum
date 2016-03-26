@@ -890,7 +890,7 @@ bool AActor::TakeInventory(const PClass *itemclass, int amount, bool fromdecorat
 			( item->Owner ) &&
 			( item->Owner->player ))
 		{
-			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( )->TypeName.GetChars( ), 0 );
+			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( ), 0 );
 		}
 
 		item->DepleteOrDestroy();
@@ -910,7 +910,7 @@ bool AActor::TakeInventory(const PClass *itemclass, int amount, bool fromdecorat
 			( item->Owner ) &&
 			( item->Owner->player ) && ( ( oldAmount > 0 ) || ( amount < 0 ) ))
 		{
-			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( )->TypeName.GetChars( ), MAX ( 0, item->Amount ) );
+			SERVERCOMMANDS_TakeInventory( item->Owner->player - players, item->GetClass( ), MAX ( 0, item->Amount ) );
 		}
 	}
 

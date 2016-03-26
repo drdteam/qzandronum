@@ -1003,7 +1003,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 				// [TP]
 				if ( pack && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 				if (pack) pack->Destroy();
 			}
@@ -1025,7 +1025,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 				// [TP]
 				if ( ammo && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 				if (ammo)
 					ammo->Amount = 0;
@@ -1074,7 +1074,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 				// [TP]
 				if ( key && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 				if (key)
 					key->Destroy ();
@@ -1098,7 +1098,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 				// [TP]
 				if ( weapon && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 				if (weapon)
 					weapon->Destroy ();
@@ -1132,7 +1132,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 					// [TP]
 					if ( artifact && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-						SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+						SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 					if (artifact)
 						artifact->Destroy ();
@@ -1156,7 +1156,7 @@ void cht_Take (player_t *player, const char *name, int amount)
 
 				// [TP]
 				if ( puzzlepiece && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, type->TypeName, 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, type, 0 );
 
 				if (puzzlepiece)
 					puzzlepiece->Destroy ();

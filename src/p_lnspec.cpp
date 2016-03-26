@@ -3110,7 +3110,7 @@ FUNC(LS_SetPlayerProperty)
 					{
 						// [WS] Destroy the powerup.
 						if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-							SERVERCOMMANDS_TakeInventory( ULONG( it->player - players ), item->GetClass( )->TypeName.GetChars( ), 0 );
+							SERVERCOMMANDS_TakeInventory( ULONG( it->player - players ), item->GetClass(), 0 );
 
 						item->Destroy ();
 					}
@@ -3159,7 +3159,7 @@ FUNC(LS_SetPlayerProperty)
 						{
 							// [WS] Destroy the powerup.
 							if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-								SERVERCOMMANDS_TakeInventory( i, item->GetClass( )->TypeName.GetChars( ), 0 );
+								SERVERCOMMANDS_TakeInventory( i, item->GetClass(), 0 );
 
 							item->Destroy ();
 						}

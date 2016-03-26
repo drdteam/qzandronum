@@ -3839,18 +3839,17 @@ void SERVERCOMMANDS_GiveInventoryNotOverwritingAmount( AActor *pReceiver, AInven
 }
 //*****************************************************************************
 //
-void SERVERCOMMANDS_TakeInventory( ULONG ulPlayer, const char *pszClassName, ULONG ulAmount, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_TakeInventory( ULONG ulPlayer, const PClass *inventoryClass, ULONG ulAmount, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	const PClass *pType = PClass::FindClass( pszClassName );
-	if ( pType == NULL || ( GetDefaultByType ( pType )->ulNetworkFlags & NETFL_SERVERSIDEONLY ) )
+	if ( inventoryClass == NULL || ( GetDefaultByType ( inventoryClass )->ulNetworkFlags & NETFL_SERVERSIDEONLY ) )
 		return;
 
 	NetCommand command ( SVC_TAKEINVENTORY );
 	command.addByte ( ulPlayer );
-	command.addString ( pszClassName );
+	command.addShort ( inventoryClass->getActorNetworkIndex() );
 	command.addLong ( ulAmount );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }

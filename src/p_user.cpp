@@ -2075,7 +2075,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 
 				// Tell the clients that this player no longer possesses a flag.
 				if (( bLeavingGame == false ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-					SERVERCOMMANDS_TakeInventory( player - players, TEAM_GetItem( i )->TypeName.GetChars( ), 0 );
+					SERVERCOMMANDS_TakeInventory( player - players, TEAM_GetItem( i ), 0 );
 				if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 					SCOREBOARD_RefreshHUD( );
 
@@ -2128,7 +2128,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 
 			// Tell the clients that this player no longer possesses a flag.
 			if (( bLeavingGame == false ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_TakeInventory( player - players, "WhiteFlag", 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "WhiteFlag" ), 0 );
 			if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 				SCOREBOARD_RefreshHUD( );
 
@@ -2178,7 +2178,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 
 			// Tell the clients that this player no longer possesses the terminator orb.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( player - players, "PowerTerminatorArtifact", 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "PowerTerminatorArtifact" ), 0 );
 			else
 				SCOREBOARD_RefreshHUD( );
 		}
@@ -2194,7 +2194,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 
 			// Tell the clients that this player no longer possesses the stone.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( player - players, "PowerPossessionArtifact", 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "PowerPossessionArtifact" ), 0 );
 			else
 				SCOREBOARD_RefreshHUD( );
 

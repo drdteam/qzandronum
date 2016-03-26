@@ -231,7 +231,7 @@ bool ATeamItem::TryPickup( AActor *&pToucher )
 		{
 			// If we're the server, tell clients to destroy this inventory item.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( ULONG( pToucher->player - players ), pInventory->GetClass( )->TypeName.GetChars( ), 0 );
+				SERVERCOMMANDS_TakeInventory( ULONG( pToucher->player - players ), pInventory->GetClass(), 0 );
 
 			pInventory->Destroy( );
 		}
@@ -545,7 +545,7 @@ bool AFlag::HandlePickup( AInventory *pItem )
 			pInventory = Owner->FindInventory( this->GetClass( ));
 
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( ULONG( Owner->player - players ), pInventory->GetClass( )->TypeName.GetChars( ), 0 );
+				SERVERCOMMANDS_TakeInventory( ULONG( Owner->player - players ), pInventory->GetClass(), 0 );
 			if ( pInventory )
 				Owner->RemoveInventory( pInventory );
 
@@ -946,7 +946,7 @@ bool AWhiteFlag::HandlePickup( AInventory *pItem )
 		// Take the flag away.
 		pInventory = Owner->FindInventory( this->GetClass( ));
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_TakeInventory( ULONG( Owner->player - players ), this->GetClass( )->TypeName.GetChars( ), 0 );
+			SERVERCOMMANDS_TakeInventory( ULONG( Owner->player - players ), this->GetClass(), 0 );
 		if ( pInventory )
 			Owner->RemoveInventory( pInventory );
 

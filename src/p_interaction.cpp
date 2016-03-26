@@ -1009,7 +1009,7 @@ static int UseHealthItems(TArray<AInventory *> &Items, int &saveHealth)
 		// [BB] Keep track of some values to inform the client how many items were used.
 		int oldAmount = Items[index]->Amount;
 		int newAmount = oldAmount;
-		const FString itemName = Items[index]->GetClass()->TypeName.GetChars();
+		const PClass *itemClass = Items[index]->GetClass();
 		ULONG ulPlayer = MAXPLAYERS;
 		if ( Items[index]->Owner && Items[index]->Owner->player )
 			ulPlayer = static_cast<ULONG>(Items[index]->Owner->player - players);
@@ -1036,7 +1036,7 @@ static int UseHealthItems(TArray<AInventory *> &Items, int &saveHealth)
 		// [BB] Inform the client about ths used items. 
 		// Note: SERVERCOMMANDS_TakeInventory checks the validity of the ulPlayer value.
 		if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( newAmount != oldAmount ) )
-			SERVERCOMMANDS_TakeInventory ( ulPlayer, itemName.GetChars(), newAmount );
+			SERVERCOMMANDS_TakeInventory ( ulPlayer, itemClass, newAmount );
 	}
 	return saved;
 }

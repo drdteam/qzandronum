@@ -38,6 +38,7 @@
 -	- Fixed: A_CheckSight would not jump if a spectator was in the line of sight of the calling actor. [Dusk]
 -	- Fixed: Using kick_idx, ignore_idx, unignore_idx, getip_idx, kickfromgame_idx and ban_idx with an invalid player index assumed a default of player 0. [Dusk]
 -	- Fixed: SpawnDecal did not work online. [Dusk]
+-	- Fixed: the 'take inventory' server command informed the clients by using the inventory class string instead of the much cheaper network id. Thanks to Siferah for spotting and reporting it. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
