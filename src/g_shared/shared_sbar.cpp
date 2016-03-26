@@ -1640,13 +1640,16 @@ void DBaseStatusBar::DrawPowerups ()
 	// Each icon gets a 32x32 block to draw itself in.
 	int x, y;
 	AInventory *item;
+	const int yshift = SmallFont->GetHeight();
 
 	// [BC] The player may not have a body between intermission-less maps.
 	if ( CPlayer->mo == NULL )
 		return;
 
 	x = -20;
-	y = 17;
+	y = 17 
+		+ (ST_IsTimeVisible()    ? yshift : 0)
+		+ (ST_IsLatencyVisible() ? yshift : 0);
 
 	// [BB] Account for the space in the top right corner occupied by Skulltag's fullscreen HUD.
 	if ( cl_stfullscreenhud && gameinfo.gametype == GAME_Doom )
