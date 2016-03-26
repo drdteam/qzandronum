@@ -164,13 +164,26 @@ inline AActor *P_SpawnMissileXYZ(const fixedvec3 &pos, AActor *source, AActor *d
 AActor *P_SpawnMissileAngle (AActor *source, const PClass *type, angle_t angle, fixed_t velz);
 AActor *P_SpawnMissileAngleSpeed (AActor *source, const PClass *type, angle_t angle, fixed_t velz, fixed_t speed);
 AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z, const PClass *type, angle_t angle, fixed_t velz);
-AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z, const PClass *type, angle_t angle, fixed_t velz, fixed_t speed, AActor *owner=NULL, bool checkspawn = true);
-AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, const PClass *type);
+AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z, const PClass *type, angle_t angle, fixed_t velz, fixed_t speed, AActor *owner=NULL, bool checkspawn = true, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
+AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, const PClass *type, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
 
 AActor *P_SpawnPlayerMissile (AActor* source, const PClass *type);
 AActor *P_SpawnPlayerMissile (AActor *source, const PClass *type, angle_t angle, bool bSpawnSound = true );
 AActor *P_SpawnPlayerMissile (AActor *source, fixed_t x, fixed_t y, fixed_t z, const PClass *type, angle_t angle, 
 							  AActor **pLineTarget = NULL, AActor **MissileActor = NULL, bool nofreeaim = false, bool noautoaim = false, bool bSpawnSound = true, bool bSpawnOnClient = true);
+
+// [BB]
+inline void P_SpawnPlayerMissileWithPossibleSpread (AActor* source, const PClass *type)
+{
+	P_SpawnPlayerMissile ( source, type );
+
+	// [BB] Apply spread.
+	if ( source && source->player && source->player->cheats2 & CF2_SPREAD )
+	{
+		P_SpawnPlayerMissile( source, type, source->angle + ( ANGLE_45 / 3 ), false );
+		P_SpawnPlayerMissile( source, type, source->angle - ( ANGLE_45 / 3 ), false );
+	}
+}
 
 void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheight=false);
 

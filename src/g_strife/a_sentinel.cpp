@@ -63,13 +63,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 
 	// [CW] If we aren't a client, spawn the missile.
 	if ( NETWORK_InClientMode() == false )
-	{
-		missile = P_SpawnMissileZAimed (self, self->Z() + 32*FRACUNIT, self->target, PClass::FindClass("SentinelFX2"));
-
-		// [CW] Spawn the missile server side.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnMissile( missile );
-	}
+		missile = P_SpawnMissileZAimed (self, self->Z() + 32*FRACUNIT, self->target, PClass::FindClass("SentinelFX2"), true); // [BB] Inform clients
 
 	if (missile != NULL && (missile->velx | missile->vely) != 0)
 	{

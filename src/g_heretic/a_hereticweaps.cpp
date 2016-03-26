@@ -1763,15 +1763,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePhoenixPL1)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, RUNTIME_CLASS(APhoenixFX1));
-
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile( self, RUNTIME_CLASS( APhoenixFX1 ), self->angle + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile( self, RUNTIME_CLASS( APhoenixFX1 ), self->angle - ( ANGLE_45 / 3 ));
-	}
-
+	P_SpawnPlayerMissileWithPossibleSpread (self, RUNTIME_CLASS(APhoenixFX1)); // [BB] Spread
 	angle = self->angle + ANG180;
 	angle >>= ANGLETOFINESHIFT;
 	self->velx += FixedMul (4*FRACUNIT, finecosine[angle]);

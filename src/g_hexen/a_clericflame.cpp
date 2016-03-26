@@ -89,15 +89,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameAttack)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, RUNTIME_CLASS(ACFlameMissile));
-	
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile( self, RUNTIME_CLASS(ACFlameMissile), self->angle + ( ANGLE_45 / 3 ));
-		P_SpawnPlayerMissile( self, RUNTIME_CLASS(ACFlameMissile), self->angle - ( ANGLE_45 / 3 ));
-	}
-
+	P_SpawnPlayerMissileWithPossibleSpread (self, RUNTIME_CLASS(ACFlameMissile)); // [BB] Spread
 	S_Sound (self, CHAN_WEAPON, "ClericFlameFire", 1, ATTN_NORM);
 
 	// [BC] If we're the server, tell other clients to make the sound.

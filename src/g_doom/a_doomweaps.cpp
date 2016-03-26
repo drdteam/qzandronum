@@ -763,14 +763,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMissile)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, PClass::FindClass("Rocket"));
-
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile( self, PClass::FindClass("Rocket"), self->angle + ( ANGLE_45 / 3 ), false );
-		P_SpawnPlayerMissile( self, PClass::FindClass("Rocket"), self->angle - ( ANGLE_45 / 3 ), false );
-	}
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("Rocket")); // [BB] Spread
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDROCKET, BOTEVENT_ENEMY_FIREDROCKET, BOTEVENT_PLAYER_FIREDROCKET );
@@ -841,15 +834,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 	// Temporarily raise the pitch to send the grenade slightly upwards
 	fixed_t SavedPlayerPitch = self->pitch;
 	self->pitch -= (1152 << FRACBITS);
-	P_SpawnPlayerMissile(self, grenade);
-
-	// Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile( self, grenade, self->angle + ( ANGLE_45 / 3 ), false );
-		P_SpawnPlayerMissile( self, grenade, self->angle - ( ANGLE_45 / 3 ), false );
-	}
-	
+	P_SpawnPlayerMissileWithPossibleSpread(self, grenade); // [BB] Spread
 	self->pitch = SavedPlayerPitch;
 
 	// Tell all the bots that a weapon was fired.
@@ -886,14 +871,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 		return;
 	}
 
-	P_SpawnPlayerMissile (self, PClass::FindClass("PlasmaBall"));
-
-	// [BC] Apply spread.
-	if ( player->cheats2 & CF2_SPREAD )
-	{
-		P_SpawnPlayerMissile( self, PClass::FindClass("PlasmaBall"), self->angle + ( ANGLE_45 / 3 ), false );
-		P_SpawnPlayerMissile( self, PClass::FindClass("PlasmaBall"), self->angle - ( ANGLE_45 / 3 ), false );
-	}
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("PlasmaBall")); // [BB] Spread
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDPLASMA, BOTEVENT_ENEMY_FIREDPLASMA, BOTEVENT_PLAYER_FIREDPLASMA );
