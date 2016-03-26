@@ -54,7 +54,7 @@ unsigned int GetRevisionNumber();
 #define DOTVERSIONSTR_REV DOTVERSIONSTR "-r" HG_TIME
 
 // [BC] What version of ZDoom is this based off of?
-#define	ZDOOMVERSIONSTR		"2.8pre-441-g458e1b1"
+#define	ZDOOMVERSIONSTR		"2.8pre-2315-g56359b6"
 
 /** Release code stuff */
 
