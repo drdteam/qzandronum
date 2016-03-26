@@ -893,10 +893,8 @@ void G_BuildTiccmd (ticcmd_t *cmd)
 	cmd->ucmd.forwardmove <<= 8;
 	cmd->ucmd.sidemove <<= 8;
 
-	// [ZZ] fix up the ticcmd so it's not possible to change angle and sr50 at the same time.
-	//      clientside part to not break the prediction of self.
-	if (cmd->ucmd.yaw != 0)
-		cmd->ucmd.sidemove = clamp<short>(cmd->ucmd.sidemove, -10240, 10240); // 10240 = 40; 12800 = 50
+	if (cmd->ucmd.sidemove > 10240 || cmd->ucmd.sidemove < -10240) //[Hyp] Lock client's turning to zero when speed is above sr40
+		cmd->ucmd.yaw = 0;
 
 	// [BB] The client calculates a checksum of the ticcmd just built. This
 	// should allow us to detect if the ticcmd is manipulated later.

@@ -62,6 +62,7 @@
 #include "cl_demo.h"
 #include "m_png.h"
 #include "p_acs.h"
+#include "version.h"
 #include "menu/menu.h"
 
 struct FLatchedValue
@@ -89,6 +90,15 @@ FBaseCVar::FBaseCVar (const FBaseCVar &var)
 
 FBaseCVar::FBaseCVar (const char *var_name, DWORD flags, void (*callback)(FBaseCVar &))
 {
+	// [TP] Support for debug-only CVars
+#if BUILD_ID == BUILD_RELEASE
+	if ( flags & CVAR_DEBUGONLY )
+	{
+		flags |= CVAR_NOSET;
+		var_name = NULL;
+	}
+#endif
+
 	FBaseCVar *var;
 
 	var = FindCVar (var_name, NULL);

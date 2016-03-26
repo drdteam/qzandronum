@@ -275,9 +275,7 @@ CVAR( Bool, sv_pure, true, CVAR_SERVERINFO | CVAR_LATCH )
 CVAR( Int, sv_maxclientsperip, 2, CVAR_ARCHIVE )
 CVAR( Int, sv_afk2spec, 0, CVAR_ARCHIVE ) // [K6]
 CVAR( Bool, sv_forcelogintojoin, false, CVAR_ARCHIVE|CVAR_NOSETBYACS )
-#if (BUILD_ID != BUILD_RELEASE)
-CVAR( Bool, sv_useticbuffer, true, CVAR_ARCHIVE|CVAR_NOSETBYACS )
-#endif
+CVAR( Bool, sv_useticbuffer, true, CVAR_ARCHIVE|CVAR_NOSETBYACS|CVAR_DEBUGONLY )
 
 CUSTOM_CVAR( String, sv_adminlistfile, "adminlist.txt", CVAR_ARCHIVE|CVAR_NOSETBYACS )
 {
@@ -370,7 +368,7 @@ CUSTOM_CVAR( Int, sv_maxpacketsize, 1024, CVAR_ARCHIVE )
 // [TP] Whether to enforce command limits. Set this false to disable
 // flood protection.
 //
-CUSTOM_CVAR( Bool, sv_limitcommands, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_SERVERINFO )
+CUSTOM_CVAR( Bool, sv_limitcommands, true, CVAR_ARCHIVE | CVAR_NOSETBYACS | CVAR_SERVERINFO | CVAR_DEBUGONLY )
 {
 	// [TP] The client also enforces command limits so this cvar must be synced.
 	if ( NETWORK_GetState() == NETSTATE_SERVER )
@@ -4758,9 +4756,7 @@ static bool server_ParseBufferedCommand ( BYTESTREAM_s *pByteStream )
 {
 	CommandType *cmd = new CommandType ( pByteStream );
 
-#if (BUILD_ID != BUILD_RELEASE)
 	if ( sv_useticbuffer )
-#endif
 	{
 		g_aClients[g_lCurrentClient].MoveCMDs.Push ( cmd );
 		return false;
@@ -5184,21 +5180,21 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 	{
 		if ( pPlayer->mo )
 		{
-			bool extAngleCheckForSR50 = false;
 
 			// [BB] Ignore the angle and pitch sent by the client if the client isn't authenticated yet.
 			// In this case the client still sends these values based on the previous map.
-			if ( SERVER_GetClient( ulClient )->State == CLS_SPAWNED ) {
-				extAngleCheckForSR50 = (moveCmd.angle != pPlayer->mo->angle);
-				pPlayer->mo->angle = moveCmd.angle;
+			if (SERVER_GetClient(ulClient)->State == CLS_SPAWNED) {
 				pPlayer->mo->pitch = moveCmd.pitch;
+				// [HYP] Lock angle if speed is above sr40
+				if (pCmd->ucmd.sidemove > 10240 || pCmd->ucmd.sidemove < -10240)
+				{
+					pCmd->ucmd.yaw = 0;
+				}
+				else //only update angle if speed is at or below sr40, disregard angle changes for speeds above
+				{
+					pPlayer->mo->angle = moveCmd.angle;
+				}
 			}
-
-			// [ZZ] fix up the ticcmd so it's not possible to change angle and sr50 at the same time.
-			//      serverside part to actually stop the cheating.
-			//		added angleExtCheckForSR50 to check against explicit angle changes (we don't expect the hackers to always kindly set .yaw for us right?)
-			if ((pCmd->ucmd.yaw != 0) || extAngleCheckForSR50)
-				pCmd->ucmd.sidemove = clamp<short>(pCmd->ucmd.sidemove, -10240, 10240); // 10240 = 40; 12800 = 50
 
 			// Makes sure the pitch is valid (should we kick them if it's not?)
 			if ( pPlayer->mo->pitch < ( -ANGLE_1 * 90 ))

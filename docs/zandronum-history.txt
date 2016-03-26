@@ -86,8 +86,8 @@
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
-!	- Since the only purpose of the CVAR sv_useticbuffer is to debug problems with the client movement buffer, it is now restricted to testing binaries. [Torr Samaho]
-!	- 'SR50 + turning' movement commands are now clamped to 'SR50' on client and server. [Circunei Z]
+!	- Since the only purpose of the CVARs sv_useticbuffer and sv_limitcommands is for debug, they are now restricted to testing binaries. [Torr Samaho, Dusk]
+!	- The player's yaw movement is locked if its speed is above 'SR40' (and angle changes are disregarded) on client and server. [Circunei Z, Hypnotoad]
 !	- Joypad strafing movements are now capped at SR40 speed. [Leonard]
 !	- Dropping is now allowed in competitive gamemodes, unless sv_nodrop explicitly disallows it. [Dusk]
 

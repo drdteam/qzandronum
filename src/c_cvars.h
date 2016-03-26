@@ -72,6 +72,9 @@ enum
 
 	// [BB] This cvar may not be changed by ConsoleCommand.
 	CVAR_NOSETBYACS = 131072,
+
+	// [TP] The CVar is not present in release builds
+	CVAR_DEBUGONLY = 262144,
 };
 
 union UCVarValue
