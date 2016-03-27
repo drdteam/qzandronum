@@ -66,19 +66,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_KnightAttack)
 	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
 	if (self->flags & MF_SHADOW || pr_knightatk () < 40)
 	{ // Red axe
-		AActor *missile = P_SpawnMissileZ (self, self->Z() + 36*FRACUNIT, self->target, PClass::FindClass("RedAxe"));
-
-		// [BB] If we're the server, tell the clients to spawn this missile.
-		if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && missile )
-			SERVERCOMMANDS_SpawnMissile( missile );
-
+		P_SpawnMissileZ (self, self->Z() + 36*FRACUNIT, self->target, PClass::FindClass("RedAxe"), true); // [BB] Inform clients
 		return;
 	}
 	// Green axe
-	AActor *missile = P_SpawnMissileZ (self, self->Z() + 36*FRACUNIT, self->target, PClass::FindClass("KnightAxe"));
-
-	// [BB] If we're the server, tell the clients to spawn this missile.
-	if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && missile )
-		SERVERCOMMANDS_SpawnMissile( missile );
+	P_SpawnMissileZ (self, self->Z() + 36*FRACUNIT, self->target, PClass::FindClass("KnightAxe"), true); // [BB] Inform clients
 }
 

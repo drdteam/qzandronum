@@ -85,24 +85,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	const PClass *fx = PClass::FindClass("SorcererFX1");
 	if (self->health > (self->SpawnHealth()/3)*2)
 	{ // Spit one fireball
-		mo = P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx );
-
-		// [BC] Spawn this to clients.
-		if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-			SERVERCOMMANDS_SpawnMissile( mo );
+		P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx, true); // [BB] Inform clients
 	}
 	else
 	{ // Spit three fireballs
-		mo = P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx);
+		mo = P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx, true); // [BB] Inform clients
 		if (mo != NULL)
 		{
 			velz = mo->velz;
 			angle = mo->angle;
-
-			// [BC] Spawn this to clients.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnMissile( mo );
-
 			mo = P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle-ANGLE_1*3, velz);
 			
 			// [BC] Spawn this to clients.
