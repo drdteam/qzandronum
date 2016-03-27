@@ -293,18 +293,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 		const PClass *fx = PClass::FindClass("Sorcerer2FX2");
 		if (fx)
 		{
-			// [BC]
-			AActor *mo = P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2);
-
-			// [BC]
-			if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_SpawnMissile( mo );
-
-			mo = P_SpawnMissileAngle (self, fx, self->angle+ANG45, FRACUNIT/2);
-
-			// [BC]
-			if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_SpawnMissile( mo );
+			P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2, true); // [BB] Inform clients
+			P_SpawnMissileAngle (self, fx, self->angle+ANG45, FRACUNIT/2, true); // [BB] Inform clients
 		}
 	}
 	else

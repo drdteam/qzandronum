@@ -172,11 +172,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FighterAttack)
 	P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), angle-ANG45/4, 0);
 	*/
 
-	AActor *aMissile;
 	for (int i = -2; i <= 2; i++) {
-		aMissile = P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), angle + (i*ANG45)/8, 0);
-		if( NETWORK_GetState( ) == NETSTATE_SERVER && aMissile )
-			SERVERCOMMANDS_SpawnMissile( aMissile );
+		P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), angle + (i*ANG45)/8, 0, true); // [BB] Inform clients
 	}
 
 	S_Sound (self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM);

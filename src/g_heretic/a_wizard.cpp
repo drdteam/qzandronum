@@ -86,21 +86,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_WizAtk3)
 		return;
 	}
 	const PClass *fx = PClass::FindClass("WizardFX1");
-	mo = P_SpawnMissile (self, self->target, fx);
+	mo = P_SpawnMissile (self, self->target, fx, NULL, true); // [BB] Inform clients
 	if (mo != NULL)
 	{
-		AActor *missile1 = P_SpawnMissileAngle(self, fx, mo->angle-(ANG45/8), mo->velz);
-		AActor *missile2 = P_SpawnMissileAngle(self, fx, mo->angle+(ANG45/8), mo->velz);
-
-		// [BB] If we're the server, tell the clients to spawn the missiles.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		{
-			SERVERCOMMANDS_SpawnMissile( mo );
-			if ( missile1 )
-				SERVERCOMMANDS_SpawnMissile( missile1 );
-			if ( missile2 )
-				SERVERCOMMANDS_SpawnMissile( missile2 );
-		}
-
+		P_SpawnMissileAngle(self, fx, mo->angle-(ANG45/8), mo->velz, true); // [BB] Inform clients
+		P_SpawnMissileAngle(self, fx, mo->angle+(ANG45/8), mo->velz, true); // [BB] Inform clients
 	}
 }

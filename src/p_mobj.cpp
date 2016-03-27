@@ -7443,14 +7443,15 @@ AActor * P_OldSpawnMissile(AActor * source, AActor * owner, AActor * dest, const
 //---------------------------------------------------------------------------
 
 AActor *P_SpawnMissileAngle (AActor *source, const PClass *type,
-	angle_t angle, fixed_t velz)
+	angle_t angle, fixed_t velz, bool bSpawnOnClient) // [BB] Added bSpawnOnClient.
 {
 	if (source == NULL)
 	{
 		return NULL;
 	}
 	return P_SpawnMissileAngleZSpeed (source, source->Z() + 32*FRACUNIT + source->GetBobOffset(),
-		type, angle, velz, GetDefaultSpeed (type));
+		type, angle, velz, GetDefaultSpeed (type),
+		NULL, true, bSpawnOnClient ); // [BB] Added bSpawnOnClient.
 }
 
 AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z,

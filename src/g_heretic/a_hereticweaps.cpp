@@ -218,16 +218,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireGoldWandPL2)
 	angle_t pitch = P_BulletSlope(self);
 	velz = FixedMul (GetDefaultByName("GoldWandFX2")->Speed,
 		finetangent[FINEANGLES/4-((signed)pitch>>ANGLETOFINESHIFT)]);
-	// [BB]
-	AActor *pMissile = P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle-(ANG45/8), velz);
-	if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SpawnMissileExact( pMissile );
-	pMissile = P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle+(ANG45/8), velz);
-	if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SpawnMissileExact( pMissile );
-
+	P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle-(ANG45/8), velz, true); // [BB] Inform clients
+	P_SpawnMissileAngle (self, PClass::FindClass("GoldWandFX2"), self->angle+(ANG45/8), velz, true); // [BB] Inform clients
 	angle = self->angle-(ANG45/8);
-
 	for(i = 0; i < 5; i++)
 	{
 		damage = 1+(pr_fgw2()&7);
@@ -238,14 +231,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireGoldWandPL2)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		pMissile = P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle - ( ANG45 / 8 ) + ( ANGLE_45 / 3 ), velz );
-		if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnMissileExact( pMissile );
-
-		pMissile = P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle + ( ANG45 / 8 ) + ( ANGLE_45 / 3 ), velz );
-		if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnMissileExact( pMissile );
-
+		P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle - ( ANG45 / 8 ) + ( ANGLE_45 / 3 ), velz, true); // [BB] Inform clients
+		P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle + ( ANG45 / 8 ) + ( ANGLE_45 / 3 ), velz, true); // [BB] Inform clients
 		angle = self->angle - ( ANG45 / 8 ) + ( ANGLE_45 / 3 );
 		for ( i = 0; i < 5; i++ )
 		{
@@ -254,14 +241,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireGoldWandPL2)
 			angle += ((ANG45/8)*2)/4;
 		}
 
-		pMissile = P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle - ( ANG45 / 8 ) - ( ANGLE_45 / 3 ), velz );
-		if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnMissileExact( pMissile );
-
-		pMissile = P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle + ( ANG45 / 8 ) - ( ANGLE_45 / 3 ), velz );
-		if ( pMissile && NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnMissileExact( pMissile );
-
+		P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle - ( ANG45 / 8 ) - ( ANGLE_45 / 3 ), velz, true); // [BB] Inform clients
+		P_SpawnMissileAngle( self, PClass::FindClass("GoldWandFX2"), self->angle + ( ANG45 / 8 ) - ( ANGLE_45 / 3 ), velz, true); // [BB] Inform clients
 		angle = self->angle - ( ANG45 / 8 ) - ( ANGLE_45 / 3 );
 		for ( i = 0; i < 5; i++ )
 		{
