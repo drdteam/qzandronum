@@ -402,29 +402,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk2)
 //			S_Sound (mo, CHAN_WEAPON, "minotaur/attack2", 1, ATTN_NORM);
 			velz = mo->velz;
 			angle = mo->angle;
-			mo = P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/8), velz);
-		
-			// [BC] If we're the server, tell clients to spawn this missile.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnMissile( mo );
-
-			mo = P_SpawnMissileAngleZ (self, z, fx, angle+(ANG45/8), velz);
-		
-			// [BC] If we're the server, tell clients to spawn this missile.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnMissile( mo );
-
-			mo = P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/16), velz);
-		
-			// [BC] If we're the server, tell clients to spawn this missile.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnMissile( mo );
-
-			mo = P_SpawnMissileAngleZ (self, z, fx, angle+(ANG45/16), velz);
-		
-			// [BC] If we're the server, tell clients to spawn this missile.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnMissile( mo );
+			P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/8), velz, true); // [BB] Inform clients
+			P_SpawnMissileAngleZ (self, z, fx, angle+(ANG45/8), velz, true); // [BB] Inform clients
+			P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/16), velz, true); // [BB] Inform clients
+			P_SpawnMissileAngleZ (self, z, fx, angle+(ANG45/16), velz, true); // [BB] Inform clients
 		}
 	}
 }

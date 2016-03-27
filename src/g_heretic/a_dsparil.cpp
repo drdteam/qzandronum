@@ -94,17 +94,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 		{
 			velz = mo->velz;
 			angle = mo->angle;
-			mo = P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle-ANGLE_1*3, velz);
-			
-			// [BC] Spawn this to clients.
-			if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_SpawnMissile( mo );
-
-			mo = P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle+ANGLE_1*3, velz);
-
-			// [BC] Spawn this to clients.
-			if (( mo ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_SpawnMissile( mo );
+			P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle-ANGLE_1*3, velz, true); // [BB] Inform clients
+			P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle+ANGLE_1*3, velz, true); // [BB] Inform clients
 		}
 		if (self->health < self->SpawnHealth()/3)
 		{ // Maybe attack again

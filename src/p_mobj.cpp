@@ -7456,10 +7456,11 @@ AActor *P_SpawnMissileAngle (AActor *source, const PClass *type,
 }
 
 AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z,
-	const PClass *type, angle_t angle, fixed_t velz)
+	const PClass *type, angle_t angle, fixed_t velz, bool bSpawnOnClient) // [BB] Added bSpawnOnClient.
 {
 	return P_SpawnMissileAngleZSpeed (source, z, type, angle, velz,
-		GetDefaultSpeed (type));
+		GetDefaultSpeed (type),
+		NULL, true, bSpawnOnClient ); // [BB] Added bSpawnOnClient.
 }
 
 AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, const PClass *type, bool bSpawnOnClient ) // [BB] Added bSpawnOnClient.
