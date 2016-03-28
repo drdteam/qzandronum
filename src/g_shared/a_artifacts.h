@@ -37,13 +37,23 @@ protected:
 	friend void InitAllPowerupEffects(AInventory *item);
 };
 
+class PClassPowerupGiver: public PClassInventory
+{
+	DECLARE_CLASS(PClassPowerupGiver, PClassInventory)
+protected:
+public:
+	virtual void ReplaceClassRef(PClass *oldclass, PClass *newclass);
+};
+
+
 // An artifact is an item that gives the player a powerup when activated.
 class APowerupGiver : public AInventory
 {
-	DECLARE_CLASS (APowerupGiver, AInventory)
+	DECLARE_CLASS_WITH_META (APowerupGiver, AInventory, PClassPowerupGiver)
 public:
 	virtual bool Use (bool pickup);
 	virtual void Serialize (FArchive &arc);
+
 
 	// [TP] For runes
 	virtual void PowerupGranted ( APowerup* ) {}

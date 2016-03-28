@@ -65,6 +65,11 @@ FRandom FState::pr_statetics("StateTics");
 
 cycle_t ActionCycles;
 
+void FState::SetAction(const char *name)
+{
+	ActionFunc = FindGlobalActionFunction(name)->Variants[0].Implementation;
+}
+
 bool FState::CallAction(AActor *self, AActor *stateowner)
 {
 	if (ActionFunc != NULL)

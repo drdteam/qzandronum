@@ -3,7 +3,7 @@
 #ifndef __A_WEAPONPIECE_H__
 #define __A_WEAPONPIECE_H__
 
-// Ammo: Something a weapon needs to operate
+// 
 class PClassWeaponPiece : public PClassInventory
 {
 	DECLARE_CLASS(PClassWeaponPiece, PClassInventory)
