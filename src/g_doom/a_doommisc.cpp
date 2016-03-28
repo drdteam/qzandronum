@@ -14,6 +14,7 @@
 #include "templates.h"
 #include "m_bbox.h"
 #include "farchive.h"
+#include "portal.h"
 // [BC] New #includes.
 #include "cl_demo.h"
 #include "gamemode.h"
