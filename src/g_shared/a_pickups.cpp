@@ -19,6 +19,8 @@
 #include "g_game.h"
 #include "doomstat.h"
 #include "farchive.h"
+#include "d_player.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "network.h"

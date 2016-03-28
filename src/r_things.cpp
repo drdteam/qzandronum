@@ -63,6 +63,7 @@
 #include "r_data/colormaps.h"
 #include "r_data/voxels.h"
 #include "p_local.h"
+#include "p_maputl.h"
 // [BB] New #includes.
 #include "w_wad.h"
 #include "cl_demo.h"

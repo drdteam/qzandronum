@@ -59,6 +59,9 @@
 #include "r_main.h"
 #include "p_3dmidtex.h"
 #include "po_man.h"
+#include "doomdata.h"
+#include "p_blockmap.h"
+#include "p_maputl.h"
 
 //*****************************************************************************
 //	VARIABLES

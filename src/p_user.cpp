@@ -54,6 +54,11 @@
 #include "gstrings.h"
 #include "farchive.h"
 #include "r_renderer.h"
+#include "d_player.h"
+#include "r_utility.h"
+#include "p_blockmap.h"
+#include "a_morph.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "sv_commands.h"
 #include "a_doomglobal.h"

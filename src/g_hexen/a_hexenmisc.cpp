@@ -20,6 +20,10 @@
 #include "farchive.h"
 #include "v_palette.h"
 #include "g_game.h"
+#include "p_blockmap.h"
+#include "r_utility.h"
+#include "p_maputl.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"

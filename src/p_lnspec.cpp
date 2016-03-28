@@ -58,9 +58,13 @@
 #include "d_event.h"
 #include "gstrings.h"
 #include "portal.h"
+#include "po_man.h"
+#include "d_player.h"
+#include "r_utility.h"
 #include "r_data/colormaps.h"
 // [BB] Zandronum doesn't have FS for now.
 //#include "fragglescript/t_fs.h"
+#include "p_spec.h"
 // [BC] New #includes.
 #include "cooperative.h"
 #include "deathmatch.h"

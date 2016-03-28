@@ -9,6 +9,8 @@
 #include "a_sharedglobal.h"
 #include "statnums.h"
 #include "farchive.h"
+#include "d_player.h"
+#include "r_utility.h"
 // [BB] New #includes.
 #include "network.h"
 #include "sv_commands.h"

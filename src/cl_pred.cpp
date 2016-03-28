@@ -63,6 +63,7 @@
 #include "c_console.h"
 #include "cl_demo.h"
 #include "cl_main.h"
+#include "p_spec.h"
 
 void P_MovePlayer (player_t *player, ticcmd_t *cmd);
 void P_CalcHeight (player_t *player);

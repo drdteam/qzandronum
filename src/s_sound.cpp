@@ -51,6 +51,7 @@
 #include "g_level.h"
 #include "po_man.h"
 #include "farchive.h"
+#include "d_player.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"

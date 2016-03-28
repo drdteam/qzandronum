@@ -56,6 +56,7 @@
 #include "g_level.h"
 #include "d_net.h"
 #include "d_netinf.h"
+#include "a_morph.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "duel.h"

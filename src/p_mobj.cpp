@@ -33,6 +33,7 @@
 #include "m_random.h"
 #include "doomdef.h"
 #include "p_local.h"
+#include "p_maputl.h"
 #include "p_lnspec.h"
 #include "p_effect.h"
 #include "p_terrain.h"
@@ -71,6 +72,9 @@
 #include "farchive.h"
 #include "r_data/colormaps.h"
 #include "r_renderer.h"
+#include "po_man.h"
+#include "p_spec.h"
+#include "p_checkposition.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "duel.h"
@@ -509,7 +513,7 @@ void AActor::Serialize (FArchive &arc)
 	if (arc.IsLoading ())
 	{
 		touching_sectorlist = NULL;
-		LinkToWorld (Sector);
+		LinkToWorld (false, NULL, Sector);
 		AddToHash ();
 		SetShade (fillcolor);
 		if (player)

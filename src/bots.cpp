@@ -88,6 +88,8 @@
 #include "p_trace.h"
 #include "sbar.h"
 #include "doomerrors.h"
+#include "a_morph.h"
+#include "p_maputl.h"
 
 //*****************************************************************************
 //	VARIABLES

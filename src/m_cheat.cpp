@@ -46,6 +46,8 @@
 #include "d_dehacked.h"
 #include "gi.h"
 #include "farchive.h"
+#include "r_utility.h"
+#include "a_morph.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "announcer.h"

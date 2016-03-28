@@ -30,6 +30,7 @@
 #include "r_state.h"
 #include "gi.h"
 #include "farchive.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "network.h"

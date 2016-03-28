@@ -16,6 +16,8 @@
 #include "a_action.h"
 #include "thingdef/thingdef.h"
 #include "v_text.h"
+#include "doomstat.h"
+#include "doomdata.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "sv_commands.h"

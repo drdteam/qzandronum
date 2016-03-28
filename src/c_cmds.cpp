@@ -69,6 +69,8 @@
 #include "v_text.h"
 #include "p_lnspec.h"
 #include "v_video.h"
+#include "r_utility.h"
+#include "r_data/r_interpolate.h"
 // [BC] New #includes.
 #include "deathmatch.h"
 #include "cl_demo.h"

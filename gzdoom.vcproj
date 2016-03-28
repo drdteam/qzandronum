@@ -55,7 +55,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="src\zscript;src\win32,src\sound,src,zlib,src\g_shared,src\g_doom,src\g_raven,src\g_heretic,src\g_hexen,src\g_strife;flac;jpeg-6b;game-music-emu;gdtoa;bzip2;lzma\C;src\huffman;sqlite;src\win32\g15\include"
+				AdditionalIncludeDirectories="src\zscript;src\textures;src\thingdef;src\win32,src\sound,src,zlib,src\g_shared,src\g_doom,src\g_raven,src\g_heretic,src\g_hexen,src\g_strife;flac;jpeg-6b;game-music-emu;gdtoa;bzip2;lzma\C;src\huffman;sqlite;src\win32\g15\include"
 				PreprocessorDefinitions="NDEBUG,WIN32,_WIN32,_WINDOWS,USEASM,NO_MANIFEST;_DO_NOT_DECLARE_INTERLOCKED_INTRINSICS_IN_MEMORY,NO_VA_COPY;BACKPATCH,HAVE_FLUIDSYNTH,DYN_FLUIDSYNTH,NO_OPENAL"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -171,7 +171,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="src\zscript;src\win32;src\sound;src;zlib;src\g_shared;src\g_doom;src\g_raven;src\g_heretic;src\g_hexen;src\g_strife;flac;jpeg-6b;game-music-emu;gdtoa;bzip2;lzma\C;src\huffman;sqlite;src\win32\g15\include"
+				AdditionalIncludeDirectories="src\zscript;src\textures;src\thingdef;src\win32;src\sound;src;zlib;src\g_shared;src\g_doom;src\g_raven;src\g_heretic;src\g_hexen;src\g_strife;flac;jpeg-6b;game-music-emu;gdtoa;bzip2;lzma\C;src\huffman;sqlite;src\win32\g15\include"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WIN32,_WINDOWS,USEASM,_CRTDBG_MAP_ALLOC,NO_MANIFEST,NO_VA_COPY;BACKPATCH,HAVE_FLUIDSYNTH,DYN_FLUIDSYNTH,NO_OPENAL"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
@@ -1470,11 +1470,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\edata.h"
+				RelativePath=".\src\duel.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\duel.h"
+				RelativePath=".\src\edata.h"
 				>
 			</File>
 			<File
@@ -4629,7 +4629,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4637,7 +4637,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4671,7 +4671,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -4681,7 +4681,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCustomBuildTool"

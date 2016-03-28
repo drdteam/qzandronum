@@ -62,6 +62,9 @@
 #include "stats.h"
 #include "botpath.h"
 #include "doomerrors.h"
+#include "p_blockmap.h"
+#include "r_state.h"
+#include "r_utility.h"
 
 //*****************************************************************************
 //	VARIABLES

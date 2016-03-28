@@ -122,6 +122,8 @@
 #include "p_enemy.h"
 #include "network/packetarchive.h"
 #include "p_lnspec.h"
+#include "r_utility.h"
+#include "a_morph.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING

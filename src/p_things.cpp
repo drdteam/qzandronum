@@ -47,6 +47,9 @@
 #include "g_level.h"
 #include "v_text.h"
 #include "i_system.h"
+#include "d_player.h"
+#include "r_utility.h"
+#include "p_spec.h"
 // [BC] New #includes.
 #include "a_doomglobal.h"
 #include "sv_commands.h"

@@ -79,6 +79,7 @@
 #include "v_video.h"
 #include "templates.h"
 #include "d_event.h"
+#include "a_morph.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING

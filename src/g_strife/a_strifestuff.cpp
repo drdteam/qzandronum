@@ -19,6 +19,7 @@
 #include "d_event.h"
 #include "v_font.h"
 #include "farchive.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "sv_commands.h"

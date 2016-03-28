@@ -30,7 +30,10 @@
 #include "sbar.h"
 #include "r_data/r_interpolate.h"
 #include "i_sound.h"
+#include "d_player.h"
 #include "g_level.h"
+#include "r_utility.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "g_game.h"
 #include "team.h"

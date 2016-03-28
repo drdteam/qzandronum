@@ -60,6 +60,7 @@
 #include "v_video.h"
 #include "p_spec.h"
 #include "hardware.h"
+#include "r_utility.h"
 #include "intermission/intermission.h"
 // [BC] New #includes.
 #include "cl_demo.h"

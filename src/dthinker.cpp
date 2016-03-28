@@ -43,6 +43,7 @@
 #include "i_system.h"
 #include "doomerrors.h"
 #include "farchive.h"
+#include "d_player.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "doomstat.h"

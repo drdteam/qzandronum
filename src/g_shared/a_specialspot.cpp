@@ -40,6 +40,7 @@
 #include "thingdef/thingdef.h"
 #include "doomstat.h"
 #include "farchive.h"
+#include "a_pickups.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "gamemode.h"

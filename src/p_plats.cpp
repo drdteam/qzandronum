@@ -31,6 +31,7 @@
 #include "r_state.h"
 #include "gi.h"
 #include "farchive.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "network.h"
 #include "sv_commands.h"

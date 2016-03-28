@@ -51,6 +51,8 @@
 #include "gi.h"
 #include "v_palette.h"
 #include "colormatcher.h"
+#include "d_player.h"
+#include "r_utility.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "network.h"

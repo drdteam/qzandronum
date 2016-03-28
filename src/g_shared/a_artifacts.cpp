@@ -20,6 +20,8 @@
 #include "doomstat.h"
 #include "v_palette.h"
 #include "farchive.h"
+#include "r_utility.h"
+
 #include "r_data/colormaps.h"
 // New #includes for ST.
 #include "cl_demo.h"

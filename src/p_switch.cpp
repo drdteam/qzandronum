@@ -47,6 +47,8 @@
 #include "tarray.h"
 #include "cmdlib.h"
 #include "farchive.h"
+#include "p_maputl.h"
+#include "p_spec.h"
 // [BC] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"

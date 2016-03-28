@@ -12,6 +12,8 @@
 #include "g_level.h"
 #include "doomstat.h"
 #include "farchive.h"
+#include "a_pickups.h"
+#include "d_player.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"
