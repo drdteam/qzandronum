@@ -589,7 +589,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 	}
 	if (ceiling->m_Speed >= movedist)
 	{
-		ceiling->StopInterpolation();
+		ceiling->StopInterpolation(true);
 	}
 
 	// [BC] If we're the server, tell clients to create a ceiling.

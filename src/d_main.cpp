@@ -3049,8 +3049,9 @@ void D_DoomMain (void)
 		FinishDehPatch();
 
 		InitActorNumsFromMapinfo();
-		PClassActor::StaticSetActorNums ();
 		InitSpawnablesFromMapinfo();
+		PClassActor::StaticSetActorNums();
+
 		// [TP] Init preferred weapon order
 		PWO_Init();
 

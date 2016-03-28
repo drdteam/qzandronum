@@ -33,8 +33,8 @@ public:
 	void Activate (AActor *activator);
 	void Deactivate (AActor *activator);
 protected:
-	float Splerp (float p1, float p2, float p3, float p4);
-	float Lerp (float p1, float p2);
+	double Splerp (double p1, double p2, double p3, double p4);
+	double Lerp (double p1, double p2);
 	virtual bool Interpolate ();
 	virtual void NewNode ();
 

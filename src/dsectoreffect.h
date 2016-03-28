@@ -39,7 +39,7 @@ protected:
 public:
 	void Destroy();
 protected:
-	void StopInterpolation();
+	void StopInterpolation(bool force = false);
 	inline EResult MoveFloor (fixed_t speed, fixed_t dest, int crush, int direction, bool hexencrush)
 	{
 		return MovePlane (speed, dest, crush, 0, direction, hexencrush);
