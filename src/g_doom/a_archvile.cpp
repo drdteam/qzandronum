@@ -176,7 +176,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_VileAttack)
 	if (fire != NULL)
 	{
 		// move the fire between the vile and the player
-		fixedvec3 pos = target->Vec3Angle(-24 * FRACUNIT, self->angle, target->Z());
+		fixedvec3 pos = target->Vec3Angle(-24 * FRACUNIT, self->angle, 0);
 		fire->SetOrigin (pos, true);
 		
 		// [BC] Tell clients of the fire update.

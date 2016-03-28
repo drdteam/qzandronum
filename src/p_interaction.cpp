@@ -1911,7 +1911,7 @@ dopain:
 	{
 		if (source == target->target)
 		{
-			target->threshold = BASETHRESHOLD;
+			target->threshold = target->DefThreshold;
 			if (target->state == target->SpawnState && target->SeeState != NULL)
 			{
 				// [BB] If we are the server, tell clients about the state change.
@@ -1936,7 +1936,7 @@ dopain:
 				target->lastenemy = target->target; // remember last enemy - killough
 			}
 			target->target = source;
-			target->threshold = BASETHRESHOLD;
+			target->threshold = target->DefThreshold;
 			if (target->state == target->SpawnState && target->SeeState != NULL)
 			{
 				// If we are the server, tell clients about the state change.

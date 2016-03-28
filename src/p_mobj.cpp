@@ -478,6 +478,10 @@ void AActor::Serialize (FArchive &arc)
 			<< RipLevelMin
 			<< RipLevelMax;
 	}
+	if (SaveVersion >= 4533)
+	{
+		arc << DefThreshold;
+	}
 
 	
 	// [BB] Zandronum additions.
@@ -1724,7 +1728,7 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 {
 	if (mo->flags3 & MF3_EXPLOCOUNT)
 	{
-		if (++mo->special2 < mo->special1)
+		if (++mo->threshold < mo->DefThreshold)
 		{
 			return;
 		}

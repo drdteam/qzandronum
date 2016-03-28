@@ -57,6 +57,7 @@
 #include "d_net.h"
 #include "d_event.h"
 #include "gstrings.h"
+#include "portal.h"
 #include "r_data/colormaps.h"
 // [BB] Zandronum doesn't have FS for now.
 //#include "fragglescript/t_fs.h"
@@ -3775,6 +3776,12 @@ FUNC(LS_Thing_SetConversation)
 	return true;
 }
 
+FUNC(LS_Line_SetPortalTarget)
+// Line_SetPortalTarget(thisid, destid)
+{
+	return P_ChangePortal(ln, arg0, arg1);
+}
+
 // [BC] From GZDoom. Now in p_lnspec.cpp where it belongs.
 // Normally this would be better placed in p_lnspec.cpp.
 // But I have accidentally overwritten that file several times
@@ -3910,7 +3917,7 @@ static lnSpecFunc LineSpecials[] =
 	/* 104 */ LS_Ceiling_CrushAndRaiseSilentDist,
 	/* 105 */ LS_Door_WaitRaise,
 	/* 106 */ LS_Door_WaitClose,
-	/* 107 */ LS_NOP,
+	/* 107 */ LS_Line_SetPortalTarget,
 	/* 108 */ LS_NOP,
 	/* 109 */ LS_Light_ForceLightning,
 	/* 110 */ LS_Light_RaiseByValue,

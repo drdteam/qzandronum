@@ -2080,7 +2080,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_LookEx)
 
 	AActor *targ = NULL; // Shuts up gcc
 	fixed_t dist;
-	angle_t fov = (fov_f == 0) ? ANGLE_180 : angle_t(fov_f * ANGLE_90 / 90);
+	angle_t fov = (fov_f == 0) ? ANGLE_180 : FLOAT2ANGLE(fov_f);
 	FLookExParams params = { fov, minseedist, maxseedist, maxheardist, flags, seestate };
 
 	// [TP] The client does not execute this
@@ -3227,7 +3227,7 @@ void A_Face (AActor *self, AActor *other, angle_t max_turn, angle_t max_pitch, a
 
 		double dist_z = target_z - source_z;
 		double ddist = sqrt(dist.X*dist.X + dist.Y*dist.Y + dist_z*dist_z);
-		int other_pitch = (int)rad2bam(asin(dist_z / ddist));
+		int other_pitch = (int)RAD2ANGLE(asin(dist_z / ddist));
 		
 		if (max_pitch != 0)
 		{
@@ -3246,8 +3246,7 @@ void A_Face (AActor *self, AActor *other, angle_t max_turn, angle_t max_pitch, a
 		{
 			self->pitch = other_pitch;
 		}
-		if (flags & FAF_NODISTFACTOR)
-			self->pitch += pitch_offset;
+		self->pitch += pitch_offset;
 	}
 	
 
