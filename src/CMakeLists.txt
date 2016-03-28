@@ -42,6 +42,14 @@ if( CMAKE_SIZEOF_VOID_P MATCHES "8" )
 	set( X64 64 )
 endif()
 
+if( ZD_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
+	set ( FASTMATH "-ffast-math" )
+else()
+	if ( MSVC )
+		set ( FASTMATH "/fp:fast" )
+	endif()
+endif()
+
 # You can either use "make install" on the FMOD distribution to put it
 # in standard system locations, or you can unpack the FMOD distribution
 # in the root of the zdoom tree. e.g.:
@@ -108,8 +116,6 @@ if( WIN32 )
 		"C:/Program Files (x86)/FMOD SoundSystem/FMOD Programmers API ${WIN_TYPE}/api"
 		# This next one is for Randy.
 		"E:/Software/Dev/FMOD/${WIN_TYPE}/api" 
-		# .. and this one for Graf Zahl
-		"D:/portable/FMOD SoundSystem 4.26/FMOD Programmers API WIN32/api"
 		)
 	set( FMOD_INC_PATH_SUFFIXES PATH_SUFFIXES inc )
 	set( FMOD_LIB_PATH_SUFFIXES PATH_SUFFIXES lib )
@@ -890,6 +896,11 @@ if( NOT NO_GL )
 		gl/scene/gl_walls_draw.cpp
 		gl/scene/gl_vertex.cpp
 		gl/scene/gl_spritelight.cpp
+		gl/stereo3d/gl_stereo3d.cpp
+		gl/stereo3d/gl_stereo_cvars.cpp
+		gl/stereo3d/gl_stereo_leftright.cpp
+		gl/stereo3d/scoped_view_shifter.cpp
+		gl/stereo3d/gl_anaglyph.cpp
 		gl/dynlights/gl_dynlight.cpp
 		gl/dynlights/gl_glow.cpp
 		gl/dynlights/gl_dynlight1.cpp
@@ -1063,6 +1074,92 @@ set( NOT_COMPILED_SOURCE_FILES
 	asm_x86_64/tmap3.s
 )
 
+set( FASTMATH_SOURCES
+	r_swrenderer.cpp
+	r_3dfloors.cpp
+	r_bsp.cpp
+	r_draw.cpp
+	r_drawt.cpp
+	r_main.cpp
+	r_plane.cpp
+	r_segs.cpp
+	r_sky.cpp
+	r_things.cpp
+	s_advsound.cpp
+	s_environment.cpp
+	s_playlist.cpp
+	s_sndseq.cpp
+	s_sound.cpp
+	GuillotineBinPack.cpp
+	SkylineBinPack.cpp
+	intermission/intermission.cpp
+	intermission/intermission_parse.cpp
+	menu/browsermenu.cpp #ZA
+	menu/colorpickermenu.cpp
+	menu/joystickmenu.cpp
+	menu/listmenu.cpp
+	menu/loadsavemenu.cpp
+	menu/menu.cpp
+	menu/menudef.cpp
+	menu/menuinput.cpp
+	menu/messagebox.cpp
+	menu/multiplayermenu.cpp #ZA
+	menu/optionmenu.cpp
+	menu/playerdisplay.cpp
+	menu/playermenu.cpp
+	menu/readthis.cpp
+	menu/videomenu.cpp
+	oplsynth/fmopl.cpp
+	oplsynth/mlopl.cpp
+	oplsynth/mlopl_io.cpp
+	oplsynth/music_opldumper_mididevice.cpp
+	oplsynth/music_opl_mididevice.cpp
+	oplsynth/opl_mus_player.cpp
+	oplsynth/dosbox/opl.cpp
+	oplsynth/OPL3.cpp
+	oplsynth/nukedopl3.cpp
+	sound/fmodsound.cpp
+	sound/i_music.cpp
+	sound/i_sound.cpp
+	sound/mpg123_decoder.cpp
+	sound/music_cd.cpp
+	sound/music_dumb.cpp
+	sound/music_gme.cpp
+	sound/music_mus_midiout.cpp
+	sound/music_smf_midiout.cpp
+	sound/music_hmi_midiout.cpp
+	sound/music_xmi_midiout.cpp
+	sound/music_midistream.cpp
+	sound/music_midi_base.cpp
+	sound/music_midi_timidity.cpp
+	sound/music_mus_opl.cpp
+	sound/music_stream.cpp
+	sound/music_fluidsynth_mididevice.cpp
+	sound/music_softsynth_mididevice.cpp
+	sound/music_timidity_mididevice.cpp
+	sound/music_wildmidi_mididevice.cpp
+	sound/music_win_mididevice.cpp
+	sound/oalsound.cpp
+	sound/sndfile_decoder.cpp
+	sound/music_pseudo_mididevice.cpp
+	timidity/common.cpp
+	timidity/instrum.cpp
+	timidity/instrum_dls.cpp
+	timidity/instrum_font.cpp
+	timidity/instrum_sf2.cpp
+	timidity/mix.cpp
+	timidity/playmidi.cpp
+	timidity/resample.cpp
+	timidity/timidity.cpp
+	wildmidi/file_io.cpp
+	wildmidi/gus_pat.cpp
+	wildmidi/reverb.cpp
+	wildmidi/wildmidi_lib.cpp
+	wildmidi/wm_error.cpp
+	r_data/colormaps.cpp
+	r_data/r_translate.cpp
+	${GL_SOURCES}
+)
 add_executable( zdoom WIN32 MACOSX_BUNDLE
 	${HEADER_FILES}
 	${NOT_COMPILED_SOURCE_FILES}
@@ -1070,6 +1167,7 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	${ASM_SOURCES}
 	${SYSTEM_SOURCES}
 	${X86_SOURCES}
+	${FASTMATH_SOURCES}
 	x86.cpp
 	actorptrselect.cpp
 	am_map.cpp
@@ -1222,24 +1320,9 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	parsecontext.cpp
 	platform.cpp #ST
 	po_man.cpp
-        portal.cpp
+    portal.cpp
 	possession.cpp #ST
-	r_swrenderer.cpp
 	r_utility.cpp
-	r_3dfloors.cpp
-	r_bsp.cpp
-	r_draw.cpp
-	r_drawt.cpp
-	r_main.cpp
-	r_plane.cpp
-	r_segs.cpp
-	r_sky.cpp
-	r_things.cpp
-	s_advsound.cpp
-	s_environment.cpp
-	s_playlist.cpp
-	s_sndseq.cpp
-	s_sound.cpp
 	sc_man.cpp
 	scoreboard.cpp #ST
 	sectinfo.cpp #ST
@@ -1273,8 +1356,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	za_database.cpp #ZA
 	zstrformat.cpp
 	zstring.cpp
-	GuillotineBinPack.cpp
-	SkylineBinPack.cpp
 	cooperative.cpp #ST [BB] This needs to be linked after deathmatch.cpp and team.cpp (see above).
 	# [BL] Huffman is ZAN
 	huffman/bitreader.cpp
@@ -1332,38 +1413,7 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	g_shared/shared_hud.cpp
 	g_shared/shared_sbar.cpp
 	g_shared/st_hud.cpp #ST
-	intermission/intermission.cpp
-	intermission/intermission_parse.cpp
-	menu/browsermenu.cpp #ZA
-	menu/colorpickermenu.cpp
-	menu/joystickmenu.cpp
-	menu/listmenu.cpp
-	menu/loadsavemenu.cpp
-	menu/menu.cpp
-	menu/menudef.cpp
-	menu/menuinput.cpp
-	menu/messagebox.cpp
-	menu/multiplayermenu.cpp #ZA
-	menu/optionmenu.cpp
-	menu/playerdisplay.cpp
-	menu/playermenu.cpp
-	menu/readthis.cpp
-	menu/videomenu.cpp
-	${GL_SOURCES}
-	gl/stereo3d/gl_stereo3d.cpp
-	gl/stereo3d/gl_stereo_cvars.cpp
-	gl/stereo3d/gl_stereo_leftright.cpp
-	gl/stereo3d/scoped_view_shifter.cpp
-	gl/stereo3d/gl_anaglyph.cpp
 	oplsynth/fmopl.cpp
-	oplsynth/mlopl.cpp
-	oplsynth/mlopl_io.cpp
-	oplsynth/music_opldumper_mididevice.cpp
-	oplsynth/music_opl_mididevice.cpp
-	oplsynth/opl_mus_player.cpp
-	oplsynth/dosbox/opl.cpp
-	oplsynth/OPL3.cpp
-	oplsynth/nukedopl3.cpp
 	resourcefiles/ancientzip.cpp
 	resourcefiles/file_7z.cpp
 	resourcefiles/file_grp.cpp
@@ -1375,30 +1425,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	resourcefiles/file_directory.cpp
 	resourcefiles/resourcefile.cpp
 	sfmt/SFMT.cpp
-	sound/fmodsound.cpp
-	sound/i_music.cpp
-	sound/i_sound.cpp
-	sound/mpg123_decoder.cpp
-	sound/music_cd.cpp
-	sound/music_dumb.cpp
-	sound/music_gme.cpp
-	sound/music_mus_midiout.cpp
-	sound/music_smf_midiout.cpp
-	sound/music_hmi_midiout.cpp
-	sound/music_xmi_midiout.cpp
-	sound/music_midistream.cpp
-	sound/music_midi_base.cpp
-	sound/music_midi_timidity.cpp
-	sound/music_mus_opl.cpp
-	sound/music_stream.cpp
-	sound/music_fluidsynth_mididevice.cpp
-	sound/music_softsynth_mididevice.cpp
-	sound/music_timidity_mididevice.cpp
-	sound/music_wildmidi_mididevice.cpp
-	sound/music_win_mididevice.cpp
-	sound/oalsound.cpp
-	sound/sndfile_decoder.cpp
-	sound/music_pseudo_mididevice.cpp
 	textures/animations.cpp
 	textures/anim_switches.cpp
 	textures/automaptexture.cpp
@@ -1428,20 +1454,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	thingdef/thingdef_parse.cpp
 	thingdef/thingdef_properties.cpp
 	thingdef/thingdef_states.cpp
-	timidity/common.cpp
-	timidity/instrum.cpp
-	timidity/instrum_dls.cpp
-	timidity/instrum_font.cpp
-	timidity/instrum_sf2.cpp
-	timidity/mix.cpp
-	timidity/playmidi.cpp
-	timidity/resample.cpp
-	timidity/timidity.cpp
-	wildmidi/file_io.cpp
-	wildmidi/gus_pat.cpp
-	wildmidi/reverb.cpp
-	wildmidi/wildmidi_lib.cpp
-	wildmidi/wm_error.cpp
 	win32/g15/g15.cpp #ST
 	xlat/parse_xlat.cpp
 	../upnpnat/upnpnat.cpp #ST
@@ -1456,12 +1468,10 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	#fragglescript/t_spec.cpp
 	#fragglescript/t_variable.cpp
 	#fragglescript/t_cmd.cpp
-	r_data/colormaps.cpp
 	r_data/sprites.cpp
 	r_data/voxels.cpp
 	r_data/renderstyle.cpp
 	r_data/r_interpolate.cpp
-	r_data/r_translate.cpp
 	zscript/ast.cpp
 	zscript/vmbuilder.cpp
 	zscript/vmdisasm.cpp
@@ -1473,9 +1483,14 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	zzautozend.cpp
 )
 
+set_source_files_properties( ${FASTMATH_SOURCES} PROPERTIES COMPILE_FLAGS ${FASTMATH} )
 set_source_files_properties( xlat/parse_xlat.cpp PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/xlat_parser.c" )
 set_source_files_properties( sc_man.cpp PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/sc_man_scanner.h" )
 set_source_files_properties( ${NOT_COMPILED_SOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE )
+if ( WIN32 )
+	set_source_files_properties( win32/fb_d3d9.cpp win32/fb_d3d9_wipe.cpp PROPERTIES COMPILE_FLAGS ${FASTMATH} )
+endif()
+
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "SunOS")
 	# [BL] Solaris requires these to be explicitly linked.
@@ -1498,6 +1513,7 @@ include_directories( .
 	textures
 	thingdef
 	timidity
+	wildmidi
 	xlat
 	zscript
 	../gdtoa
