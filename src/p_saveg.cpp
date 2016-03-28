@@ -53,6 +53,7 @@
 #include "p_lnspec.h"
 #include "p_acs.h"
 #include "p_terrain.h"
+#include "portal.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "cl_demo.h"
@@ -552,6 +553,12 @@ void P_SerializeWorld (FArchive &arc)
 			<< li->SavedFlags
 			<< li->SavedAlpha;
 
+		if (SaveVersion >= 4532)
+		{
+			arc << li->portalindex;
+		}
+		else li->portalindex = UINT_MAX;
+
 		if (SaveVersion >= 4531)
 		{
 			arc << li->skybox;
@@ -595,6 +602,15 @@ void P_SerializeWorld (FArchive &arc)
 	for (i = 0, zn = zones; i < numzones; ++i, ++zn)
 	{
 		arc << zn->Environment;
+	}
+
+	if (SaveVersion >= 4532)
+	{
+		arc << linePortals;
+	}
+	else
+	{
+		linePortals.Clear();
 	}
 }
 

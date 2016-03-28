@@ -64,6 +64,7 @@
 #include "a_keys.h"
 #include "c_dispatch.h"
 #include "r_sky.h"
+#include "portal.h"
 #ifndef NO_EDATA
 #include "edata.h"
 #endif
@@ -1728,6 +1729,10 @@ void P_SpawnSpecials (void)
 			}
 			break;
 
+		case Line_SetPortal:
+			P_SpawnLinePortal(&lines[i]);
+			break;
+
 		// [RH] ZDoom Static_Init settings
 		case Static_Init:
 			switch (lines[i].args[1])
@@ -1853,6 +1858,7 @@ void P_SpawnSpecials (void)
 	if ( NETWORK_InClientMode() == false )
 	{
 		FBehavior::StaticStartTypedScripts (SCRIPT_Open, NULL, false);
+	P_FinalizePortals();
 	}
 	else
 	{

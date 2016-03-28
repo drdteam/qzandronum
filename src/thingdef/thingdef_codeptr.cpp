@@ -787,7 +787,7 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 
 		P_SetPsprite(self->player, ps_flash, jumpto);
 	}
-	else if (callingstate == self->state)
+	else if (callingstate == self->state || (self->ObjectFlags & OF_StateChanged))
 	{
 		// [BC] If we're the server, tell clients to change the thing's state.
 		if (( ulClientUpdateFlags & CLIENTUPDATE_FRAME ) &&

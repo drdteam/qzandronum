@@ -1847,7 +1847,7 @@ void P_LoadThings (MapData * map)
 
 
 #ifndef NO_EDATA
-		if (mti[i].info != NULL && mti[i].info->Special == SMT_EDFThing)
+		if (mti[i].info != NULL && mti[i].info->Special == SMT_EDThing)
 		{
 			ProcessEDMapthing(&mti[i], flags);
 		}
@@ -2062,7 +2062,6 @@ void P_SetLineID (int i, line_t *ld)
 			break;
 
 		case Line_SetPortal:
-		case Line_SetVisualPortal:
 			setid = ld->args[1]; // 0 = target id, 1 = this id, 2 = plane anchor
 			break;
 		}
@@ -2186,9 +2185,6 @@ void P_FinishLoadingLineDef(line_t *ld, int alpha)
 
 		break;
 	}
-
-	// [ZZ] check initial portal link
-	P_CheckPortal(ld);
 }
 // killough 4/4/98: delay using sidedefs until they are loaded
 void P_FinishLoadingLineDefs ()
@@ -2281,6 +2277,7 @@ void P_LoadLineDefs (MapData * map)
 	for (i = 0; i < numlines; i++, mld++, ld++)
 	{
 		ld->Alpha = FRACUNIT;	// [RH] Opaque by default
+		ld->portalindex = UINT_MAX;
 
 		// [RH] Translate old linedef special and flags to be
 		//		compatible with the new format.
@@ -2375,6 +2372,8 @@ void P_LoadLineDefs2 (MapData * map)
 	for (i = 0; i < numlines; i++, mld++, ld++)
 	{
 		int j;
+
+		ld->portalindex = UINT_MAX;
 
 		for (j = 0; j < 5; j++)
 			ld->args[j] = mld->args[j];
@@ -3723,6 +3722,7 @@ void P_FreeLevelData ()
 		level.killed_monsters = level.found_items = level.found_secrets =
 		wminfo.maxfrags = 0;
 		
+	linePortals.Clear();
 	FBehavior::StaticUnloadModules ();
 	if (vertexes != NULL)
 	{

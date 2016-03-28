@@ -108,7 +108,7 @@ unsigned int GetRevisionNumber();
 
 // Use 4500 as the base git save version, since it's higher than the
 // SVN revision ever got.
-#define SAVEVER 4531
+#define SAVEVER 4532
 
 #define SAVEVERSTRINGIFY2(x) #x
 #define SAVEVERSTRINGIFY(x) SAVEVERSTRINGIFY2(x)

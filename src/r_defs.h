@@ -387,8 +387,9 @@ enum
 	PLANEF_NOPASS		= 16,
 	PLANEF_BLOCKSOUND	= 32,
 	PLANEF_DISABLED		= 64,
+	PLANEF_OBSTRUCTED	= 128,	// if the portal plane is beyond the sector's floor or ceiling.
 
-	PLANEF_SPRINGPAD		= 128,	// [BC] Floor bounces actors up at the same velocity they landed on it with.	
+	PLANEF_SPRINGPAD		= 256,	// [BC] Floor bounces actors up at the same velocity they landed on it with.	
 };
 
 // Internal sector flags
@@ -1156,16 +1157,15 @@ struct line_t
 	sector_t	*frontsector, *backsector;
 	int 		validcount;	// if == validcount, already checked
 	int			locknumber;	// [Dusk] lock number for special
-	line_t		*portal_dst;
-	bool		portal;
-	bool		portal_mirror;
-	bool		portal_passive;
+	unsigned	portalindex;
 	TObjPtr<ASkyViewpoint> skybox;
 
-	bool isLinePortal() const
-	{
-		return portal;
-	}
+	// returns true if the portal is crossable by actors
+	bool isLinePortal() const;
+	// returns true if the portal needs to be handled by the renderer
+	bool isVisualPortal() const;
+	line_t *getPortalDestination() const;
+	int getPortalAlignment() const;
 
 	// [BC] Have any of this line's textures been changed during the course of the level?
 	// [EP] TODO: remove the 'ul' prefix from this variable, it isn't ULONG anymore
