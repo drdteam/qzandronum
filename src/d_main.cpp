@@ -260,6 +260,7 @@ bool nospriterename;
 FStartupInfo DoomStartupInfo;
 FString lastIWAD;
 int restart = 0;
+bool batchrun;	// just run the startup and collect all error messages in a logfile, then quit without any interaction
 
 cycle_t FrameCycles;
 
@@ -2293,7 +2294,6 @@ static FString ParseGameInfo(TArray<FString> &pwads, const char *fn, const char 
 
 static FString CheckGameInfo(TArray<FString> & pwads)
 {
-	DWORD t = I_FPSTime();
 	// scan the list of WADs backwards to find the last one that contains a GAMEINFO lump
 	for(int i=pwads.Size()-1; i>=0; i--)
 	{
@@ -2345,8 +2345,6 @@ static FString CheckGameInfo(TArray<FString> & pwads)
 			delete resfile;
 		}
 	}
-	t = I_FPSTime() - t;
-	Printf("Gameinfo scan took %d ms\n", t);
 	return "";
 }
 
@@ -2445,7 +2443,7 @@ static void D_DoomInit()
 	{
 		rngseed = staticrngseed = atoi(v);
 		use_staticrng = true;
-		Printf("D_DoomInit: Static RNGseed %d set.\n", rngseed);
+		if (!batchrun) Printf("D_DoomInit: Static RNGseed %d set.\n", rngseed);
 	}
 	else
 	{
@@ -2466,7 +2464,7 @@ static void D_DoomInit()
 
 	FRandom::StaticClearRandom ();
 
-	Printf ("M_LoadDefaults: Load system defaults.\n");
+	if (!batchrun) Printf ("M_LoadDefaults: Load system defaults.\n");
 	M_LoadDefaults ();			// load before initing other systems
 }
 
@@ -2530,7 +2528,7 @@ static void CheckCmdLine()
 	int p;
 	const char *v;
 
-	Printf ("Checking cmd-line parameters...\n");
+	if (!batchrun) Printf ("Checking cmd-line parameters...\n");
 	if (Args->CheckParm ("-nomonsters"))	flags |= DF_NO_MONSTERS;
 	if (Args->CheckParm ("-respawn"))		flags |= DF_MONSTERS_RESPAWN;
 	if (Args->CheckParm ("-fast"))			flags |= DF_FAST_MONSTERS;
@@ -2731,6 +2729,7 @@ void D_DoomMain (void)
 	FString *args;
 	int argcount;	
 	FIWadManager *iwad_man;
+	const char *batchout = Args->CheckValue("-errorlog");
 
 	// +logfile gets checked too late to catch the full startup log in the logfile so do some extra check for it here.
   /* [BB] Zandronum uses some cvars to configure the logfile, these are not loaded yet.
@@ -2738,6 +2737,17 @@ void D_DoomMain (void)
 	if (logfile.IsNotEmpty())
 	{
 		execLogfile(logfile);
+	}
+	else if (batchout != NULL && *batchout != 0)
+	{
+		batchrun = true;
+		execLogfile(batchout, true);
+		Printf("Command line: ");
+		for (int i = 0; i < Args->NumArgs(); i++)
+		{
+			Printf("%s ", Args->GetArg(i));
+		}
+		Printf("\n");
 	}
   */
 
@@ -2852,7 +2862,7 @@ void D_DoomMain (void)
 			Printf("Notice: File hashing is incredibly verbose. Expect loading files to take much longer than usual.\n");
 		}
 
-		Printf ("W_Init: Init WADfiles.\n");
+		if (!batchrun) Printf ("W_Init: Init WADfiles.\n");
 		Wads.InitMultipleFiles (/*allwads*/); // [BB] Removed argument.
 		allwads.Clear();
 		allwads.ShrinkToFit();
@@ -2922,7 +2932,7 @@ void D_DoomMain (void)
 
 		if (!restart)
 		{
-			Printf ("I_Init: Setting up machine state.\n");
+			if (!batchrun) Printf ("I_Init: Setting up machine state.\n");
 			I_Init ();
 			I_CreateRenderer();
 		}
@@ -2930,7 +2940,7 @@ void D_DoomMain (void)
 		// Server doesn't need video.
 		if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		{
-			Printf ("V_Init: allocate screen.\n");
+			if (!batchrun) Printf ("V_Init: allocate screen.\n");
 			V_Init (!!restart);
 		}
 		// [BB] We still need to initialize the palette for the ACS
@@ -2944,10 +2954,10 @@ void D_DoomMain (void)
 		// [RC] Start the G15 LCD module here.
 		G15_Construct ();
 
-		Printf ("S_Init: Setting up sound.\n");
+		if (!batchrun) Printf ("S_Init: Setting up sound.\n");
 		S_Init ();
 
-		Printf ("ST_Init: Init startup screen.\n");
+		if (!batchrun) Printf ("ST_Init: Init startup screen.\n");
 		if (!restart)
 		{
 			StartScreen = FStartupScreen::CreateInstance (TexMan.GuesstimateNumTextures() + 5);
@@ -2965,11 +2975,11 @@ void D_DoomMain (void)
 		S_ParseReverbDef ();
 
 		// [RH] Parse any SNDINFO lumps
-		Printf ("S_InitData: Load sound definitions.\n");
+		if (!batchrun) Printf ("S_InitData: Load sound definitions.\n");
 		S_InitData ();
 
 		// [RH] Parse through all loaded mapinfo lumps
-		Printf ("G_ParseMapInfo: Load map definitions.\n");
+		if (!batchrun) Printf ("G_ParseMapInfo: Load map definitions.\n");
 		G_ParseMapInfo (iwad_info->MapInfo);
 		ReadStatistics();
 
@@ -2979,12 +2989,12 @@ void D_DoomMain (void)
 		// [BL] Load SectInfo
 		SECTINFO_Load();
 
-		Printf ("Texman.Init: Init texture manager.\n");
+		if (!batchrun) Printf ("Texman.Init: Init texture manager.\n");
 		TexMan.Init();
 		C_InitConback();
 
 		// [CW] Parse any TEAMINFO lumps.
-		Printf ("ParseTeamInfo: Load team definitions.\n");
+		if (!batchrun) Printf ("ParseTeamInfo: Load team definitions.\n");
 		//TeamLibrary.ParseTeamInfo ();
 		// [BB] At the moment Skulltag still doesn't use the new ZDoom TeamLibrary class.
 		TEAMINFO_Init ();
@@ -3005,11 +3015,11 @@ void D_DoomMain (void)
 
 		StartScreen->Progress ();
 
-		Printf ("R_Init: Init %s refresh subsystem.\n", gameinfo.ConfigName.GetChars());
+		if (!batchrun) Printf ("R_Init: Init %s refresh subsystem.\n", gameinfo.ConfigName.GetChars());
 		StartScreen->LoadingStatus ("Loading graphics", 0x3f);
 		R_Init ();
 
-		Printf ("DecalLibrary: Load decals.\n");
+		if (!batchrun) Printf ("DecalLibrary: Load decals.\n");
 		DecalLibrary.ReadAllDecals ();
 
 		// [RH] Add any .deh and .bex files on the command line.
@@ -3026,7 +3036,7 @@ void D_DoomMain (void)
 			{
 				if (stricmp (key, "Path") == 0 && FileExists (value))
 				{
-					Printf ("Applying patch %s\n", value);
+					if (!batchrun) Printf ("Applying patch %s\n", value);
 					D_LoadDehFile(value);
 				}
 			}
@@ -3063,10 +3073,10 @@ void D_DoomMain (void)
 		BOTS_ParseBotInfo( );
 		GameConfig->ReadRevealedBotsAndSkins( );
 
-		Printf ("M_Init: Init menus.\n");
+		if (!batchrun) Printf ("M_Init: Init menus.\n");
 		M_Init ();
 
-		Printf ("P_Init: Init Playloop state.\n");
+		if (!batchrun) Printf ("P_Init: Init Playloop state.\n");
 		StartScreen->LoadingStatus ("Init game engine", 0x3f);
 		AM_StaticInit();
 		P_Init ();
@@ -3077,22 +3087,25 @@ void D_DoomMain (void)
 		SBarInfo::Load();
 		HUD_InitHud();
 
-		// [RH] User-configurable startup strings. Because BOOM does.
-		static const char *startupString[5] = {
-			"STARTUP1", "STARTUP2", "STARTUP3", "STARTUP4", "STARTUP5"
-		};
-		for (p = 0; p < 5; ++p)
+		if (!batchrun)
 		{
-			const char *str = GStrings[startupString[p]];
-			if (str != NULL && str[0] != '\0')
+			// [RH] User-configurable startup strings. Because BOOM does.
+			static const char *startupString[5] = {
+				"STARTUP1", "STARTUP2", "STARTUP3", "STARTUP4", "STARTUP5"
+			};
+			for (p = 0; p < 5; ++p)
 			{
-				Printf ("%s\n", str);
+				const char *str = GStrings[startupString[p]];
+				if (str != NULL && str[0] != '\0')
+				{
+					Printf("%s\n", str);
+				}
 			}
 		}
 
 		if (!restart)
 		{
-			Printf ("D_CheckNetGame: Checking network game status.\n");
+			if (!batchrun) Printf ("D_CheckNetGame: Checking network game status.\n");
 			StartScreen->LoadingStatus ("Checking network game status.", 0x3f);
 			D_CheckNetGame ();
 		}
@@ -3150,7 +3163,7 @@ void D_DoomMain (void)
 				StartScreen = NULL;
 				S_Sound (CHAN_BODY, "misc/startupdone", 1, ATTN_NONE);
 
-				if (Args->CheckParm("-norun"))
+				if (Args->CheckParm("-norun") || batchrun)
 				{
 					throw CNoRunExit();
 				}

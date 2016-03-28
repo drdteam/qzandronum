@@ -2516,7 +2516,7 @@ bool D_LoadDehFile(const char *patchfile)
 
 static bool DoDehPatch()
 {
-	Printf("Adding dehacked patch %s\n", PatchName);
+	if (!batchrun) Printf("Adding dehacked patch %s\n", PatchName);
 
 	int cont;
 
@@ -2607,7 +2607,7 @@ static bool DoDehPatch()
 	UnloadDehSupp ();
 	delete[] PatchName;
 	delete[] PatchFile;
-	Printf ("Patch installed\n");
+	if (!batchrun) Printf ("Patch installed\n");
 	return true;
 }
 

@@ -156,7 +156,7 @@ void PClassActor::StaticInit()
 		sprites.Push (temp);
 	}
 
-	Printf ("LoadActors: Load actor definitions.\n");
+	if (!batchrun) Printf ("LoadActors: Load actor definitions.\n");
 	ClearStrifeTypes();
 	LoadActors ();
 	// [BB] Zandronum uses different bot code.

@@ -644,7 +644,7 @@ void I_DetectOS(void)
 
 	if (OSPlatform == os_Win95)
 	{
-		Printf ("OS: Windows %s %lu.%lu.%lu %s\n",
+		if (!batchrun) Printf ("OS: Windows %s %lu.%lu.%lu %s\n",
 				osname,
 				info.dwMajorVersion, info.dwMinorVersion,
 				info.dwBuildNumber & 0xffff, info.szCSDVersion);
@@ -655,7 +655,7 @@ void I_DetectOS(void)
 	}
 	else
 	{
-		Printf ("OS: Windows %s (NT %lu.%lu) Build %lu\n    %s\n",
+		if (!batchrun) Printf ("OS: Windows %s (NT %lu.%lu) Build %lu\n    %s\n",
 				osname,
 				info.dwMajorVersion, info.dwMinorVersion,
 				info.dwBuildNumber, info.szCSDVersion);
@@ -667,7 +667,7 @@ void I_DetectOS(void)
 
 	if (OSPlatform == os_unknown)
 	{
-		Printf ("(Assuming Windows 2000)\n");
+		if (!batchrun) Printf ("(Assuming Windows 2000)\n");
 		OSPlatform = os_Win2k;
 	}
 }
@@ -784,7 +784,7 @@ void CalculateCPUSpeed()
 		PerfToMillisec = PerfToSec * 1000.0;
 	}
 
-	Printf ("CPU Speed: %.0f MHz\n", 0.001 / PerfToMillisec);
+	if (!batchrun) Printf ("CPU Speed: %.0f MHz\n", 0.001 / PerfToMillisec);
 }
 
 //==========================================================================

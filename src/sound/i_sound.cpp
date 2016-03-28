@@ -273,7 +273,7 @@ void I_InitSound ()
 	nosfx = !!Args->CheckParm ("-nosfx") || !!Args->CheckParm("-host"); // [BB]
 
 	GSnd = NULL;
-	if (nosound)
+	if (nosound || batchrun)
 	{
 		GSnd = new NullSoundRenderer;
 		I_InitMusic ();

@@ -492,7 +492,7 @@ void FSliderItem::Drawer(bool selected)
 
 	// [BB] "Green" -> "Handicap"
 	int x = SmallFont->StringWidth ("Handicap") + 8 + mXpos;
-	int x2 = SmallFont->StringWidth (mText) + 8 + mXpos;
+	int x2 = SmallFont->StringWidth (text) + 8 + mXpos;
 	DrawSlider (MAX(x2, x), mYpos);
 }
 

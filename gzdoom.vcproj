@@ -1470,6 +1470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\edata.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\duel.h"
 				>
 			</File>

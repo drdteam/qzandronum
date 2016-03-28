@@ -304,7 +304,7 @@ void FWadCollection::AddFile (const char *filename, FileReader *wadinfo, bool bL
 	if ( wadinfo )
 		wadinfo->bLoadedAutomatically = bLoadedAutomatically;
 
-	Printf (" adding %s", filename);
+	if (!batchrun) Printf (" adding %s", filename);
 	startlump = NumLumps;
 
 	FResourceFile *resfile;

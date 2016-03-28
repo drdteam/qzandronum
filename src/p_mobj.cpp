@@ -4793,17 +4793,8 @@ void AActor::Tick ()
 		Destroy();
 		return;
 	}
-	if ((flags7 & MF7_HANDLENODELAY) && !(flags2 & MF2_DORMANT))
-	{
-		flags7 &= ~MF7_HANDLENODELAY;
-		if (state->GetNoDelay())
-		{
-			// For immediately spawned objects with the NoDelay flag set for their
-			// Spawn state, explicitly call the current state's function.
-			if (state->CallAction(this, this) && (ObjectFlags & OF_EuthanizeMe))
-				return;				// freed itself
-		}
-	}
+	if (!CheckNoDelay())
+		return; // freed itself
 	// cycle through states, calling action functions at transitions
 	if (tics != -1)
 	{
@@ -4858,6 +4849,38 @@ void AActor::Tick ()
 
 	// [BB] Stop the net traffic measurement and add the result to this actor's traffic.
 	NETTRAFFIC_AddActorTraffic ( this, NETWORK_StopTrafficMeasurement ( ) );
+}
+
+//==========================================================================
+//
+// AActor :: CheckNoDelay
+//
+//==========================================================================
+
+bool AActor::CheckNoDelay()
+{
+	if ((flags7 & MF7_HANDLENODELAY) && !(flags2 & MF2_DORMANT))
+	{
+		flags7 &= ~MF7_HANDLENODELAY;
+		if (state->GetNoDelay())
+		{
+			// For immediately spawned objects with the NoDelay flag set for their
+			// Spawn state, explicitly call the current state's function.
+			if (state->CallAction(this, this))
+			{
+				if (ObjectFlags & OF_EuthanizeMe)
+				{
+					return false;		// freed itself
+				}
+				if (ObjectFlags & OF_StateChanged)
+				{
+					ObjectFlags &= ~OF_StateChanged;
+					return SetState(state);
+				}
+			}
+		}
+	}
+	return true;
 }
 
 //==========================================================================
