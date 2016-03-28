@@ -6654,6 +6654,7 @@ bool P_ChangeSector(sector_t *sector, int crunch, int amt, int floorOrCeil, bool
 					}
 				}
 			} while (n);
+			sec->CheckPortalPlane(!floorOrCeil);
 		}
 	}
 	P_Recalculate3DFloors(sector);			// Must recalculate the 3d floor and light lists
@@ -6716,6 +6717,8 @@ bool P_ChangeSector(sector_t *sector, int crunch, int amt, int floorOrCeil, bool
 			}
 		}
 	} while (n);	// repeat from scratch until all things left are marked valid
+
+	sector->CheckPortalPlane(floorOrCeil);	// check for portal obstructions after everything is done.
 
 	if (!cpos.nofit && !isreset /* && sector->MoreFlags & (SECF_UNDERWATERMASK)*/)
 	{
