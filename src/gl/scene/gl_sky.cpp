@@ -130,22 +130,6 @@ void GLSkyInfo::init(int sky1, PalEntry FadeColor)
 }
 
 
-void GLLineToLineInfo::init(line_t *line)
-{
-/*
-	static const divline_t divlx = { 0, 0, 128 * FRACUNIT, 0 };
-	static const divline_t divly = { 0, 0, 0, 128 * FRACUNIT };
-	xDisplacement = line->skybox->scaleX;
-	yDisplacement = line->skybox->scaleY;
-	angle = R_PointToAnglePrecise(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
-
-	divline_t divl;
-	P_MakeDivline(line, &divl);
-	x0 = P_InterceptVector(&divlx, &divl);
-	y0 = P_InterceptVector(&divly, &divl);
-*/
-}
-
 //==========================================================================
 //
 //  Calculate sky texture for ceiling or floor
@@ -209,19 +193,12 @@ void GLWall::SkyLine(sector_t *fs, line_t *line)
 {
 	ASkyViewpoint * skyboxx = line->skybox;
 	GLSkyInfo skyinfo;
-	GLLineToLineInfo llinfo;
 	int ptype;
 
 	// JUSTHIT is used as an indicator that a skybox is in use.
 	// This is to avoid recursion
 
-	if (line->isVisualPortal())
-	{
-		ptype = PORTALTYPE_LINETOLINE;
-		llinfo.init(line);
-		l2l = UniqueLineToLines.Get(&llinfo);
-	}
-	else if (!gl_noskyboxes && skyboxx && GLRenderer->mViewActor != skyboxx && !(skyboxx->flags&MF_JUSTHIT))
+	if (!gl_noskyboxes && skyboxx && GLRenderer->mViewActor != skyboxx && !(skyboxx->flags&MF_JUSTHIT))
 	{
 		ptype = PORTALTYPE_SKYBOX;
 		skybox = skyboxx;
