@@ -153,7 +153,7 @@ class CommandDrawImage : public SBarInfoCommandFlowControl
 				{
 					type = INVENTORYICON;
 					const PClass* item = PClass::FindClass(sc.String);
-					if(item == NULL || !PClass::FindClass("Inventory")->IsAncestorOf(item)) //must be a kind of Inventory
+					if(item == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(item)) //must be a kind of Inventory
 					{
 						sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
 					}
@@ -430,20 +430,20 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 					return compare != value;
 			}
 		}
-		// Key species are used to allow altnerates for existing key slots.
+		// Key species are used to allow alternates for existing key slots.
 		static FName LookupKeySpecies(int keynum)
 		{
-			for(unsigned int i = 0;i < PClass::m_Types.Size();++i)
+			for (unsigned int i = 0; i < PClassActor::AllActorClasses.Size(); ++i)
 			{
-				const PClass *cls = PClass::m_Types[i];
-				if(cls->IsDescendantOf(RUNTIME_CLASS(AKey)))
+				PClassActor *cls = PClassActor::AllActorClasses[i];
+				if (cls->IsDescendantOf(RUNTIME_CLASS(AKey)))
 				{
 					AKey *key = (AKey *)GetDefaultByType(cls);
-					if(key->KeyNumber == keynum)
+					if (key->KeyNumber == keynum)
 						return cls->TypeName;
 				}
 			}
-			return FName();
+			return NAME_None;
 		}
 
 	public:
@@ -489,7 +489,7 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 			{
 				inventoryItem[0] = sc.String;
 				const PClass* item = PClass::FindClass(sc.String);
-				if(item == NULL || !PClass::FindClass("Inventory")->IsAncestorOf(item)) //must be a kind of Inventory
+				if(item == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(item)) //must be a kind of Inventory
 				{
 					sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
 				}
@@ -516,7 +516,7 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 					sc.MustGetToken(TK_Identifier);
 					inventoryItem[1] = sc.String;
 					const PClass* item = PClass::FindClass(sc.String);
-					if(item == NULL || !PClass::FindClass("Inventory")->IsAncestorOf(item)) //must be a kind of Inventory
+					if(item == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(item)) //must be a kind of Inventory
 					{
 						sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
 					}
@@ -547,7 +547,7 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 				drawAlt = 1; //draw off state until we know we have something.
 				for (int i = 0; i < statusBar->CPlayer->weapons.Slots[conditionalValue[0]].Size(); i++)
 				{
-					const PClass *weap = statusBar->CPlayer->weapons.Slots[conditionalValue[0]].GetWeapon(i);
+					PClassActor *weap = statusBar->CPlayer->weapons.Slots[conditionalValue[0]].GetWeapon(i);
 					if(weap == NULL)
 					{
 						continue;
@@ -634,12 +634,12 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 			}
 			else //check the inventory items and draw selected sprite
 			{
-				AInventory* item = statusBar->CPlayer->mo->FindInventory(PClass::FindClass(inventoryItem[0]));
+				AInventory* item = statusBar->CPlayer->mo->FindInventory(PClass::FindActor(inventoryItem[0]));
 				if(item == NULL || !EvaluateOperation(conditionalOperator[0], conditionalValue[0], item->Amount))
 					drawAlt = 1;
 				if(conditionAnd)
 				{
-					item = statusBar->CPlayer->mo->FindInventory(PClass::FindClass(inventoryItem[1]));
+					item = statusBar->CPlayer->mo->FindInventory(PClass::FindActor(inventoryItem[1]));
 					bool secondCondition = item != NULL && EvaluateOperation(conditionalOperator[1], conditionalValue[1], item->Amount);
 					if((item != NULL && secondCondition) && drawAlt == 0) //both
 					{
@@ -1009,7 +1009,7 @@ class CommandDrawString : public SBarInfoCommand
 		SBarInfoCoordinate	startX;
 		SBarInfoCoordinate	x;
 		SBarInfoCoordinate	y;
-		int					cache; /// General purpose cache.
+		intptr_t			cache; /// General purpose cache.
 		StringValueType		strValue;
 		int					valueArgument;
 		FString				str;
@@ -1018,11 +1018,11 @@ class CommandDrawString : public SBarInfoCommand
 	private:
 		void SetStringToTag(AActor *actor)
 		{
-			if(actor != NULL)
+			if (actor != NULL)
 			{
-				if(actor->GetClass()->ClassIndex != cache)
+				if ((intptr_t)actor->GetClass() != cache)
 				{
-					cache = actor->GetClass()->ClassIndex;
+					cache = (intptr_t)actor->GetClass();
 					str = actor->GetTag();
 					RealignString();
 				}
@@ -1099,7 +1099,7 @@ class CommandDrawNumber : public CommandDrawString
 						value = AMMO;
 						if(!parenthesized || !sc.CheckToken(TK_StringConst))
 							sc.MustGetToken(TK_Identifier);
-						inventoryItem = PClass::FindClass(sc.String);
+						inventoryItem = PClass::FindActor(sc.String);
 						if(inventoryItem == NULL || !RUNTIME_CLASS(AAmmo)->IsAncestorOf(inventoryItem)) //must be a kind of ammo
 						{
 							sc.ScriptMessage("'%s' is not a type of ammo.", sc.String);
@@ -1115,7 +1115,7 @@ class CommandDrawNumber : public CommandDrawString
 						value = AMMOCAPACITY;
 						if(!parenthesized || !sc.CheckToken(TK_StringConst))
 							sc.MustGetToken(TK_Identifier);
-						inventoryItem = PClass::FindClass(sc.String);
+						inventoryItem = PClass::FindActor(sc.String);
 						if(inventoryItem == NULL || !RUNTIME_CLASS(AAmmo)->IsAncestorOf(inventoryItem)) //must be a kind of ammo
 						{
 							sc.ScriptMessage("'%s' is not a type of ammo.", sc.String);
@@ -1181,7 +1181,7 @@ class CommandDrawNumber : public CommandDrawString
 						value = POWERUPTIME;
 						if(!parenthesized || !sc.CheckToken(TK_StringConst))
 							sc.MustGetToken(TK_Identifier);
-						inventoryItem = PClass::FindClass(sc.String);
+						inventoryItem = PClass::FindActor(sc.String);
 						if(inventoryItem == NULL || !RUNTIME_CLASS(APowerupGiver)->IsAncestorOf(inventoryItem))
 						{
 							sc.ScriptMessage("'%s' is not a type of PowerupGiver.", sc.String);
@@ -1211,7 +1211,7 @@ class CommandDrawNumber : public CommandDrawString
 				}
 				if(value == INVENTORY)
 				{
-					inventoryItem = PClass::FindClass(sc.String);
+					inventoryItem = PClass::FindActor(sc.String);
 					if(inventoryItem == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(inventoryItem)) //must be a kind of ammo
 					{
 						sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
@@ -1453,7 +1453,7 @@ class CommandDrawNumber : public CommandDrawString
 				case POWERUPTIME:
 				{
 					//Get the PowerupType and check to see if the player has any in inventory.
-					const PClass* powerupType = ((APowerupGiver*) GetDefaultByType(inventoryItem))->PowerupType;
+					PClassActor* powerupType = ((APowerupGiver*) GetDefaultByType(inventoryItem))->PowerupType;
 					APowerup* powerup = (APowerup*) statusBar->CPlayer->mo->FindInventory(powerupType);
 					if(powerup != NULL)
 						num = powerup->EffectTics / TICRATE + 1;
@@ -1593,7 +1593,7 @@ class CommandDrawNumber : public CommandDrawString
 		EColorRange			highTranslation;
 		EColorRange			normalTranslation;
 		ValueType			value;
-		const PClass		*inventoryItem;
+		PClassActor			*inventoryItem;
 
 		FString				prefixPadding;
 
@@ -2654,7 +2654,7 @@ class CommandDrawBar : public SBarInfoCommand
 				if(!parenthesized || !sc.CheckToken(TK_StringConst))
 						sc.MustGetToken(TK_Identifier);
 				type = AMMO;
-				data.inventoryItem = PClass::FindClass(sc.String);
+				data.inventoryItem = PClass::FindActor(sc.String);
 				if(data.inventoryItem == NULL || !RUNTIME_CLASS(AAmmo)->IsAncestorOf(data.inventoryItem)) //must be a kind of ammo
 				{
 					sc.ScriptMessage("'%s' is not a type of ammo.", sc.String);
@@ -2681,8 +2681,8 @@ class CommandDrawBar : public SBarInfoCommand
 
 				type = POWERUPTIME;
 				if(!parenthesized || !sc.CheckToken(TK_StringConst))
-						sc.MustGetToken(TK_Identifier);
-				data.inventoryItem = PClass::FindClass(sc.String);
+					sc.MustGetToken(TK_Identifier);
+				data.inventoryItem = PClass::FindActor(sc.String);
 				if(data.inventoryItem == NULL || !RUNTIME_CLASS(APowerupGiver)->IsAncestorOf(data.inventoryItem))
 				{
 					sc.ScriptMessage("'%s' is not a type of PowerupGiver.", sc.String);
@@ -2712,7 +2712,7 @@ class CommandDrawBar : public SBarInfoCommand
 			else
 			{
 				type = INVENTORY;
-				data.inventoryItem = PClass::FindClass(sc.String);
+				data.inventoryItem = PClass::FindActor(sc.String);
 				if(data.inventoryItem == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(data.inventoryItem))
 				{
 					sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
@@ -2875,7 +2875,7 @@ class CommandDrawBar : public SBarInfoCommand
 				{
 					//Get the PowerupType and check to see if the player has any in inventory.
 					APowerupGiver *powerupGiver = (APowerupGiver*) GetDefaultByType(data.inventoryItem);
-					const PClass *powerupType = powerupGiver->PowerupType;
+					PClassActor *powerupType = powerupGiver->PowerupType;
 					APowerup *powerup = (APowerup*) statusBar->CPlayer->mo->FindInventory(powerupType);
 					if(powerup != NULL && powerupType != NULL && powerupGiver != NULL)
 					{
@@ -2939,7 +2939,7 @@ class CommandDrawBar : public SBarInfoCommand
 
 			if(sc.CheckToken(TK_Identifier) || (extendedSyntax && sc.CheckToken(TK_StringConst))) //comparing reference
 			{
-				data.inventoryItem = PClass::FindClass(sc.String);
+				data.inventoryItem = PClass::FindActor(sc.String);
 				if(data.inventoryItem == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(data.inventoryItem)) //must be a kind of inventory
 				{
 					sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
@@ -2987,7 +2987,7 @@ class CommandDrawBar : public SBarInfoCommand
 			bool	useMaximumConstant;
 			union
 			{
-				const PClass	*inventoryItem;
+				PClassActor		*inventoryItem;
 				int				value;
 			};
 		};
@@ -3088,10 +3088,10 @@ class CommandPlayerClass : public SBarInfoCommandFlowControl
 				bool foundClass = false;
 				for(unsigned int c = 0;c < PlayerClasses.Size();c++)
 				{
-					if(stricmp(sc.String, PlayerClasses[c].Type->Meta.GetMetaString(APMETA_DisplayName)) == 0)
+					if(stricmp(sc.String, PlayerClasses[c].Type->DisplayName) == 0)
 					{
 						foundClass = true;
-						classes.Push(PlayerClasses[c].Type->ClassIndex);
+						classes.Push(PlayerClasses[c].Type);
 						break;
 					}
 				}
@@ -3112,7 +3112,7 @@ class CommandPlayerClass : public SBarInfoCommandFlowControl
 			if(statusBar->CPlayer->cls == NULL)
 				return; //No class so we can not continue
 		
-			int spawnClass = statusBar->CPlayer->cls->ClassIndex;
+			PClass *spawnClass = statusBar->CPlayer->cls;
 			for(unsigned int i = 0;i < classes.Size();i++)
 			{
 				if(classes[i] == spawnClass)
@@ -3124,7 +3124,7 @@ class CommandPlayerClass : public SBarInfoCommandFlowControl
 			SetTruth(false, block, statusBar);
 		}
 	protected:
-		TArray<int>	classes;
+		TArray<PClass*>	classes;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3494,7 +3494,7 @@ class CommandInInventory : public SBarInfoCommandFlowControl
 			}
 			for(int i = 0;i < 2;i++)
 			{
-				item[i] = PClass::FindClass(sc.String);
+				item[i] = PClass::FindActor(sc.String);
 				if(item[i] == NULL || !RUNTIME_CLASS(AInventory)->IsAncestorOf(item[i]))
 				{
 					sc.ScriptMessage("'%s' is not a type of inventory item.", sc.String);
@@ -3545,7 +3545,7 @@ class CommandInInventory : public SBarInfoCommandFlowControl
 	protected:
 		bool			conditionAnd;
 		bool			negate;
-		const PClass	*item[2];
+		PClassActor		*item[2];
 		int				amount[2];
 };
 

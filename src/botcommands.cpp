@@ -1908,14 +1908,14 @@ static void botcmd_GetCurrentWeapon( CSkullBot *pBot )
 //
 static void botcmd_ChangeWeapon( CSkullBot *pBot )
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 	AWeapon			*pWeapon;
 	char			szWeapon[1024];
 
 	sprintf( szWeapon, "%s", pBot->m_ScriptData.aszStringStack[pBot->m_ScriptData.lStringStackPosition - 1] );
 	pBot->PopStringStack( );
 
-	pType = PClass::FindClass( szWeapon );
+	pType = PClass::FindActor( szWeapon );
 
 	// Invalid class.
 	if ( pType == NULL )

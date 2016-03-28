@@ -272,7 +272,7 @@ ULONG TEAM_TeamsWithPlayersOn( void )
 void TEAM_ExecuteReturnRoutine( ULONG ulTeamIdx, AActor *pReturner )
 {
 	AActor						*pTeamItem;
-	const PClass				*pClass;
+	PClassActor				*pClass;
 	TThinkerIterator<AActor>	Iterator;
 
 	// [BB] Allow teams.Size( ) here, this handles the white flag.
@@ -289,7 +289,7 @@ void TEAM_ExecuteReturnRoutine( ULONG ulTeamIdx, AActor *pReturner )
 	}
 
 	if ( ulTeamIdx == teams.Size( ) )
-		pClass = PClass::FindClass( "WhiteFlag" );
+		pClass = PClass::FindActor( "WhiteFlag" );
 	else
 		pClass = TEAM_GetItem( ulTeamIdx );
 
@@ -1152,14 +1152,14 @@ const char *TEAM_SelectCustomStringForPlayer( player_t *pPlayer, const FString T
 
 //*****************************************************************************
 //
-const PClass *TEAM_GetItem( ULONG ulTeamIdx )
+PClassActor *TEAM_GetItem( ULONG ulTeamIdx )
 {
 	if ( TEAM_CheckIfValid( ulTeamIdx ))
 	{
 		if ( GAMEMODE_GetCurrentFlags() & GMF_USEFLAGASTEAMITEM )
-			return ( PClass::FindClass( teams[ulTeamIdx].FlagItem.GetChars( )));
+			return ( PClass::FindActor( teams[ulTeamIdx].FlagItem.GetChars( )));
 		else
-			return ( PClass::FindClass( teams[ulTeamIdx].SkullItem.GetChars( )));
+			return ( PClass::FindActor( teams[ulTeamIdx].SkullItem.GetChars( )));
 	}
 
 	return ( NULL );

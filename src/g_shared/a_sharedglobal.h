@@ -280,7 +280,7 @@ public:
 
 	TObjPtr<AActor> UnmorphedMe;
 	int UnmorphTime, MorphStyle;
-	const PClass *MorphExitFlash;
+	PClassActor *MorphExitFlash;
 	ActorFlags FlagsSave;
 };
 

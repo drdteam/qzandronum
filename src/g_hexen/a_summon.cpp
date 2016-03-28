@@ -37,7 +37,7 @@ bool AArtiDarkServant::Use (bool pickup)
 		return ( true );
 	}
 
-	AActor *mo = P_SpawnPlayerMissile (Owner, PClass::FindClass ("SummoningDoll"));
+	AActor *mo = P_SpawnPlayerMissile (Owner, PClass::FindActor("SummoningDoll"));
 	if (mo)
 	{
 		mo->target = Owner;
@@ -59,12 +59,14 @@ bool AArtiDarkServant::Use (bool pickup)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AMinotaurFriend *mo;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	mo = Spawn<AMinotaurFriend> (self->Pos(), ALLOW_REPLACE);
@@ -82,7 +84,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_SpawnThing( arti );
 			}
-			return;
+			return 0;
 		}
 				
 		// [BC] If we're the server, spawn this item to clients.
@@ -117,4 +119,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 			SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, S_GetName( mo->ActiveSound ), 1, ATTN_NORM );
 		}
 	}
+	return 0;
 }

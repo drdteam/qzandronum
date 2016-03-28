@@ -756,7 +756,7 @@ static bool astar_PathNextNode( ASTARPATH_t *pPath )
 			if ( botdebug_shownodes )
 			{
 				if ( pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] == NULL )
-					pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] = Spawn( PClass::FindClass( "PathNode" ), pPath->pCurrentNode->Position.x, pPath->pCurrentNode->Position.y, ONFLOORZ, NO_REPLACE );
+					pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] = Spawn( PClass::FindActor( "PathNode" ), pPath->pCurrentNode->Position.x, pPath->pCurrentNode->Position.y, ONFLOORZ, NO_REPLACE );
 
 				AActor * pPathNode = pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx];
 				pPathNode->SetState( pPathNode->SpawnState + ASTAR_FRAME_INCLOSED );
@@ -858,7 +858,7 @@ static bool astar_PullNodeFromOpenList( ASTARPATH_t *pPath )
 	if ( botdebug_shownodes )
 	{
 		if ( pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] == NULL )
-			pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] = Spawn( PClass::FindClass( "PathNode" ), pPath->pCurrentNode->Position.x, pPath->pCurrentNode->Position.y, ONFLOORZ, NO_REPLACE );
+			pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx] = Spawn( PClass::FindActor( "PathNode" ), pPath->pCurrentNode->Position.x, pPath->pCurrentNode->Position.y, ONFLOORZ, NO_REPLACE );
 
 		AActor * pPathNode = pPath->paVisualizations[( pPath->pCurrentNode->lXNodeIdx * g_lNumVerticalNodes ) + pPath->pCurrentNode->lYNodeIdx];
 		pPathNode->SetState( pPathNode->SpawnState + ASTAR_FRAME_OFFOPEN );
@@ -882,7 +882,7 @@ static bool astar_PullNodeFromOpenList( ASTARPATH_t *pPath )
 				if ( botdebug_shownodes )
 				{
 					if ( pPath->paVisualizations[( pNextNode->lXNodeIdx * g_lNumVerticalNodes ) + pNextNode->lYNodeIdx] == NULL )
-						pPath->paVisualizations[( pNextNode->lXNodeIdx * g_lNumVerticalNodes ) + pNextNode->lYNodeIdx] = Spawn( PClass::FindClass( "PathNode" ), pNextNode->Position.x, pNextNode->Position.y, ONFLOORZ, NO_REPLACE );
+						pPath->paVisualizations[( pNextNode->lXNodeIdx * g_lNumVerticalNodes ) + pNextNode->lYNodeIdx] = Spawn( PClass::FindActor( "PathNode" ), pNextNode->Position.x, pNextNode->Position.y, ONFLOORZ, NO_REPLACE );
 
 					AActor * pPathNode = pPath->paVisualizations[( pNextNode->lXNodeIdx * g_lNumVerticalNodes ) + pNextNode->lYNodeIdx];
 					pPathNode ->SetState( pPathNode->SpawnState + ASTAR_FRAME_ONPATH );
@@ -1087,7 +1087,7 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 			if ( botdebug_shownodes )
 			{
 				if ( pPath->paVisualizations[( pNode->lXNodeIdx * g_lNumVerticalNodes ) + pNode->lYNodeIdx] == NULL )
-					pPath->paVisualizations[( pNode->lXNodeIdx * g_lNumVerticalNodes ) + pNode->lYNodeIdx] = Spawn( PClass::FindClass( "PathNode" ), pNode->Position.x, pNode->Position.y, ONFLOORZ, NO_REPLACE );
+					pPath->paVisualizations[( pNode->lXNodeIdx * g_lNumVerticalNodes ) + pNode->lYNodeIdx] = Spawn( PClass::FindActor( "PathNode" ), pNode->Position.x, pNode->Position.y, ONFLOORZ, NO_REPLACE );
 
 				AActor *pPathNode = pPath->paVisualizations[( pNode->lXNodeIdx * g_lNumVerticalNodes ) + pNode->lYNodeIdx];
 				pPathNode->SetState( pPathNode->SpawnState + ASTAR_FRAME_INOPEN );

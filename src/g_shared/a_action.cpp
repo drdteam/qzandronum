@@ -90,7 +90,7 @@ void A_Unblock(AActor *self, bool drop)
 	// If the actor has attached metadata for items to drop, drop those.
 	if (drop && !self->IsKindOf (RUNTIME_CLASS (APlayerPawn)))	// [GRB]
 	{
-		FDropItem *di = self->GetDropItems();
+		DDropItem *di = self->GetDropItems();
 
 		if (di != NULL)
 		{
@@ -98,8 +98,11 @@ void A_Unblock(AActor *self, bool drop)
 			{
 				if (di->Name != NAME_None)
 				{
-					const PClass *ti = PClass::FindClass(di->Name);
-					if (ti) P_DropItem (self, ti, di->amount, di->probability);
+					PClassActor *ti = PClass::FindActor(di->Name);
+					if (ti != NULL)
+					{
+						P_DropItem (self, ti, di->Amount, di->Probability);
+					}
 				}
 				di = di->Next;
 			}
@@ -109,12 +112,16 @@ void A_Unblock(AActor *self, bool drop)
 
 DEFINE_ACTION_FUNCTION(AActor, A_NoBlocking)
 {
+	PARAM_ACTION_PROLOGUE;
 	A_Unblock(self, true);
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_Fall)
 {
+	PARAM_ACTION_PROLOGUE;
 	A_Unblock(self, true);
+	return 0;
 }
 
 //==========================================================================
@@ -125,8 +132,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_Fall)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetFloorClip)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 |= MF2_FLOORCLIP;
 	self->AdjustFloorClip ();
+	return 0;
 }
 
 //==========================================================================
@@ -137,8 +147,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_SetFloorClip)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnSetFloorClip)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 &= ~MF2_FLOORCLIP;
 	self->floorclip = 0;
+	return 0;
 }
 
 //==========================================================================
@@ -149,7 +162,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnSetFloorClip)
 
 DEFINE_ACTION_FUNCTION(AActor, A_HideThing)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->renderflags |= RF_INVISIBLE;
+	return 0;
 }
 
 //==========================================================================
@@ -160,7 +176,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_HideThing)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnHideThing)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->renderflags &= ~RF_INVISIBLE;
+	return 0;
 }
 
 //============================================================================
@@ -171,6 +190,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnHideThing)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeath)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int t = pr_freezedeath();
 	self->tics = 75+t+pr_freezedeath();
 	self->flags |= MF_SOLID|MF_SHOOTABLE|MF_NOBLOOD|MF_ICECORPSE;
@@ -204,6 +225,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeath)
 			self->args[1], self->args[2], self->args[3], self->args[4]);
 		self->special = 0;
 	}
+	return 0;
 }
 
 //==========================================================================
@@ -214,8 +236,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeath)
 
 DEFINE_ACTION_FUNCTION(AActor, A_GenericFreezeDeath)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->Translation = TRANSLATION(TRANSLATION_Standard, 7);
 	CALL_ACTION(A_FreezeDeath, self);
+	return 0;
 }
 
 //============================================================================
@@ -226,6 +251,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenericFreezeDeath)
 
 DEFINE_ACTION_FUNCTION(AActor, A_IceSetTics)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int floor;
 
 	self->tics = 70+(pr_icesettics()&63);
@@ -238,6 +265,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_IceSetTics)
 	{
 		self->tics <<= 1;
 	}
+	return 0;
 }
 
 //============================================================================
@@ -248,6 +276,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_IceSetTics)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeathChunks)
 {
+	PARAM_ACTION_PROLOGUE;
 
 	int i;
 	int numChunks;
@@ -256,7 +285,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeathChunks)
 	if ((self->velx || self->vely || self->velz) && !(self->flags6 & MF6_SHATTERING))
 	{
 		self->tics = 3*TICRATE;
-		return;
+		return 0;
 	}
 	self->velx = self->vely = self->velz = 0;
 	S_Sound (self, CHAN_BODY, "misc/icebreak", 1, ATTN_NORM);
@@ -325,6 +354,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FreezeDeathChunks)
 	// will make it invisible and destroy it one tic later. Shall Skulltag do this, too? With
 	// custom survival handling of course.
 	//self->SetState(self->FindState(NAME_Null));
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -426,13 +456,20 @@ void DCorpsePointer::Serialize (FArchive &arc)
 // throw another corpse on the queue
 DEFINE_ACTION_FUNCTION(AActor, A_QueueCorpse)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (sv_corpsequeuesize > 0)
+	{
 		new DCorpsePointer (self);
+	}
+	return 0;
 }
 
 // Remove an self from the queue (for resurrection)
 DEFINE_ACTION_FUNCTION(AActor, A_DeQueueCorpse)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	TThinkerIterator<DCorpsePointer> iterator (STAT_CORPSEPOINTER);
 	DCorpsePointer *corpsePtr;
 
@@ -442,9 +479,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeQueueCorpse)
 		{
 			corpsePtr->Corpse = NULL;
 			corpsePtr->Destroy ();
-			return;
+			return 0;
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -455,7 +493,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeQueueCorpse)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetInvulnerable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 |= MF2_INVULNERABLE;
+	return 0;
 }
 
 //============================================================================
@@ -466,7 +507,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_SetInvulnerable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnSetInvulnerable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 &= ~MF2_INVULNERABLE;
+	return 0;
 }
 
 //============================================================================
@@ -477,7 +521,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnSetInvulnerable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetReflective)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 |= MF2_REFLECTIVE;
+	return 0;
 }
 
 //============================================================================
@@ -488,7 +535,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_SetReflective)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnSetReflective)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 &= ~MF2_REFLECTIVE;
+	return 0;
 }
 
 //============================================================================
@@ -499,7 +549,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnSetReflective)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetReflectiveInvulnerable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 |= MF2_REFLECTIVE|MF2_INVULNERABLE;
+	return 0;
 }
 
 //============================================================================
@@ -510,7 +563,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_SetReflectiveInvulnerable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnSetReflectiveInvulnerable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 &= ~(MF2_REFLECTIVE|MF2_INVULNERABLE);
+	return 0;
 }
 
 //==========================================================================
@@ -521,8 +577,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnSetReflectiveInvulnerable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetShootable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 &= ~MF2_NONSHOOTABLE;
 	self->flags |= MF_SHOOTABLE;
+	return 0;
 }
 
 //==========================================================================
@@ -533,8 +592,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_SetShootable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_UnSetShootable)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags2 |= MF2_NONSHOOTABLE;
 	self->flags &= ~MF_SHOOTABLE;
+	return 0;
 }
 
 //===========================================================================
@@ -545,7 +607,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_UnSetShootable)
 
 DEFINE_ACTION_FUNCTION(AActor, A_NoGravity)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags |= MF_NOGRAVITY;
+	return 0;
 }
 
 //===========================================================================
@@ -556,8 +621,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_NoGravity)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Gravity)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags &= ~MF_NOGRAVITY;
 	self->gravity = FRACUNIT;
+	return 0;
 }
 
 //===========================================================================
@@ -568,8 +636,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_Gravity)
 
 DEFINE_ACTION_FUNCTION(AActor, A_LowGravity)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags &= ~MF_NOGRAVITY;
 	self->gravity = FRACUNIT/8;
+	return 0;
 }
 
 //===========================================================================

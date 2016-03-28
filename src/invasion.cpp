@@ -237,7 +237,7 @@ public:
 char *ACustomMonsterInvasionSpot::GetSpawnName( void )
 {
 	ULONG		ulNumDropItems;
-	FDropItem	*pDropItem;
+	DDropItem	*pDropItem;
 
 	ulNumDropItems = 0;
 
@@ -430,7 +430,7 @@ public:
 char *ACustomPickupInvasionSpot::GetSpawnName( void )
 {
 	ULONG		ulNumDropItems;
-	FDropItem	*pDropItem;
+	DDropItem	*pDropItem;
 
 	ulNumDropItems = 0;
 
@@ -573,7 +573,7 @@ public:
 char *ACustomWeaponInvasionSpot::GetSpawnName( void )
 {
 	ULONG		ulNumDropItems;
-	FDropItem	*pDropItem;
+	DDropItem	*pDropItem;
 
 	ulNumDropItems = 0;
 
@@ -1449,10 +1449,10 @@ bool INVASION_IsMapThingInvasionSpot( const FMapThing *mthing )
 	if ( mthing == NULL )
 		return false;
 
-	const PClass *pType = mthing->info->Type;
+	PClassActor *pType = mthing->info->Type;
 	if ( pType )
 	{
-		pType = pType->ActorInfo->GetReplacement( )->Class;
+		pType = pType->GetReplacement( );
 
 		if (( pType->IsDescendantOf( PClass::FindClass( "BaseMonsterInvasionSpot" ))) ||
 			( pType->IsDescendantOf( PClass::FindClass( "BasePickupInvasionSpot" ))) ||

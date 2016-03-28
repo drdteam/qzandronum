@@ -259,7 +259,7 @@ FName			NETWORK_ReadName( BYTESTREAM_s* bytestream );
 void			NETWORK_WriteName( BYTESTREAM_s* bytestream, FName name );
 
 const char		*NETWORK_GetClassNameFromIdentification( USHORT usActorNetworkIndex );
-const PClass	*NETWORK_GetClassFromIdentification( USHORT usActorNetworkIndex );
+PClassActor	*NETWORK_GetClassFromIdentification( USHORT usActorNetworkIndex );
 
 // [BB] Returns true if either "NETSTATE_CLIENT" or a client side demo is played.
 bool			NETWORK_InClientMode( );

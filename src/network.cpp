@@ -143,7 +143,7 @@ static	UCHAR			g_ucHuffmanBuffer[131072];
 NETADDRESS_s	g_LocalAddress;
 
 // [BB]
-static	TArray<const PClass*> g_ActorNetworkIndexClassPointerMap;
+static	TArray<PClassActor*> g_ActorNetworkIndexClassPointerMap;
 
 // [BB]
 static GeoIP * g_GeoIPDB = NULL;
@@ -434,9 +434,9 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 
 	// [BB] Initialize the actor network class indices.
 	g_ActorNetworkIndexClassPointerMap.Clear();
-	for ( unsigned int i = 0; i < PClass::m_Types.Size(); i++ )
+	for ( unsigned int i = 0; i < PClassActor::AllActorClasses.Size(); ++i )
 	{
-		PClass* cls = PClass::m_Types[i];
+		PClassActor* cls = PClassActor::AllActorClasses[i];
 		if ( (cls->IsDescendantOf(RUNTIME_CLASS(AActor)))
 		     // [BB] The server only binaries don't know DynamicLight and derived classes.
 		     && !(cls->IsDescendantOf(PClass::FindClass("DynamicLight"))) )
@@ -1217,7 +1217,7 @@ const char *NETWORK_GetClassNameFromIdentification( USHORT usActorNetworkIndex )
 // [CW]
 //*****************************************************************************
 //
-const PClass *NETWORK_GetClassFromIdentification( USHORT usActorNetworkIndex )
+PClassActor *NETWORK_GetClassFromIdentification( USHORT usActorNetworkIndex )
 {
 	if ( (usActorNetworkIndex == 0) || (usActorNetworkIndex > g_ActorNetworkIndexClassPointerMap.Size()) )
 		return NULL;

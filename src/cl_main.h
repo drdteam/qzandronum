@@ -156,14 +156,14 @@ void				CLIENT_WaitForServer( void );
 
 // Support functions to make things work more smoothly.
 void				CLIENT_AuthenticateLevel( const char *pszMapName );
-AActor				*CLIENT_SpawnThing( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, LONG lNetID );
-void				CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t VelX, fixed_t VelY, fixed_t VelZ, LONG lNetID, LONG lTargetNetID );
+AActor				*CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, LONG lNetID );
+void				CLIENT_SpawnMissile( PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t VelX, fixed_t VelY, fixed_t VelZ, LONG lNetID, LONG lTargetNetID );
 void				CLIENT_MoveThing( AActor *pActor, fixed_t X, fixed_t Y, fixed_t Z );
 AActor				*CLIENT_FindThingByNetID( LONG lID );
 void				CLIENT_DisplayMOTD( void );
 void				CLIENT_RestoreSpecialPosition( AActor *pActor );
 void				CLIENT_RestoreSpecialDoomThing( AActor *pActor, bool bFog );
-AInventory			*CLIENT_FindPlayerInventory( ULONG ulPlayer, const PClass *pType );
+AInventory			*CLIENT_FindPlayerInventory( ULONG ulPlayer, PClassActor *pType );
 AInventory			*CLIENT_FindPlayerInventory( ULONG ulPlayer, const char *pszName );
 //void				CLIENT_RemoveMonsterCorpses( void );
 sector_t			*CLIENT_FindSectorByID( ULONG ulID );

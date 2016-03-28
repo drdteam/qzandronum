@@ -367,7 +367,7 @@ void FindStateLabelAndOffset( AActor *pActor, FState *pState, FString &stateLabe
 {
 	stateLabel = "";
 	lOffset = 0;
-	FStateLabels *pStateList = pActor->GetClass()->ActorInfo->StateList;
+	FStateLabels *pStateList = pActor->GetClass()->StateList;
 
 	bool found = FindStateAddressRecursor( pActor, pState, "", pStateList, stateLabel, lOffset );
 	if ( found == false && sv_showwarnings && ( bSuppressWarning == false ) )
@@ -792,7 +792,7 @@ void SERVERCOMMANDS_SetPlayerArmorAndMaxArmorBonus( ULONG ulPlayer, ULONG ulPlay
 
 	if ( pArmor && ( pArmor->BonusCount > 0 ) )
 	{
-		AInventory *pInventory = static_cast<AInventory*> ( Spawn( PClass::FindClass( "MaxArmorBonus" ), 0,0,0, NO_REPLACE) );
+		AInventory *pInventory = static_cast<AInventory*> ( Spawn( PClass::FindActor( "MaxArmorBonus" ), 0,0,0, NO_REPLACE) );
 		if ( pInventory ) 
 		{
 			pInventory->Amount = pArmor->BonusCount;
@@ -2115,15 +2115,15 @@ void SERVERCOMMANDS_SetThingFrame( AActor *pActor, FState *pState, ULONG ulPlaye
 					if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pActor, pActor->MeleeState ) == false )
 					{
 						// [BB] Apparently pActor doesn't own the state. Find out who does.
-						const PClass *pStateOwnerClass = FState::StaticFindStateOwner ( pState );
+						PClassActor *pStateOwnerClass = FState::StaticFindStateOwner ( pState );
 						const AActor *pStateOwner = ( pStateOwnerClass != NULL ) ? GetDefaultByType ( pStateOwnerClass ) : NULL;
 						if ( pStateOwner )
 						{
 							lOffset = LONG( pState - pStateOwner->SpawnState );
 							if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pStateOwnerClass, pStateOwner->SpawnState ) == false )
 							{
-								lOffset = LONG( pState - pStateOwnerClass->ActorInfo->FindState(NAME_Death) );
-								if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pStateOwnerClass, pStateOwnerClass->ActorInfo->FindState(NAME_Death) ) == false )
+								lOffset = LONG( pState - pStateOwnerClass->FindState(NAME_Death) );
+								if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pStateOwnerClass, pStateOwnerClass->FindState(NAME_Death) ) == false )
 								{
 									if ( sv_showwarnings )
 										Printf ( "Warning: SERVERCOMMANDS_SetThingFrame failed to set the frame for actor %s.\n", pActor->GetClass()->TypeName.GetChars() );
@@ -2868,7 +2868,7 @@ void SERVERCOMMANDS_WeaponChange( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCom
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_WeaponRailgun( AActor *source, const TVector3<double> &start, const TVector3<double> &end, LONG color1, LONG color2, float maxdiff, int railflags, angle_t angleoffset, const PClass* spawnclass, int duration, float sparsity, float drift, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_WeaponRailgun( AActor *source, const TVector3<double> &start, const TVector3<double> &end, LONG color1, LONG color2, float maxdiff, int railflags, angle_t angleoffset, PClassActor* spawnclass, int duration, float sparsity, float drift, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	// Evidently, to draw a railgun trail, there must be a source actor.
 	if ( !EnsureActorHasNetID (source) )
@@ -3839,7 +3839,7 @@ void SERVERCOMMANDS_GiveInventoryNotOverwritingAmount( AActor *pReceiver, AInven
 }
 //*****************************************************************************
 //
-void SERVERCOMMANDS_TakeInventory( ULONG ulPlayer, const PClass *inventoryClass, ULONG ulAmount, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_TakeInventory( ULONG ulPlayer, PClassActor *inventoryClass, ULONG ulAmount, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;

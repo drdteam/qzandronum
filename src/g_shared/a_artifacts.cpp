@@ -407,9 +407,9 @@ void APowerInvulnerable::InitEffect ()
 	Super::InitEffect();
 	Owner->effects &= ~FX_RESPAWNINVUL;
 	Owner->flags2 |= MF2_INVULNERABLE;
-	if (Mode == NAME_None)
+	if (Mode == NAME_None && Owner->IsKindOf(RUNTIME_CLASS(APlayerPawn)))
 	{
-		Mode = (ENamedName)RUNTIME_TYPE(Owner)->Meta.GetMetaInt(APMETA_InvulMode);
+		Mode = static_cast<PClassPlayerPawn *>(Owner->GetClass())->InvulMode;
 	}
 	if (Mode == NAME_Reflective)
 	{
@@ -1691,8 +1691,8 @@ void APowerDamage::ModifyDamage(int damage, FName damageType, int &newdamage, bo
 	static const fixed_t def = 4*FRACUNIT;
 	if (!passive && damage > 0)
 	{
-		const fixed_t * pdf = NULL;
-		DmgFactors * df = GetClass()->ActorInfo->DamageFactors;
+		const fixed_t *pdf = NULL;
+		DmgFactors *df = GetClass()->DamageFactors;
 		if (df != NULL && df->CountUsed() != 0)
 		{
 			pdf = df->CheckFactor(damageType);
@@ -1772,7 +1772,7 @@ void APowerProtection::ModifyDamage(int damage, FName damageType, int &newdamage
 	if (passive && damage > 0)
 	{
 		const fixed_t *pdf = NULL;
-		DmgFactors *df = GetClass()->ActorInfo->DamageFactors;
+		DmgFactors *df = GetClass()->DamageFactors;
 		if (df != NULL && df->CountUsed() != 0)
 		{
 			pdf = df->CheckFactor(damageType);
@@ -1973,9 +1973,9 @@ void APowerMorph::InitEffect( )
 	if (Owner != NULL && Owner->player != NULL && PlayerClass != NAME_None)
 	{
 		player_t *realplayer = Owner->player;	// Remember the identity of the player
-		const PClass *morph_flash = PClass::FindClass (MorphFlash);
-		const PClass *unmorph_flash = PClass::FindClass (UnMorphFlash);
-		const PClass *player_class = PClass::FindClass (PlayerClass);
+		PClassActor *morph_flash = PClass::FindActor(MorphFlash);
+		PClassActor *unmorph_flash = PClass::FindActor(UnMorphFlash);
+		PClassPlayerPawn *player_class = dyn_cast<PClassPlayerPawn>(PClass::FindClass (PlayerClass));
 		if (P_MorphPlayer(realplayer, realplayer, player_class, -1/*INDEFINITELY*/, MorphStyle, morph_flash, unmorph_flash))
 		{
 			Owner = realplayer->mo;				// Replace the new owner in our owner; safe because we are not attached to anything yet
@@ -2179,7 +2179,7 @@ void APowerTerminatorArtifact::InitEffect( )
 	// [BB] The server handles giving the megasphere.
 	if ( NETWORK_InClientMode() == false )
 	{
-		AInventory *pGivenInventory = Owner->GiveInventoryType( PClass::FindClass( "Megasphere" ));
+		AInventory *pGivenInventory = Owner->GiveInventoryType( PClass::FindActor( "Megasphere" ));
 		if ( pGivenInventory && (NETWORK_GetState( ) == NETSTATE_SERVER) )
 			SERVERCOMMANDS_GiveInventory( ULONG( Owner->player - players ), pGivenInventory );
 	}

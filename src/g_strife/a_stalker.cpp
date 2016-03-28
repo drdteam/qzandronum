@@ -13,10 +13,12 @@ static FRandom pr_stalker ("Stalker");
 
 DEFINE_ACTION_FUNCTION(AActor, A_StalkerChaseDecide)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (!(self->flags & MF_NOGRAVITY))
@@ -35,16 +37,19 @@ DEFINE_ACTION_FUNCTION(AActor, A_StalkerChaseDecide)
 
 		self->SetState (self->FindState("Drop"));
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_StalkerLookInit)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	FState *state;
 
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (self->flags & MF_NOGRAVITY)
@@ -68,20 +73,26 @@ DEFINE_ACTION_FUNCTION(AActor, A_StalkerLookInit)
 		self->SetState (state);
 
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_StalkerDrop)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags5 &= ~MF5_NOVERTICALMELEERANGE;
 	self->flags &= ~MF_NOGRAVITY;
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_StalkerAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (self->flags & MF_NOGRAVITY)
@@ -103,10 +114,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_StalkerAttack)
 			P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
 		}
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_StalkerWalk)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	S_Sound (self, CHAN_BODY, "stalker/walk", 1, ATTN_NORM);
-	A_Chase (self);
+	A_Chase (stack, self);
+	return 0;
 }

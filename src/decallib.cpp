@@ -367,9 +367,9 @@ void FDecalLib::ReadAllDecals ()
 		ReadDecals (sc);
 	}
 	// Supporting code to allow specifying decals directly in the DECORATE lump
-	for (i = 0; i < PClass::m_RuntimeActors.Size(); i++)
+	for (i = 0; i < PClassActor::AllActorClasses.Size(); i++)
 	{
-		AActor *def = (AActor*)GetDefaultByType (PClass::m_RuntimeActors[i]);
+		AActor *def = (AActor*)GetDefaultByType (PClassActor::AllActorClasses[i]);
 
 		FName v = ENamedName(intptr_t(def->DecalGenerator));
 		if (v.IsValidName())
@@ -604,7 +604,7 @@ void FDecalLib::ParseDecalGroup (FScanner &sc)
 
 void FDecalLib::ParseGenerator (FScanner &sc)
 {
-	const PClass *type;
+	PClassActor *type;
 	FDecalBase *decal;
 	bool optional = false;
 
@@ -613,8 +613,8 @@ void FDecalLib::ParseGenerator (FScanner &sc)
 	optional = sc.Compare("optional");
 	if (optional) sc.MustGetString();
 
-	type = PClass::FindClass (sc.String);
-	if (type == NULL || type->ActorInfo == NULL)
+	type = PClass::FindActor (sc.String);
+	if (type == NULL)
 	{
 		if (!optional) sc.ScriptError ("%s is not an actor.", sc.String);
 	}

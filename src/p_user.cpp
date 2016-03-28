@@ -163,26 +163,26 @@ bool FPlayerClass::CheckSkin (int skin)
 //
 //===========================================================================
 
-const char *GetPrintableDisplayName(const PClass *cls)
+FString GetPrintableDisplayName(PClassPlayerPawn *cls)
 { 
 	// Fixme; This needs a decent way to access the string table without creating a mess.
-	const char *name = cls->Meta.GetMetaString(APMETA_DisplayName);
-	return name;
+	// [RH] ????
+	return cls->DisplayName;
 }
 
-bool ValidatePlayerClass(const PClass *ti, const char *name)
+bool ValidatePlayerClass(PClassActor *ti, const char *name)
 {
-	if (!ti)
+	if (ti == NULL)
 	{
-		Printf ("Unknown player class '%s'\n", name);
+		Printf("Unknown player class '%s'\n", name);
 		return false;
 	}
-	else if (!ti->IsDescendantOf (RUNTIME_CLASS (APlayerPawn)))
+	else if (!ti->IsDescendantOf(RUNTIME_CLASS(APlayerPawn)))
 	{
-		Printf ("Invalid player class '%s'\n", name);
+		Printf("Invalid player class '%s'\n", name);
 		return false;
 	}
-	else if (ti->Meta.GetMetaString (APMETA_DisplayName) == NULL)
+	else if (static_cast<PClassPlayerPawn *>(ti)->DisplayName.IsEmpty())
 	{
 		Printf ("Missing displayname for player class '%s'\n", name);
 		return false;
@@ -195,18 +195,18 @@ void SetupPlayerClasses ()
 	FPlayerClass newclass;
 
 	PlayerClasses.Clear();
-	for (unsigned i=0; i<gameinfo.PlayerClasses.Size(); i++)
+	for (unsigned i = 0; i < gameinfo.PlayerClasses.Size(); i++)
 	{
-		newclass.Flags = 0;
-		newclass.Type = PClass::FindClass(gameinfo.PlayerClasses[i]);
-
-		if (ValidatePlayerClass(newclass.Type, gameinfo.PlayerClasses[i]))
+		PClassActor *cls = PClass::FindActor(gameinfo.PlayerClasses[i]);
+		if (ValidatePlayerClass(cls, gameinfo.PlayerClasses[i]))
 		{
-			if ((GetDefaultByType(newclass.Type)->flags6 & MF6_NOMENU))
+			newclass.Flags = 0;
+			newclass.Type = static_cast<PClassPlayerPawn *>(cls);
+			if ((GetDefaultByType(cls)->flags6 & MF6_NOMENU))
 			{
 				newclass.Flags |= PCF_NOMENU;
 			}
-			PlayerClasses.Push (newclass);
+			PlayerClasses.Push(newclass);
 		}
 	}
 }
@@ -223,17 +223,17 @@ CCMD (addplayerclass)
 {
 	if (ParsingKeyConf && argv.argc () > 1)
 	{
-		const PClass *ti = PClass::FindClass (argv[1]);
+		PClassActor *ti = PClass::FindActor(argv[1]);
 
 		if (ValidatePlayerClass(ti, argv[1]))
 		{
 			FPlayerClass newclass;
 
-			newclass.Type = ti;
+			newclass.Type = static_cast<PClassPlayerPawn *>(ti);
 			newclass.Flags = 0;
 
 			int arg = 2;
-			while (arg < argv.argc ())
+			while (arg < argv.argc())
 			{
 				if (!stricmp (argv[arg], "nomenu"))
 				{
@@ -246,7 +246,6 @@ CCMD (addplayerclass)
 
 				arg++;
 			}
-
 			PlayerClasses.Push (newclass);
 		}
 	}
@@ -258,7 +257,7 @@ CCMD (playerclasses)
 	{
 		Printf ("%3d: Class = %s, Name = %s\n", i,
 			PlayerClasses[i].Type->TypeName.GetChars(),
-			PlayerClasses[i].Type->Meta.GetMetaString (APMETA_DisplayName));
+			PlayerClasses[i].Type->DisplayName.GetChars());
 	}
 }
 
@@ -646,6 +645,90 @@ int player_t::GetSpawnClass()
 {
 	const PClass * type = PlayerClasses[CurrentPlayerClass].Type;
 	return static_cast<APlayerPawn*>(GetDefaultByType(type))->SpawnMask;
+}
+
+//===========================================================================
+//
+// PClassPlayerPawn
+//
+//===========================================================================
+
+IMPLEMENT_CLASS(PClassPlayerPawn)
+
+PClassPlayerPawn::PClassPlayerPawn()
+{
+	for (size_t i = 0; i < countof(HexenArmor); ++i)
+	{
+		HexenArmor[i] = 0;
+	}
+	ColorRangeStart = 0;
+	ColorRangeEnd = 0;
+}
+
+void PClassPlayerPawn::Derive(PClass *newclass)
+{
+	assert(newclass->IsKindOf(RUNTIME_CLASS(PClassPlayerPawn)));
+	Super::Derive(newclass);
+	PClassPlayerPawn *newp = static_cast<PClassPlayerPawn *>(newclass);
+	size_t i;
+
+	newp->DisplayName = DisplayName;
+	newp->SoundClass = SoundClass;
+	newp->Face = Face;
+	newp->InvulMode = InvulMode;
+	newp->HealingRadiusType = HealingRadiusType;
+	newp->ColorRangeStart = ColorRangeStart;
+	newp->ColorRangeEnd = ColorRangeEnd;
+	newp->ColorSets = ColorSets;
+	for (i = 0; i < countof(HexenArmor); ++i)
+	{
+		newp->HexenArmor[i] = HexenArmor[i];
+	}
+	for (i = 0; i < countof(Slot); ++i)
+	{
+		newp->Slot[i] = Slot[i];
+	}
+}
+
+static int STACK_ARGS intcmp(const void *a, const void *b)
+{
+	return *(const int *)a - *(const int *)b;
+}
+
+void PClassPlayerPawn::EnumColorSets(TArray<int> *out)
+{
+	out->Clear();
+	FPlayerColorSetMap::Iterator it(ColorSets);
+	FPlayerColorSetMap::Pair *pair;
+
+	while (it.NextPair(pair))
+	{
+		out->Push(pair->Key);
+	}
+	qsort(&(*out)[0], out->Size(), sizeof(int), intcmp);
+}
+
+//==========================================================================
+//
+//
+//==========================================================================
+
+bool PClassPlayerPawn::GetPainFlash(FName type, PalEntry *color) const
+{
+	const PClassPlayerPawn *info = this;
+
+	while (info != NULL)
+	{
+		const PalEntry *flash = info->PainFlashes.CheckKey(type);
+		if (flash != NULL)
+		{
+			*color = *flash;
+			return true;
+		}
+		// Try parent class
+		info = dyn_cast<PClassPlayerPawn>(info->ParentClass);
+	}
+	return false;
 }
 
 //===========================================================================
@@ -1038,7 +1121,7 @@ bool APlayerPawn::UseInventory (AInventory *item)
 //
 //===========================================================================
 
-AWeapon *APlayerPawn::BestWeapon (const PClass *ammotype)
+AWeapon *APlayerPawn::BestWeapon(PClassAmmo *ammotype)
 {
 	AWeapon *bestMatch = NULL;
 	int bestOrder = INT_MAX;
@@ -1118,7 +1201,7 @@ AWeapon *APlayerPawn::BestWeapon (const PClass *ammotype)
 //
 //===========================================================================
 
-AWeapon *APlayerPawn::PickNewWeapon (const PClass *ammotype)
+AWeapon *APlayerPawn::PickNewWeapon(PClassAmmo *ammotype)
 {
 	AWeapon *best = BestWeapon (ammotype);
 
@@ -1161,7 +1244,7 @@ AWeapon *APlayerPawn::PickNewWeapon (const PClass *ammotype)
 //
 //===========================================================================
 
-void APlayerPawn::CheckWeaponSwitch(const PClass *ammotype)
+void APlayerPawn::CheckWeaponSwitch(PClassAmmo *ammotype)
 {
 	if (( NETWORK_GetState( ) != NETSTATE_SERVER ) && // [BC] Let clients decide if they want to switch weapons.
 		( player->userinfo.GetSwitchOnPickup() > 0 ) &&
@@ -1201,14 +1284,14 @@ void APlayerPawn::GiveDeathmatchInventory()
 	// [BB] Spectators are supposed to have no inventory.
 	if ( player && player->bSpectating ) return;
 
-	for (unsigned int i = 0; i < PClass::m_Types.Size(); ++i)
+	for (unsigned int i = 0; i < PClassActor::AllActorClasses.Size(); ++i)
 	{
-		if (PClass::m_Types[i]->IsDescendantOf (RUNTIME_CLASS(AKey)))
+		if (PClassActor::AllActorClasses[i]->IsDescendantOf (RUNTIME_CLASS(AKey)))
 		{
-			AKey *key = (AKey *)GetDefaultByType (PClass::m_Types[i]);
+			AKey *key = (AKey *)GetDefaultByType (PClassActor::AllActorClasses[i]);
 			if (key->KeyNumber != 0)
 			{
-				key = static_cast<AKey *>(Spawn (PClass::m_Types[i], 0,0,0, NO_REPLACE));
+				key = static_cast<AKey *>(Spawn(static_cast<PClassActor *>(PClassActor::AllActorClasses[i]), 0,0,0, NO_REPLACE));
 				if (!key->CallTryPickup (this))
 				{
 					key->Destroy ();
@@ -1367,8 +1450,8 @@ const char *APlayerPawn::GetSoundClass() const
 	}
 
 	// [GRB]
-	const char *sclass = GetClass ()->Meta.GetMetaString (APMETA_SoundClass);
-	return sclass != NULL ? sclass : "player";
+	PClassPlayerPawn *pclass = GetClass();
+	return pclass->SoundClass.IsNotEmpty() ? pclass->SoundClass.GetChars() : "player";
 }
 
 //===========================================================================
@@ -1493,7 +1576,7 @@ void APlayerPawn::GiveDefaultInventory ()
 
 	AInventory *fist, *pistol, *bullets;
 	ULONG						ulIdx;
-	const PClass				*pType;
+	PClassActor				*pType;
 	AWeapon						*pWeapon;
 	APowerStrength				*pBerserk;
 	AWeapon						*pPendingWeapon;
@@ -1518,18 +1601,14 @@ void APlayerPawn::GiveDefaultInventory ()
 	// HexenArmor must always be the first item in the inventory because
 	// it provides player class based protection that should not affect
 	// any other protection item.
-	fixed_t hx[5];
-	for(int i=0;i<5;i++)
-	{
-		hx[i] = GetClass()->Meta.GetMetaFixed(APMETA_Hexenarmor0+i);
-	}
-	GiveInventoryType (RUNTIME_CLASS(AHexenArmor));
+	PClassPlayerPawn *myclass = GetClass();
+	GiveInventoryType(RUNTIME_CLASS(AHexenArmor));
 	AHexenArmor *harmor = FindInventory<AHexenArmor>();
-	harmor->Slots[4] = hx[0];
-	harmor->SlotsIncrement[0] = hx[1];
-	harmor->SlotsIncrement[1] = hx[2];
-	harmor->SlotsIncrement[2] = hx[3];
-	harmor->SlotsIncrement[3] = hx[4];
+	harmor->Slots[4] = myclass->HexenArmor[0];
+	for (int i = 0; i < 4; ++i)
+	{
+		harmor->SlotsIncrement[i] = myclass->HexenArmor[i + 1];
+	}
 
 	// BasicArmor must come right after that. It should not affect any
 	// other protection item as well but needs to process the damage
@@ -1541,7 +1620,7 @@ void APlayerPawn::GiveDefaultInventory ()
 	AddInventory (barmor);
 
 	// Now add the items from the DECORATE definition
-	FDropItem *di = GetDropItems();
+	DDropItem *di = GetDropItems();
 
 	// [BB] Buckshot only makes sense if this is a Doom, but not a Doom 1 game.
 	const bool bBuckshotPossible = ((gameinfo.gametype == GAME_Doom) && (gameinfo.flags & GI_MAPxx) );
@@ -1560,11 +1639,11 @@ void APlayerPawn::GiveDefaultInventory ()
 			// [BL] This used to call GiveInventoryTypeRespectingReplacements, but we also want to be sure
 			// the railgun is a weapon so that we can be sure we give the player the proper kind of ammo.
 			// [Dusk] Since Railgun was moved out to skulltag_actors, its presence must be checked for.
-			const PClass *pRailgunClass = PClass::FindClass( "Railgun" );
+			PClassActor *pRailgunClass = PClass::FindActor( "Railgun" );
 			if(!pRailgunClass)
 				I_Error("Tried to play instagib without a railgun!\n");
 
-			const PClass *pRailgun = pRailgunClass->ActorInfo->GetReplacement( )->Class;
+			PClassActor *pRailgun = pRailgunClass->GetReplacement( );
 			if(!pRailgun->IsDescendantOf( RUNTIME_CLASS( AWeapon ) ))
 				I_Error("Tried to give an improperly defined railgun.\n");
 
@@ -1593,7 +1672,7 @@ void APlayerPawn::GiveDefaultInventory ()
 		else if (( buckshot && bBuckshotPossible ) && ( deathmatch || teamgame ))
 		{
 			// Give the player the weapon.
-			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "SuperShotgun" ) );
+			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindActor( "SuperShotgun" ) );
 
 			if ( pInventory )
 			{
@@ -1603,7 +1682,7 @@ void APlayerPawn::GiveDefaultInventory ()
 			}
 
 			// Find the player's ammo for the weapon in his inventory, and max. out the amount.
-			pInventory = player->mo->FindInventory( PClass::FindClass( "Shell" ));
+			pInventory = player->mo->FindInventory( PClass::FindActor( "Shell" ));
 			if ( pInventory != NULL )
 				pInventory->Amount = pInventory->MaxAmount;
 			return;
@@ -1612,7 +1691,7 @@ void APlayerPawn::GiveDefaultInventory ()
 
 	while (di)
 	{
-		const PClass *ti = PClass::FindClass (di->Name);
+		PClassActor *ti = PClass::FindActor (di->Name);
 		// [BB] Don't give out weapons in LMS that are supposed to be forbidden.
 		if (ti && ( LASTMANSTANDING_IsWeaponDisallowed ( ti ) == false ) )
 		{
@@ -1620,14 +1699,14 @@ void APlayerPawn::GiveDefaultInventory ()
 			if (item != NULL)
 			{
 				item->Amount = clamp<int>(
-					item->Amount + (di->amount ? di->amount : ((AInventory *)item->GetDefault ())->Amount),
+					item->Amount + (di->Amount ? di->Amount : ((AInventory *)item->GetDefault ())->Amount),
 					0, item->MaxAmount);
 			}
 			else
 			{
 				item = static_cast<AInventory *>(Spawn (ti, 0,0,0, NO_REPLACE));
-				item->ItemFlags|=IF_IGNORESKILL;	// no skill multiplicators here
-				item->Amount = di->amount;
+				item->ItemFlags |= IF_IGNORESKILL;	// no skill multiplicators here
+				item->Amount = di->Amount;
 				if (item->IsKindOf (RUNTIME_CLASS (AWeapon)))
 				{
 					// To allow better control any weapon is emptied of
@@ -1692,12 +1771,12 @@ void APlayerPawn::GiveDefaultInventory ()
 			if ( player->PendingWeapon != WP_NOCHANGE )
 				pPendingWeapon = player->PendingWeapon;
 
-			for ( ulIdx = 0; ulIdx < PClass::m_Types.Size( ); ulIdx++ )
+			for ( ulIdx = 0; ulIdx < PClassActor::AllActorClasses.Size(); ulIdx++ )
 			{
-				pType = PClass::m_Types[ulIdx];
+				pType = PClassActor::AllActorClasses[ulIdx];
 
 				// [BB] Don't give anything that is not allowed for our game.
-				if ( pType->ActorInfo && ( pType->ActorInfo->GameFilter != GAME_Any ) && ( ( pType->ActorInfo->GameFilter & gameinfo.gametype ) == 0 ) )
+				if ( ( pType->GameFilter != GAME_Any ) && ( ( pType->GameFilter & gameinfo.gametype ) == 0 ) )
 					continue;
 
 				// Potentially disallow certain weapons.
@@ -1750,8 +1829,8 @@ void APlayerPawn::GiveDefaultInventory ()
 			}
 
 			// Also give the player berserk.
-			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "Berserk" ) );
-			pBerserk = static_cast<APowerStrength *>( player->mo->FindInventory( PClass::FindClass( "PowerStrength" )));
+			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindActor( "Berserk" ) );
+			pBerserk = static_cast<APowerStrength *>( player->mo->FindInventory( PClass::FindActor( "PowerStrength" )));
 			if ( pBerserk )
 			{
 				pBerserk->EffectTics = 768;
@@ -1763,7 +1842,7 @@ void APlayerPawn::GiveDefaultInventory ()
 			}
 
 			player->health = deh.MegasphereHealth;
-			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "GreenArmor" ) );
+			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindActor( "GreenArmor" ) );
 			player->health -= player->userinfo.GetHandicap();
 
 			// Don't allow player to be DOA.
@@ -1777,7 +1856,7 @@ void APlayerPawn::GiveDefaultInventory ()
 		// [BC] If the user has the shotgun start flag set, do that!
 		else if ( dmflags2 & DF2_COOP_SHOTGUNSTART )
 		{
-			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "Shotgun" ) );
+			pInventory = player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindActor( "Shotgun" ) );
 			if ( pInventory )
 			{
 				// [BB] PLAYER_SetWeapon takes care of the special client / server and demo handling.
@@ -1786,17 +1865,17 @@ void APlayerPawn::GiveDefaultInventory ()
 				// Start them off with two clips.
 				// [BB] PLAYER_SetWeapon doesn't set the consoleplayer's ReadyWeapon/PendingWeapon.
 				// Thus, we can't use those pointers, but need to rely on pInventory.
-				AInventory *pAmmo = player->mo->FindInventory( PClass::FindClass( "Shell" )->ActorInfo->GetReplacement( )->Class );
+				AInventory *pAmmo = player->mo->FindInventory( PClass::FindActor( "Shell" )->GetReplacement( ) );
 				if ( pAmmo != NULL )
 					pAmmo->Amount = static_cast<AWeapon *>( pInventory )->AmmoGive1 * 2;
 			}
 		}
 		else if (!Inventory)
 		{
-			fist = player->mo->GiveInventoryType (PClass::FindClass ("Fist"));
-			pistol = player->mo->GiveInventoryType (PClass::FindClass ("Pistol"));
+			fist = player->mo->GiveInventoryType (PClass::FindActor ("Fist"));
+			pistol = player->mo->GiveInventoryType (PClass::FindActor ("Pistol"));
 			// Adding the pistol automatically adds bullets
-			bullets = player->mo->FindInventory (PClass::FindClass ("Clip"));
+			bullets = player->mo->FindInventory (PClass::FindActor ("Clip"));
 			if (bullets != NULL)
 			{
 				bullets->Amount = deh.StartBullets;		// [RH] Used to be 50
@@ -1814,7 +1893,7 @@ void APlayerPawn::GiveDefaultInventory ()
 	if ( this->GetClass()->IsDescendantOf( PClass::FindClass( "HereticPlayer" ) ) )
 	{
 		ULONG			ulIdx;
-		const PClass	*pType;
+		PClassActor	*pType;
 		AWeapon			*pWeapon;
 		AWeapon			*pPendingWeapon;
 		AInventory		*pInventory;
@@ -1825,12 +1904,12 @@ void APlayerPawn::GiveDefaultInventory ()
 			// Give the player all the weapons, and the maximum amount of every type of
 			// ammunition.
 			pPendingWeapon = NULL;
-			for ( ulIdx = 0; ulIdx < PClass::m_Types.Size( ); ulIdx++ )
+			for ( ulIdx = 0; ulIdx < PClassActor::AllActorClasses.Size(); ulIdx++ )
 			{
-				pType = PClass::m_Types[ulIdx];
+				pType = PClassActor::AllActorClasses[ulIdx];
 
 				// [BB] Don't give anything that is not allowed for our game.
-				if ( pType->ActorInfo && ( ( pType->ActorInfo->GameFilter & gameinfo.gametype ) == 0 ) )
+				if ( ( pType->GameFilter & gameinfo.gametype ) == 0 )
 					continue;
 
 				if ( pType->ParentClass->IsDescendantOf( RUNTIME_CLASS( AWeapon )))
@@ -1874,7 +1953,7 @@ void APlayerPawn::GiveDefaultInventory ()
 			}
 
 			player->health = deh.MegasphereHealth;
-			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindClass( "SilverShield" ) );
+			player->mo->GiveInventoryTypeRespectingReplacements( PClass::FindActor( "SilverShield" ) );
 			player->health -= player->userinfo.GetHandicap();
 
 			// Don't allow player to be DOA.
@@ -1894,7 +1973,7 @@ void APlayerPawn::MorphPlayerThink ()
 
 void APlayerPawn::ActivateMorphWeapon ()
 {
-	const PClass *morphweapon = PClass::FindClass (MorphWeapon);
+	PClassActor *morphweapon = PClass::FindActor (MorphWeapon);
 	player->PendingWeapon = WP_NOCHANGE;
 	player->psprites[ps_weapon].sy = WEAPONTOP;
 
@@ -1966,7 +2045,7 @@ void APlayerPawn::Die (AActor *source, AActor *inflictor, int dmgflags)
 			AInventory *item;
 
 			// kgDROP - start - modified copy from a_action.cpp
-			FDropItem *di = weap->GetDropItems();
+			DDropItem *di = weap->GetDropItems();
 
 			if (di != NULL)
 			{
@@ -1974,8 +2053,8 @@ void APlayerPawn::Die (AActor *source, AActor *inflictor, int dmgflags)
 				{
 					if (di->Name != NAME_None)
 					{
-						const PClass *ti = PClass::FindClass(di->Name);
-						if (ti) P_DropItem (player->mo, ti, di->amount, di->probability);
+						PClassActor *ti = PClass::FindActor(di->Name);
+						if (ti) P_DropItem (player->mo, ti, di->Amount, di->Probability);
 					}
 					di = di->Next;
 				}
@@ -2121,19 +2200,19 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 		}
 
 		// Check if the player is carrying the white flag.
-		pInventory = this->FindInventory( PClass::FindClass( "WhiteFlag" ));
+		pInventory = this->FindInventory( PClass::FindActor( "WhiteFlag" ));
 		if (( oneflagctf ) && ( pInventory ))
 		{
 			this->RemoveInventory( pInventory );
 
 			// Tell the clients that this player no longer possesses a flag.
 			if (( bLeavingGame == false ) && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
-				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "WhiteFlag" ), 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindActor( "WhiteFlag" ), 0 );
 			if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 				SCOREBOARD_RefreshHUD( );
 
 			// Spawn a new flag.
-			pTeamItem = Spawn( PClass::FindClass( "WhiteFlag" ), X(), Y(), ONFLOORZ, NO_REPLACE );
+			pTeamItem = Spawn( PClass::FindActor( "WhiteFlag" ), X(), Y(), ONFLOORZ, NO_REPLACE );
 			if ( pTeamItem )
 			{
 				pTeamItem->flags |= MF_DROPPED;
@@ -2174,11 +2253,11 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 	{
 		if ( player->cheats2 & CF2_TERMINATORARTIFACT )
 		{
-			P_DropItem( this, PClass::FindClass( "Terminator" ), -1, 256 );
+			P_DropItem( this, PClass::FindActor( "Terminator" ), -1, 256 );
 
 			// Tell the clients that this player no longer possesses the terminator orb.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "PowerTerminatorArtifact" ), 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindActor( "PowerTerminatorArtifact" ), 0 );
 			else
 				SCOREBOARD_RefreshHUD( );
 		}
@@ -2190,11 +2269,11 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 	{
 		if ( player->cheats2 & CF2_POSSESSIONARTIFACT )
 		{
-			P_DropItem( this, PClass::FindClass( "PossessionStone" ), -1, 256 );
+			P_DropItem( this, PClass::FindActor( "PossessionStone" ), -1, 256 );
 
 			// Tell the clients that this player no longer possesses the stone.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindClass( "PowerPossessionArtifact" ), 0 );
+				SERVERCOMMANDS_TakeInventory( player - players, PClass::FindActor( "PowerPossessionArtifact" ), 0 );
 			else
 				SCOREBOARD_RefreshHUD( );
 
@@ -2349,6 +2428,8 @@ fixed_t APlayerPawn::CalcJumpHeight( bool bAddStepZ )
 
 DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int sound = 0;
 	int chan = CHAN_VOICE;
 
@@ -2362,7 +2443,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 		{
 			S_Sound (self, CHAN_VOICE, "*death", 1, ATTN_NORM);
 		}
-		return;
+		return 0;
 	}
 
 	// Handle the different player death screams
@@ -2411,6 +2492,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 		}
 	}
 	S_Sound (self, chan, sound, 1, ATTN_NORM);
+	return 0;
 }
 
 
@@ -2422,17 +2504,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 {
-	ACTION_PARAM_START(1);
-	ACTION_PARAM_CLASS(spawntype, 0);
+	PARAM_ACTION_PROLOGUE;
+	PARAM_CLASS_OPT(spawntype, APlayerChunk)	{ spawntype = NULL; }
 
 	APlayerPawn *mo;
 	player_t *player;
 
 	// [GRB] Parameterized version
-	if (!spawntype || !spawntype->IsDescendantOf (RUNTIME_CLASS (APlayerChunk)))
+	if (spawntype == NULL || !spawntype->IsDescendantOf(RUNTIME_CLASS(APlayerChunk)))
 	{
-		spawntype = PClass::FindClass("BloodySkull");
-		if (spawntype == NULL) return;
+		spawntype = dyn_cast<PClassPlayerPawn>(PClass::FindClass("BloodySkull"));
+		if (spawntype == NULL)
+			return 0;
 	}
 
 	self->flags &= ~MF_SOLID;
@@ -2464,6 +2547,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 		if ( player->pIcon )
 			player->pIcon->SetTracer( mo );
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -2474,10 +2558,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CheckPlayerDone)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->player == NULL)
 	{
-		self->Destroy ();
+		self->Destroy();
 	}
+	return 0;
 }
 
 //===========================================================================
@@ -3403,8 +3490,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 /*
 	if (debugfile && !(player->cheats & CF_PREDICTING))
 	{
-		fprintf (debugfile, "tic %d for pl %td: (%d, %d, %d, %u) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
-			gametic, player-players, player->mo->X(), player->mo->Y(), player->mo->Z(),
+		fprintf (debugfile, "tic %d for pl %d: (%d, %d, %d, %u) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
+			gametic, (int)(player-players), player->mo->X(), player->mo->Y(), player->mo->Z(),
 			player->mo->angle>>ANGLETOFINESHIFT, player->cmd.ucmd.buttons,
 			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
 			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
@@ -4431,55 +4518,6 @@ void player_t::Serialize (FArchive &arc)
 	if (SaveVersion >= 4522)
 	{
 		arc << MUSINFOactor << MUSINFOtics;
-	}
-}
-
-
-static FPlayerColorSetMap *GetPlayerColors(FName classname)
-{
-	const PClass *cls = PClass::FindClass(classname);
-
-	if (cls != NULL)
-	{
-		FActorInfo *inf = cls->ActorInfo;
-
-		if (inf != NULL)
-		{
-			return inf->ColorSets;
-		}
-	}
-	return NULL;
-}
-
-FPlayerColorSet *P_GetPlayerColorSet(FName classname, int setnum)
-{
-	FPlayerColorSetMap *map = GetPlayerColors(classname);
-	if (map == NULL)
-	{
-		return NULL;
-	}
-	return map->CheckKey(setnum);
-}
-
-static int STACK_ARGS intcmp(const void *a, const void *b)
-{
-	return *(const int *)a - *(const int *)b;
-}
-
-void P_EnumPlayerColorSets(FName classname, TArray<int> *out)
-{
-	out->Clear();
-	FPlayerColorSetMap *map = GetPlayerColors(classname);
-	if (map != NULL)
-	{
-		FPlayerColorSetMap::Iterator it(*map);
-		FPlayerColorSetMap::Pair *pair;
-
-		while (it.NextPair(pair))
-		{
-			out->Push(pair->Key);
-		}
-		qsort(&(*out)[0], out->Size(), sizeof(int), intcmp);
 	}
 }
 

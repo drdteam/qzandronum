@@ -22,10 +22,12 @@ static FRandom pr_shootgun ("ShootGun");
 
 DEFINE_ACTION_FUNCTION(AActor, A_ShootGun)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int pitch;
 
 	if (self->target == NULL)
-		return;
+		return 0;
 
 	// [BC] Play this sound to clients.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -37,6 +39,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ShootGun)
 	P_LineAttack (self, self->angle + (pr_shootgun.Random2() << 19),
 		MISSILERANGE, pitch,
 		3*(pr_shootgun() % 5 + 1), NAME_Hitscan, NAME_StrifePuff);
+	return 0;
 }
 
 // Teleporter Beacon --------------------------------------------------------
@@ -81,6 +84,8 @@ bool ATeleporterBeacon::Use (bool pickup)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Beacon)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *owner = self->target;
 	AActor *rebel;
 	angle_t an;
@@ -90,14 +95,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_Beacon)
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	rebel = Spawn("Rebel1", self->X(), self->Y(), self->floorz, ALLOW_REPLACE);
 	if (!P_TryMove (rebel, rebel->X(), rebel->Y(), true))
 	{
 		rebel->Destroy ();
-		return;
+		return 0;
 	}
 	// Once the rebels start teleporting in, you can't pick up the beacon anymore.
 	self->flags &= ~MF_SPECIAL;
@@ -154,4 +159,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_Beacon)
 
 		self->SetState(self->FindState(NAME_Death));
 	}
+	return 0;
 }

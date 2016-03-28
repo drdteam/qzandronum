@@ -49,7 +49,7 @@ public:
 	virtual void PowerupGranted ( APowerup* ) {}
 	virtual void ModifyPowerup ( APowerup* ) {}
 
-	const PClass *PowerupType;
+	PClassActor *PowerupType;
 	int EffectTics;			// Non-0 to override the powerup's default tics
 	PalEntry BlendColor;	// Non-0 to override the powerup's default blend
 	FNameNoInit Mode;		// Meaning depends on powerup - used for Invulnerability and Invisibility

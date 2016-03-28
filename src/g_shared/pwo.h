@@ -51,7 +51,7 @@
 class PWOWeaponInfo
 {
 public:
-	PWOWeaponInfo ( const PClass* type );
+	PWOWeaponInfo ( PClassActor* type );
 	
 	void BumpReferenceCount() { ReferenceCount++; }
 	const PClass* GetClass() const { return WeaponClass; }
@@ -62,17 +62,17 @@ public:
 	int GetWeight() { return static_cast<int>( Weight ); }
 	bool IsShared() const { return ReferenceCount != 1; }
 
-	bool operator== ( const PClass* type ) const
+	bool operator== ( PClassActor* type ) const
 	{
-		return WeaponClass == type->ActorInfo->GetReplacee()->Class;
+		return WeaponClass == type->GetReplacee();
 	}
 
-	static PWOWeaponInfo* FindInfo ( const PClass* type );
+	static PWOWeaponInfo* FindInfo ( PClassActor* type );
 
 private:
 	PWOWeaponInfo( const PWOWeaponInfo& ) {}
 
-	const PClass* WeaponClass;
+	PClassActor* WeaponClass;
 	unsigned int ReferenceCount;
 	float Weight;
 	FString Name;

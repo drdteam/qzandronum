@@ -329,7 +329,7 @@ private:
 		{
 			for (j = 0; j < CPlayer->weapons.Slots[i+2].Size(); j++)
 			{
-				const PClass *weap = CPlayer->weapons.Slots[i+2].GetWeapon (j);
+				PClassActor *weap = CPlayer->weapons.Slots[i+2].GetWeapon (j);
 				if (weap != NULL && CPlayer->mo->FindInventory (weap) != NULL)
 				{
 					arms[i] = 1;
@@ -408,7 +408,7 @@ private:
 		// Catalog the player's ammo
 		for (i = 0; i < 4; i++)
 		{
-			const PClass *type = PClass::FindClass (ammoTypes[i]);
+			PClassActor *type = PClass::FindActor (ammoTypes[i]);
 			AInventory *item = CPlayer->mo->FindInventory (type);
 			if (item != NULL)
 			{
@@ -738,7 +738,7 @@ void DrawFullHUD_GameInformation()
 			// If they're not, then check to see if they're carrying the white flag in one
 			// flag CTF.
 			if ( ( pInventory == NULL ) && CPlayer->mo )
-				pInventory = CPlayer->mo->FindInventory( PClass::FindClass( "WhiteFlag" ));
+				pInventory = CPlayer->mo->FindInventory( PClass::FindActor( "WhiteFlag" ));
 
 			// If the player is carrying any of these "flags", draw an indicator.
 			if ( pInventory )

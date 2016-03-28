@@ -436,27 +436,35 @@ int AForceFieldGuard::TakeSpecialDamage (AActor *inflictor, AActor *source, int 
 
 DEFINE_ACTION_FUNCTION(AActor, A_SetShadow)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags |= MF_STRIFEx8000000|MF_SHADOW;
 	self->RenderStyle = STYLE_Translucent;
 	self->alpha = HR_SHADOW;
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_ClearShadow)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->flags &= ~(MF_STRIFEx8000000|MF_SHADOW);
 	self->RenderStyle = STYLE_Normal;
 	self->alpha = OPAQUE;
+	return 0;
 }
 
 static FRandom pr_gethurt ("HurtMe!");
 
 DEFINE_ACTION_FUNCTION(AActor, A_GetHurt)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] The server handles this.
 	if ( NETWORK_InClientMode() )
 	{
 		if (( self->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) == false )
-			return;
+			return 0;
 	}
 
 	self->flags4 |= MF4_INCOMBAT;
@@ -474,16 +482,19 @@ DEFINE_ACTION_FUNCTION(AActor, A_GetHurt)
 	{
 		self->Die (self->target, self->target);
 	}
+	return 0;
 }
 
 // Klaxon Warning Light -----------------------------------------------------
 
 DEFINE_ACTION_FUNCTION(AActor, A_TurretLook)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *target;
 
 	if (self->flags5 & MF5_INCONVERSATION)
-		return;
+		return 0;
 
 	self->threshold = 0;
 	target = self->LastHeard;
@@ -495,7 +506,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_TurretLook)
 		self->target = target;
 		if ((self->flags & MF_AMBUSH) && !P_CheckSight (self, target))
 		{
-			return;
+			return 0;
 		}
 		if (self->SeeSound != 0)
 		{
@@ -505,10 +516,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_TurretLook)
 		self->threshold = 10;
 		self->SetState (self->SeeState);
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_KlaxonBlare)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (--self->reactiontime < 0)
 	{
 		self->target = NULL;
@@ -532,6 +546,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KlaxonBlare)
 	{
 		S_Sound (self, CHAN_VOICE, "misc/alarm", 1, ATTN_NORM);
 	}
+	return 0;
 }
 
 // Power Coupling -----------------------------------------------------------
@@ -568,7 +583,7 @@ void APowerCoupling::Die (AActor *source, AActor *inflictor, int dmgflags)
 	players[i].mo->GiveInventoryType (QuestItemClasses[5]);
 	S_Sound (CHAN_VOICE, "svox/voc13", 1, ATTN_NORM);
 	players[i].SetLogNumber (13);
-	P_DropItem (this, PClass::FindClass("BrokenPowerCoupling"), -1, 256);
+	P_DropItem (this, PClass::FindActor("BrokenPowerCoupling"), -1, 256);
 	Destroy ();
 }
 
@@ -595,6 +610,8 @@ IMPLEMENT_CLASS (AMeat)
 
 DEFINE_ACTION_FUNCTION(AActor, A_TossGib)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	const char *gibtype = (self->flags & MF_NOBLOOD) ? "Junk" : "Meat";
 	AActor *gib = Spawn (gibtype, self->PosPlusZ(24*FRACUNIT), ALLOW_REPLACE);
 	angle_t an;
@@ -602,7 +619,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_TossGib)
 
 	if (gib == NULL)
 	{
-		return;
+		return 0;
 	}
 
 	an = pr_gibtosser() << 24;
@@ -611,23 +628,29 @@ DEFINE_ACTION_FUNCTION(AActor, A_TossGib)
 	gib->velx = speed * finecosine[an >> ANGLETOFINESHIFT];
 	gib->vely = speed * finesine[an >> ANGLETOFINESHIFT];
 	gib->velz = (pr_gibtosser() & 15) << FRACBITS;
+	return 0;
 }
 
 //============================================================================
 
 DEFINE_ACTION_FUNCTION(AActor, A_FLoopActiveSound)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->ActiveSound != 0 && !(level.time & 7))
 	{
 		S_Sound (self, CHAN_VOICE, self->ActiveSound, 1, ATTN_NORM);
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_Countdown)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] The server handles this.
 	if ( NETWORK_InClientMode() && ( ( self->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) == false ) )
-		return;
+		return 0;
 
 	if (--self->reactiontime <= 0)
 	{
@@ -639,18 +662,24 @@ DEFINE_ACTION_FUNCTION(AActor, A_Countdown)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SetThingFlags( self, FLAGSET_FLAGS );
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_LoopActiveSound)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->ActiveSound != 0 && !S_IsActorPlayingSomething (self, CHAN_VOICE, -1))
 	{
 		S_Sound (self, CHAN_VOICE|CHAN_LOOP, self->ActiveSound, 1, ATTN_NORM);
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_CheckTerrain)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	sector_t *sec = self->Sector;
 
 	if (self->Z() == sec->floorplane.ZatPoint(self))
@@ -669,6 +698,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckTerrain)
 			self->vely += FixedMul (speed, finesine[finean]);
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -679,6 +709,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckTerrain)
 
 DEFINE_ACTION_FUNCTION(AActor, A_ClearSoundTarget)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *actor;
 
 	self->Sector->SoundTarget = NULL;
@@ -686,11 +718,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_ClearSoundTarget)
 	{
 		actor->LastHeard = NULL;
 	}
+	return 0;
 }
 
 
 DEFINE_ACTION_FUNCTION(AActor, A_ItBurnsItBurns)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	S_Sound (self, CHAN_VOICE, "human/imonfire", 1, ATTN_NORM);
 
 	if (self->player != NULL && self->player->mo == self)
@@ -702,17 +737,23 @@ DEFINE_ACTION_FUNCTION(AActor, A_ItBurnsItBurns)
 		self->player->playerstate = PST_LIVE;
 		self->player->extralight = 3;
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_DropFire)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *drop = Spawn("FireDroplet", self->PosPlusZ(24*FRACUNIT), ALLOW_REPLACE);
 	drop->velz = -FRACUNIT;
 	P_RadiusAttack (self, self, 64, 64, NAME_Fire, 0);
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_CrispyPlayer)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->player != NULL && self->player->mo == self)
 	{
 		self->player->playerstate = PST_DEAD;
@@ -720,10 +761,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_CrispyPlayer)
 			self->player->psprites[ps_weapon].state +
 			(self->FindState("FireHandsLower") - self->FindState("FireHands")));
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_HandLower)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->player != NULL)
 	{
 		pspdef_t *psp = &self->player->psprites[ps_weapon];
@@ -734,5 +778,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_HandLower)
 		}
 		if (self->player->extralight > 0) self->player->extralight--;
 	}
+	return 0;
 }
 

@@ -283,17 +283,13 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 			{
 				message = GStrings("OB_MONTELEFRAG");
 			}
-			else if (mod == NAME_Melee)
+			else if (mod == NAME_Melee && attacker->GetClass()->HitObituary.IsNotEmpty())
 			{
-				message = attacker->GetClass()->Meta.GetMetaString (AMETA_HitObituary);
-				if (message == NULL)
-				{
-					message = attacker->GetClass()->Meta.GetMetaString (AMETA_Obituary);
-				}
+				message = attacker->GetClass()->HitObituary;
 			}
-			else
+			else if (attacker->GetClass()->Obituary.IsNotEmpty())
 			{
-				message = attacker->GetClass()->Meta.GetMetaString (AMETA_Obituary);
+				message = attacker->GetClass()->Obituary;
 			}
 		}
 	}
@@ -321,13 +317,13 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 
 			if (message == NULL)
 			{
-				if (inflictor != NULL)
+				if (inflictor != NULL && inflictor->GetClass()->Obituary.IsNotEmpty())
 				{
-					message = inflictor->GetClass()->Meta.GetMetaString (AMETA_Obituary);
+					message = inflictor->GetClass()->Obituary;
 				}
 				if (message == NULL && (dmgflags & DMG_PLAYERATTACK) && attacker->player->ReadyWeapon != NULL)
 				{
-					message = attacker->player->ReadyWeapon->GetClass()->Meta.GetMetaString (AMETA_Obituary);
+					message = attacker->player->ReadyWeapon->GetClass()->Obituary;
 				}
 				if (message == NULL)
 				{
@@ -341,7 +337,7 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 				}
 				if (message == NULL)
 				{
-					message = attacker->GetClass()->Meta.GetMetaString (AMETA_Obituary);
+					message = attacker->GetClass()->Obituary;
 				}
 			}
 		}
@@ -394,8 +390,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 	bool	bPossessedTerminatorArtifact;
 
 	// Handle possible unmorph on death
-	bool wasgibbed = (health < GibHealth());
-
+	bool wasgibbed = (health < GetGibHealth());
 	AActor *realthis = NULL;
 	int realstyle = 0;
 	int realhealth = 0;
@@ -405,7 +400,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 		{
 			if (wasgibbed)
 			{
-				int realgibhealth = realthis->GibHealth();
+				int realgibhealth = realthis->GetGibHealth();
 				if (realthis->health >= realgibhealth)
 				{
 					realthis->health = realgibhealth -1; // if morphed was gibbed, so must original be (where allowed)l
@@ -489,22 +484,22 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 	flags6 |= MF6_KILLED;
 
 	// [RH] Allow the death height to be overridden using metadata.
-	fixed_t metaheight = 0;
+	fixed_t metaheight = -1;
 	if (DamageType == NAME_Fire)
 	{
-		metaheight = GetClass()->Meta.GetMetaFixed (AMETA_BurnHeight);
+		metaheight = GetClass()->BurnHeight;
 	}
-	if (metaheight == 0)
+	if (metaheight < 0)
 	{
-		metaheight = GetClass()->Meta.GetMetaFixed (AMETA_DeathHeight);
+		metaheight = GetClass()->DeathHeight;
 	}
-	if (metaheight != 0)
+	if (metaheight < 0)
 	{
-		height = MAX<fixed_t> (metaheight, 0);
+		height >>= 2;
 	}
 	else
 	{
-		height >>= 2;
+		height = MAX<fixed_t> (metaheight, 0);
 	}
 
 	// [RH] If the thing has a special, execute and remove it
@@ -830,7 +825,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 	}
 
 	FState *diestate = NULL;
-	int gibhealth = GibHealth();
+	int gibhealth = GetGibHealth();
 	ActorFlags4 iflags4 = inflictor == NULL ? ActorFlags4::FromInt(0) : inflictor->flags4;
 	bool extremelydead = ((health < gibhealth || iflags4 & MF4_EXTREMEDEATH) && !(iflags4 & MF4_NOEXTREMEDEATH));
 
@@ -1009,7 +1004,7 @@ static int UseHealthItems(TArray<AInventory *> &Items, int &saveHealth)
 		// [BB] Keep track of some values to inform the client how many items were used.
 		int oldAmount = Items[index]->Amount;
 		int newAmount = oldAmount;
-		const PClass *itemClass = Items[index]->GetClass();
+		PClassActor *itemClass = Items[index]->GetClass();
 		ULONG ulPlayer = MAXPLAYERS;
 		if ( Items[index]->Owner && Items[index]->Owner->player )
 			ulPlayer = static_cast<ULONG>(Items[index]->Owner->player - players);
@@ -1323,49 +1318,49 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		if ((rawdamage < TELEFRAG_DAMAGE) || (target->flags7 & MF7_LAXTELEFRAGDMG)) // TELEFRAG_DAMAGE may only be reduced with LAXTELEFRAGDMG or it may not guarantee its effect.
 		{
 			if (player && damage > 1)
+		{
+			// Take half damage in trainer mode
+			damage = FixedMul(damage, G_SkillProperty(SKILLP_DamageFactor));
+		}
+		// Special damage types
+		if (inflictor)
+		{
+			if (inflictor->flags4 & MF4_SPECTRAL)
 			{
-				// Take half damage in trainer mode
-				damage = FixedMul(damage, G_SkillProperty(SKILLP_DamageFactor));
-			}
-			// Special damage types
-			if (inflictor)
-			{
-				if (inflictor->flags4 & MF4_SPECTRAL)
+				if (player != NULL)
 				{
-					if (player != NULL)
-					{
-						if (!deathmatch && inflictor->FriendPlayer > 0)
-							return -1;
-					}
-					else if (target->flags4 & MF4_SPECTRAL)
-					{
-						if (inflictor->FriendPlayer == 0 && !target->IsHostile(inflictor))
-							return -1;
-					}
+					if (!deathmatch && inflictor->FriendPlayer > 0)
+						return -1;
 				}
+				else if (target->flags4 & MF4_SPECTRAL)
+				{
+					if (inflictor->FriendPlayer == 0 && !target->IsHostile(inflictor))
+						return -1;
+				}
+			}
 
 				damage = inflictor->DoSpecialDamage(target, damage, mod);
 				if (damage < 0)
-				{
-					return -1;
-				}
+			{
+				return -1;
 			}
+		}
 
 			int olddam = damage;
 
 			if (damage > 0 && source != NULL)
 			{
-				damage = FixedMul(damage, source->DamageMultiply);
+			damage = FixedMul(damage, source->DamageMultiply);
 
 				// Handle active damage modifiers (e.g. PowerDamage)
 				if (damage > 0 && source->Inventory != NULL)
 				{
 					source->Inventory->ModifyDamage(damage, mod, damage, false);
-				}
 			}
-			// Handle passive damage modifiers (e.g. PowerProtection), provided they are not afflicted with protection penetrating powers.
+		}
+		// Handle passive damage modifiers (e.g. PowerProtection), provided they are not afflicted with protection penetrating powers.
 			if (damage > 0 && (target->Inventory != NULL) && !(flags & DMG_NO_PROTECT))
-			{
+		{
 				target->Inventory->ModifyDamage(damage, mod, damage, true);
 			}
 			if (damage > 0 && !(flags & DMG_NO_FACTOR))
@@ -1382,12 +1377,12 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			return -1;
 		}
 
+		{
+			damage = FixedMul(damage, target->DamageFactor);
+			if (damage > 0)
 			{
-				damage = FixedMul(damage, target->DamageFactor);
-				if (damage > 0)
-				{
-					damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, mod, target->GetClass()->ActorInfo->DamageFactors);
-				}
+				damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, mod, target->GetClass()->DamageFactors);
+			}
 			}
 
 			if (damage >= 0)
@@ -1398,23 +1393,23 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			// '<0' is handled below. This only handles the case where damage gets reduced to 0.
 			if (damage == 0 && olddam > 0)
 			{
-				{ // Still allow FORCEPAIN
-					if (forcedPain)
+			{ // Still allow FORCEPAIN
+				if (forcedPain)
 					{
-						goto dopain;
+					goto dopain;
 					}
-					else if (fakedPain)
+				else if (fakedPain)
 					{
-						goto fakepain;
+					goto fakepain;
 					}
-					return -1;
-				}
+				return -1;
 			}
 		}
+	}
 		if (target->flags5 & MF5_NODAMAGE)
 		{
 			damage = 0;
-		}
+	}
 	}
 	if (damage < 0)
 	{
@@ -1546,13 +1541,13 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 			if (damage < 0)
 			{
 				return damage;
-			}
+		}
 			else if (damage == 0)
 			{
 				if (forcedPain)
 				{
 					goto dopain;
-				}
+	}
 				else if (fakedPain)
 				{
 					goto fakepain;
@@ -1824,7 +1819,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	// [BB] The server takes care of this.
 	if ( (woundstate != NULL) && ( NETWORK_InClientMode() == false ) )
 	{
-		int woundhealth = RUNTIME_TYPE(target)->Meta.GetMetaInt (AMETA_WoundHealth, 6);
+		int woundhealth = target->GetClass()->WoundHealth;
 
 		if (target->health <= woundhealth)
 		{
@@ -1842,7 +1837,7 @@ fakepain: //Needed so we can skip the rest of the above, but still obey the orig
 	if (!(target->flags5 & MF5_NOPAIN) && (inflictor == NULL || !(inflictor->flags5 & MF5_PAINLESS)) &&
 		(target->player != NULL || !G_SkillProperty(SKILLP_NoPain)) && !(target->flags & MF_SKULLFLY))
 	{
-		pc = target->GetClass()->ActorInfo->PainChances;
+		pc = target->GetClass()->PainChances;
 		painchance = target->PainChance;
 		if (pc != NULL)
 		{
@@ -2158,7 +2153,7 @@ void P_PoisonDamage (player_t *player, AActor *source, int damage,
 	damage = FixedMul(damage, target->DamageFactor);
 	if (damage > 0)
 	{
-		damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, player->poisontype, target->GetClass()->ActorInfo->DamageFactors);
+		damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, player->poisontype, target->GetClass()->DamageFactors);
 	}
 	if (damage <= 0)
 	{ // Damage was reduced to 0, so don't bother further.

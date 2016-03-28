@@ -44,11 +44,13 @@
 
 DEFINE_ACTION_FUNCTION(AActor, A_BarrelDestroy)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] Just always destroy it in client mode.
 	if ( NETWORK_InClientMode() )
 	{
 		self->Destroy( );
-		return;
+		return 0;
 	}
 
 	if (dmflags2 & DF2_BARRELS_RESPAWN)
@@ -67,4 +69,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_BarrelDestroy)
 		// [BB] Only destroy the actor if it's not needed for a map reset. Otherwise just hide it.
 		self->HideOrDestroyIfSafe ();
 	}
+	return 0;
 }

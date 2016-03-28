@@ -97,7 +97,7 @@ unsigned int GetRevisionNumber();
 
 // Minimum demo version we can play.
 // Bump it whenever you change or remove existing DEM_ commands.
-#define MINDEMOVERSION 0x21C
+#define MINDEMOVERSION 0x21D
 
 // SAVEVER is the version of the information stored in level snapshots.
 // Note that SAVEVER is not directly comparable to VERSION.

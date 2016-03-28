@@ -1962,7 +1962,7 @@ void SCOREBOARD_RefreshHUD( void )
 							TEAM_SetCarrier( i, &players[ulIdx] );
 					}
 
-					if ( players[ulIdx].mo->FindInventory( PClass::FindClass( "WhiteFlag" )))
+					if ( players[ulIdx].mo->FindInventory( PClass::FindActor( "WhiteFlag" )))
 						g_pWhiteCarrier = &players[ulIdx];
 				}
 			}

@@ -13,10 +13,12 @@ static FRandom pr_reaverattack ("ReaverAttack");
 
 DEFINE_ACTION_FUNCTION(AActor, A_ReaverRanged)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (self->target != NULL)
@@ -41,4 +43,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_ReaverRanged)
 			P_LineAttack (self, angle, MISSILERANGE, pitch, damage, NAME_Hitscan, NAME_StrifePuff);
 		}
 	}
+	return 0;
 }

@@ -1520,7 +1520,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 				SERVERCOMMANDS_GiveInventory( ulIdx, pInventory, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
 			// See if the player is carrying the white flag in OFCTF.
-			pInventory = players[ulIdx].mo->FindInventory( PClass::FindClass( "WhiteFlag" ));
+			pInventory = players[ulIdx].mo->FindInventory( PClass::FindActor( "WhiteFlag" ));
 			if (( oneflagctf ) && ( pInventory ))
 				SERVERCOMMANDS_GiveInventory( ulIdx, pInventory, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 		}
@@ -1541,7 +1541,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 			if (( playeringame[ulIdx] == false ) || ( players[ulIdx].mo == NULL ))
 				continue;
 
-			pInventory = players[ulIdx].mo->FindInventory( PClass::FindClass( "PowerTerminatorArtifact" ));
+			pInventory = players[ulIdx].mo->FindInventory( PClass::FindActor( "PowerTerminatorArtifact" ));
 			if ( pInventory )
 				SERVERCOMMANDS_GiveInventory( ulIdx, pInventory, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 		}
@@ -1556,7 +1556,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 			if (( playeringame[ulIdx] == false ) || ( players[ulIdx].mo == NULL ))
 				continue;
 
-			pInventory = players[ulIdx].mo->FindInventory( PClass::FindClass( "PowerPossessionArtifact" ));
+			pInventory = players[ulIdx].mo->FindInventory( PClass::FindActor( "PowerPossessionArtifact" ));
 			if ( pInventory )
 				SERVERCOMMANDS_GiveInventory( ulIdx, pInventory, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 		}
@@ -2529,8 +2529,8 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		// Don't spawn players, items about to be deleted, inventory items
 		// that have an owner, or items that the client spawns himself.
 		if (( pActor->IsKindOf( RUNTIME_CLASS( APlayerPawn ))) ||
-			( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HoldAndDestroy") ) ||	// S_HOLDANDDESTROY
-			( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("Held") ) || // S_HELD
+			( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HoldAndDestroy") ) ||	// S_HOLDANDDESTROY
+			( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("Held") ) || // S_HELD
 			( pActor->ulNetworkFlags & NETFL_ALLOWCLIENTSPAWN ))
 		{
 			continue;
@@ -2540,7 +2540,7 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		// The clients don't need them at all, since the server will tell
 		// them to spawn a new actor during GAME_ResetMap anyway.
 		if ( !( pActor->IsKindOf( RUNTIME_CLASS( AInventory ) ) )
-		     && ( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideIndefinitely") ) // S_HIDEINDEFINITELY 
+		     && ( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideIndefinitely") ) // S_HIDEINDEFINITELY 
 		   )
 		{
 			continue;
@@ -2615,7 +2615,7 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 			// [BB] Clients need to know the SectorAction specials to predict them.
 			// [EP] Spectators need to know the allowed specials to use them.
 			if ( ( NETWORK_IsClientPredictedSpecial ( pActor->special ) || GAMEMODE_IsSpectatorAllowedSpecial ( pActor->special ) )
-				&& pActor->IsKindOf( PClass::FindClass( "SectorAction" ) ) )
+				&& pActor->IsKindOf( PClass::FindActor( "SectorAction" ) ) )
 				SERVERCOMMANDS_SetThingSpecial ( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 
 			// [BB] Some things like AMovingCamera rely on the AActor tid.
@@ -2630,9 +2630,9 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 
 			// This item has been picked up, and is in its hidden, respawn state. Let
 			// the client know that.
-			if (( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideDoomish") ) ||	// S_HIDEDOOMISH
-				( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideSpecial") ) ||	// S_HIDESPECIAL
-				( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideIndefinitely") ))
+			if (( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideDoomish") ) ||	// S_HIDEDOOMISH
+				( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideSpecial") ) ||	// S_HIDESPECIAL
+				( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideIndefinitely") ))
 			{
 				SERVERCOMMANDS_HideThing( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 			}
@@ -2642,7 +2642,7 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 				SERVERCOMMANDS_ThingDeactivate( pActor, NULL, ulClient, SVCF_ONLYTHISCLIENT );
 
 			// [BB] Active ActorMovers need to be synced with the client.
-			if ( pActor->IsKindOf( PClass::FindClass( "ActorMover" ) ) && pActor->IsActive( ) )
+			if ( pActor->IsKindOf( PClass::FindActor( "ActorMover" ) ) && pActor->IsActive( ) )
 			{
 				static_cast<APathFollower *> ( pActor )->SyncWithClient ( ulClient );
 				SERVERCOMMANDS_ThingActivate( pActor, NULL, ulClient, SVCF_ONLYTHISCLIENT );
@@ -2658,7 +2658,7 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 			// If any of this actor's flags have changed during the course of the level, notify
 			// the client.
 			// [BB] InterpolationPoint abuses the MF_AMBUSH flag, so we have to exclude this class here.
-			if ( pActor->IsKindOf( PClass::FindClass( "InterpolationPoint" ) ) == false )
+			if ( pActor->IsKindOf( PClass::FindActor( "InterpolationPoint" ) ) == false )
 				SERVERCOMMANDS_UpdateThingFlagsNotAtDefaults( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 
 			// [BB] Now that the ammo amount from weapon pickups is handled on the server
@@ -3869,7 +3869,7 @@ void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon )
 		// [Dusk] Weapon holders need special treatment. While the server manages
 		// weapon pieces, holders need to be synced as the client uses it for
 		// weapon piece HUD display.
-		if ( pInventory->IsKindOf( PClass::FindClass( "WeaponHolder" )) )
+		if ( pInventory->IsKindOf( PClass::FindActor( "WeaponHolder" )) )
 		{
 			SERVERCOMMANDS_GiveWeaponHolder( ulClient, static_cast<AWeaponHolder *>( pInventory ), ulClient, SVCF_ONLYTHISCLIENT );
 			// [BB] This item was taken care of, move to the next.
@@ -3879,8 +3879,8 @@ void SERVER_ResetInventory( ULONG ulClient, const bool bChangeClientWeapon )
 		if ( pInventory->IsKindOf( RUNTIME_CLASS( APowerup )))
 		{
 			// [BB] All clients need to be informed about some special iventory kinds.
-			if ( pInventory->IsKindOf( PClass::FindClass( "PowerTerminatorArtifact" ))
-				 || pInventory->IsA( PClass::FindClass( "PowerPossessionArtifact" )) )
+			if ( pInventory->IsKindOf( PClass::FindActor( "PowerTerminatorArtifact" ))
+				 || pInventory->IsA( PClass::FindActor( "PowerPossessionArtifact" )) )
 				SERVERCOMMANDS_GivePowerup( ulClient, static_cast<APowerup *>( pInventory ) );
 			else
 				SERVERCOMMANDS_GivePowerup( ulClient, static_cast<APowerup *>( pInventory ), ulClient, SVCF_ONLYTHISCLIENT );
@@ -4063,7 +4063,7 @@ void SERVER_SyncSharedKeys( int playerToSync, bool withmessage )
 
 	for ( unsigned int keyidx = 0; keyidx < g_keysFound.Size(); ++keyidx )
 	{
-		const PClass* keyclass = NETWORK_GetClassFromIdentification( g_keysFound[keyidx] );
+		PClassActor* keyclass = NETWORK_GetClassFromIdentification( g_keysFound[keyidx] );
 
 		if ( keyclass == NULL )
 		{
@@ -5126,7 +5126,7 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 			if ( ( level.maptime > 3*TICRATE )
 				|| ( ( SERVER_GetClient( ulClient )->State == CLS_SPAWNED ) && ( pPlayer->ReadyWeapon == NULL ) && ( pPlayer->PendingWeapon == WP_NOCHANGE ) ) )
 			{
-				const PClass *pType = NETWORK_GetClassFromIdentification( moveCmd.usWeaponNetworkIndex );
+				PClassActor *pType = NETWORK_GetClassFromIdentification( moveCmd.usWeaponNetworkIndex );
 				if (( pType ) && ( pType->IsDescendantOf( RUNTIME_CLASS( AWeapon ))))
 				{
 					if ( pPlayer->mo )
@@ -5368,7 +5368,7 @@ ClientWeaponSelectCommand::ClientWeaponSelectCommand ( BYTESTREAM_s *pByteStream
 
 bool ClientWeaponSelectCommand::process( const ULONG ulClient ) const
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 	AInventory		*pInventory;
 
 	// If the player doesn't have a body, break out.
@@ -5884,7 +5884,7 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 {
 	const char		*pszName;
 	AActor			*pSource;
-	const PClass	*pType;
+	PClassActor	*pType;
 	AActor			*pActor;
 
 	// Read in the item name.
@@ -5901,8 +5901,8 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 	// If it's legal, do the cheat.
 	if ( sv_cheats )
 	{
-		pType = PClass::FindClass( pszName );
-		if (( pType == NULL ) || ( pType->ActorInfo == NULL ))
+		pType = PClass::FindActor( pszName );
+		if ( pType == NULL )
 		{
 			Printf( "server_SummonCheat: Couldn't find class: %s\n", pszName );
 			return ( false );
@@ -6431,7 +6431,8 @@ static bool server_MorphCheat( BYTESTREAM_s *pByteStream )
 	// If it's legal, do the moprh.
 	if ( sv_cheats )
 	{
-		const char *msg = cht_Morph (players + g_lCurrentClient, PClass::FindClass (pszMorphClass), false);
+		PClassActor *pClass = PClass::FindActor(pszMorphClass);
+		const char *msg = pClass->IsKindOf(RUNTIME_CLASS(PClassPlayerPawn)) ? cht_Morph (players + g_lCurrentClient, static_cast<PClassPlayerPawn *>(pClass), false) : '\0';
 		FString messageString = *msg != '\0' ? msg : "Morph failed.";
 		SERVER_PrintfPlayer( g_lCurrentClient, "%s", messageString.GetChars() );
 	}

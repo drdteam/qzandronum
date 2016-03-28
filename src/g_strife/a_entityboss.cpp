@@ -14,10 +14,13 @@ static FRandom pr_entity ("Entity");
 
 DEFINE_ACTION_FUNCTION(AActor, A_SubEntityDeath)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (CheckBossDeath (self))
 	{
 		G_ExitLevel (0, false);
 	}
+	return 0;
 }
 
 void A_SpectralMissile (AActor *self, const char *missilename)
@@ -25,7 +28,7 @@ void A_SpectralMissile (AActor *self, const char *missilename)
 	if (self->target != NULL)
 	{
 		AActor *missile = P_SpawnMissileXYZ (self->PosPlusZ(32*FRACUNIT), 
-			self, self->target, PClass::FindClass(missilename), false);
+			self, self->target, PClass::FindActor(missilename), false);
 		if (missile != NULL)
 		{
 			missile->tracer = self->target;
@@ -40,6 +43,8 @@ DECLARE_ACTION(A_Spectre3Attack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_EntityAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// Apparent Strife bug: Case 5 was unreachable because they used % 5 instead of % 6.
 	// I've fixed that by making case 1 duplicate it, since case 1 did nothing.
 	switch (pr_entity() % 5)
@@ -65,14 +70,17 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityAttack)
 		A_SpectralMissile (self, "SpectralLightningBigBall2");
 		break;
 	}
+	return 0;
 }
 
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpawnEntity)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	AActor *entity = Spawn("EntityBoss", self->PosPlusZ(70*FRACUNIT), ALLOW_REPLACE);
 	if (entity != NULL)
@@ -86,17 +94,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpawnEntity)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnMissile( entity );
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *second;
 	fixed_t secondRadius = GetDefaultByName("EntitySecond")->radius * 2;
 	angle_t an;
 
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	AActor *spot = self->tracer;
 	if (spot == NULL) spot = self;
@@ -142,4 +153,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 		SERVERCOMMANDS_SpawnMissile( second );
 
 	A_FaceTarget (second);
+	return 0;
 }

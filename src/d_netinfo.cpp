@@ -302,9 +302,9 @@ int D_PlayerClassToInt (const char *classname)
 	{
 		for (unsigned int i = 0; i < PlayerClasses.Size (); ++i)
 		{
-			const PClass *type = PlayerClasses[i].Type;
+			PClassPlayerPawn *type = PlayerClasses[i].Type;
 
-			if (stricmp (type->Meta.GetMetaString (APMETA_DisplayName), classname) == 0)
+			if (type->DisplayName.IsNotEmpty() && stricmp(type->DisplayName, classname) == 0)
 			{
 				return i;
 			}
@@ -326,7 +326,7 @@ void D_GetPlayerColor (int player, float *h, float *s, float *v, FPlayerColorSet
 
 	if (players[player].mo != NULL)
 	{
-		colorset = P_GetPlayerColorSet(players[player].mo->GetClass()->TypeName, info->GetColorSet());
+		colorset = players[player].mo->GetClass()->GetColorSet(info->GetColorSet());
 	}
 	if (colorset != NULL)
 	{
@@ -1218,7 +1218,7 @@ void D_WriteUserInfoStrings (int pnum, BYTE **stream, bool compact)
 
 		case NAME_PlayerClass:
 			*stream += sprintf(*((char **)stream), "\\%s", info->GetPlayerClassNum() == -1 ? "Random" :
-				D_EscapeUserInfo(info->GetPlayerClassType()->Meta.GetMetaString(APMETA_DisplayName)).GetChars());
+				D_EscapeUserInfo(info->GetPlayerClassType()->DisplayName.GetChars()).GetChars());
 			break;
 
 		case NAME_Skin:
@@ -1474,7 +1474,7 @@ void WriteUserInfo(FArchive &arc, userinfo_t &info)
 
 		case NAME_PlayerClass:
 			i = info.GetPlayerClassNum();
-			arc.WriteString(i == -1 ? "Random" : PlayerClasses[i].Type->Meta.GetMetaString(APMETA_DisplayName));
+			arc.WriteString(i == -1 ? "Random" : PlayerClasses[i].Type->DisplayName.GetChars());
 			break;
 
 		default:
@@ -1585,7 +1585,7 @@ CCMD (playerinfo)
 		Printf("%20s: %s (%d)\n", "Skin", skins[ui->GetSkin()].name, ui->GetSkin());
 		Printf("%20s: %s (%d)\n", "Gender", GenderNames[ui->GetGender()], ui->GetGender());
 		Printf("%20s: %s (%d)\n", "PlayerClass",
-			ui->GetPlayerClassNum() == -1 ? "Random" : ui->GetPlayerClassType()->Meta.GetMetaString (APMETA_DisplayName),
+			ui->GetPlayerClassNum() == -1 ? "Random" : ui->GetPlayerClassType()->DisplayName.GetChars(),
 			ui->GetPlayerClassNum());
 
 		// Print generic info

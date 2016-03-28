@@ -69,24 +69,26 @@ void ACFlameMissile::Effect ()
 
 DEFINE_ACTION_FUNCTION(AActor, A_CFlameAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
 		S_Sound (self, CHAN_WEAPON, "ClericFlameFire", 1, ATTN_NORM);
-		return;
+		return 0;
 	}
 
 	P_SpawnPlayerMissileWithPossibleSpread (self, RUNTIME_CLASS(ACFlameMissile)); // [BB] Spread
@@ -95,6 +97,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameAttack)
 	// [BC] If we're the server, tell other clients to make the sound.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_WeaponSound( ULONG( player - players ), "ClericFlameFire", ULONG( player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 //============================================================================
@@ -105,11 +109,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CFlamePuff)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->renderflags &= ~RF_INVISIBLE;
 	self->velx = 0;
 	self->vely = 0;
 	self->velz = 0;
 	S_Sound (self, CHAN_BODY, "ClericFlameExplode", 1, ATTN_NORM);
+	return 0;
 }
 
 //============================================================================
@@ -120,6 +127,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlamePuff)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CFlameMissile)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int i;
 	int an, an90;
 	fixed_t dist;
@@ -131,7 +140,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameMissile)
 	// [BC] Let the server handle this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	AActor *BlockingMobj = self->BlockingMobj;
@@ -177,6 +186,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameMissile)
 		}
 		self->SetState (self->SpawnState);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -187,10 +197,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_CFlameMissile)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CFlameRotate)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int an;
 
 	an = (self->angle+ANG90)>>ANGLETOFINESHIFT;
 	self->velx = self->special1+FixedMul(FLAMEROTSPEED, finecosine[an]);
 	self->vely = self->special2+FixedMul(FLAMEROTSPEED, finesine[an]);
 	self->angle += ANG90/15;
+	return 0;
 }

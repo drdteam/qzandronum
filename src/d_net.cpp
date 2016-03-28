@@ -2105,7 +2105,7 @@ BYTE *FDynamicBuffer::GetData (int *len)
 }
 
 
-static int KillAll(const PClass *cls)
+static int KillAll(PClassActor *cls)
 {
 	AActor *actor;
 	int killcount = 0;
@@ -2301,7 +2301,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 	case DEM_SUMMONFRIEND2:
 	case DEM_SUMMONFOE2:
 		{
-			const PClass *typeinfo;
+			PClassActor *typeinfo;
 			int angle = 0;
 			SWORD tid = 0;
 			BYTE special = 0;
@@ -2316,8 +2316,8 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 				for(i = 0; i < 5; i++) args[i] = ReadLong(stream);
 			}
 
-			typeinfo = PClass::FindClass (s);
-			if (typeinfo != NULL && typeinfo->ActorInfo != NULL)
+			typeinfo = PClass::FindActor(s);
+			if (typeinfo != NULL)
 			{
 				AActor *source = players[player].mo;
 				if (source != NULL)
@@ -2531,7 +2531,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 
 	case DEM_RUNSPECIAL:
 		{
-			int snum = ReadByte(stream);
+			int snum = ReadWord(stream);
 			int argn = ReadByte(stream);
 			int arg[5] = { 0, 0, 0, 0, 0 };
 
@@ -2562,7 +2562,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 	case DEM_MORPHEX:
 		{
 			s = ReadString (stream);
-			const char *msg = cht_Morph (players + player, PClass::FindClass (s), false);
+			const char *msg = cht_Morph (players + player, dyn_cast<PClassPlayerPawn>(PClass::FindClass (s)), false);
 			if (player == consoleplayer)
 			{
 				Printf ("%s\n", *msg != '\0' ? msg : "Morph failed.");
@@ -2594,12 +2594,12 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 		{
 			char *classname = ReadString (stream);
 			int killcount = 0;
-			const PClass *cls = PClass::FindClass(classname);
+			PClassActor *cls = PClass::FindActor(classname);
 
-			if (cls != NULL && cls->ActorInfo != NULL)
+			if (cls != NULL)
 			{
 				killcount = KillAll(cls);
-				const PClass *cls_rep = cls->GetReplacement();
+				PClassActor *cls_rep = cls->GetReplacement();
 				if (cls != cls_rep)
 				{
 					killcount += KillAll(cls_rep);
@@ -2617,8 +2617,8 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 	{
 		char *classname = ReadString(stream);
 		int removecount = 0;
-		const PClass *cls = PClass::FindClass(classname);
-		if (cls != NULL && cls->ActorInfo != NULL)
+		PClassActor *cls = PClass::FindActor(classname);
+		if (cls != NULL && cls->IsKindOf(RUNTIME_CLASS(PClassActor)))
 		{
 			removecount = RemoveClass(cls);
 			const PClass *cls_rep = cls->GetReplacement();
@@ -2661,7 +2661,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 			}
 			for(i = 0; i < count; ++i)
 			{
-				const PClass *wpn = Net_ReadWeapon(stream);
+				PClassWeapon *wpn = Net_ReadWeapon(stream);
 				players[pnum].weapons.AddSlot(slot, wpn, pnum == consoleplayer);
 			}
 		}
@@ -2670,7 +2670,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 	case DEM_ADDSLOT:
 		{
 			int slot = ReadByte(stream);
-			const PClass *wpn = Net_ReadWeapon(stream);
+			PClassWeapon *wpn = Net_ReadWeapon(stream);
 			players[player].weapons.AddSlot(slot, wpn, player == consoleplayer);
 		}
 		break;
@@ -2678,7 +2678,7 @@ void Net_DoCommand (int type, BYTE **stream, int player)
 	case DEM_ADDSLOTDEFAULT:
 		{
 			int slot = ReadByte(stream);
-			const PClass *wpn = Net_ReadWeapon(stream);
+			PClassWeapon *wpn = Net_ReadWeapon(stream);
 			players[player].weapons.AddSlotDefault(slot, wpn, player == consoleplayer);
 		}
 		break;
@@ -2827,7 +2827,7 @@ void Net_SkipCommand (int type, BYTE **stream)
 			break;
 
 		case DEM_RUNSPECIAL:
-			skip = 2 + *(*stream + 1) * 4;
+			skip = 3 + *(*stream + 2) * 4;
 			break;
 
 		case DEM_CONVREPLY:

@@ -24,15 +24,17 @@ static FRandom pr_pain ("BishopPainBlur");
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (!self->target)
 	{
-		return;
+		return 0;
 	}
 	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
 
@@ -45,9 +47,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack)
 		int damage = pr_atk.HitDice (4);
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		return;
+		return 0;
 	}
 	self->special1 = (pr_atk() & 3) + 5;
+	return 0;
 }
 
 //============================================================================
@@ -59,12 +62,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (!self->target || !self->special1)
@@ -76,14 +81,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack2)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SetThingState( self, STATE_SEE );
 
-		return;
+		return 0;
 	}
-	mo = P_SpawnMissile (self, self->target, PClass::FindClass("BishopFX"), NULL, true); // [BB] Inform clients
+	mo = P_SpawnMissile (self, self->target, PClass::FindActor("BishopFX"), NULL, true); // [BB] Inform clients
 	if (mo != NULL)
 	{
 		mo->tracer = self->target;
 	}
 	self->special1--;
+	return 0;
 }
 
 //============================================================================
@@ -94,7 +100,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack2)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopMissileWeave)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	A_Weave(self, 2, 2, 2*FRACUNIT, FRACUNIT);
+	return 0;
 }
 
 //============================================================================
@@ -105,15 +114,17 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopMissileWeave)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopDecide)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (pr_decide() < 220)
 	{
-		return;
+		return 0;
 	}
 	else
 	{
@@ -122,7 +133,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDecide)
 			SERVERCOMMANDS_SetThingFrame( self, self->FindState ("Blur") );
 
 		self->SetState (self->FindState ("Blur"));
-	}		
+	}
+	return 0;
 }
 
 //============================================================================
@@ -133,10 +145,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDecide)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopDoBlur)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	self->special1 = (pr_doblur() & 3) + 3; // Random number of blurs
@@ -160,6 +174,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDoBlur)
 		SERVERCOMMANDS_MoveThingExact( self, CM_VELX|CM_VELY );
 		SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "BishopBlur", 1, ATTN_NORM );
 	}
+
+	return 0;
 }
 
 //============================================================================
@@ -170,10 +186,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDoBlur)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopSpawnBlur)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	AActor *mo;
@@ -216,6 +234,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopSpawnBlur)
 			SERVERCOMMANDS_SetThingAngle( mo );
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -226,11 +245,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopSpawnBlur)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopChase)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] This is server-side. The z coordinate seems to go out of sync
 	// on client and server, if you make this client side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	fixed_t newz = self->Z() - finesine[self->special2 << BOBTOFINESHIFT] * 4;
@@ -241,6 +262,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopChase)
 	// [BB] If we're the server, update the thing's z coordinate.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_MoveThingExact( self, CM_Z );
+
+	return 0;
 }
 
 //============================================================================
@@ -251,6 +274,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopChase)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopPuff)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	mo = Spawn ("BishopPuff", self->PosPlusZ(40*FRACUNIT), ALLOW_REPLACE);
@@ -258,6 +283,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPuff)
 	{
 		mo->velz = FRACUNIT/2;
 	}
+	return 0;
 }
 
 //============================================================================
@@ -268,12 +294,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPuff)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BishopPainBlur)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (pr_pain() < 64)
@@ -283,7 +311,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPainBlur)
 			SERVERCOMMANDS_SetThingFrame( self, self->FindState ("Blur") );
 
 		self->SetState (self->FindState ("Blur"));
-		return;
+		return 0;
 	}
 	fixed_t xo = (pr_pain.Random2() << 12);
 	fixed_t yo = (pr_pain.Random2() << 12);
@@ -300,4 +328,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPainBlur)
 			SERVERCOMMANDS_SetThingAngle( mo );
 		}
 	}
+	return 0;
 }

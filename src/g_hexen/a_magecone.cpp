@@ -51,6 +51,8 @@ int AFrostMissile::DoSpecialDamage (AActor *victim, int damage, FName damagetype
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	angle_t angle;
 	int damage;
 	int slope;
@@ -62,21 +64,21 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 	S_Sound (self, CHAN_WEAPON, "MageShardsFire", 1, ATTN_NORM);
 
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	// [BC] If we're the server, play the sound.
@@ -138,6 +140,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 			}
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -148,6 +151,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 
 DEFINE_ACTION_FUNCTION(AActor, A_ShedShard)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 	int spawndir = self->special1;
 	int spermcount = self->special2;
@@ -155,10 +160,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_ShedShard)
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	if (spermcount <= 0) return;				// No sperm left
+	if (spermcount <= 0)
+	{
+		return 0;				// No sperm left
+	}
 	self->special2 = 0;
 	spermcount--;
 
@@ -234,4 +242,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_ShedShard)
 				SERVERCOMMANDS_SpawnMissileExact( mo );
 		}
 	}
+	return 0;
 }

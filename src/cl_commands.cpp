@@ -166,7 +166,7 @@ void CLIENTCOMMANDS_UserInfo( ULONG ulFlags )
 		if ( players[consoleplayer].userinfo.GetPlayerClassNum() == -1 )
 			NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, "random" );
 		else
-			NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, PlayerClasses[players[consoleplayer].userinfo.GetPlayerClassNum()].Type->Meta.GetMetaString( APMETA_DisplayName ));
+			NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, PlayerClasses[players[consoleplayer].userinfo.GetPlayerClassNum()].Type->DisplayName );
 	}
 }
 

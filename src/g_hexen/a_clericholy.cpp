@@ -130,6 +130,8 @@ bool AHolySpirit::SpecialBlastHandling (AActor *source, fixed_t strength)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int j;
 	int i;
 	AActor *mo;
@@ -175,6 +177,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack2)
 		}
 		SpawnSpiritTail (mo);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -207,18 +210,25 @@ void SpawnSpiritTail (AActor *spirit)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 	AActor *linetarget;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	ACWeapWraithverge *weapon = static_cast<ACWeapWraithverge *> (self->player->ReadyWeapon);
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
+	}
+	AActor *missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor("HolyMissile"), self->angle, &linetarget);
+	if (missile != NULL)
+	{
+		missile->tracer = linetarget;
 	}
 
 	// [BC] Weapons are handled by the server.
@@ -226,20 +236,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 	{
 		weapon->CHolyCount = 3;
 		S_Sound (self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM);
-		return;
+		return 0;
 	}
 
-	AActor * missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindClass ("HolyMissile"), self->angle, &linetarget);
-	if (missile != NULL) missile->tracer = linetarget;
 
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindClass ("HolyMissile"), self->angle + ( ANGLE_45 / 3 ), &linetarget);
+		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle + ( ANGLE_45 / 3 ), &linetarget);
 		if ( missile != NULL )
 			missile->tracer = linetarget;
 
-		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindClass ("HolyMissile"), self->angle - ( ANGLE_45 / 3 ), &linetarget);
+		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle - ( ANGLE_45 / 3 ), &linetarget);
 		if ( missile != NULL )
 			missile->tracer = linetarget;
 	}
@@ -250,6 +258,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 	// [BC] If we're the server, play this sound to clients.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_WeaponSound( ULONG( player - players ), "HolySymbolFire", ULONG( player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 //============================================================================
@@ -260,6 +270,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolyPalette)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->player != NULL)
 	{
 		ACWeapWraithverge *weapon = static_cast<ACWeapWraithverge *> (self->player->ReadyWeapon);
@@ -268,6 +280,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyPalette)
 			weapon->CHolyCount--;
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -341,6 +354,8 @@ static void CHolyTailRemove (AActor *actor)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolyTail)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *parent;
 
 	parent = self->target;
@@ -348,7 +363,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyTail)
 	if (parent == NULL || parent->health <= 0)	// better check for health than current state - it's safer!
 	{ // Ghost removed, so remove all tail parts
 		CHolyTailRemove (self);
-		return;
+		return 0;
 	}
 	else
 	{
@@ -360,6 +375,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyTail)
 		}
 		CHolyTailFollow (self, 10*FRACUNIT);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -496,6 +512,8 @@ void CHolyWeave (AActor *actor, FRandom &pr_random)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolySeek)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->health--;
 	if (self->health <= 0)
 	{
@@ -504,7 +522,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolySeek)
 		self->velz = 0;
 		self->SetState (self->FindState(NAME_Death));
 		self->tics -= pr_holyseek()&3;
-		return;
+		return 0;
 	}
 	if (self->tracer)
 	{
@@ -516,6 +534,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolySeek)
 		}
 	}
 	CHolyWeave (self, pr_holyweave);
+	return 0;
 }
 
 //============================================================================
@@ -526,6 +545,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolySeek)
 
 DEFINE_ACTION_FUNCTION(AActor, A_CHolyCheckScream)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	CALL_ACTION(A_CHolySeek, self);
 	if (pr_checkscream() < 20)
 	{
@@ -535,6 +556,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyCheckScream)
 	{
 		CHolyFindTarget(self);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -546,20 +568,25 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyCheckScream)
 
 DEFINE_ACTION_FUNCTION(AActor, A_ClericAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	if (!self->target) return;
 
-	AActor * missile = P_SpawnMissileZ (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindClass ("HolyMissile"), true); // [BB] Inform clients
+	if (!self->target) return 0;
+
+	AActor * missile = P_SpawnMissileZ (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindActor ("HolyMissile"), true); // [BB] Inform clients
 	if (missile != NULL) missile->tracer = NULL;	// No initial target
 	S_Sound (self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM);
 
 	// [BB] Tell the clients to play the sound.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM );
+
+	return 0;
 }
 

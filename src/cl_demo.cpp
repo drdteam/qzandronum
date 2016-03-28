@@ -325,7 +325,7 @@ void CLIENTDEMO_WriteUserInfo( void )
 	clientdemo_CheckDemoBuffer( 18 +
 		(ULONG)strlen( players[consoleplayer].userinfo.GetName() ) +
 		(ULONG)strlen( skins[players[consoleplayer].userinfo.GetSkin()].name ) +
-		(ULONG)strlen( PlayerClasses[players[consoleplayer].CurrentPlayerClass].Type->Meta.GetMetaString( APMETA_DisplayName )));
+		(ULONG)strlen( PlayerClasses[players[consoleplayer].CurrentPlayerClass].Type->DisplayName ));
 
 	// Write the header.
 	NETWORK_WriteByte( &g_ByteStream, CLD_USERINFO );
@@ -341,7 +341,7 @@ void CLIENTDEMO_WriteUserInfo( void )
 	NETWORK_WriteByte( &g_ByteStream, players[consoleplayer].userinfo.GetTicsPerUpdate() );
 	NETWORK_WriteByte( &g_ByteStream, players[consoleplayer].userinfo.GetConnectionType() );
 	NETWORK_WriteByte( &g_ByteStream, players[consoleplayer].userinfo.GetClientFlags() ); // [CK] List of booleans
-	NETWORK_WriteString( &g_ByteStream, PlayerClasses[players[consoleplayer].CurrentPlayerClass].Type->Meta.GetMetaString( APMETA_DisplayName ));
+	NETWORK_WriteString( &g_ByteStream, PlayerClasses[players[consoleplayer].CurrentPlayerClass].Type->DisplayName );
 }
 
 //*****************************************************************************

@@ -89,16 +89,16 @@ void P_FireWeapon (player_t *player);
 void P_DropWeapon (player_t *player);
 void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y);
 angle_t P_BulletSlope (AActor *mo, AActor **pLineTarget = NULL);
-void P_GunShot (AActor *mo, bool accurate, const PClass *pufftype, angle_t pitch);
+void P_GunShot (AActor *mo, bool accurate, PClassActor *pufftype, angle_t pitch);
 
-void DoReadyWeapon(AActor * self);
-void DoReadyWeaponToBob(AActor * self);
-void DoReadyWeaponToFire(AActor * self, bool primary = true, bool secondary = true);
-void DoReadyWeaponToSwitch(AActor * self, bool switchable = true);
+void DoReadyWeapon(AActor *self);
+void DoReadyWeaponToBob(AActor *self);
+void DoReadyWeaponToFire(AActor *self, bool primary = true, bool secondary = true);
+void DoReadyWeaponToSwitch(AActor *self, bool switchable = true);
 
 DECLARE_ACTION(A_Raise)
 void A_ReFire(AActor *self, FState *state = NULL);
 // [BB] ST also needs A_GunFlash.
-void A_GunFlash(AActor *self, FState *flash = NULL, const int Flags = 0);
+int A_GunFlash(AActor *self, FState *flash = NULL, const int flags = 0);
 
 #endif	// __P_PSPR_H__

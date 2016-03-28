@@ -851,6 +851,8 @@ public:
 		PCD_PRINTSCRIPTCHARARRAY,
 		PCD_PRINTSCRIPTCHRANGE,
 /*380*/	PCD_STRCPYTOSCRIPTCHRANGE,
+		PCD_LSPEC5EX,
+		PCD_LSPEC5EXRESULT,
 
 		// [BB] We need to fix the number for the new commands!
 		// [CW] Begin team additions.
@@ -1081,6 +1083,6 @@ int		ACS_PushAndReturnDynamicString ( const FString &Work );
 bool	ACS_ExistsScript( int script );
 
 // [BB] Export DoGiveInv
-bool	DoGiveInv(AActor *actor, const PClass *info, int amount);
+bool	DoGiveInv(AActor *actor, PClassActor *info, int amount);
 
 #endif //__P_ACS_H__

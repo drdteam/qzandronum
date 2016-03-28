@@ -1519,7 +1519,7 @@ bool PIT_CheckThing(AActor *thing, FCheckPosition &tm)
 			}
 		}
 
-		LineSpecials[thing->special]( NULL, tm.thing, false, thing->args[0],
+		P_ExecuteSpecial(thing->special, NULL, tm.thing, false, thing->args[0],
 			thing->args[1], thing->args[2], thing->args[3], thing->args[4] );
 	}
 
@@ -4271,7 +4271,7 @@ static ETraceStatus CheckForActor(FTraceResults &res, void *userdata)
 //==========================================================================
 
 AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
-	int pitch, int damage, FName damageType, const PClass *pufftype, int flags, AActor **victim, int *actualdamage)
+	int pitch, int damage, FName damageType, PClassActor *pufftype, int flags, AActor **victim, int *actualdamage)
 {
 	// [BB] The only reason the client should try to execute P_LineAttack, is the online hitscan decal fix. 
 	// [CK] And also predicted puffs and blood decals.
@@ -4547,7 +4547,7 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 					// Since the puff is the damage inflictor we need it here 
 					// regardless of whether it is displayed or not.
 					// [BB] In case the puff has a custom obituary, the clients need to spawn it too.
-					const bool bTellClientToSpawn = pufftype && ( pufftype->Meta.GetMetaString (AMETA_Obituary) != NULL );
+					const bool bTellClientToSpawn = pufftype && ( pufftype->HitObituary.IsNotEmpty() );
 					puff = P_SpawnPuff(t1, pufftype, hitx, hity, hitz, angle - ANG180, 2, puffFlags | PF_HITTHING | PF_TEMPORARY, NULL, bTellClientToSpawn );
 					killPuff = true;
 				}
@@ -4638,7 +4638,7 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 	int pitch, int damage, FName damageType, FName pufftype, int flags, AActor **victim, int *actualdamage)
 {
-	const PClass * type = PClass::FindClass(pufftype);
+	PClassActor *type = PClass::FindActor(pufftype);
 	if (victim != NULL)
 	{
 		*victim = NULL;
@@ -4903,7 +4903,7 @@ static ETraceStatus ProcessRailHit(FTraceResults &res, void *userdata)
 //
 //
 //==========================================================================
-void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, double maxdiff, int railflags, const PClass *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, double sparsity, double drift, const PClass *spawnclass, int SpiralOffset)
+void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, double maxdiff, int railflags, PClassActor *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, double sparsity, double drift, PClassActor *spawnclass, int SpiralOffset)
 {
 	fixed_t vx, vy, vz;
 	angle_t angle, pitch;
@@ -4914,7 +4914,10 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 	// [Spleen]
 	UNLAGGED_Reconcile( source );
 
-	if (puffclass == NULL) puffclass = PClass::FindClass(NAME_BulletPuff);
+	if (puffclass == NULL)
+	{
+		puffclass = PClass::FindActor(NAME_BulletPuff);
+	}
 
 	pitch = ((angle_t)(-source->pitch) + pitchoffset) >> ANGLETOFINESHIFT;
 	angle = (source->angle + angleoffset) >> ANGLETOFINESHIFT;
@@ -5138,7 +5141,7 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 	}
 }
 
-void P_RailAttackWithPossibleSpread (AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, float maxdiff, int railflags, const PClass *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, float sparsity, float drift, const PClass *spawnclass, int SpiralOffset)
+void P_RailAttackWithPossibleSpread (AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, float maxdiff, int railflags, PClassActor *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, float sparsity, float drift, PClassActor *spawnclass, int SpiralOffset)
 {
 	// [BB] Sanity check.
 	if ( source == NULL )
@@ -5817,7 +5820,7 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 			{
 				points = points * splashfactor;
 			}
-			points *= thing->GetClass()->Meta.GetMetaFixed(AMETA_RDFactor, FRACUNIT) / (double)FRACUNIT;
+			points *= thing->GetClass()->RDFactor / (float)FRACUNIT;
 
 			// points and bombdamage should be the same sign
 			if (((points * bombdamage) > 0) && P_CheckSight(thing, bombspot, SF_IGNOREVISIBILITY | SF_IGNOREWATERBOUNDARY))
@@ -5939,7 +5942,7 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 				int damage = Scale(bombdamage, bombdistance - dist, bombdistance);
 				damage = (int)((double)damage * splashfactor);
 
-				damage = Scale(damage, thing->GetClass()->Meta.GetMetaFixed(AMETA_RDFactor, FRACUNIT), FRACUNIT);
+				damage = Scale(damage, thing->GetClass()->RDFactor, FRACUNIT);
 				if (damage > 0)
 				{
 					// [BC/BB] Damage is server side.
@@ -6224,10 +6227,9 @@ void P_DoCrunch(AActor *thing, FChangePosition *cpos)
 			if (!(thing->flags&MF_NOBLOOD))
 			{
 				PalEntry bloodcolor = thing->GetBloodColor();
-				const PClass *bloodcls = thing->GetBloodType();
-
-				P_TraceBleed(newdam > 0 ? newdam : cpos->crushchange, thing);
-
+				PClassActor *bloodcls = thing->GetBloodType();
+				
+				P_TraceBleed (newdam > 0 ? newdam : cpos->crushchange, thing);
 				if (bloodcls != NULL || ( NETWORK_GetState( ) == NETSTATE_SERVER )) // [BB]
 				{
 					AActor *mo;
@@ -6814,7 +6816,7 @@ msecnode_t *P_AddSecnode(sector_t *s, AActor *thing, msecnode_t *nextnode)
 
 	if (s == 0)
 	{
-		I_FatalError("AddSecnode of 0 for %s\n", thing->_StaticType.TypeName.GetChars());
+		I_FatalError("AddSecnode of 0 for %s\n", thing->GetClass()->TypeName.GetChars());
 	}
 
 	node = nextnode;

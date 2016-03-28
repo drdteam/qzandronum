@@ -131,7 +131,7 @@ bool	ClassOwnsState( const PClass *pClass, const FState *pState );
 bool	ActorOwnsState( const AActor *pActor, const FState *pState );
 void	D_ErrorCleanup ();
 extern const AInventory *SendItemUse;
-DECLARE_ACTION(A_RestoreSpecialPosition)
+int A_RestoreSpecialPosition ( AActor *self );
 
 EXTERN_CVAR( Bool, telezoom )
 EXTERN_CVAR( Bool, sv_cheats )
@@ -2732,7 +2732,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 					if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false ) 
 						break;
 
-					const PClass *pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
+					PClassActor *pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
 					if ( pType == NULL )
 						break;
 
@@ -3208,7 +3208,7 @@ void CLIENT_AuthenticateLevel( const char *pszMapName )
 
 //*****************************************************************************
 //
-AActor *CLIENT_SpawnThing( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, LONG lNetID )
+AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, LONG lNetID )
 {
 	AActor			*pActor;
 
@@ -3296,7 +3296,7 @@ AActor *CLIENT_SpawnThing( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z,
 
 //*****************************************************************************
 //
-void CLIENT_SpawnMissile( const PClass *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t VelX, fixed_t VelY, fixed_t VelZ, LONG lNetID, LONG lTargetNetID )
+void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, fixed_t VelX, fixed_t VelY, fixed_t VelZ, LONG lNetID, LONG lTargetNetID )
 {
 	AActor				*pActor;
 
@@ -3451,7 +3451,7 @@ AActor *CLIENT_FindThingByNetID( LONG lNetID )
 //
 void CLIENT_RestoreSpecialPosition( AActor *pActor )
 {
-	CALL_ACTION(A_RestoreSpecialPosition, pActor);
+	A_RestoreSpecialPosition ( pActor );
 }
 
 //*****************************************************************************
@@ -3499,7 +3499,7 @@ void CLIENT_RestoreSpecialDoomThing( AActor *pActor, bool bFog )
 
 //*****************************************************************************
 //
-AInventory *CLIENT_FindPlayerInventory( ULONG ulPlayer, const PClass *pType )
+AInventory *CLIENT_FindPlayerInventory( ULONG ulPlayer, PClassActor *pType )
 {
 	AInventory		*pInventory;
 
@@ -3521,9 +3521,9 @@ AInventory *CLIENT_FindPlayerInventory( ULONG ulPlayer, const PClass *pType )
 //
 AInventory *CLIENT_FindPlayerInventory( ULONG ulPlayer, const char *pszName )
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 
-	pType = PClass::FindClass( pszName );
+	pType = PClass::FindActor( pszName );
 	if ( pType == NULL )
 		return ( NULL );
 
@@ -3948,7 +3948,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	AActor			*pCameraActor;
 	APlayerPawn		*pOldActor;
 	USHORT			usActorNetworkIndex = 0;
-	const PClass	*pType;
+	PClassActor	*pType;
 
 	// Which player is being spawned?
 	ulPlayer = NETWORK_ReadByte( pByteStream );
@@ -4044,7 +4044,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// frame of its death state.
 		if ( pOldActor->health > 0 )
 		{
-			CALL_ACTION(A_NoBlocking, pOldActor);
+			A_Unblock ( pOldActor, true );
 
 			// Put him in the last frame of his death state.
 			CLIENT_SetActorToLastDeathStateFrame ( pOldActor );
@@ -4086,8 +4086,8 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
 		// [BB] We'll be casting the spawned body to APlayerPawn, so we must check
 		// if the desired class is valid.
-		if ( pType && pType->IsDescendantOf( RUNTIME_CLASS( APlayerPawn ) ) )
-			pPlayer->cls = pType;
+		if ( pType && pType->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
+			pPlayer->cls = static_cast<PClassPlayerPawn *>(pType);
 	}
 
 	// Spawn the body.
@@ -4299,7 +4299,8 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// morph time since the server handles the timing of the unmorphing.
 		pPlayer->morphTics = -1;
 		// [EP] Still, assign the current class pointer, because it's used by the status bar
-		pPlayer->MorphedPlayerClass = pType;
+		if ( pType && pType->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
+			pPlayer->MorphedPlayerClass = static_cast<PClassPlayerPawn *>(pType);
 	}
 	else
 	{
@@ -5243,7 +5244,7 @@ static void client_SetPlayerPendingWeapon( BYTESTREAM_s *pByteStream )
 {
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
-	const PClass	*pType = NULL;
+	PClassActor	*pType = NULL;
 	AWeapon			*pWeapon = NULL;
 
 	// Read in the player whose info is about to be updated.
@@ -5351,7 +5352,7 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 		if ( StateList.Size( ) == 0 )
 			return;
 
-		pNewState = players[ulPlayer].ReadyWeapon->GetClass( )->ActorInfo->FindState( StateList.Size( ), &StateList[0] );
+		pNewState = players[ulPlayer].ReadyWeapon->GetClass( )->FindState( StateList.Size( ), &StateList[0] );
 
 		// [BB] The offset was calculated by FindStateLabelAndOffset using GetNextState(),
 		// so we have to use this here, too, to propely find the target state.
@@ -5880,7 +5881,7 @@ static void client_PlayerUseInventory( BYTESTREAM_s *pByteStream )
 {
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
-	const PClass	*pType;
+	PClassActor	*pType;
 	AInventory		*pInventory;
 
 	// Read in the player using an inventory item.
@@ -5936,7 +5937,7 @@ static void client_PlayerDropInventory( BYTESTREAM_s *pByteStream )
 {
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
-	const PClass	*pType;
+	PClassActor	*pType;
 	AInventory		*pInventory;
 
 	// Read in the player dropping an inventory item.
@@ -6431,10 +6432,10 @@ static void client_SetThingState( BYTESTREAM_s *pByteStream )
 		}
 		else if ( pActor->IsKindOf( PClass::FindClass("Archvile")))
 		{
-			const PClass *archvile = PClass::FindClass("Archvile");
+			PClassActor *archvile = PClass::FindActor("Archvile");
 			if (archvile != NULL)
 			{
-				pNewState = archvile->ActorInfo->FindState(NAME_Heal);
+				pNewState = archvile->FindState(NAME_Heal);
 			}
 			S_Sound( pActor, CHAN_BODY, "vile/raise", 1, ATTN_IDLE );
 		}
@@ -7097,14 +7098,14 @@ static void client_SetThingFrame( BYTESTREAM_s *pByteStream, bool bCallStateFunc
 		}
 		else if ( pszState[0] == ';' || pszState[0] == '+' )
 		{
-			const PClass *pStateOwnerClass = PClass::FindClass ( pszState+1 );
+			PClassActor *pStateOwnerClass = PClass::FindActor ( pszState+1 );
 			const AActor *pStateOwner = ( pStateOwnerClass != NULL ) ? GetDefaultByType ( pStateOwnerClass ) : NULL;
 			if ( pStateOwner )
 			{
 				if ( pszState[0] == ';' )
 					pBaseState = pStateOwner->SpawnState;
 				else
-					pBaseState = pStateOwnerClass->ActorInfo->FindState(NAME_Death);
+					pBaseState = pStateOwnerClass->FindState(NAME_Death);
 				// [BB] The offset is only guaranteed to work if the actor owns the state and pBaseState.
 				// Note: Looks like one can't call GetClass() on an actor pointer obtained by GetDefaultByType.
 				if ( ( lOffset != 0 ) && ( ( ClassOwnsState ( pStateOwnerClass, pBaseState ) == false ) || ( ClassOwnsState ( pStateOwnerClass, pBaseState + lOffset ) == false ) ) )
@@ -7131,7 +7132,7 @@ static void client_SetThingFrame( BYTESTREAM_s *pByteStream, bool bCallStateFunc
 	// Build the state name list.
 	TArray<FName> &StateList = MakeStateNameList( pszState );
 
-	pNewState = RUNTIME_TYPE( pActor )->ActorInfo->FindState( StateList.Size( ), &StateList[0] );
+	pNewState = pActor->FindState( StateList.Size( ), &StateList[0] );
 	if ( pNewState )
 	{
 		// [BB] The offset was calculated by SERVERCOMMANDS_SetThingFrame using GetNextState(),
@@ -7243,7 +7244,7 @@ static void client_ThingIsCorpse( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	CALL_ACTION(A_NoBlocking, pActor );	// [RH] Use this instead of A_PainDie
+	A_Unblock ( pActor, true );	// [RH] Use this instead of A_PainDie
 
 	// Do some other stuff done in AActor::Die.
 	pActor->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY|MF_NOGRAVITY);
@@ -7509,7 +7510,7 @@ static void client_RespawnRavenThing( BYTESTREAM_s *pByteStream )
 	pActor->renderflags &= ~RF_INVISIBLE;
 	S_Sound( pActor, CHAN_VOICE, "misc/spawn", 1, ATTN_IDLE );
 
-	pActor->SetState( RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideSpecial") + 3 );
+	pActor->SetState( RUNTIME_CLASS ( AInventory )->FindState("HideSpecial") + 3 );
 }
 
 //*****************************************************************************
@@ -8654,7 +8655,7 @@ static void client_WeaponChange( BYTESTREAM_s *pByteStream )
 {
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
-	const PClass	*pType;
+	PClassActor	*pType;
 	AWeapon			*pWeapon;
 
 	// Read in the player whose info is about to be updated.
@@ -8727,7 +8728,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	int flags = NETWORK_ReadByte( pByteStream );
 
 	angle_t angle = source->angle;
-	const PClass* spawnclass = NULL;
+	PClassActor* spawnclass = NULL;
 	int duration = 0;
 	float sparsity = 1.0f;
 	float drift = 1.0f;
@@ -10302,7 +10303,7 @@ static void client_SetMapSky( BYTESTREAM_s *pByteStream )
 //
 static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
 	LONG			lAmount;
@@ -10419,7 +10420,7 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 //
 static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 	ULONG			ulPlayer;
 	USHORT			actorNetworkIndex;
 	LONG			lAmount;
@@ -10484,7 +10485,7 @@ static void client_TakeInventory( BYTESTREAM_s *pByteStream )
 //
 static void client_GivePowerup( BYTESTREAM_s *pByteStream )
 {
-	const PClass	*pType;
+	PClassActor	*pType;
 	ULONG			ulPlayer;
 	USHORT			usActorNetworkIndex;
 	LONG			lAmount;
@@ -10579,7 +10580,7 @@ static void client_DoInventoryPickup( BYTESTREAM_s *pByteStream )
 		return;
 
 	// If the player doesn't have this inventory item, break out.
-	pInventory = static_cast<AInventory *>( Spawn( PClass::FindClass( szClassName ), 0, 0, 0, NO_REPLACE ));
+	pInventory = static_cast<AInventory *>( Spawn( PClass::FindActor( szClassName ), 0, 0, 0, NO_REPLACE ));
 	if ( pInventory == NULL )
 		return;
 
@@ -10656,7 +10657,7 @@ static void client_SetInventoryIcon( BYTESTREAM_s *pByteStream )
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
 		return;
 
-	const PClass *pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
+	PClassActor *pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
 	if ( pType == NULL )
 		return;
 

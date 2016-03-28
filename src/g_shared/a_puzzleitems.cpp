@@ -14,7 +14,16 @@
 #include "network.h"
 #include "sv_commands.h"
 
-IMPLEMENT_CLASS (APuzzleItem)
+IMPLEMENT_CLASS(PClassPuzzleItem)
+
+void PClassPuzzleItem::Derive(PClass *newclass)
+{
+	Super::Derive(newclass);
+	assert(newclass->IsKindOf(RUNTIME_CLASS(PClassPuzzleItem)));
+	static_cast<PClassPuzzleItem *>(newclass)->PuzzFailMessage = PuzzFailMessage;
+}
+
+IMPLEMENT_CLASS(APuzzleItem)
 
 void APuzzleItem::Serialize (FArchive &arc)
 {
@@ -53,9 +62,9 @@ bool APuzzleItem::Use (bool pickup)
 	// [BB] The server has to generate the message in any case.
 	if (Owner != NULL && ( Owner->CheckLocalView (consoleplayer) || ( NETWORK_GetState( ) == NETSTATE_SERVER ) ) )
 	{
-		const char *message = GetClass()->Meta.GetMetaString (AIMETA_PuzzFailMessage);
-		if (message != NULL && *message=='$') message = GStrings[message + 1];
-		if (message == NULL) message = GStrings("TXT_USEPUZZLEFAILED");
+		FString message = GetClass()->PuzzFailMessage;
+		if (message.IsNotEmpty() && message[0] == '$') message = GStrings[&message[1]];
+		if (message.IsEmpty()) message = GStrings("TXT_USEPUZZLEFAILED");
 		C_MidPrintBold (SmallFont, message);
 
 		// [BB] If we're the server, print the message. This sends the message to all players.

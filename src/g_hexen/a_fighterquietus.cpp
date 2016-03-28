@@ -26,14 +26,14 @@ static FRandom pr_fswordflame ("FSwordFlame");
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_DropWeaponPieces)
 {
-	ACTION_PARAM_START(3);
-	ACTION_PARAM_CLASS(p1, 0);
-	ACTION_PARAM_CLASS(p2, 1);
-	ACTION_PARAM_CLASS(p3, 2);
+	PARAM_ACTION_PROLOGUE;
+	PARAM_CLASS(p1, AActor);
+	PARAM_CLASS(p2, AActor);
+	PARAM_CLASS(p3, AActor);
 
 	for (int i = 0, j = 0, fineang = 0; i < 3; ++i)
 	{
-		const PClass *cls = j==0? p1 : j==1? p2 : p3;
+		PClassActor *cls = j == 0 ?  p1 : j == 1 ? p2 : p3;
 		if (cls)
 		{
 			AActor *piece = Spawn (cls, self->Pos(), ALLOW_REPLACE);
@@ -48,6 +48,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_DropWeaponPieces)
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -80,24 +81,26 @@ int AFSwordMissile::DoSpecialDamage(AActor *victim, int damage, FName damagetype
 
 DEFINE_ACTION_FUNCTION(AActor, A_FSwordAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
 		S_Sound (self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM);
-		return;
+		return 0;
 	}
 
 	P_SpawnPlayerMissile (self, 0, 0, -10*FRACUNIT, RUNTIME_CLASS(AFSwordMissile), self->angle+ANGLE_45/4);
@@ -127,6 +130,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FSwordAttack)
 	// [BB] If we're the server, tell the clients to play the sound.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_WeaponSound( ULONG( player - players ), "FighterSwordFire", ULONG( player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 //============================================================================
@@ -137,6 +142,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FSwordAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FSwordFlames)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int i;
 
 	for (i = 1+(pr_fswordflame()&3); i; i--)
@@ -146,6 +153,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FSwordFlames)
 		fixed_t zo = ((pr_fswordflame() - 128) << 11);
 		Spawn ("FSwordFlame", self->Vec3Offset(xo, yo, zo), ALLOW_REPLACE);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -156,10 +164,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_FSwordFlames)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FighterAttack)
 {
-	// [Dusk] Zedek's attack is handled by the server
-	if ( NETWORK_InClientMode() ) return;
+	PARAM_ACTION_PROLOGUE;
 
-	if (!self->target) return;
+	// [Dusk] Zedek's attack is handled by the server
+	if ( NETWORK_InClientMode() ) return 0;
+
+	if (!self->target) return 0;
+
 
 	angle_t angle = self->angle;
 
@@ -181,5 +192,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FighterAttack)
 	// [Dusk] inform of the sound.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM );
+
+	return 0;
 }
 

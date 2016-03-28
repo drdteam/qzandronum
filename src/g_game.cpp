@@ -546,17 +546,20 @@ CCMD (use)
 {
 	if (argv.argc() > 1 && who != NULL)
 	{
-		SendItemUse = who->FindInventory (PClass::FindClass (argv[1]));
+		SendItemUse = who->FindInventory(PClass::FindActor(argv[1]));
 	}
 }
 
 CCMD (invdrop)
 {
-	// [BB/BC] If we are a client, we have to bypass the way ZDoom handles the item usage.
-	if( NETWORK_GetState( ) == NETSTATE_CLIENT )
-		CLIENTCOMMANDS_RequestInventoryDrop( players[consoleplayer].mo->InvSel );
-	else
-		if (players[consoleplayer].mo) SendItemDrop = players[consoleplayer].mo->InvSel;
+	if (players[consoleplayer].mo)
+	{
+		// [BB/BC] If we are a client, we have to bypass the way ZDoom handles the item usage.
+		if( NETWORK_GetState( ) == NETSTATE_CLIENT )
+			CLIENTCOMMANDS_RequestInventoryDrop( players[consoleplayer].mo->InvSel );
+		else
+			SendItemDrop = players[consoleplayer].mo->InvSel;
+	}
 }
 
 CCMD (weapdrop)
@@ -575,19 +578,19 @@ CCMD (drop)
 	{
 		if (argv.argc() > 1 && who != NULL)
 		{
-			CLIENTCOMMANDS_RequestInventoryDrop( who->FindInventory (PClass::FindClass (argv[1])) );
+			CLIENTCOMMANDS_RequestInventoryDrop( who->FindInventory (PClass::FindActor (argv[1])) );
 		}
 	}
 	else
 	{
 		if (argv.argc() > 1 && who != NULL)
 		{
-			SendItemDrop = who->FindInventory (PClass::FindClass (argv[1]));
+			SendItemDrop = who->FindInventory(PClass::FindActor(argv[1]));
 		}
 	}
 }
 
-const PClass *GetFlechetteType(AActor *other);
+PClassActor *GetFlechetteType(AActor *other);
 
 CCMD (useflechette)
 { // Select from one of arti_poisonbag1-3, whichever the player has
@@ -601,7 +604,7 @@ CCMD (useflechette)
 	if (who == NULL)
 		return;
 
-	const PClass *type = GetFlechetteType(who);
+	PClassActor *type = GetFlechetteType(who);
 	if (type != NULL)
 	{
 		AInventory *item;
@@ -632,7 +635,7 @@ CCMD (select)
 
 	if (argv.argc() > 1)
 	{
-		AInventory *item = who->FindInventory (PClass::FindClass (argv[1]));
+		AInventory *item = who->FindInventory(PClass::FindActor(argv[1]));
 		if (item != NULL)
 		{
 			who->InvSel = item;
@@ -2087,7 +2090,7 @@ void G_PlayerReborn (int player, bool bGiveInventory)
 	BYTE		currclass;
 	userinfo_t  userinfo;	// [RH] Save userinfo
 	APlayerPawn *actor;
-	const PClass *cls;
+	PClassPlayerPawn *cls;
 	FString		log;
 	// [BB]
 	//DBot		*Bot;		//Added by MC:
@@ -3124,10 +3127,10 @@ void GAME_CheckMode( void )
 						}
 					}
 
-					if ( pItem->IsKindOf( PClass::FindClass( "BlueSkull" )))
+					if ( pItem->IsKindOf( PClass::FindActor( "BlueSkull" )))
 					{
 						// Replace this skull with skulltag mode's version of the skull.
-						pNewSkull = Spawn( PClass::FindClass( "BlueSkullST" ), pItem->Pos(), NO_REPLACE );
+						pNewSkull = Spawn( PClass::FindActor( "BlueSkullST" ), pItem->Pos(), NO_REPLACE );
 						if ( pNewSkull )
 						{
 							pNewSkull->flags &= ~MF_DROPPED;
@@ -3142,10 +3145,10 @@ void GAME_CheckMode( void )
 						pItem->Destroy( );
 					}
 
-					if ( pItem->IsKindOf( PClass::FindClass( "RedSkull" )))
+					if ( pItem->IsKindOf( PClass::FindActor( "RedSkull" )))
 					{
 						// Replace this skull with skulltag mode's version of the skull.
-						pNewSkull = Spawn( PClass::FindClass( "RedSkullST" ), pItem->Pos(), NO_REPLACE );
+						pNewSkull = Spawn( PClass::FindActor( "RedSkullST" ), pItem->Pos(), NO_REPLACE );
 						if ( pNewSkull )
 						{
 							pNewSkull->flags &= ~MF_DROPPED;
@@ -3815,7 +3818,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				else
 					Z = ONFLOORZ;
 
-				pNewActor = Spawn( RUNTIME_TYPE( pActor ), X, Y, Z, NO_REPLACE );
+				pNewActor = Spawn( pActor->GetClass( ), X, Y, Z, NO_REPLACE );
 
 				// Adjust the Z position after it's spawned.
 				if ( Z == ONFLOORZ )
@@ -3943,7 +3946,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		else
 			Z = ONFLOORZ;
 
-		pNewActor = Spawn( RUNTIME_TYPE( pActor ), X, Y, Z, NO_REPLACE );
+		pNewActor = Spawn( pActor->GetClass(), X, Y, Z, NO_REPLACE );
 
 		// [BB] This if fixes a server crash, if ambient sounds are currently playing
 		// at the end of a countdown (DUEL start countdown for example).
@@ -4117,7 +4120,7 @@ bool GAME_IsMapRestRequested( void )
 
 //*****************************************************************************
 //
-AActor* GAME_SelectRandomSpotForArtifact ( const PClass *pArtifactType, const TArray<FPlayerStart> &Spots )
+AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TArray<FPlayerStart> &Spots )
 {
 	if ( Spots.Size() == 0 )
 		return NULL;
@@ -4158,9 +4161,9 @@ void GAME_SpawnTerminatorArtifact( void )
 	// [BB] One can't hijack SelectRandomDeathmatchSpot to find a free spot for the artifact!
 	// [RC] Spawn it at a Terminator start, or a deathmatch spot
 	if(TerminatorStarts.Size() > 0) 	// Use the terminator starts, if the mapper added them
-		pTerminatorBall = GAME_SelectRandomSpotForArtifact( PClass::FindClass( "Terminator" ), TerminatorStarts );
+		pTerminatorBall = GAME_SelectRandomSpotForArtifact( PClass::FindActor( "Terminator" ), TerminatorStarts );
 	else if(deathmatchstarts.Size() > 0) // Or use a deathmatch start, if one exists
-		pTerminatorBall = GAME_SelectRandomSpotForArtifact( PClass::FindClass( "Terminator" ), deathmatchstarts );
+		pTerminatorBall = GAME_SelectRandomSpotForArtifact( PClass::FindActor( "Terminator" ), deathmatchstarts );
 	else // Or return! Be that way!
 		return;
 
@@ -4181,9 +4184,9 @@ void GAME_SpawnPossessionArtifact( void )
 	// [BB] One can't hijack SelectRandomDeathmatchSpot to find a free spot for the artifact!
 	// [RC] Spawn it at a Possession start, or a deathmatch spot
 	if(PossessionStarts.Size() > 0) 	// Did the mapper place possession starts? Use those
-		pPossessionStone = GAME_SelectRandomSpotForArtifact( PClass::FindClass( "PossessionStone" ), PossessionStarts );
+		pPossessionStone = GAME_SelectRandomSpotForArtifact( PClass::FindActor( "PossessionStone" ), PossessionStarts );
 	else if(deathmatchstarts.Size() > 0) // Or use a deathmatch start, if one exists
-		pPossessionStone = GAME_SelectRandomSpotForArtifact( PClass::FindClass( "PossessionStone" ), deathmatchstarts );
+		pPossessionStone = GAME_SelectRandomSpotForArtifact( PClass::FindActor( "PossessionStone" ), deathmatchstarts );
 	else // Or return! Be that way!
 		return;
 

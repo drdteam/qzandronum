@@ -9,8 +9,6 @@
 #include "thingdef/thingdef.h"
 */
 
-AActor *P_SpawnSubMissile (AActor *source, const PClass *type, AActor *target);
-
 class ASpectralMonster : public AActor
 {
 	DECLARE_CLASS (ASpectralMonster, AActor)
@@ -28,15 +26,20 @@ void ASpectralMonster::Touch (AActor *toucher)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightningTail)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *foo = Spawn("SpectralLightningHTail", self->Vec3Offset(-self->velx, -self->vely, 0), ALLOW_REPLACE);
 
 	foo->angle = self->angle;
 	foo->FriendPlayer = self->FriendPlayer;
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpectralBigBallLightning)
 {
-	const PClass *cls = PClass::FindClass("SpectralLightningH3");
+	PARAM_ACTION_PROLOGUE;
+
+	PClassActor *cls = PClass::FindActor("SpectralLightningH3");
 	if (cls)
 	{
 		self->angle += ANGLE_90;
@@ -46,17 +49,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralBigBallLightning)
 		self->angle += ANGLE_90;
 		P_SpawnSubMissile (self, cls, self->target);
 	}
+	return 0;
 }
 
 static FRandom pr_zap5 ("Zap5");
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *flash;
 
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	if (self->threshold != 0)
 		--self->threshold;
@@ -72,8 +78,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 		pr_zap5.Random2(3) * FRACUNIT * 50,
 		pr_zap5.Random2(3) * FRACUNIT * 50);
 
-	flash = Spawn (self->threshold > 25 ? PClass::FindClass(NAME_SpectralLightningV2) :
-		PClass::FindClass(NAME_SpectralLightningV1), pos.x, pos.y, ONCEILINGZ, ALLOW_REPLACE);
+	flash = Spawn (self->threshold > 25 ? PClass::FindActor(NAME_SpectralLightningV2) :
+		PClass::FindActor(NAME_SpectralLightningV1), pos.x, pos.y, ONCEILINGZ, ALLOW_REPLACE);
 
 	flash->target = self->target;
 	flash->velz = -18*FRACUNIT;
@@ -89,6 +95,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 	flash->target = self->target;
 	flash->velz = -18*FRACUNIT;
 	flash->FriendPlayer = self->FriendPlayer;
+	return 0;
 
 	// [CW] Tell clients to spawn the missile.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -100,6 +107,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Tracer2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *dest;
 	angle_t exact;
 	fixed_t dist;
@@ -108,13 +117,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_Tracer2)
 	// [BC] Server takes care of movement.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	dest = self->tracer;
 
 	if (!dest || dest->health <= 0 || self->Speed == 0 || !self->CanSeek(dest))
-		return;
+		return 0;
 
 	// change angle
 	exact = self->AngleTo(dest);
@@ -169,4 +178,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_Tracer2)
 	// [BC] Update the thing's position, angle and velocity.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_MoveThingExact( self, CM_X|CM_Y|CM_Z|CM_ANGLE|CM_VELX|CM_VELY|CM_VELZ );
+
+	return 0;
 }

@@ -32,7 +32,7 @@ public:
 	void BeginPlay ();
 	void Tick ();
 	void SetWeapon (EMarineWeapon);
-	void SetSprite (const PClass *source);
+	void SetSprite (PClassActor *source);
 	void Serialize (FArchive &arc);
 
 	int CurrentWeapon;

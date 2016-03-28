@@ -141,6 +141,9 @@
 #include "resourcefiles/resourcefile.h"
 #include "r_renderer.h"
 #include "p_local.h"
+#include "autosegs.h"
+// [BB] Zandronum doesn't have FS for now.
+//#include "fragglescript/t_fs.h"
 
 
 // [ZZ] PWO header file
@@ -2356,6 +2359,22 @@ static void SetMapxxFlag()
 
 //==========================================================================
 //
+// FinalGC
+//
+// If this doesn't free everything, the debug CRT will let us know.
+//
+//==========================================================================
+
+static void FinalGC()
+{
+	Args = NULL;
+	GC::FinalGC = true;
+	GC::FullGC();
+	GC::DelSoftRootHead();	// the soft root head will not be collected by a GC so we have to do it explicitly
+}
+
+//==========================================================================
+//
 // Initialize
 //
 //==========================================================================
@@ -2385,6 +2404,8 @@ static void D_DoomInit()
 
 	// Check response files before coalescing file parameters.
 	M_FindResponseFile ();
+
+	atterm(FinalGC);
 
 	// Combine different file parameters with their pre-switch bits.
 	Args->CollectFiles("-deh", ".deh");
@@ -2688,21 +2709,6 @@ static void CheckCmdLine()
 
 //==========================================================================
 //
-// FinalGC
-//
-// If this doesn't free everything, the debug CRT will let us know.
-//
-//==========================================================================
-
-static void FinalGC()
-{
-	Args = NULL;
-	GC::FullGC();
-	GC::DelSoftRootHead();	// the soft root head will not be collected by a GC so we have to do it explicitly
-}
-
-//==========================================================================
-//
 // D_DoomMain
 //
 //==========================================================================
@@ -2751,7 +2757,6 @@ void D_DoomMain (void)
 
 	// [RH] Make sure zdoom.pk3 is always loaded,
 	// as it contains magic stuff we need.
-
 	wad = BaseFileSearch (BASEWAD, NULL, true);
 	if (wad == NULL)
 	{
@@ -2765,13 +2770,13 @@ void D_DoomMain (void)
 	// Now that we have the IWADINFO, initialize the autoload ini sections.
 	GameConfig->DoAutoloadSetup(iwad_man);
 
-	PClass::StaticInit ();
-	atterm(FinalGC);
-
 	// reinit from here
 
 	do
 	{
+		PClass::StaticInit();
+		PType::StaticInit();
+
 		if (restart)
 		{
 			C_InitConsole(SCREENWIDTH, SCREENHEIGHT, false);
@@ -2976,11 +2981,10 @@ void D_DoomMain (void)
 		// [BB] At the moment Skulltag still doesn't use the new ZDoom TeamLibrary class.
 		TEAMINFO_Init ();
 
-		FActorInfo::StaticInit ();
+		PClassActor::StaticInit ();
 
 		// [GRB] Initialize player class list
 		SetupPlayerClasses ();
-
 
 		// [RH] Load custom key and weapon settings from WADs
 		D_LoadWadSettings ();
@@ -3027,9 +3031,8 @@ void D_DoomMain (void)
 		FinishDehPatch();
 
 		InitActorNumsFromMapinfo();
+		PClassActor::StaticSetActorNums ();
 		InitSpawnablesFromMapinfo();
-		FActorInfo::StaticSetActorNums ();
-
 		// [TP] Init preferred weapon order
 		PWO_Init();
 
@@ -3304,9 +3307,28 @@ void D_DoomMain (void)
 			// [BB]
 			NETWORK_Destruct();
 
-			GC::FullGC();					// perform one final garbage collection before deleting the class data
-			PClass::ClearRuntimeData();		// clear all runtime generated class data
+			GC::FullGC();					// clean up before taking down the object list.
+
+			// Delete the VM functions here. The garbage collector will not do this automatically because they are referenced from the global action function definitions.
+			FAutoSegIterator probe(ARegHead, ARegTail);
+			while (*++probe != NULL)
+			{
+				AFuncDesc *afunc = (AFuncDesc *)*probe;
+				*(afunc->VMPointer) = NULL;
+			}
+
+			ReleaseGlobalSymbols();
+			PClass::StaticShutdown();
+
+			GC::FullGC();					// perform one final garbage collection after shutdown
+
+			for (DObject *obj = GC::Root; obj; obj = obj->ObjNext)
+			{
+				obj->ClearClass();	// Delete the Class pointer because the data it points to has been deleted. This will automatically be reset if needed.
+			}
+
 			restart++;
+			PClass::bShutdown = false;
 		}
 	}
 	while (1);

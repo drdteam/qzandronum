@@ -102,7 +102,7 @@ void PWO_Init()
 //
 // =================================================================================================
 
-PWOWeaponInfo::PWOWeaponInfo ( const PClass* type ) :
+PWOWeaponInfo::PWOWeaponInfo ( PClassActor* type ) :
 	WeaponClass ( type ),
 	ReferenceCount ( 0 ),
 	Weight ( 0.0f ),
@@ -116,7 +116,7 @@ PWOWeaponInfo::PWOWeaponInfo ( const PClass* type ) :
 	// weapons replaced directly by a mod are similar enough so that they can share PWO, but weapons
 	// replaced by random spawner such are usually distinct enough that one wants separate entries
 	// for each weapon.
-	IniName ( type->ActorInfo->GetReplacee()->Class->TypeName ) {}
+	IniName ( type->GetReplacee()->TypeName ) {}
 
 // =================================================================================================
 //
@@ -126,7 +126,7 @@ PWOWeaponInfo::PWOWeaponInfo ( const PClass* type ) :
 //
 // =================================================================================================
 
-PWOWeaponInfo* PWOWeaponInfo::FindInfo ( const PClass* type )
+PWOWeaponInfo* PWOWeaponInfo::FindInfo ( PClassActor* type )
 {
 	PWOWeaponInfo** infop = WeaponInfoPerClass.CheckKey( type );
 	return infop ? *infop : NULL;
@@ -140,7 +140,7 @@ PWOWeaponInfo* PWOWeaponInfo::FindInfo ( const PClass* type )
 //
 // =================================================================================================
 
-static PWOWeaponInfo* PWO_AddWeapon ( const PClass* type )
+static PWOWeaponInfo* PWO_AddWeapon ( PClassActor* type )
 {
 	assert ( WeaponInfoPerClass.CheckKey( type ) == NULL );
 	WeaponInfo.Push( new PWOWeaponInfo( type ) );
@@ -158,11 +158,11 @@ static PWOWeaponInfo* PWO_AddWeapon ( const PClass* type )
 
 void PWO_SetWeaponWeight ( const char* name, int weight )
 {
-	const PClass* type = PClass::FindClass( name );
+	PClassActor* type = PClass::FindActor( name );
 
 	if ( type != NULL )
 	{
-		type = type->ActorInfo->GetReplacement()->Class;
+		type = type->GetReplacement();
 		weight = clamp( weight, -10, 10 );
 		PWOWeaponInfo* info = PWOWeaponInfo::FindInfo( type );
 	
@@ -217,9 +217,9 @@ TArray<PWOWeaponInfo*> PWO_GetWeaponsForClass ( const FPlayerClass* playerclass,
 	for ( int slot = 0; slot < NUM_WEAPON_SLOTS; ++slot )
 	for ( int rank = 0; rank < weaponSlots.Slots[slot].Size(); ++rank )
 	{
-		const PClass* type = weaponSlots.Slots[slot].GetWeapon( rank );
+		PClassActor* type = weaponSlots.Slots[slot].GetWeapon( rank );
 
-		if ( type != type->ActorInfo->GetReplacement()->Class )
+		if ( type != type->GetReplacement() )
 			continue; // replaced by something else
 
 		PWOWeaponInfo* info = PWOWeaponInfo::FindInfo( type );

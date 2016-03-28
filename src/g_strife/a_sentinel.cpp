@@ -11,11 +11,13 @@ static FRandom pr_sentinelrefire ("SentinelRefire");
 
 DEFINE_ACTION_FUNCTION(AActor, A_SentinelBob)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	fixed_t minz, maxz;
 
 	// [CW] This is handled by the server.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	if (self->flags & MF_INFLOAT)
 	{
@@ -25,10 +27,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelBob)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_MoveThing( self, CM_VELZ );
 
-		return;
+		return 0;
 	}
 	if (self->threshold != 0)
-		return;
+		return 0;
 
 	maxz =  self->ceilingz - self->height - 16*FRACUNIT;
 	minz = self->floorz + 96*FRACUNIT;
@@ -49,21 +51,26 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelBob)
 	// [CW] Moving the actor is server side.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_MoveThingExact( self, CM_VELZ );
+
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *missile = NULL, *trail;
+
 
 	// [BB] Without a target the P_SpawnMissileZAimed call will crash.
 	if (!self->target)
 	{
-		return;
+		return 0;
 	}
 
 	// [CW] If we aren't a client, spawn the missile.
 	if ( NETWORK_InClientMode() == false )
-		missile = P_SpawnMissileZAimed (self, self->Z() + 32*FRACUNIT, self->target, PClass::FindClass("SentinelFX2"), true); // [BB] Inform clients
+		missile = P_SpawnMissileZAimed (self, self->Z() + 32*FRACUNIT, self->target, PClass::FindActor("SentinelFX2"), true); // [BB] Inform clients
 
 	if (missile != NULL && (missile->velx | missile->vely) != 0)
 	{
@@ -82,15 +89,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelAttack)
 		}
 		missile->AddZ(missile->velz >> 2);
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_SentinelRefire)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	A_FaceTarget (self);
 
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	if (pr_sentinelrefire() >= 30)
 	{
@@ -108,4 +118,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_SentinelRefire)
 			self->SetState (self->SeeState);
 		}
 	}
+	return 0;
 }

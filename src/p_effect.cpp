@@ -445,7 +445,7 @@ particle_t *JitterParticle (int ttl)
 	return JitterParticle (ttl, 1.0);
 }
 // [XA] Added "drift speed" multiplier setting for enhanced railgun stuffs.
-particle_t *JitterParticle (int ttl, float drift)
+particle_t *JitterParticle (int ttl, double drift)
 {
 	particle_t *particle = NewParticle ();
 
@@ -744,7 +744,7 @@ static int P_RainbowParticleColor( )
 	return *( g_rainbowParticleColors[index] );
 }
 
-void P_DrawRailTrail(AActor *source, const TVector3<double> &start, const TVector3<double> &end, int color1, int color2, double maxdiff, int flags, const PClass *spawnclass, angle_t angle, int duration, double sparsity, double drift, int SpiralOffset)
+void P_DrawRailTrail(AActor *source, const TVector3<double> &start, const TVector3<double> &end, int color1, int color2, double maxdiff_d, int flags, PClassActor *spawnclass, angle_t angle, int duration, double sparsity, double drift, int SpiralOffset)
 {
 	// [BC] The server has no need to draw a railgun trail.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -755,6 +755,7 @@ void P_DrawRailTrail(AActor *source, const TVector3<double> &start, const TVecto
 	TAngle<double> deg;
 	TVector3<double> step, dir, pos, extend;
 	bool fullbright;
+	float maxdiff = (float)maxdiff_d;
 
 	dir = end - start;
 	lengthsquared = dir | dir;

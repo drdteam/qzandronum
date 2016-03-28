@@ -102,7 +102,7 @@ static void DragonSeek (AActor *actor, angle_t thresh, angle_t turnMax)
 			}
 			else if (pr_dragonseek() < 128 && P_CheckMissileRange(actor))
 			{
-				P_SpawnMissile(actor, target, PClass::FindClass ("DragonFireball"), NULL, true); // [BB] Inform clients
+				P_SpawnMissile(actor, target, PClass::FindActor("DragonFireball"), NULL, true); // [BB] Inform clients
 				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM);
 
 				// [BB] If we're the server, tell the clients to play the sound.
@@ -175,10 +175,12 @@ static void DragonSeek (AActor *actor, angle_t thresh, angle_t turnMax)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonInitFlight)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	FActorIterator iterator (self->tid);
@@ -193,10 +195,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonInitFlight)
 				SERVERCOMMANDS_SetThingState( self, STATE_SPAWN );
 
 			self->SetState (self->SpawnState);
-			return;
+			return 0;
 		}
 	} while (self->tracer == self);
 	self->RemoveFromHash ();
+	return 0;
 }
 
 //============================================================================
@@ -207,12 +210,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonInitFlight)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonFlight)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	angle_t angle;
 
 	// [BB] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	DragonSeek (self, 4*ANGLE_1, 8*ANGLE_1);
@@ -221,7 +226,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlight)
 		if(!(self->target->flags&MF_SHOOTABLE))
 		{ // target died
 			self->target = NULL;
-			return;
+			return 0;
 		}
 		angle = self->AngleTo(self->target);
 		if (absangle(self->angle-angle) < ANGLE_45/2 && self->CheckMeleeRange())
@@ -252,6 +257,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlight)
 	{
 		P_LookForPlayers (self, true, NULL);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -262,6 +268,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlight)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonFlap)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	CALL_ACTION(A_DragonFlight, self);
 	if (pr_dragonflap() < 240)
 	{
@@ -271,6 +279,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlap)
 	{
 		self->PlayActiveSound ();
 	}
+	return 0;
 }
 
 //============================================================================
@@ -281,13 +290,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlap)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	P_SpawnMissile (self, self->target, PClass::FindClass ("DragonFireball"), NULL, true); // [BB] Inform clients						
+	P_SpawnMissile (self, self->target, PClass::FindActor("DragonFireball"), NULL, true); // [BB] Inform clients
+	return 0;
 }
 
 //============================================================================
@@ -298,6 +310,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonFX2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 	int i;
 	int delay;
@@ -315,7 +329,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFX2)
 			mo->tics = delay+(pr_dragonfx2()&3)*i*2;
 			mo->target = self->target;
 		}
-	} 
+	}
+	return 0;
 }
 
 //============================================================================
@@ -326,12 +341,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFX2)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonPain)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	CALL_ACTION(A_Pain, self);
 
 	// [BB] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (!self->tracer)
@@ -342,6 +359,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonPain)
 
 		self->SetState (self->SeeState);
 	}
+	return 0;
 }
 
 //============================================================================
@@ -352,8 +370,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonPain)
 
 DEFINE_ACTION_FUNCTION(AActor, A_DragonCheckCrash)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->Z() <= self->floorz)
 	{
 		self->SetState (self->FindState ("Crash"));
 	}
+	return 0;
 }

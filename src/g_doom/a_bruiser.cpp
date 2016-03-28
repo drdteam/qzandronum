@@ -5,8 +5,10 @@ static FRandom pr_bruisattack ("BruisAttack");
 
 DEFINE_ACTION_FUNCTION(AActor, A_BruisAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (!self->target)
-		return;
+		return 0;
 				
 	if (self->CheckMeleeRange ())
 	{
@@ -19,9 +21,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_BruisAttack)
 
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		return;
+		return 0;
 	}
 	
 	// launch a missile
-	P_SpawnMissile (self, self->target, PClass::FindClass("BaronBall"), NULL, true); // [BB] Inform clients
+	P_SpawnMissile (self, self->target, PClass::FindActor("BaronBall"), NULL, true); // [BB] Inform clients
+	return 0;
 }

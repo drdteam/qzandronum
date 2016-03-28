@@ -123,7 +123,7 @@ bool		TEAM_HasCustomString( ULONG ulTeamIdx, const FString TEAMINFO::*stringPoin
 const char	*TEAM_GetCustomString( ULONG ulTeamIdx, const FString TEAMINFO::*stringPointer );
 const char	*TEAM_SelectCustomStringForPlayer( player_t *pPlayer, const FString TEAMINFO::*stringPointer, const char *pszDefaultString );
 
-const PClass	*TEAM_GetItem( ULONG ulTeamIdx );
+PClassActor	*TEAM_GetItem( ULONG ulTeamIdx );
 void		TEAM_SetItem( ULONG ulTeamIdx, const PClass *pType, bool bFlag );
 
 AInventory	*TEAM_FindOpposingTeamsItemInPlayersInventory( player_t *pPlayer );

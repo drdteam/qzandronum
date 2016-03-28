@@ -28,8 +28,11 @@ static FRandom pr_bluespark ("BlueSpark");
 
 DEFINE_ACTION_FUNCTION(AActor, A_Sor1Pain)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->special1 = 20; // Number of steps to walk fast
 	CALL_ACTION(A_Pain, self);
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -40,12 +43,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_Sor1Pain)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Sor1Chase)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->special1)
 	{
 		self->special1--;
 		self->tics -= 3;
 	}
-	A_Chase(self);
+	A_Chase(stack, self);
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -58,6 +64,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Sor1Chase)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 	fixed_t velz;
 	angle_t angle;
@@ -66,12 +74,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	if ( NETWORK_InClientMode() )
 	{
 		S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
-		return;
+		return 0;
 	}
 
 	if (!self->target)
 	{
-		return;
+		return 0;
 	}
 	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
 	if (self->CheckMeleeRange ())
@@ -79,10 +87,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 		int damage = pr_scrc1atk.HitDice (8);
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		return;
+		return 0;
 	}
 
-	const PClass *fx = PClass::FindClass("SorcererFX1");
+	PClassActor *fx = PClass::FindActor("SorcererFX1");
 	if (self->health > (self->SpawnHealth()/3)*2)
 	{ // Spit one fireball
 		P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx, true); // [BB] Inform clients
@@ -115,6 +123,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 			}
 		}
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -125,6 +134,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SorcererRise)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	self->flags &= ~MF_SOLID;
@@ -132,7 +143,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SorcererRise)
 	// [BC] Let the server spawn this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	mo = Spawn("Sorcerer2", self->Pos(), ALLOW_REPLACE);
@@ -147,6 +158,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_SorcererRise)
 		SERVERCOMMANDS_SpawnThing( mo );
 		SERVERCOMMANDS_SetThingFrame( mo, mo->FindState("Rise") );
 	}
+
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -215,6 +228,7 @@ void P_DSparilTeleport (AActor *actor)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Decide)
 {
+	PARAM_ACTION_PROLOGUE;
 
 	static const int chance[] =
 	{
@@ -224,7 +238,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Decide)
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	unsigned int chanceindex = self->health / ((self->SpawnHealth()/8 == 0) ? 1 : self->SpawnHealth()/8);
@@ -237,6 +251,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Decide)
 	{
 		P_DSparilTeleport (self);
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -247,18 +262,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Decide)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int chance;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
 		S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NONE);
-		return;
+		return 0;
 	}
 
 	if (!self->target)
 	{
-		return;
+		return 0;
 	}
 	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NONE);
 	if (self->CheckMeleeRange())
@@ -266,13 +283,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 		int damage = pr_s2a.HitDice (20);
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		return;
+		return 0;
 	}
 	chance = self->health < self->SpawnHealth()/2 ? 96 : 48;
 	if (pr_s2a() < chance)
 	{ // Wizard spawners
 
-		const PClass *fx = PClass::FindClass("Sorcerer2FX2");
+		PClassActor *fx = PClass::FindActor("Sorcerer2FX2");
 		if (fx)
 		{
 			P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2, true); // [BB] Inform clients
@@ -281,8 +298,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 	}
 	else
 	{ // Blue bolt
-		P_SpawnMissile (self, self->target, PClass::FindClass("Sorcerer2FX1"), NULL, true); // [BB] Inform clients
+		P_SpawnMissile (self, self->target, PClass::FindActor("Sorcerer2FX1"), NULL, true); // [BB] Inform clients
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -293,13 +311,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_BlueSpark)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int i;
 	AActor *mo;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	for (i = 0; i < 2; i++)
@@ -313,6 +333,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BlueSpark)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnMissile( mo );
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -323,12 +344,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_BlueSpark)
 
 DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	mo = Spawn("Wizard", self->Pos(), ALLOW_REPLACE);
@@ -361,6 +384,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 				SERVERCOMMANDS_SpawnThing( mo );
 		}
 	}
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -371,8 +395,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Sor2DthInit)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	self->special1 = 7; // Animation loop counter
 	P_Massacre (); // Kill monsters early
+	return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -383,9 +410,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_Sor2DthInit)
 
 DEFINE_ACTION_FUNCTION(AActor, A_Sor2DthLoop)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (--self->special1)
 	{ // Need to loop
 		self->SetState (self->FindState("DeathLoop"));
 	}
+	return 0;
 }
 

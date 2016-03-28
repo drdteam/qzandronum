@@ -125,20 +125,22 @@ void MStaffSpawn (AActor *pmo, angle_t angle)
 
 DEFINE_ACTION_FUNCTION(AActor, A_MStaffAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	angle_t angle;
 	player_t *player;
 	AActor *linetarget;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	AMWeapBloodscourge *weapon = static_cast<AMWeapBloodscourge *> (self->player->ReadyWeapon);
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 	angle = self->angle;
 	
@@ -170,6 +172,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MStaffAttack)
 
 	S_Sound (self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM);
 	weapon->MStaffCount = 3;
+	return 0;
 }
 
 //============================================================================
@@ -180,6 +183,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_MStaffAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_MStaffPalette)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (self->player != NULL)
 	{
 		AMWeapBloodscourge *weapon = static_cast<AMWeapBloodscourge *> (self->player->ReadyWeapon);
@@ -188,6 +193,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MStaffPalette)
 			weapon->MStaffCount--;
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -198,11 +204,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_MStaffPalette)
 
 DEFINE_ACTION_FUNCTION(AActor, A_MStaffTrack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if ((self->tracer == 0) && (pr_mstafftrack()<50))
 	{
 		self->tracer = P_RoughMonsterSearch (self, 10, true);
 	}
 	P_SeekerMissile (self, ANGLE_1*2, ANGLE_1*10);
+	return 0;
 }
 
 //============================================================================
@@ -262,15 +271,18 @@ void MStaffSpawn2 (AActor *actor, angle_t angle)
 
 DEFINE_ACTION_FUNCTION(AActor, A_MageAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-
-	if (!self->target) return;
-
+	if (self->target == NULL)
+	{
+		return 0;
+	}
 	angle_t angle;
 	angle = self->angle;
 	MStaffSpawn2 (self, angle);
@@ -281,5 +293,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_MageAttack)
 	// [BB] If we're the server, tell the clients to play the sound.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM );
-}
 
+	return 0;
+}

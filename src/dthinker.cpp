@@ -49,6 +49,7 @@
 
 
 static cycle_t ThinkCycles;
+extern cycle_t ActionCycles;
 
 IMPLEMENT_CLASS (DThinker)
 
@@ -410,6 +411,7 @@ void DThinker::RunThinkers ()
 	int i, count;
 
 	ThinkCycles.Reset();
+	ActionCycles.Reset();
 
 	ThinkCycles.Clock();
 
@@ -583,6 +585,6 @@ DThinker *FThinkerIterator::Next ()
 ADD_STAT (think)
 {
 	FString out;
-	out.Format ("Think time = %04.1f ms", ThinkCycles.TimeMS());
+	out.Format ("Think time = %04.1f ms, Action = %04.1f ms", ThinkCycles.TimeMS(), ActionCycles.TimeMS());
 	return out;
 }

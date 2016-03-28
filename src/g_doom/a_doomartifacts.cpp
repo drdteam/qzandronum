@@ -68,6 +68,8 @@ protected:
 
 DEFINE_ACTION_FUNCTION(AActor, A_RandomPowerupFrame)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	ULONG	ulFrame;
 	ARandomPowerup	*pRandomPowerup;
 
@@ -78,6 +80,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_RandomPowerupFrame)
 		self->SetState( self->state->NextState );
 	else
 		pRandomPowerup->ulCurrentFrame = ulFrame;
+	return 0;
 }
 
 IMPLEMENT_CLASS (ARandomPowerup)
@@ -85,7 +88,7 @@ IMPLEMENT_CLASS (ARandomPowerup)
 bool ARandomPowerup::Use (bool pickup)
 {
 	AInventory		*pItem;
-	const PClass	*pType = NULL;
+	PClassActor	*pType = NULL;
 	bool			bReturnValue = false;
 
 	if ( NETWORK_InClientMode() )
@@ -98,42 +101,42 @@ bool ARandomPowerup::Use (bool pickup)
 	// Megasphere.
 	case 0:
 
-		pType = PClass::FindClass( "Megasphere" );
+		pType = PClass::FindActor( "Megasphere" );
 		break;
 	// Soulsphere.
 	case 1:
 
-		pType = PClass::FindClass( "Soulsphere" );
+		pType = PClass::FindActor( "Soulsphere" );
 		break;
 	// Guardsphere.
 	case 2:
 
-		pType = PClass::FindClass( "Guardsphere" );
+		pType = PClass::FindActor( "Guardsphere" );
 		break;
 	// Partial invisibility.
 	case 3:
 
-		pType = PClass::FindClass( "Blursphere" );
+		pType = PClass::FindActor( "Blursphere" );
 		break;
 	// Time freeze.
 	case 4:
 
-		pType = PClass::FindClass( "TimeFreezeSphere" );
+		pType = PClass::FindActor( "TimeFreezeSphere" );
 		break;
 	// Invisibility.
 	case 5:
 
-		pType = PClass::FindClass( "InvisibilitySphere" );
+		pType = PClass::FindActor( "InvisibilitySphere" );
 		break;
 	// Doomsphere.
 	case 6:
 
-		pType = PClass::FindClass( "Doomsphere" );
+		pType = PClass::FindActor( "Doomsphere" );
 		break;
 	// Turbosphere.
 	case 7:
 
-		pType = PClass::FindClass( "Turbosphere" );
+		pType = PClass::FindActor( "Turbosphere" );
 		break;
 	}
 

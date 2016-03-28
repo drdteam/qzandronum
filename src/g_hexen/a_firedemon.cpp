@@ -32,25 +32,25 @@ static FRandom pr_firedemonsplotch ("FiredSplotch");
 void A_FiredSpawnRock (AActor *actor)
 {
 	AActor *mo;
-	const PClass *rtype;
+	PClassActor *rtype;
 
 	switch (pr_firedemonrock() % 5)
 	{
 		case 0:
-			rtype = PClass::FindClass ("FireDemonRock1");
+			rtype = PClass::FindActor("FireDemonRock1");
 			break;
 		case 1:
-			rtype = PClass::FindClass ("FireDemonRock2");
+			rtype = PClass::FindActor("FireDemonRock2");
 			break;
 		case 2:
-			rtype = PClass::FindClass ("FireDemonRock3");
+			rtype = PClass::FindActor("FireDemonRock3");
 			break;
 		case 3:
-			rtype = PClass::FindClass ("FireDemonRock4");
+			rtype = PClass::FindActor("FireDemonRock4");
 			break;
 		case 4:
 		default:
-			rtype = PClass::FindClass ("FireDemonRock5");
+			rtype = PClass::FindActor("FireDemonRock5");
 			break;
 	}
 
@@ -80,11 +80,14 @@ void A_FiredSpawnRock (AActor *actor)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FiredRocks)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	A_FiredSpawnRock (self);
 	A_FiredSpawnRock (self);
 	A_FiredSpawnRock (self);
 	A_FiredSpawnRock (self);
 	A_FiredSpawnRock (self);
+	return 0;
 }
 
 //============================================================================
@@ -95,11 +98,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredRocks)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SmBounce)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// give some more velocity (x,y,&z)
 	self->SetZ(self->floorz + FRACUNIT);
 	self->velz = (2*FRACUNIT) + (pr_smbounce() << 10);
 	self->velx = pr_smbounce()%3<<FRACBITS;
 	self->vely = pr_smbounce()%3<<FRACBITS;
+	return 0;
 }
 
 //============================================================================
@@ -110,15 +116,17 @@ DEFINE_ACTION_FUNCTION(AActor, A_SmBounce)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FiredAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (self->target == NULL)
-		return;
-	AActor *mo = P_SpawnMissile (self, self->target, PClass::FindClass ("FireDemonMissile"));
+		return 0;
+	AActor *mo = P_SpawnMissile (self, self->target, PClass::FindActor("FireDemonMissile"));
 	if (mo)
 	{
 		S_Sound (self, CHAN_BODY, "FireDemonAttack", 1, ATTN_NORM);
@@ -130,6 +138,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredAttack)
 			SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "FireDemonAttack", 1, ATTN_NORM );
 		}
 	}
+
+	return 0;
 }
 
 //============================================================================
@@ -140,6 +150,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int weaveindex = self->special1;
 	AActor *target = self->target;
 	angle_t ang;
@@ -158,7 +170,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 		if ( self->special2 == 0 )
 			P_Move( self );
 
-		return;
+		return 0;
 	}
 
 	if (self->reactiontime) self->reactiontime--;
@@ -181,7 +193,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 	if(!self->target || !(self->target->flags&MF_SHOOTABLE))
 	{	// Invalid target
 		P_LookForPlayers (self,true, NULL);
-		return;
+		return 0;
 	}
 
 	// Strafe
@@ -240,7 +252,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 
 			self->SetState (self->MissileState);
 			self->flags |= MF_JUSTATTACKED;
-			return;
+			return 0;
 		}
 	}
 	else
@@ -253,6 +265,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 	{
 		self->PlayActiveSound ();
 	}
+	return 0;
 }
 
 //============================================================================
@@ -263,6 +276,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredChase)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FiredSplotch)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *mo;
 
 	mo = Spawn ("FireDemonSplotch1", self->Pos(), ALLOW_REPLACE);
@@ -279,4 +294,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredSplotch)
 		mo->vely = (pr_firedemonsplotch() - 128) << 11;
 		mo->velz = (pr_firedemonsplotch() << 10) + FRACUNIT*3;
 	}
+	return 0;
 }

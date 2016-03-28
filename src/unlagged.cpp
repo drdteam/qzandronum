@@ -405,7 +405,7 @@ void UNLAGGED_RemoveReconciliationBlocker ( )
 
 void UNLAGGED_SpawnDebugActors ( )
 {
-	const PClass *pType = PClass::FindClass( "UnlaggedDebugActor" );
+	PClassActor *pType = PClass::FindActor( "UnlaggedDebugActor" );
 	if ( pType == NULL )
 		I_FatalError( "To spawn unlagged debug actors a DECORATE actor called \"UnlaggedDebugActor\" needs to be defined!\n" );
 

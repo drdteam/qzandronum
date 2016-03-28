@@ -278,7 +278,7 @@ void COOP_GiveStoredUVDPickupsToPlayer ( const ULONG ulPlayer )
 	TMap<FName, int>::ConstIterator mapit ( UVDpickupMap );
 	while ( mapit.NextPair (pair) )
 	{
-		const PClass *pType = PClass::FindClass ( pair->Key.GetChars() );
+		PClassActor *pType = PClass::FindActor ( pair->Key.GetChars() );
 		if ( pType )
 			DoGiveInv ( players[ulPlayer].mo, pType, 1 );
 	}

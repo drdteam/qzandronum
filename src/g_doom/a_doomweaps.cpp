@@ -28,6 +28,8 @@ static FRandom pr_oldbfg ("OldBFG");
 //
 DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	angle_t 	angle;
 	int 		damage;
 	int 		pitch;
@@ -36,7 +38,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (self->player != NULL)
@@ -45,7 +47,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 		if (weapon != NULL && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire))
-				return;
+				return 0;
 		}
 	}
 
@@ -93,17 +95,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 			SERVERCOMMANDS_SetThingAngleExact( self );
 		}
 	}
+	return 0;
 }
 
 //
 // A_FirePistol
 //
-void A_CustomFireBullets( AActor *self,
+int A_CustomFireBullets( AActor *self,
 						  angle_t Spread_XY,
 						  angle_t Spread_Z, 
 						  int NumberOfBullets,
 						  int DamagePerBullet,
-						  const PClass * PuffType,
+						  PClassActor * PuffType,
 						  const bool fromweapon,
 						  const char *AttackSound = NULL,
 						  int Flags = 1,
@@ -112,8 +115,10 @@ void A_CustomFireBullets( AActor *self,
 
 DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] A_FirePistol is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/pistol", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/pistol", true, 0, false );
 	A_GunFlash ( self );
 /*
 	bool accurate;
@@ -124,7 +129,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 		if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-				return;
+				return 0;
 
 			P_SetPsprite (self->player, ps_flash, weapon->FindState(NAME_Flash));
 		}
@@ -152,7 +157,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 		return;
 
-	P_GunShot (self, accurate, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (self));
+	P_GunShot (self, accurate, PClass::FindActor(NAME_BulletPuff), P_BulletSlope (self));
 
 	// [BC] Apply spread.
 	if (( actor->player ) && ( actor->player->cheats2 & CF2_SPREAD ))
@@ -182,6 +187,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 		BOTS_PostWeaponFiredEvent( ULONG( actor->player - players ), BOTEVENT_FIREDPISTOL, BOTEVENT_ENEMY_FIREDPISTOL, BOTEVENT_PLAYER_FIREDPISTOL );
 	}
 */
+	return 0;
 }
 
 //
@@ -201,6 +207,19 @@ enum SAW_Flags
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 {
+	PARAM_ACTION_PROLOGUE;
+	PARAM_SOUND_OPT	(fullsound)			{ fullsound = "weapons/sawfull"; }
+	PARAM_SOUND_OPT	(hitsound)			{ hitsound = "weapons/sawhit"; }
+	PARAM_INT_OPT	(damage)			{ damage = 2; }
+	PARAM_CLASS_OPT	(pufftype, AActor)	{ pufftype = NULL; }
+	PARAM_INT_OPT	(flags)				{ flags = 0; }
+	PARAM_FIXED_OPT	(range)				{ range = 0; }
+	PARAM_ANGLE_OPT	(spread_xy)			{ spread_xy = angle_t(2.8125 * (ANGLE_90 / 90.0)); }
+	PARAM_ANGLE_OPT	(spread_z)			{ spread_z = 0; }
+	PARAM_FIXED_OPT	(lifesteal)			{ lifesteal = 0; }
+	PARAM_INT_OPT	(lifestealmax)		{ lifestealmax = 0; }
+	PARAM_CLASS_OPT	(armorbonustype, ABasicArmorBonus)	{ armorbonustype = NULL; }
+
 	angle_t angle;
 	angle_t slope;
 	player_t *player;
@@ -210,57 +229,52 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
-
-	ACTION_PARAM_START(11);
-	ACTION_PARAM_SOUND(fullsound, 0);
-	ACTION_PARAM_SOUND(hitsound, 1);
-	ACTION_PARAM_INT(damage, 2);
-	ACTION_PARAM_CLASS(pufftype, 3);
-	ACTION_PARAM_INT(Flags, 4);
-	ACTION_PARAM_FIXED(Range, 5);
-	ACTION_PARAM_ANGLE(Spread_XY, 6);
-	ACTION_PARAM_ANGLE(Spread_Z, 7);
-	ACTION_PARAM_FIXED(LifeSteal, 8);
-	ACTION_PARAM_INT(lifestealmax, 9);
-	ACTION_PARAM_CLASS(armorbonustype, 10);
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
-	if (pufftype == NULL) pufftype = PClass::FindClass(NAME_BulletPuff);
-	if (damage == 0) damage = 2;
-
-	if (!(Flags & SF_NORANDOM))
+	if (pufftype == NULL)
+	{
+		pufftype = PClass::FindActor(NAME_BulletPuff);
+	}
+	if (damage == 0)
+	{
+		damage = 2;
+	}
+	if (!(flags & SF_NORANDOM))
+	{
 		damage *= (pr_saw()%10+1);
-	
-	// use meleerange + 1 so the puff doesn't skip the flash (i.e. plays all states)
-	if (Range == 0) Range = MELEERANGE+1;
+	}
+	if (range == 0)
+	{ // use meleerange + 1 so the puff doesn't skip the flash (i.e. plays all states)
+		range = MELEERANGE+1;
+	}
 
-	angle = self->angle + (pr_saw.Random2() * (Spread_XY / 255));
-	slope = P_AimLineAttack (self, angle, Range, &linetarget) + (pr_saw.Random2() * (Spread_Z / 255));
+	angle = self->angle + (pr_saw.Random2() * (spread_xy / 255));
+	slope = P_AimLineAttack (self, angle, range, &linetarget) + (pr_saw.Random2() * (spread_z / 255));
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if ((weapon != NULL) && !(Flags & SF_NOUSEAMMO) && !(!linetarget && (Flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
+	if ((weapon != NULL) && !(flags & SF_NOUSEAMMO) && !(!linetarget && (flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 
-	P_LineAttack (self, angle, Range, slope, damage, NAME_Melee, pufftype, false, &linetarget, &actualdamage);
+	P_LineAttack (self, angle, range, slope, damage, NAME_Melee, pufftype, false, &linetarget, &actualdamage);
 
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack( self, angle + ( ANGLE_45 / 3 ), Range,
-					  P_AimLineAttack( self, angle + ( ANGLE_45 / 3 ), Range, &linetarget ), damage,
+		P_LineAttack( self, angle + ( ANGLE_45 / 3 ), range,
+					  P_AimLineAttack( self, angle + ( ANGLE_45 / 3 ), range, &linetarget ), damage,
 					  NAME_Melee, pufftype, false );
 
-		P_LineAttack( self, angle - ( ANGLE_45 / 3 ), Range,
-					  P_AimLineAttack( self, angle - ( ANGLE_45 / 3 ), Range, &linetarget ), damage,
+		P_LineAttack( self, angle - ( ANGLE_45 / 3 ), range,
+					  P_AimLineAttack( self, angle - ( ANGLE_45 / 3 ), range, &linetarget ), damage,
 					  NAME_Melee, pufftype, false );
 	}
 
@@ -276,7 +290,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 
 	if (!linetarget)
 	{
-		if ((Flags & SF_RANDOMLIGHTMISS) && (pr_saw() > 64))
+		if ((flags & SF_RANDOMLIGHTMISS) && (pr_saw() > 64))
 		{
 			player->extralight = !player->extralight;
 		}
@@ -285,10 +299,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 		// [BC] If we're the server, tell clients to play the saw sound.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( fullsound ), 1, ATTN_NORM );
-		return;
+		return 0;
 	}
 
-	if (Flags & SF_RANDOMLIGHTHIT)
+	if (flags & SF_RANDOMLIGHTHIT)
 	{
 		int randVal = pr_saw();
 		if (randVal < 64)
@@ -308,16 +322,19 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	// [EP] Is the actor's health changed by the life steal?
 	const int prevhealth = self->health;
 
-	if (LifeSteal && !(linetarget->flags5 & MF5_DONTDRAIN))
+	if (lifesteal && !(linetarget->flags5 & MF5_DONTDRAIN))
 	{
-		if (Flags & SF_STEALARMOR)
+		if (flags & SF_STEALARMOR)
 		{
-			if (!armorbonustype) armorbonustype = PClass::FindClass("ArmorBonus");
-
-			if (armorbonustype->IsDescendantOf (RUNTIME_CLASS(ABasicArmorBonus)))
+			if (armorbonustype == NULL)
 			{
-				ABasicArmorBonus *armorbonus = static_cast<ABasicArmorBonus *>(Spawn (armorbonustype, 0,0,0, NO_REPLACE));
-				armorbonus->SaveAmount *= (actualdamage * LifeSteal) >> FRACBITS;
+				armorbonustype = dyn_cast<ABasicArmorBonus::MetaClass>(PClass::FindClass("ArmorBonus"));
+			}
+			if (armorbonustype != NULL)
+			{
+				assert(armorbonustype->IsDescendantOf (RUNTIME_CLASS(ABasicArmorBonus)));
+				ABasicArmorBonus *armorbonus = static_cast<ABasicArmorBonus *>(Spawn(armorbonustype, 0,0,0, NO_REPLACE));
+				armorbonus->SaveAmount *= (actualdamage * lifesteal) >> FRACBITS;
 				armorbonus->MaxSaveAmount = lifestealmax <= 0 ? armorbonus->MaxSaveAmount : lifestealmax;
 				armorbonus->flags |= MF_DROPPED;
 				armorbonus->ClearCounters();
@@ -331,7 +348,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 
 		else
 		{
-			P_GiveBody (self, (actualdamage * LifeSteal) >> FRACBITS, lifestealmax);
+			P_GiveBody (self, (actualdamage * lifesteal) >> FRACBITS, lifestealmax);
 		}
 	}
 
@@ -345,7 +362,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( hitsound ), 1, ATTN_NORM );
 		
 	// turn to face target
-	if (!(Flags & SF_NOTURN))
+	if (!(flags & SF_NOTURN))
 	{
 		angle = self->AngleTo(linetarget);
 		if (angle - self->angle > ANG180)
@@ -363,7 +380,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 				self->angle += ANG90 / 20;
 		}
 	}
-	if (!(Flags & SF_NOPULLIN))
+	if (!(flags & SF_NOPULLIN))
 		self->flags |= MF_JUSTATTACKED;
 
 	// [BC] If we're the server, tell clients to adjust the player's angle.
@@ -372,6 +389,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( self->player - players ), BOTEVENT_USEDCHAINSAW, BOTEVENT_ENEMY_USEDCHAINSAW, BOTEVENT_PLAYER_USEDCHAINSAW );
+
+	return 0;
 }
 
 //
@@ -379,8 +398,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 //
 DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] A_FireShotgun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 7, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/shotgf", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 7, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/shotgf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int i;
@@ -388,7 +409,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	// [BC] If we're the server, tell clients that a weapon is being fired.
@@ -400,7 +421,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-			return;
+			return 0;
 		P_SetPsprite (player, ps_flash, weapon->FindState(NAME_Flash));
 	}
 	player->mo->PlayAttacking2 ();
@@ -415,9 +436,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 		return;
 
-
-	for (i=0 ; i<7 ; i++)
-		P_GunShot (self, false, PClass::FindClass(NAME_BulletPuff), pitch);
+	for (i = 0; i < 7; i++)
+	{
+		P_GunShot (self, false, PClass::FindActor(NAME_BulletPuff), pitch);
+	}
 
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
@@ -426,14 +448,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 
 		SavedActorAngle = self->angle;
 		self->angle += ( ANGLE_45 / 3 );
-		for (i=0 ; i<7 ; i++)
-			P_GunShot (self, false, PClass::FindClass(NAME_BulletPuff), pitch);
+		for (i = 0; i < 7; i++)
+		{
+			P_GunShot (self, false, PClass::FindActor(NAME_BulletPuff), pitch);
+		}
 		self->angle = SavedActorAngle;
 
 		SavedActorAngle = actor->angle;
 		self->angle -= ( ANGLE_45 / 3 );
-		for (i=0 ; i<7 ; i++)
-			P_GunShot (self, false, PClass::FindClass(NAME_BulletPuff), pitch);
+		for (i = 0; i < 7; i++)
+		{
+			P_GunShot (self, false, PClass::FindActor(NAME_BulletPuff), pitch);
+		}
 		self->angle = SavedActorAngle;
 	}
 
@@ -446,6 +472,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDSHOTGUN, BOTEVENT_ENEMY_FIREDSHOTGUN, BOTEVENT_PLAYER_FIREDSHOTGUN );
 */
+	return 0;
 }
 
 //
@@ -453,8 +480,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 //
 DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] A_FireShotgun2 is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 11.2 * ANGLE_1), angle_t( 7.1 * ANGLE_1), 20, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/sshotf", true, 0, false );
+	A_CustomFireBullets( self, angle_t( 11.2 * ANGLE_1), angle_t( 7.1 * ANGLE_1), 20, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/sshotf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int 		i;
@@ -464,7 +493,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	// [BC] If we're the server, tell clients that a weapon is being fired.
@@ -476,7 +505,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 2))
-			return;
+			return 0;
 		P_SetPsprite (player, ps_flash, weapon->FindState(NAME_Flash));
 	}
 	player->mo->PlayAttacking2 ();
@@ -540,10 +569,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDSSG, BOTEVENT_ENEMY_FIREDSSG, BOTEVENT_PLAYER_FIREDSSG );
 */
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_OpenShotgun2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Clients only do this for "their" player.
 	if ( NETWORK_IsConsolePlayerOrSpiedByConsolePlayerOrNotInClientMode( self->player ) )
 		S_Sound (self, CHAN_WEAPON, "weapons/sshoto", 1, ATTN_NORM);
@@ -551,10 +583,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_OpenShotgun2)
 	// [BC] If we're the server, tell clients that a weapon is being fired.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( self->player ))
 		SERVERCOMMANDS_WeaponSound( ULONG( self->player - players ), "weapons/sshoto", ULONG( self->player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_LoadShotgun2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Clients only do this for "their" player.
 	if ( NETWORK_IsConsolePlayerOrSpiedByConsolePlayerOrNotInClientMode( self->player ) )
 		S_Sound (self, CHAN_WEAPON, "weapons/sshotl", 1, ATTN_NORM);
@@ -562,10 +598,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_LoadShotgun2)
 	// [BC] If we're the server, tell clients that a weapon is being fired.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( self->player ))
 		SERVERCOMMANDS_WeaponSound( ULONG( self->player - players ), "weapons/sshotl", ULONG( self->player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_CloseShotgun2)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Clients only do this for "their" player.
 	if ( NETWORK_IsConsolePlayerOrSpiedByConsolePlayerOrNotInClientMode( self->player ) )
 		S_Sound (self, CHAN_WEAPON, "weapons/sshotc", 1, ATTN_NORM);
@@ -574,6 +614,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CloseShotgun2)
 	// [BC] If we're the server, tell clients that a weapon is being fired.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( self->player ))
 		SERVERCOMMANDS_WeaponSound( ULONG( self->player - players ), "weapons/sshotc", ULONG( self->player - players ), SVCF_SKIPTHISCLIENT );
+
+	return 0;
 }
 
 //------------------------------------------------------------------------------------
@@ -588,15 +630,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_CloseShotgun2)
 void P_SetSafeFlash(AWeapon *weapon, player_t *player, FState *flashstate, int index)
 {
 
-	const PClass * cls = weapon->GetClass();
+	PClassActor *cls = weapon->GetClass();
 	while (cls != RUNTIME_CLASS(AWeapon))
 	{
-		FActorInfo * info = cls->ActorInfo;
-		if (flashstate >= info->OwnedStates && flashstate < info->OwnedStates + info->NumOwnedStates)
+		if (flashstate >= cls->OwnedStates && flashstate < cls->OwnedStates + cls->NumOwnedStates)
 		{
 			// The flash state belongs to this class.
 			// Now let's check if the actually wanted state does also
-			if (flashstate+index < info->OwnedStates + info->NumOwnedStates)
+			if (flashstate + index < cls->OwnedStates + cls->NumOwnedStates)
 			{
 				// we're ok so set the state
 				P_SetPsprite (player, ps_flash, flashstate + index);
@@ -610,7 +651,7 @@ void P_SetSafeFlash(AWeapon *weapon, player_t *player, FState *flashstate, int i
 			}
 		}
 		// try again with parent class
-		cls = cls->ParentClass;
+		cls = static_cast<PClassActor *>(cls->ParentClass);
 	}
 	// if we get here the state doesn't seem to belong to any class in the inheritance chain
 	// This can happen with Dehacked if the flash states are remapped. 
@@ -629,13 +670,15 @@ void P_SetSafeFlash(AWeapon *weapon, player_t *player, FState *flashstate, int i
 //
 DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BC] I guess we have to do all this old stuff to ensure that the flash state on the
 	// chaingun ends up on the right frame. Shouldn't it just work?
 	player_t *player = self->player;
 
 	if (NULL == player)
 	{
-		return;
+		return 0;
 	}
 	player->mo->PlayAttacking2 ();
 
@@ -658,21 +701,21 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 		}
 	}
 	// [BB] A_FireCGun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindClass("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/chngun" );
+	A_CustomFireBullets( self, angle_t( 5.6 * ANGLE_1), angle_t( 0 * ANGLE_1), 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/chngun" );
 //	A_GunFlash( self );
 /*
 	player_t *player;
 
 	if (self == NULL || NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	AWeapon *weapon = player->ReadyWeapon;
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-			return;
+			return 0;
 		
 		S_Sound (self, CHAN_WEAPON, "weapons/chngun", 1, ATTN_NORM);
 
@@ -707,7 +750,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 		return;
 
-	P_GunShot (self, !player->refire, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (self));
+	P_GunShot (self, !player->refire, PClass::FindActor(NAME_BulletPuff), P_BulletSlope (self));
 
 	// [BC] Apply apread.
 	if ( player->cheats2 & CF2_SPREAD )
@@ -734,6 +777,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDCHAINGUN, BOTEVENT_ENEMY_FIREDCHAINGUN, BOTEVENT_PLAYER_FIREDCHAINGUN );
 */
+	return 0;
 }
 
 //
@@ -741,29 +785,33 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 //
 DEFINE_ACTION_FUNCTION(AActor, A_FireMissile)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-			return;
+			return 0;
 	}
 
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("Rocket")); // [BB] Spread
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindActor("Rocket")); // [BB] Spread
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDROCKET, BOTEVENT_ENEMY_FIREDROCKET, BOTEVENT_PLAYER_FIREDROCKET );
+
+	return 0;
 }
 
 // [BC]
@@ -806,26 +854,29 @@ bool AGrenade::FloorBounceMissile( secplane_t &plane )
 //
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 {
+	PARAM_ACTION_PROLOGUE;
+	PARAM_CLASS_OPT(grenade, AActor)	{ grenade = PClass::FindActor("Grenade"); }
+
 	player_t *player;
-	ACTION_PARAM_START(1);
-	ACTION_PARAM_CLASS(grenade, 0);
-	if (grenade == NULL) return;
+
+	if (grenade == NULL)
+		return 0;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
-			return;
+			return 0;
 	}
 		
 	// Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	// Temporarily raise the pitch to send the grenade slightly upwards
@@ -836,6 +887,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 
 	// Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDGRENADE, BOTEVENT_ENEMY_FIREDGRENADE, BOTEVENT_PLAYER_FIREDGRENADE );
+
+	return 0;
 }
 
 //
@@ -843,17 +896,19 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 //
 DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-			return;
+			return 0;
 
 		FState *flash = weapon->FindState(NAME_Flash);
 		if (flash != NULL)
@@ -865,20 +920,22 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindClass("PlasmaBall")); // [BB] Spread
+	P_SpawnPlayerMissileWithPossibleSpread (self, PClass::FindActor("PlasmaBall")); // [BB] Spread
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDPLASMA, BOTEVENT_ENEMY_FIREDPLASMA, BOTEVENT_PLAYER_FIREDPLASMA );
+
+	return 0;
 }
 
 //
 // [RH] A_FireRailgun
 // [TP] Now takes a puff class
 //
-static void FireRailgun(AActor *self, int offset_xy, bool fromweapon, const PClass* puffType = NULL )
+static void FireRailgun(AActor *self, int offset_xy, bool fromweapon, PClassActor* puffType = NULL )
 {
 	int damage;
 	player_t *player;
@@ -929,30 +986,38 @@ static void FireRailgun(AActor *self, int offset_xy, bool fromweapon, const PCla
 // [TP] This now takes a puff type to retain Skulltag's railgun's ability to pierce armor.
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireRailgun)
 {
-	ACTION_PARAM_START( 1 )
-	ACTION_PARAM_CLASS( puffType, 0 );
-	FireRailgun(self, 0, ACTION_CALL_FROM_WEAPON(), puffType );
+	PARAM_ACTION_PROLOGUE;
+	PARAM_CLASS_OPT	(pufftype, AActor) { pufftype = PClass::FindActor(NAME_BulletPuff); }
+	FireRailgun(self, 0, ACTION_CALL_FROM_WEAPON(), pufftype );
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunRight)
 {
+	PARAM_ACTION_PROLOGUE;
 	FireRailgun(self, 10, ACTION_CALL_FROM_WEAPON());
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunLeft)
 {
+	PARAM_ACTION_PROLOGUE;
 	FireRailgun(self, -10, ACTION_CALL_FROM_WEAPON());
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_RailWait)
 {
 	// Okay, this was stupid. Just use a NULL function instead of this.
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_CheckRailReload)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if ( self->player == NULL )
-		return;
+		return 0;
 
 	self->player->ulRailgunShots++;
 	// If we have not made our 4th shot...
@@ -965,6 +1030,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckRailReload)
 	else
 		// We need to reload. However, don't reload if we're out of ammo.
 		self->player->ReadyWeapon->CheckAmmo( false, false );
+	return 0;
 }
 
 //
@@ -973,36 +1039,39 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckRailReload)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	player_t *player;
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
 	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, deh.BFGCells))
-			return;
+			return 0;
 	}
 
 	// [BC] Weapons are handled by the server.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 
-	P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle, NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG));
+	P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindActor("BFGBall"), self->angle, NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG));
 
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle + ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
-		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindClass("BFGBall"), self->angle - ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
+		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindActor("BFGBall"), self->angle + ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
+		P_SpawnPlayerMissile (self,  0, 0, 0, PClass::FindActor("BFGBall"), self->angle - ( ANGLE_45 / 3 ), NULL, NULL, !(dmflags2 & DF2_YES_FREEAIMBFG), false, false );
 	}
 
+	return 0;
 }
 
 
@@ -1012,6 +1081,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 //
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 {
+	PARAM_ACTION_PROLOGUE;
+	PARAM_CLASS_OPT	(spraytype, AActor)		{ spraytype = NULL; }
+	PARAM_INT_OPT	(numrays)				{ numrays = 40; }
+	PARAM_INT_OPT	(damagecnt)				{ damagecnt = 15; }
+	PARAM_ANGLE_OPT	(angle)					{ angle = ANGLE_90; }
+	PARAM_FIXED_OPT	(distance)				{ distance = 16*64*FRACUNIT; }
+	PARAM_ANGLE_OPT	(vrange)				{ vrange = 32*FRACUNIT; }
+	PARAM_INT_OPT	(defdamage)				{ defdamage = 0; }
+
 	int 				i;
 	int 				j;
 	int 				damage;
@@ -1021,19 +1099,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 	// [BC] This is not done on the client end.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
-	ACTION_PARAM_START(7);
-	ACTION_PARAM_CLASS(spraytype, 0);
-	ACTION_PARAM_INT(numrays, 1);
-	ACTION_PARAM_INT(damagecnt, 2);
-	ACTION_PARAM_ANGLE(angle, 3);
-	ACTION_PARAM_FIXED(distance, 4);
-	ACTION_PARAM_ANGLE(vrange, 5);
-	ACTION_PARAM_INT(defdamage, 6);
-
-	if (spraytype == NULL) spraytype = PClass::FindClass("BFGExtra");
+	if (spraytype == NULL) spraytype = PClass::FindActor("BFGExtra");
 	if (numrays <= 0) numrays = 40;
 	if (damagecnt <= 0) damagecnt = 15;
 	if (angle == 0) angle = ANG90;
@@ -1042,7 +1111,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 
 	// [RH] Don't crash if no target
 	if (!self->target)
-		return;
+		return 0;
 
 	// offset angles from its attack angle
 	for (i = 0; i < numrays; i++)
@@ -1092,6 +1161,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 			P_TraceBleed(newdam > 0 ? newdam : damage, linetarget, self->target);
 		}
 	}
+	return 0;
 }
 
 //
@@ -1099,6 +1169,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 //
 DEFINE_ACTION_FUNCTION(AActor, A_BFGsound)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// [BB] Clients only do this for "their" player.
 	if ( NETWORK_IsConsolePlayerOrSpiedByConsolePlayerOrNotInClientMode( self->player ) )
 		S_Sound (self, CHAN_WEAPON, "weapons/bfgf", 1, ATTN_NORM);
@@ -1117,6 +1189,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BFGsound)
 		// Tell all the bots that a weapon was fired.
 		BOTS_PostWeaponFiredEvent( ULONG( self->player - players ), BOTEVENT_FIREDBFG, BOTEVENT_ENEMY_FIREDBFG, BOTEVENT_PLAYER_FIREDBFG );
 	}
+
+	return 0;
 }
 
 //
@@ -1130,7 +1204,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BFGsound)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 {
-	const PClass * plasma[] = {PClass::FindClass("PlasmaBall1"), PClass::FindClass("PlasmaBall2")};
+	PARAM_ACTION_PROLOGUE;
+	PClassActor *plasma[] = { PClass::FindActor("PlasmaBall1"), PClass::FindActor("PlasmaBall2") };
 	AActor * mo = NULL;
 
 	player_t *player;
@@ -1138,7 +1213,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
@@ -1146,7 +1221,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
-			return;
+			return 0;
 
 		doesautoaim = !(weapon->WeaponFlags & WIF_NOAUTOAIM);
 		weapon->WeaponFlags |= WIF_NOAUTOAIM; // No autoaiming that gun
@@ -1165,5 +1240,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 		self->angle = SavedPlayerAngle;
 		self->pitch = SavedPlayerPitch;
     }
-	if (doesautoaim && weapon != NULL) weapon->WeaponFlags &= ~WIF_NOAUTOAIM; // Restore autoaim setting
+	if (doesautoaim && weapon != NULL)
+	{ // Restore autoaim setting
+		weapon->WeaponFlags &= ~WIF_NOAUTOAIM;
+	}
+	return 0;
 }

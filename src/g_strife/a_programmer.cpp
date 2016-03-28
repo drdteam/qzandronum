@@ -74,21 +74,24 @@ PalEntry AProgLevelEnder::GetBlend ()
 
 DEFINE_ACTION_FUNCTION(AActor, A_ProgrammerMelee)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	int damage;
 
 	if (self->target == NULL)
-		return;
+		return 0;
 
 	A_FaceTarget (self);
 
 	if (!self->CheckMeleeRange ())
-		return;
+		return 0;
 
 	S_Sound (self, CHAN_WEAPON, "programmer/clank", 1, ATTN_NORM);
 
 	damage = ((pr_prog() % 10) + 1) * 6;
 	int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 	P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
+	return 0;
 }
 
 //============================================================================
@@ -99,14 +102,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_ProgrammerMelee)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpotLightning)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *spot;
 
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
-		return;
+		return 0;
 
 	if (self->target == NULL)
-		return;
+		return 0;
 
 	spot = Spawn("SpectralLightningSpot", self->target->X(), self->target->Y(), self->target->floorz, ALLOW_REPLACE);
 	if (spot != NULL)
@@ -120,6 +125,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpotLightning)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnThing( spot );
 	}
+	return 0;
 }
 
 //============================================================================
@@ -130,6 +136,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpotLightning)
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpawnProgrammerBase)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	AActor *foo = Spawn("ProgrammerBase", self->PosPlusZ(24*FRACUNIT), ALLOW_REPLACE);
 	if (foo != NULL)
 	{
@@ -138,6 +146,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpawnProgrammerBase)
 		foo->vely = FixedMul (foo->Speed, finesine[foo->angle >> ANGLETOFINESHIFT]);
 		foo->velz = pr_prog() << 9;
 	}
+	return 0;
 }
 
 //============================================================================
@@ -148,8 +157,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpawnProgrammerBase)
 
 DEFINE_ACTION_FUNCTION(AActor, A_ProgrammerDeath)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	if (!CheckBossDeath (self))
-		return;
+		return 0;
 
 	for (int i = 0; i < MAXPLAYERS; ++i)
 	{
@@ -161,4 +172,5 @@ DEFINE_ACTION_FUNCTION(AActor, A_ProgrammerDeath)
 	}
 	// the sky change scripts are now done as special actions in MAPINFO
 	CALL_ACTION(A_BossDeath, self);
+	return 0;
 }

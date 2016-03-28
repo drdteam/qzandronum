@@ -13,17 +13,19 @@ static FRandom pr_spidrefire ("SpidRefire");
 
 DEFINE_ACTION_FUNCTION(AActor, A_SpidRefire)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	// keep firing unless target got out of sight
 	A_FaceTarget (self);
 
 	// [BC] Client spider masterminds continue to fire until told by the server to stop.
 	if ( NETWORK_InClientMode() )
 	{
-		return;
+		return 0;
 	}
 
 	if (pr_spidrefire() < 10)
-		return;
+		return 0;
 
 	if (!self->target
 		|| P_HitFriend (self)
@@ -36,10 +38,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpidRefire)
 
 		self->SetState (self->SeeState);
 	}
+	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_Metal)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	S_Sound (self, CHAN_BODY, "spider/walk", 1, ATTN_IDLE);
-	A_Chase (self);
+	A_Chase (stack, self);
+	return 0;
 }

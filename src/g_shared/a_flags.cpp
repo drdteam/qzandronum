@@ -972,7 +972,7 @@ bool AWhiteFlag::HandlePickup( AInventory *pItem )
 LONG AWhiteFlag::AllowFlagPickup( AActor *pToucher )
 {
 	// [BB] Carrying more than one WhiteFlag is not allowed.
-	if (( pToucher == NULL ) || ( pToucher->FindInventory( PClass::FindClass( "WhiteFlag" ) ) == NULL ) )
+	if (( pToucher == NULL ) || ( pToucher->FindInventory( PClass::FindActor( "WhiteFlag" ) ) == NULL ) )
 		return ( ALLOW_PICKUP );
 	else
 		return ( DENY_PICKUP );

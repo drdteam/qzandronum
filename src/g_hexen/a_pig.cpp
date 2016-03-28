@@ -60,6 +60,8 @@ void APigPlayer::MorphPlayerThink ()
 
 DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	angle_t angle;
 	int damage;
 	int slope;
@@ -69,7 +71,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 
 	if (NULL == (player = self->player))
 	{
-		return;
+		return 0;
 	}
 
 	damage = 3+(pr_snoutattack()&3);
@@ -79,7 +81,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 	S_Sound(player->mo, CHAN_VOICE, "PigActive", 1, ATTN_NORM);
 
 	// [Dusk] clients aren't properly aware of linetarget, thus they stop here.
-	if ( NETWORK_InClientMode() ) return;
+	if ( NETWORK_InClientMode() ) return 0;
 
 	if(linetarget)
 	{
@@ -98,6 +100,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 				SERVERCOMMANDS_SoundActor (player->mo, CHAN_VOICE, "PigAttack", 1, ATTN_NORM);
 		}
 	}
+	return 0;
 }
 
 //============================================================================
@@ -108,9 +111,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 
 DEFINE_ACTION_FUNCTION(AActor, A_PigPain)
 {
+	PARAM_ACTION_PROLOGUE;
+
 	CALL_ACTION(A_Pain, self);
 	if (self->Z() <= self->floorz)
 	{
 		self->velz = FRACUNIT*7/2;
 	}
+	return 0;
 }

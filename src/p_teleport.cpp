@@ -92,7 +92,6 @@ void P_SpawnTeleportFog(AActor *mobj, fixed_t x, fixed_t y, fixed_t z, bool befo
 
 	if (mo != NULL && setTarget)
 		mo->target = mobj;
-
 	// [BB] If we're the server, tell the clients to spawn the fog.
 	if ( mo && spawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
 		SERVERCOMMANDS_SpawnThing( mo );
