@@ -20,6 +20,7 @@
 #include "v_font.h"
 #include "farchive.h"
 #include "p_spec.h"
+#include "portal.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "sv_commands.h"
