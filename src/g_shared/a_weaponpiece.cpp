@@ -7,7 +7,19 @@
 #include "network.h"
 #include "sv_commands.h"
 
+IMPLEMENT_CLASS(PClassWeaponPiece)
 IMPLEMENT_CLASS (AWeaponHolder)
+
+void PClassWeaponPiece::ReplaceClassRef(PClass *oldclass, PClass *newclass)
+{
+	Super::ReplaceClassRef(oldclass, newclass);
+	AWeaponPiece *def = (AWeaponPiece*)Defaults;
+	if (def != NULL)
+	{
+		if (def->WeaponClass == oldclass) def->WeaponClass = static_cast<PClassWeapon *>(newclass);
+	}
+}
+
 
 void AWeaponHolder::Serialize (FArchive &arc)
 {

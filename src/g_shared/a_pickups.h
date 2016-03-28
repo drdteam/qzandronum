@@ -136,14 +136,16 @@ enum
 class PClassInventory : public PClassActor
 {
 	DECLARE_CLASS(PClassInventory, PClassActor)
-protected:
-	virtual void Derive(PClass *newclass);
 public:
 	PClassInventory();
+	virtual void DeriveData(PClass *newclass);
+	virtual void ReplaceClassRef(PClass *oldclass, PClass *newclass);
 
 	FString PickupMessage;
 	int GiveQuest;			// Optionally give one of the quest items.
 	FTextureID AltHUDIcon;
+	TArray<PClassPlayerPawn *> RestrictedToPlayerClass;
+	TArray<PClassPlayerPawn *> ForbiddenToPlayerClass;
 };
 
 class AInventory : public AActor
@@ -247,7 +249,7 @@ class PClassAmmo : public PClassInventory
 {
 	DECLARE_CLASS(PClassAmmo, PClassInventory)
 protected:
-	virtual void Derive(PClass *newclass);
+	virtual void DeriveData(PClass *newclass);
 public:
 	PClassAmmo();
 
@@ -272,9 +274,10 @@ class PClassWeapon : public PClassInventory
 {
 	DECLARE_CLASS(PClassWeapon, PClassInventory);
 protected:
-	virtual void Derive(PClass *newclass);
+	virtual void DeriveData(PClass *newclass);
 public:
 	PClassWeapon();
+	virtual void ReplaceClassRef(PClass *oldclass, PClass *newclass);
 
 	int SlotNumber;
 	fixed_t SlotPriority;
@@ -415,9 +418,9 @@ class PClassHealth : public PClassInventory
 {
 	DECLARE_CLASS(PClassHealth, PClassInventory)
 protected:
-	virtual void Derive(PClass *newclass);
 public:
 	PClassHealth();
+	virtual void DeriveData(PClass *newclass);
 
 	FString LowHealthMessage;
 	int LowHealth;
@@ -544,8 +547,8 @@ class PClassPuzzleItem : public PClassInventory
 {
 	DECLARE_CLASS(PClassPuzzleItem, PClassInventory);
 protected:
-	virtual void Derive(PClass *newclass);
 public:
+	virtual void DeriveData(PClass *newclass);
 	FString PuzzFailMessage;
 };
 
