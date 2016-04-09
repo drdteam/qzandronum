@@ -692,7 +692,8 @@ void DBaseStatusBar::DrBNumber (signed int val, int x, int y, int size) const
 	FTexture *pic;
 
 	pic = Images[imgBNumbers];
-	w = (pic != NULL) ? pic->GetWidth() : 0;
+	// [BB] Check scaled width, since the '0' texture may be a high res replacement.
+	w = (pic != NULL) ? pic->GetScaledWidth() : 0;
 
 	if (val == 0)
 	{

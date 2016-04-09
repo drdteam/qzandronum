@@ -428,3 +428,20 @@ OptionMenu ZA_LoginMenu
 	StaticText	" "
 	Command		"Log in",				"menu_login"
 }
+
+// =================================================================================================
+//
+// Bot skill menu
+//
+// =================================================================================================
+
+ListMenu "BotSkillMenu"
+{
+	StaticPatch 48, 24, "M_BSKILL"
+	Position 38, 54
+	PatchItem "M_MOMMY", "m", "ChooseBotSkill", 0
+	PatchItem "M_PAIN", "a", "ChooseBotSkill", 1
+	PatchItem "M_BRING","b", "ChooseBotSkill", 2
+	PatchItem "M_THRIVE","t", "ChooseBotSkill", 3
+	PatchItem "M_BNMARE","n", "ChooseBotSkill", 4
+}

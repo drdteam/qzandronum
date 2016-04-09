@@ -1802,20 +1802,10 @@ void FMapInfoParser::ParseEpisodeInfo ()
 		epi->mPicName = pic;
 		epi->mShortcut = tolower(key);
 		epi->mNoSkill = noskill;
-		/* [BB] FIXME
-		EpisodeMenu[i].bBotSkill = bBotEpisode;
-		EpisodeMenu[i].bBotSkillFullText = !bBotSkillPicIsGFX;
-		if ( bBotEpisode )
-			sprintf( EpisodeSkillHeaders[i], "%s", szBotSkillTitle );
-		*/
-
-		/* [BB] We can't do this here.
-		if ( bBotSkillPicIsGFX )
-		{
-			if ( !TexMan.CheckForTexture( szBotSkillTitle, FTexture::TEX_MiscPatch, 0 ).Exists() )
-				TexMan.AddPatch( szBotSkillTitle );
-		}
-		*/
+		// [BB] Support for Skulltag's bot episodes
+		epi->bBotEpisode = bBotEpisode;
+		epi->bBotSkillFullText = !bBotSkillPicIsGFX;
+		epi->BotSkillTitle = szBotSkillTitle;
 	}
 }
 

@@ -1277,11 +1277,15 @@ void S_Sound (int channel, FSoundID sound_id, float volume, float attenuation)
 //
 //==========================================================================
 
-void S_Sound (AActor *ent, int channel, FSoundID sound_id, float volume, float attenuation)
+void S_Sound (AActor *ent, int channel, FSoundID sound_id, float volume, float attenuation, bool bSoundOnClient) // [EP] Added bSoundOnClient.
 {
 	if (ent == NULL || ent->Sector->Flags & SECF_SILENT)
 		return;
 	S_StartSound (ent, NULL, NULL, NULL, channel, sound_id, volume, attenuation);
+
+	// [EP] If we're the server, tell the clients to make a sound.
+	if ( bSoundOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ))
+		SERVERCOMMANDS_SoundActor( ent, channel, S_GetName( sound_id ), volume, attenuation );
 }
 
 //==========================================================================

@@ -60,8 +60,8 @@ public:
 
 		DBaseStatusBar::Images.Init (sharedLumpNames, NUM_BASESB_IMAGES);
 		tex = DBaseStatusBar::Images[imgBNumbers];
-		BigWidth = tex->GetWidth();
-		BigHeight = tex->GetHeight();
+		BigWidth = tex->GetScaledWidth();
+		BigHeight = tex->GetScaledHeight();
 
 		DoCommonInit ();
 	}
@@ -263,7 +263,9 @@ private:
 			}
 			else
 				DrawNumber (OldHealth, 90/*48*/, 3);
-
+			FTexture *pic = TexMan["STTPRCNT"];
+			if (pic != NULL)
+				DrawImage (pic, 90, 3);
 		}
 		AInventory *armor = /*[BC]*/ CPlayer->mo ? CPlayer->mo->FindInventory<ABasicArmor>() : NULL;
 		int armorpoints = armor != NULL ? armor->Amount : 0;
@@ -280,6 +282,9 @@ private:
 				DrawUnknownDashs(221, 3);
 			else
 				DrawNumber (OldArmor, 221/*179*/, 3);
+			FTexture *pic = TexMan["STTPRCNT"];
+			if (pic != NULL)
+				DrawImage (pic, 221, 3);
 		}
 		if (CPlayer->ReadyWeapon != NULL)
 		{
@@ -370,7 +375,7 @@ private:
 
 		if (pic != NULL)
 		{
-			w = pic->GetWidth();
+			w = pic->GetScaledWidth();
 			x -= pic->LeftOffset;
 			y -= pic->TopOffset;
 
@@ -1517,12 +1522,6 @@ int DDoomStatusBar::FDoomStatusBarTexture::CopyTrueColorPixels(FBitmap *bmp, int
 		}
 	}
 
-	tex = TexMan["STTPRCNT"];
-	if (tex != NULL)
-	{
-		tex->CopyTrueColorPixels(bmp, x+90, y+3);
-		tex->CopyTrueColorPixels(bmp, x+221, y+3);
-	}
 	if ( NETWORK_GetState( ) != NETSTATE_SINGLE )
 	{
 		tex = TexMan["STFBANY"];

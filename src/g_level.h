@@ -651,6 +651,10 @@ struct FEpisode
 	FString mPicName;
 	char mShortcut;
 	bool mNoSkill;
+	// [BB] Support for Skulltag's bot episodes
+	bool bBotEpisode;
+	bool bBotSkillFullText;
+	FString BotSkillTitle;
 };
 
 extern TArray<FEpisode> AllEpisodes;

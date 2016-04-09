@@ -369,7 +369,37 @@ void M_SetMenu(FName menu, int param)
 		}
 
 		GameStartupInfo.Episode = param;
-		M_StartupSkillMenu(&GameStartupInfo);	// needs player class name from class menu (later)
+
+		// [BB] Special handling for bot episodes.
+		if ( AllEpisodes[GameStartupInfo.Episode].bBotEpisode )
+		{
+			FMenuDescriptor **desc = MenuDescriptors.CheckKey ( NAME_BotSkillMenu );
+			if ( (desc != NULL) && ( (*desc)->mType == MDESC_ListMenu ) )
+			{
+				FEpisode *epi = &AllEpisodes[GameStartupInfo.Episode];
+				FListMenuDescriptor *ld = static_cast<FListMenuDescriptor*>(*desc);
+				// [BB] If we already added a title, we have to delete the old one.
+				// This is a very fragile check and assumes that the BotSkillMenu definition
+				// of menudef.za wasn't changed and still has 6 entries.
+				if ( ld->mItems.Size() == 7 )
+					ld->mItems.Pop();
+
+				if ( epi->BotSkillTitle.IsNotEmpty() )
+				{
+					if ( epi->bBotSkillFullText )
+						ld->mItems.Push ( new FListMenuItemStaticText(160, 1, epi->BotSkillTitle, BigFont, CR_RED, true) );
+					else
+					{
+						FTextureID tex = TexMan.CheckForTexture ( epi->BotSkillTitle, FTexture::TEX_MiscPatch );
+						ld->mItems.Push ( new FListMenuItemStaticPatch(160, 1, tex, true) );
+					}
+				}
+			}
+			M_SetMenu(NAME_BotSkillMenu, -1);
+			return;
+		}
+		else
+			M_StartupSkillMenu(&GameStartupInfo);	// needs player class name from class menu (later)
 		break;
 
 	case NAME_StartgameConfirm:
@@ -387,6 +417,17 @@ void M_SetMenu(FName menu, int param)
 		// sent either from skill menu or confirmation screen. Skill gets only set if sent from skill menu
 		// Now we can finally start the game. Ugh...
 		GameStartupInfo.Skill = param;
+	// [BB] Sneak in the bot skill with fall through to avoid copy and paste.
+	case NAME_ChooseBotSkill:
+		if ( menu == NAME_ChooseBotSkill )
+		{
+			botskill = param;
+			if ( param == 4 )
+			{								  
+				M_StartMessage ( "are you sure? you'll prolly get\nyour ass whooped!\n\npress y or n.", 0, NAME_StartgameConfirmed );
+				return;
+			}
+		}
 	case NAME_StartgameConfirmed:
 
 		G_DeferedInitNew (&GameStartupInfo);
