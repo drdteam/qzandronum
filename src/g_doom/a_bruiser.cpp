@@ -1,5 +1,3 @@
-
-
 static FRandom pr_bruisattack ("BruisAttack");
 
 

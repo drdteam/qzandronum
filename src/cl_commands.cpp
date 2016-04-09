@@ -379,7 +379,7 @@ void CLIENTCOMMANDS_RequestJoin( const char *pszJoinPassword )
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_RequestRCON( char *pszRCONPassword )
+void CLIENTCOMMANDS_RequestRCON( const char *pszRCONPassword )
 {
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_REQUESTRCON );
 	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, pszRCONPassword );
@@ -387,7 +387,7 @@ void CLIENTCOMMANDS_RequestRCON( char *pszRCONPassword )
 
 //*****************************************************************************
 //
-void CLIENTCOMMANDS_RCONCommand( char *pszCommand )
+void CLIENTCOMMANDS_RCONCommand( const char *pszCommand )
 {
 	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_RCONCOMMAND );
 	NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, pszCommand );

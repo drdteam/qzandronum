@@ -68,7 +68,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KnightAttack)
 		return 0;
 	}
 	// Throw axe
-	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
+	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM, true);	// [EP] Inform the clients.
 	if (self->flags & MF_SHADOW || pr_knightatk () < 40)
 	{ // Red axe
 		P_SpawnMissileZ (self, self->Z() + 36*FRACUNIT, self->target, PClass::FindActor("RedAxe"), true); // [BB] Inform clients

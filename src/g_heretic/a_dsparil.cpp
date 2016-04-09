@@ -73,7 +73,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	// [BC] In client mode, just play the attack sound and get out.
 	if ( NETWORK_InClientMode() )
 	{
-		S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
 		return 0;
 	}
 
@@ -81,7 +80,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	{
 		return 0;
 	}
-	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
+	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM, true);	// [EP] Inform the clients.
 	if (self->CheckMeleeRange ())
 	{
 		int damage = pr_scrc1atk.HitDice (8);
@@ -269,7 +268,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
-		S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NONE);
 		return 0;
 	}
 
@@ -277,7 +275,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 	{
 		return 0;
 	}
-	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NONE);
+	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NONE, true);	// [EP] Inform the clients.
 	if (self->CheckMeleeRange())
 	{
 		int damage = pr_s2a.HitDice (20);
