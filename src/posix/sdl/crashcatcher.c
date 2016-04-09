@@ -284,6 +284,9 @@ static void crash_handler(const char *logfile)
 	const char *sigdesc = "";
 	int i;
 
+	// [EP/TP] Will contain the new log filename if necessary.
+	char newLogfile[64];
+
 	if(fread(&crash_info, sizeof(crash_info), 1, stdin) != 1)
 	{
 		fprintf(stderr, "!!! Failed to retrieve info from crashed process\n");
@@ -356,8 +359,7 @@ static void crash_handler(const char *logfile)
 
 	if(logfile)
 	{
-		// [EP/TP] Needed for the timestamp appending to crash log filename.
-		char newLogfile[64];
+		// [EP/TP] Append the timestamp and the process id to the crash log filename.
 		time_t timestamp;
 
 		time( &timestamp );
