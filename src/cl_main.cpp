@@ -3276,6 +3276,10 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 		pActor->SpawnPoint[1] = Y;
 		pActor->SpawnPoint[2] = Z;
 
+		// [BB] The "Spawn" call apparantly doesn't properly take into account 3D floors,
+		// so we have to explicitly adjust the floor again.
+		P_FindFloorCeiling ( pActor );
+
 		// [BB] The current position of the actor comes straight from the server, so it's safe
 		// to assume that it's correct and thus a valid value for the last updated position.
 		pActor->lastX = X;
