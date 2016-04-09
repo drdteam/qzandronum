@@ -91,6 +91,7 @@
 -	- Fixed: Server-to-client ACS script calls would corrupt arguments within the range [-128, -1]. [Dusk]
 -	- Fixed: The client could change the value of sv_limitcommands for itself, allowing it to skip some sanity checks. [Dusk]
 -	- Fixed: Player TIDs were not synced to newly connecting clients. [Dusk]
+-	- Fixed: sv_forcegldefaults 1 didn't honor the MAPINFO lightmode option if present. [Edward-san]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
