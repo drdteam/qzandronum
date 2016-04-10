@@ -94,20 +94,12 @@ static void DragonSeek (AActor *actor, angle_t thresh, angle_t turnMax)
 				int damage = pr_dragonseek.HitDice (10);
 				int newdam = P_DamageMobj (actor->target, actor, actor, damage, NAME_Melee);
 				P_TraceBleed (newdam > 0 ? newdam : damage, actor->target, actor);
-				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM);
-
-				// [BB] If we're the server, tell the clients to play the sound.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SoundActor( actor, CHAN_WEAPON, S_GetName(actor->AttackSound), 1, ATTN_NORM );
+				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.;
 			}
 			else if (pr_dragonseek() < 128 && P_CheckMissileRange(actor))
 			{
 				P_SpawnMissile(actor, target, PClass::FindActor("DragonFireball"), NULL, true); // [BB] Inform clients
-				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM);
-
-				// [BB] If we're the server, tell the clients to play the sound.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SoundActor( actor, CHAN_WEAPON, S_GetName(actor->AttackSound), 1, ATTN_NORM );
+				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 			}
 			actor->target = oldTarget;
 		}
@@ -234,23 +226,18 @@ DEFINE_ACTION_FUNCTION(AActor, A_DragonFlight)
 			int damage = pr_dragonflight.HitDice (8);
 			int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 			P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-			S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM);
-
-			// [BB] If we're the server, tell the clients to play the sound.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName(self->AttackSound), 1, ATTN_NORM );
+			S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 		}
 		else if (absangle(self->angle-angle) <= ANGLE_1*20)
 		{
-			// [BB] If we're the server, tell the clients to update the thing's state and play the sound.
+			// [BB] If we're the server, tell the clients to update the thing's state.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				SERVERCOMMANDS_SetThingState( self, STATE_MISSILE );
-				SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName(self->AttackSound), 1, ATTN_NORM );
 			}
 
 			self->SetState (self->MissileState);
-			S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM);
+			S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 		}
 	}
 	else

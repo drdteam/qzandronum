@@ -104,12 +104,8 @@ bool AArtiHealingRadius::Use (bool pickup)
 			}
 			if (gotsome)
 			{
-				S_Sound (players[i].mo, CHAN_AUTO, "MysticIncant", 1, ATTN_NORM);
+				S_Sound (players[i].mo, CHAN_AUTO, "MysticIncant", 1, ATTN_NORM, true);	// [TP] Inform the clients.
 				effective=true;
-
-				// [Dusk] As the server, tell clients to play the sound
-				if ( NETWORK_GetState () == NETSTATE_SERVER )
-					SERVERCOMMANDS_SoundActor( players[i].mo, CHAN_AUTO, "MysticIncant", 1, ATTN_NORM );
 			}
 		}
 	}

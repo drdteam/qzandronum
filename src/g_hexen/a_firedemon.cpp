@@ -129,14 +129,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_FiredAttack)
 	AActor *mo = P_SpawnMissile (self, self->target, PClass::FindActor("FireDemonMissile"));
 	if (mo)
 	{
-		S_Sound (self, CHAN_BODY, "FireDemonAttack", 1, ATTN_NORM);
-
-		// [BC] If we're the server, spawn this and make the sound for clients.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		{
+		// [BC] If we're the server, spawn this for clients.
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
 			SERVERCOMMANDS_SpawnMissile( mo );
-			SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "FireDemonAttack", 1, ATTN_NORM );
-		}
+
+		S_Sound (self, CHAN_BODY, "FireDemonAttack", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 	}
 
 	return 0;

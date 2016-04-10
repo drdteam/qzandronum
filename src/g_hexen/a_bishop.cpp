@@ -36,12 +36,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopAttack)
 	{
 		return 0;
 	}
-	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM);
-
-	// [BB] If we're the server, tell the clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_BODY, S_GetName(self->AttackSound), 1, ATTN_NORM );
-
+	S_Sound (self, CHAN_BODY, self->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 	if (self->CheckMeleeRange())
 	{
 		int damage = pr_atk.HitDice (4);
@@ -166,15 +161,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDoBlur)
 	{ // Thrust forward
 		P_ThrustMobj (self, self->angle, 11*FRACUNIT);
 	}
-	S_Sound (self, CHAN_BODY, "BishopBlur", 1, ATTN_NORM);
 
-	// [BB] If we're the server, update the thing's velocity and play the sound.
+	// [BB] If we're the server, update the thing's velocity.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		SERVERCOMMANDS_MoveThingExact( self, CM_VELX|CM_VELY );
-		SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "BishopBlur", 1, ATTN_NORM );
 	}
 
+	S_Sound (self, CHAN_BODY, "BishopBlur", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 	return 0;
 }
 

@@ -229,15 +229,14 @@ void ASorcBall1::DoFireSpell ()
 
 	if (pr_heresiarch() < 200)
 	{
-		S_Sound (target, CHAN_VOICE, "SorcererSpellCast", 1, ATTN_NONE);
+		S_Sound (target, CHAN_VOICE, "SorcererSpellCast", 1, ATTN_NONE, true);	// [BB] Inform the clients.
 		special2 = SORCFX4_RAPIDFIRE_TIME;
 		args[4] = 128;
 		target->args[3] = SORC_FIRING_SPELL;
 
-		// [BB] If we're the server, tell the clients to play the sound and set special2 and arguments.
+		// [BB] If we're the server, tell the clients to set special2 and arguments.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
-			SERVERCOMMANDS_SoundActor( target, CHAN_VOICE,  "SorcererSpellCast", 1, ATTN_NONE );
 			SERVERCOMMANDS_SetThingSpecial2( this );
 			SERVERCOMMANDS_SetThingArguments( this );
 			SERVERCOMMANDS_SetThingArguments( target );
@@ -639,11 +638,7 @@ void ASorcBall::SorcUpdateBallAngle ()
 
 void ASorcBall::CastSorcererSpell ()
 {
-	S_Sound (target, CHAN_VOICE, "SorcererSpellCast", 1, ATTN_NONE);
-
-	// [BB] If we're the server, tell the clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( target, CHAN_VOICE,  "SorcererSpellCast", 1, ATTN_NONE );
+	S_Sound (target, CHAN_VOICE, "SorcererSpellCast", 1, ATTN_NONE, true);	// [BB] Inform the clients.
 
 	// Put sorcerer into throw spell animation
 	if (target->health > 0)

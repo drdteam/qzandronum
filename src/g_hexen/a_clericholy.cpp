@@ -581,11 +581,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ClericAttack)
 
 	AActor * missile = P_SpawnMissileZ (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindActor ("HolyMissile"), true); // [BB] Inform clients
 	if (missile != NULL) missile->tracer = NULL;	// No initial target
-	S_Sound (self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM);
-
-	// [BB] Tell the clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM );
+	S_Sound (self, CHAN_WEAPON, "HolySymbolFire", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 
 	return 0;
 }

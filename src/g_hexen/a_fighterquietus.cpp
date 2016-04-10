@@ -187,11 +187,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FighterAttack)
 		P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), angle + (i*ANG45)/8, 0, true); // [BB] Inform clients
 	}
 
-	S_Sound (self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM);
-
-	// [Dusk] inform of the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM );
+	S_Sound (self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM, true);	// [TP] Inform the clients.
 
 	return 0;
 }
