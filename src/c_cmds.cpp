@@ -1130,15 +1130,16 @@ CCMD (warp)
 		Printf ("You can only warp inside a level.\n");
 		return;
 	}
-	if (argv.argc() != 3)
+	if (argv.argc() < 3 || argv.argc() > 4)
 	{
-		Printf ("Usage: warp <x> <y>\n");
+		Printf ("Usage: warp <x> <y> [z]\n");
 	}
 	else
 	{
 		// [TP] Handle warp cheat online.
 		fixed_t x = FLOAT2FIXED( atof( argv[1] ));
 		fixed_t y = FLOAT2FIXED( atof( argv[2] ));
+		fixed_t floorz = (argv.argc() == 3 ? ONFLOORZ : FLOAT2FIXED ( atof (argv[3]) ));
 		if (( NETWORK_GetState() == NETSTATE_CLIENT ) && ( players[consoleplayer].bSpectating == false ))
 		{
 			CLIENTCOMMANDS_WarpCheat( x, y );

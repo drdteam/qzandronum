@@ -201,7 +201,7 @@ bool ACustomInventory::CallStateChain (AActor *actor, FState *state)
 			stack.Call(state->ActionFunc, params, countof(params), wantret, numret);
 			// As long as even one state succeeds, the whole chain succeeds unless aborted below.
 			// A state that wants to jump does not count as "succeeded".
-			if (nextstate != NULL)
+			if (nextstate == NULL)
 			{
 				result |= retval;
 			}
@@ -2477,13 +2477,15 @@ static bool DoGiveInventory(AActor *receiver, bool orresult, VM_ARGS, AActor *se
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GiveInventory)
 {
 	PARAM_ACTION_PROLOGUE;
-	ACTION_RETURN_BOOL(DoGiveInventory(self, false, VM_ARGS_NAMES, self, callingstate)); // [BB] self, callingstate
+	bool result = DoGiveInventory(self, false, VM_ARGS_NAMES, self, callingstate); // [BB] self, callingstate
+	ACTION_RETURN_BOOL(result);
 }	
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GiveToTarget)
 {
 	PARAM_ACTION_PROLOGUE;
-	ACTION_RETURN_BOOL(DoGiveInventory(self->target, false, VM_ARGS_NAMES, self, callingstate)); // [BB] self, callingstate
+	bool result = DoGiveInventory(self->target, false, VM_ARGS_NAMES, self, callingstate); // [BB] self, callingstate
+	ACTION_RETURN_BOOL(result);
 }
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GiveToChildren)
@@ -2582,13 +2584,15 @@ bool DoTakeInventory(AActor *receiver, bool orresult, VM_ARGS, AActor *self, FSt
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_TakeInventory)
 {
 	PARAM_ACTION_PROLOGUE;
-	ACTION_RETURN_BOOL(DoTakeInventory(self, false, VM_ARGS_NAMES, self, callingstate)); // [BB] self, callingstate
+	bool result = DoTakeInventory(self, false, VM_ARGS_NAMES, self, callingstate); // [BB] self, callingstate
+	ACTION_RETURN_BOOL(result);
 }	
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_TakeFromTarget)
 {
 	PARAM_ACTION_PROLOGUE;
-	ACTION_RETURN_BOOL(DoTakeInventory(self->target, false, VM_ARGS_NAMES, self, callingstate)); // [BB] self, callingstate
+	bool result = DoTakeInventory(self->target, false, VM_ARGS_NAMES, self, callingstate); // [BB] self, callingstate
+	ACTION_RETURN_BOOL(result);
 }	
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_TakeFromChildren)
@@ -2899,9 +2903,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItem)
 	AActor *mo = Spawn( missile, self->Vec3Angle(distance, self->angle, -self->floorclip + self->GetBobOffset() + zheight), ALLOW_REPLACE);
 
 	int flags = (transfer_translation ? SIXF_TRANSFERTRANSLATION : 0) + (useammo ? SIXF_SETMASTER : 0);
-	// [BB]
-	const bool res = InitSpawnedItem(self, mo, flags);	// for an inventory item's use state
-	if ( mo && res )
+	bool result = InitSpawnedItem(self, mo, flags);
+	if ( mo && result )
 	{
 		// [BC] If we're the server and the spawn was not blocked, tell clients to spawn the item.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -2918,7 +2921,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItem)
 		else if ( NETWORK_InClientMode() )
 			mo->ulNetworkFlags |= NETFL_CLIENTSIDEONLY;
 	}
-	ACTION_RETURN_BOOL(res);	// for an inventory item's use state
+	ACTION_RETURN_BOOL(result);	// for an inventory item's use state
 }
 
 //===========================================================================
@@ -3943,8 +3946,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIf)
 			return 0;
 	}
 
-	SERVER_JUMP(condition ? jump : NULL, CLIENTUPDATE_FRAME);	// [BC] It's probably not good to do this client-side.
-	ACTION_RETURN_STATE(condition ? jump : NULL);
+	if (!condition) jump = NULL;
+	SERVER_JUMP(jump, CLIENTUPDATE_FRAME);	// [BC] It's probably not good to do this client-side.
+	ACTION_RETURN_STATE(jump);
 }
 
 //===========================================================================
