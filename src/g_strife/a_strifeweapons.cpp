@@ -82,18 +82,19 @@ void P_DaggerAlert (AActor *target, AActor *emitter)
 			looker->target = target;
 			if (looker->SeeSound)
 			{
-				S_Sound (looker, CHAN_VOICE, looker->SeeSound, 1, ATTN_NORM);
+				S_Sound (looker, CHAN_VOICE, looker->SeeSound, 1, ATTN_NORM, true);	// [BC/EP] Inform the clients.
 			}
 
-			// [BC] If we're the server, tell clinets to set this thing's state.
+			// [BC/EP] If we're the server, tell the clients to set the looker's state.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				SERVERCOMMANDS_SetThingState( emitter, STATE_SEE );
-				SERVERCOMMANDS_SoundActor( looker, CHAN_VOICE, S_GetName( looker->SeeSound ), 1, ATTN_NORM );
-			}
+				SERVERCOMMANDS_SetThingState( looker, STATE_SEE );
 
 			looker->SetState (looker->SeeState);
 			looker->flags4 |= MF4_INCOMBAT;
+
+			// [EP] Tell the clients to update the flags, too.
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SetThingFlags( looker, FLAGSET_FLAGS4 );
 		}
 	}
 }

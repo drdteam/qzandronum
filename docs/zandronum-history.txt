@@ -46,6 +46,8 @@
 -	- Fixed: clients would play D'Sparil's attacks sound even when the attacks didn't start because there was no target to attack. [Edward-san]
 -	- Fixed: clients weren't informed to play the heretic Knight attack sounds when it throws the axes. [Edward-san]
 -	- Fixed: clients were told to play the 'poison cough' sound even when the poisoning by flechette didn't happen (for example because the player is invulnerable). [Edward-san]
+-	- Fixed: clients were not informed correctly about the actors being in alert when another actor is hit by a dagger attack. [Edward-san]
+-	- Fixed: clients would play the sounds from the world-activated ACS function ActivatorSound differently from offline. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]

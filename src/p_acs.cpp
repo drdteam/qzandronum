@@ -9350,11 +9350,7 @@ scriptwait:
 				{
 					S_Sound (CHAN_AUTO,
 							 lookup,
-							 (float)(STACK(1)) / 127.f, ATTN_NONE);
-
-					// [BB] If we're the server, tell clients to play this sound.
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_Sound( CHAN_AUTO, lookup, (float)STACK( 1 ) / 127.f, ATTN_NORM );
+							 (float)(STACK(1)) / 127.f, ATTN_NONE, true);	// [BB/EP] Inform the clients.
 				}
 			}
 			sp -= 2;

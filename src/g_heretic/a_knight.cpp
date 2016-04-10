@@ -59,12 +59,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KnightAttack)
 		int damage = pr_knightatk.HitDice (3);
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		S_Sound (self, CHAN_BODY, "hknight/melee", 1, ATTN_NORM);
-
-		// [BB] If we're the server, tell the clients to play the sound.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "hknight/melee", 1, ATTN_NORM );
-
+		S_Sound (self, CHAN_BODY, "hknight/melee", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 		return 0;
 	}
 	// Throw axe

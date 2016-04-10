@@ -83,12 +83,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_WizAtk3)
 	{
 		return 0;
 	}
-	S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM);
-
-	// [BB] If we're the server, tell the clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( self->AttackSound ), 1, ATTN_NORM );
-
+	S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 	if (self->CheckMeleeRange())
 	{
 		int damage = pr_wizatk3.HitDice (4);

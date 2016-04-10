@@ -70,7 +70,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	fixed_t velz;
 	angle_t angle;
 
-	// [BC] In client mode, just play the attack sound and get out.
+	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
 	{
 		return 0;
@@ -194,20 +194,18 @@ void P_DSparilTeleport (AActor *actor)
 	{
 		mo = Spawn("Sorcerer2Telefade", prevX, prevY, prevZ, ALLOW_REPLACE);
 		if (mo) mo->Translation = actor->Translation;
-		S_Sound (mo, CHAN_BODY, "misc/teleport", 1, ATTN_NORM);
 
-		// [BC] Spawn the actor to clients and play the sound.
+		// [BC] Spawn the actor to clients.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
 			SERVERCOMMANDS_SpawnThing( mo );
-			SERVERCOMMANDS_SoundActor( mo, CHAN_BODY, "misc/teleport", 1, ATTN_NORM );
-			SERVERCOMMANDS_SoundActor( actor, CHAN_BODY, "misc/teleport", 1, ATTN_NORM );
 			// [BB] Also notify the clients of the state change.
 			SERVERCOMMANDS_SetThingFrame( actor, actor->FindState("Teleport") );
 		}
 
+		S_Sound (mo, CHAN_BODY, "misc/teleport", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		actor->SetState (actor->FindState("Teleport"));
-		S_Sound (actor, CHAN_BODY, "misc/teleport", 1, ATTN_NORM);
+		S_Sound (actor, CHAN_BODY, "misc/teleport", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		actor->SetZ(actor->floorz, false);
 		actor->angle = spot->angle;
 		actor->velx = actor->vely = actor->velz = 0;

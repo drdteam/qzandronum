@@ -136,16 +136,15 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_MakePod)
 	}
 	mo->SetState (mo->FindState("Grow"));
 	P_ThrustMobj (mo, pr_makepod()<<24, (fixed_t)(4.5*FRACUNIT));
-	S_Sound (mo, CHAN_BODY, self->AttackSound, 1, ATTN_IDLE);
 
-	// [BC] If we're the server, spawn the pod and play the sound.
+	// [BC] If we're the server, spawn the pod.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		SERVERCOMMANDS_SpawnMissile( mo );
 		SERVERCOMMANDS_SetThingFrame( mo, mo->state );
-		SERVERCOMMANDS_SoundActor( mo, CHAN_BODY, "world/podgrow", 1, ATTN_IDLE );
 	}
 
+	S_Sound (mo, CHAN_BODY, self->AttackSound, 1, ATTN_IDLE, true);	// [BC] Inform the clients.
 	self->special1++; // Increment generated pod count
 	mo->master = self; // Link the generator to the pod
 	return 0;

@@ -37,14 +37,12 @@ void A_SkullAttack(AActor *self, fixed_t speed)
 	dest = self->target;		
 	self->flags |= MF_SKULLFLY;
 
-	S_Sound (self, CHAN_VOICE, self->AttackSound, 1, ATTN_NORM);
+	S_Sound (self, CHAN_VOICE, self->AttackSound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
 
-	// [BC] If we're the server, tell clients play this sound.
-	// [BB] And tell them of MF_SKULLFLY.
+	// [BB] Tell them of MF_SKULLFLY.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		SERVERCOMMANDS_SetThingFlags( self, FLAGSET_FLAGS );
-		SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, S_GetName( self->AttackSound ), 1, ATTN_NORM );
 	}
 
 	A_FaceTarget (self);

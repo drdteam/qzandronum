@@ -23,12 +23,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_HeadAttack)
 	if (self->CheckMeleeRange ())
 	{
 		int damage = (pr_headattack()%6+1)*10;
-		S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM);
-
-		// [BC] If we're the server, tell clients play this sound.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, S_GetName( self->AttackSound ), 1, ATTN_NORM );
-
+		S_Sound (self, CHAN_WEAPON, self->AttackSound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
 		return 0;

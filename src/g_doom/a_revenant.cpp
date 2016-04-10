@@ -164,11 +164,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SkelWhoosh)
 	if (!self->target)
 		return 0;
 	A_FaceTarget (self);
-	S_Sound (self, CHAN_WEAPON, "skeleton/swing", 1, ATTN_NORM);
-
-	// [BC] If we're the server, tell clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "skeleton/swing", 1, ATTN_NORM );
+	S_Sound (self, CHAN_WEAPON, "skeleton/swing", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 
 	return 0;
 }
@@ -191,13 +187,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_SkelFist)
 	if (self->CheckMeleeRange ())
 	{
 		int damage = ((pr_skelfist()%10)+1)*6;
-		S_Sound (self, CHAN_WEAPON, "skeleton/melee", 1, ATTN_NORM);
+		S_Sound (self, CHAN_WEAPON, "skeleton/melee", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-
-		// [BC] If we're the server, tell clients to play the sound.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "skeleton/melee", 1, ATTN_NORM );
 	}
 	return 0;
 }
