@@ -56,6 +56,7 @@
 #include "i_net.h"
 #include "p_setup.h"
 #include "sv_main.h"
+#include "tflags.h"
 
 //*****************************************************************************
 //	DEFINES
@@ -107,6 +108,17 @@ enum
 #define	CLIENT_UPDATE_SIDEMOVE			0x20
 #define	CLIENT_UPDATE_UPMOVE			0x40
 #define	CLIENT_UPDATE_BUTTONS_LONG		0x80
+
+// [BC/BB] Flags to handle jumps in code pointers
+enum ClientJumpUpdateFlag
+{
+	CLIENTUPDATE_FRAME			= 1,
+	CLIENTUPDATE_POSITION		= 2,
+	CLIENTUPDATE_SKIPPLAYER		= 4
+};
+
+typedef TFlags<ClientJumpUpdateFlag, unsigned int> ClientJumpUpdateFlags;
+DEFINE_TFLAGS_OPERATORS (ClientJumpUpdateFlags)
 
 // Identifying states (the cheap & easy way out)
 #define	STATE_SPAWN				1

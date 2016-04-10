@@ -104,11 +104,6 @@ static FRandom pr_burst ("Burst");
 static FRandom pr_monsterrefire ("MonsterRefire");
 static FRandom pr_teleport("A_Teleport");
 
-// [BC] Blah.
-#define	CLIENTUPDATE_FRAME			1
-#define	CLIENTUPDATE_POSITION		2
-#define	CLIENTUPDATE_SKIPPLAYER		4
-
 //==========================================================================
 //
 // [BB] Used in all code pointers that spawn actors to handle
@@ -829,8 +824,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_BulletAttack)
 // Do the state jump
 //
 //==========================================================================
-// [BC] Added ulClientUpdateFlags.
-static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FState *jumpto, ULONG ulClientUpdateFlags)
+// [BC] Added clientUpdateFlags.
+static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FState *jumpto, ClientJumpUpdateFlags clientUpdateFlags)
 {
 	if (jumpto == NULL) return;
 
@@ -841,7 +836,7 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 	else if (self->player != NULL && callingstate == self->player->psprites[ps_weapon].state)
 	{
 		// [BB] If we're the server, tell clients to change the thing's state.
-		if (( ulClientUpdateFlags & CLIENTUPDATE_FRAME ) &&
+		if (( clientUpdateFlags & CLIENTUPDATE_FRAME ) &&
 			( NETWORK_GetState( ) == NETSTATE_SERVER ))
 		{
 			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, ps_weapon );
@@ -852,7 +847,7 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 	else if (self->player != NULL && callingstate == self->player->psprites[ps_flash].state)
 	{
 		// [BB] If we're the server, tell clients to change the thing's state.
-		if (( ulClientUpdateFlags & CLIENTUPDATE_FRAME ) &&
+		if (( clientUpdateFlags & CLIENTUPDATE_FRAME ) &&
 			( NETWORK_GetState( ) == NETSTATE_SERVER ))
 		{
 			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, ps_flash );
@@ -863,14 +858,14 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 	else if (callingstate == self->state || (self->ObjectFlags & OF_StateChanged))
 	{
 		// [BC] If we're the server, tell clients to change the thing's state.
-		if (( ulClientUpdateFlags & CLIENTUPDATE_FRAME ) &&
+		if (( clientUpdateFlags & CLIENTUPDATE_FRAME ) &&
 			( NETWORK_GetState( ) == NETSTATE_SERVER ))
 		{
 			// [BB] For some reason calling SERVERCOMMANDS_SetThingFrame normally here causes clients
 			// to crash when exiting from tnt03a1 to tnt03a2. The crash seems to be caused by calling
 			// SetState on the clients. Just calling SetStateNF instead seems to fix the problem. This
 			// is done by the "false" argument.
-			if (( ulClientUpdateFlags & CLIENTUPDATE_SKIPPLAYER ) &&
+			if (( clientUpdateFlags & CLIENTUPDATE_SKIPPLAYER ) &&
 				( self->player ))
 			{
 				SERVERCOMMANDS_SetThingFrame( self, jumpto, ULONG( self->player - players ), SVCF_SKIPTHISCLIENT, false );
@@ -878,7 +873,7 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 			else
 				SERVERCOMMANDS_SetThingFrame( self, jumpto, MAXPLAYERS, 0, false );
 
-			if ( ulClientUpdateFlags & CLIENTUPDATE_POSITION )
+			if ( clientUpdateFlags & CLIENTUPDATE_POSITION )
 				SERVERCOMMANDS_MoveThing( self, CM_X|CM_Y|CM_Z );
 		}
 
@@ -900,8 +895,8 @@ static void DoJump(AActor *self, AActor *stateowner, FState *callingstate, FStat
 
 // This is just to avoid having to directly reference the internally defined
 // CallingState and statecall parameters in the code below.
-// [BB] Added ulClientUpdateFlags.
-#define ACTION_JUMP(offset, ulClientUpdateFlags) DoJump(self, stateowner, callingstate, offset, ulClientUpdateFlags)
+// [BB] Added clientUpdateFlags.
+#define ACTION_JUMP(offset, clientUpdateFlags) DoJump(self, stateowner, callingstate, offset, clientUpdateFlags)
 
 //==========================================================================
 //
@@ -928,7 +923,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Jump)
 	{
 		int jumpnum = (count == 1 ? 0 : (pr_cajump() % count));
 		PARAM_STATE_AT(paramnum + jumpnum, jumpto);
-		ACTION_JUMP(jumpto, predictable == false); // [BC] Random state changes shouldn't be client-side.
+		ACTION_JUMP(jumpto, ( predictable == false ) ? CLIENTUPDATE_FRAME : ClientJumpUpdateFlags::FromInt ( 0 ) ); // [BC] Random state changes shouldn't be client-side.
 	}
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 	return numret;
@@ -959,7 +954,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfHealthLower)
 
 	if (measured != NULL && measured->health < health)
 	{
-		ACTION_JUMP(jump, true);	// [BC] Clients don't know what the actor's health is.
+		ACTION_JUMP(jump, CLIENTUPDATE_FRAME);	// [BC] Clients don't know what the actor's health is.
 	}
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 	return numret;
@@ -977,7 +972,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetOutsideMeleeRange)
 
 	if (!self->CheckMeleeRange())
 	{
-		ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 	return numret;
@@ -995,7 +990,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInsideMeleeRange)
 
 	if (self->CheckMeleeRange())
 	{
-		ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 	return numret;
@@ -1077,10 +1072,9 @@ int DoJumpIfInventory(AActor *owner, AActor *self, AActor *stateowner, FState *c
 	PARAM_INT		(itemamount);
 	PARAM_STATE		(label);
 	PARAM_INT_OPT	(setowner) { setowner = AAPTR_DEFAULT; }
-	ULONG	ulClientUpdateFlags;
 
 	// [BC] Don't jump here in client mode.
-	ulClientUpdateFlags = 0;
+	ClientJumpUpdateFlags clientUpdateFlags = 0;
 	if (( self->player ) &&
 		(( callingstate == self->player->psprites[ps_weapon].state ) || ( callingstate == self->player->psprites[ps_flash].state )))
 	{
@@ -1096,13 +1090,13 @@ int DoJumpIfInventory(AActor *owner, AActor *self, AActor *stateowner, FState *c
 			}
 		}
 
-		ulClientUpdateFlags |= CLIENTUPDATE_FRAME;
+		clientUpdateFlags |= CLIENTUPDATE_FRAME;
 
 		// The player should know his own inventory.
 		if ( self->player )
-			ulClientUpdateFlags |= CLIENTUPDATE_SKIPPLAYER;
+			clientUpdateFlags |= CLIENTUPDATE_SKIPPLAYER;
 		else
-			ulClientUpdateFlags |= CLIENTUPDATE_POSITION;
+			clientUpdateFlags |= CLIENTUPDATE_POSITION;
 	}
 
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
@@ -1124,11 +1118,11 @@ int DoJumpIfInventory(AActor *owner, AActor *self, AActor *stateowner, FState *c
 		if (itemamount > 0)
 		{
 			if (item->Amount >= itemamount)
-				ACTION_JUMP(label, ulClientUpdateFlags);	// [BC] Clients don't necessarily have inventory information.
+				ACTION_JUMP(label, clientUpdateFlags);	// [BC] Clients don't necessarily have inventory information.
 		}
 		else if (item->Amount >= item->MaxAmount)
 		{
-			ACTION_JUMP(label, ulClientUpdateFlags);	// [BC] Clients don't necessarily have inventory information.
+			ACTION_JUMP(label, clientUpdateFlags);	// [BC] Clients don't necessarily have inventory information.
 		}
 	}
 	return numret;
@@ -1163,7 +1157,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfArmorType)
 	ABasicArmor *armor = (ABasicArmor *)self->FindInventory(NAME_BasicArmor);
 
 	if (armor && armor->ArmorType == type && armor->Amount >= amount)
-		ACTION_JUMP(label, false);	// [BB] Clients know the player's inventory, so this is hopefully okay.
+		ACTION_JUMP(label, 0);	// [BB] Clients know the player's inventory, so this is hopefully okay.
 	return numret;
 }
 
@@ -1701,7 +1695,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfNoAmmo)
 
 	if (!self->player->ReadyWeapon->CheckAmmo(self->player->ReadyWeapon->bAltFire, false, true))
 	{
-		ACTION_JUMP(jump, false);	// [BC] Clients have ammo information.
+		ACTION_JUMP(jump, 0);	// [BC] Clients have ammo information.
 	}
 	return numret;
 }
@@ -3834,7 +3828,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckSightOrRange)
 			}
 		}
 	}
-	ACTION_JUMP(jump, false);	// [BB] This is hopefully okay.
+	ACTION_JUMP(jump, 0);	// [BB] This is hopefully okay.
 	return numret;
 }
 
@@ -3902,7 +3896,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckRange)
 			}
 		}
 	}
-	ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+	ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	return numret;
 }
 
@@ -3981,7 +3975,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIf)
 			return 0;
 	}
 	if (condition)
-		ACTION_JUMP(jump, true);	// [BC] It's probably not good to do this client-side.
+		ACTION_JUMP(jump, CLIENTUPDATE_FRAME);	// [BC] It's probably not good to do this client-side.
 	return numret;
 }
 
@@ -4093,7 +4087,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckFloor)
 	ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 	if (self->Z() <= self->floorz)
 	{
-		ACTION_JUMP(jump, false);	// [BC] Clients have floor information.
+		ACTION_JUMP(jump, 0);	// [BC] Clients have floor information.
 	}
 	return numret;
 }
@@ -4113,7 +4107,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckCeiling)
 	ACTION_SET_RESULT(false);
 	if (self->Top() >= self->ceilingz) // Height needs to be counted
 	{
-		ACTION_JUMP(jump, false);	// [BB] Clients have ceiling information.
+		ACTION_JUMP(jump, 0);	// [BB] Clients have ceiling information.
 	}
 	return numret;
 }
@@ -4263,7 +4257,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_PlayerSkinCheck)
 	if (self->player != NULL &&
 		skins[self->player->userinfo.GetSkin()].othergame)
 	{
-		ACTION_JUMP(jump, false);	// [BC] Clients have skin information.
+		ACTION_JUMP(jump, 0);	// [BC] Clients have skin information.
 	}
 	return numret;
 }
@@ -4601,7 +4595,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 			if (flags & (CLOFF_SETMASTER))	self->master = trace.Actor;
 			if (flags & (CLOFF_SETTRACER))	self->tracer = trace.Actor;
 		}
-		ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	return numret;
 }
@@ -4760,7 +4754,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInLOS)
 	// If it's not a player, also update the position. Since the client locally ignores the
 	// jump, the position of the monster possibly was changed on the client by the monster
 	// movement prediction.
-	ACTION_JUMP(jump, CLIENTUPDATE_FRAME|( !self->player ? CLIENTUPDATE_POSITION : 0 ));
+	ACTION_JUMP(jump, CLIENTUPDATE_FRAME|( !self->player ? CLIENTUPDATE_POSITION : ClientJumpUpdateFlags::FromInt ( 0 ) ));
 	return numret;
 }
 
@@ -4885,7 +4879,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckForReload)
 	if (ReloadCounter != 0)
 	{
 		// Go back to the refire frames, instead of continuing on to the reload frames.
-		ACTION_JUMP(jump, false);	// [BB] Clients should know the ReloadCounter value.
+		ACTION_JUMP(jump, 0);	// [BB] Clients should know the ReloadCounter value.
 	}
 	else
 	{
@@ -5077,7 +5071,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckFlag)
 
 	if (CheckActorFlag(owner, flagname))
 	{
-		ACTION_JUMP(jumpto, false); // [BB] Clients know the flags, so it's hopefully ok.
+		ACTION_JUMP(jumpto, 0); // [BB] Clients know the flags, so it's hopefully ok.
 	}
 	return numret;
 }
@@ -6016,7 +6010,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Warp)
 		{
 			ACTION_SET_RESULT(false);	// Jumps should never set the result for inventory state chains!
 			// in this case, you have the statejump to help you handle all the success anyway.
-			ACTION_JUMP(success_state, true);	// [BB] Client's don't go in here.
+			ACTION_JUMP(success_state, CLIENTUPDATE_FRAME);	// [BB] Client's don't go in here.
 			return numret;
 		}
 
@@ -6380,7 +6374,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckSpecies)
 	}
 
 	if (jump && mobj->GetSpecies() == species)
-		ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	return numret;
 }
 
@@ -7194,9 +7188,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfHigherOrLower)
 	if (mobj != NULL && mobj != self) //AAPTR_DEFAULT is completely useless in this regard.
 	{
 	if ((high) && (mobj->Z() > ((includeHeight ? self->height : 0) + self->Z() + offsethigh)))
-			ACTION_JUMP(high, false);	// [BB] Let's hope that the clients know enough.
+			ACTION_JUMP(high, 0);	// [BB] Let's hope that the clients know enough.
 	else if ((low) && (mobj->Z() + (includeHeight ? mobj->height : 0)) < (self->Z() + offsetlow))
-			ACTION_JUMP(low, false);	// [BB] Let's hope that the clients know enough.
+			ACTION_JUMP(low, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	return numret;
 }
@@ -7449,7 +7443,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckProximity)
 
 	if (result && jump)
 	{
-		ACTION_JUMP(jump, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(jump, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	return numret;
 }
@@ -7512,7 +7506,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckBlock)
 	//[MC] Easiest way to tell if an actor is blocking it, use the pointers.
 	if (mobj->BlockingMobj || (!(flags & CBF_NOLINES) && mobj->BlockingLine != NULL))
 	{
-		ACTION_JUMP(block, false);	// [BB] Let's hope that the clients know enough.
+		ACTION_JUMP(block, 0);	// [BB] Let's hope that the clients know enough.
 	}
 	return numret;
 }
