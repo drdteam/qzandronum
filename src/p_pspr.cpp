@@ -204,9 +204,16 @@ void P_SetPsprite (player_t *player, int position, FState *state, bool nofunctio
 		// [BB] Some action functions rely on the fact that ReadyWeapon is not NULL.
 		if (!nofunction && player->mo != NULL && player->ReadyWeapon)
 		{
-			if (state->CallAction(player->mo, player->ReadyWeapon))
+			FState *newstate;
+			if (state->CallAction(player->mo, player->ReadyWeapon, &newstate))
 			{
-				if (!psp->state)
+				if (newstate != NULL)
+				{
+					state = newstate;
+					psp->tics = 0;
+					continue;
+				}
+				if (psp->state == NULL)
 				{
 					break;
 				}
