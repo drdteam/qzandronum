@@ -53,11 +53,7 @@ bool APuzzleItem::Use (bool pickup)
 		return true;
 	}
 	// [RH] Always play the sound if the use fails.
-	S_Sound (Owner, CHAN_VOICE, "*puzzfail", 1, ATTN_IDLE);
-
-	// [BC] If we're the server, play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( Owner, CHAN_VOICE, "*puzzfail", 1, ATTN_IDLE );
+	S_Sound (Owner, CHAN_VOICE, "*puzzfail", 1, ATTN_IDLE, true);	// [BC] Inform the clients.
 
 	// [BB] The server has to generate the message in any case.
 	if (Owner != NULL && ( Owner->CheckLocalView (consoleplayer) || ( NETWORK_GetState( ) == NETSTATE_SERVER ) ) )

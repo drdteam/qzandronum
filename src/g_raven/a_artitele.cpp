@@ -99,11 +99,7 @@ bool AArtiTeleport::Use (bool pickup)
  	}
 	if (canlaugh)
  	{ // Full volume laugh
- 		S_Sound (Owner, CHAN_VOICE, "*evillaugh", 1, ATTN_NONE);
-
-		// [BC] Play the laugh for clients.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( Owner, CHAN_VOICE, "*evillaugh", 1, ATTN_NONE );
+ 		S_Sound (Owner, CHAN_VOICE, "*evillaugh", 1, ATTN_NONE, true);	// [BC] Inform the clients.
  	}
 	return true;
 }

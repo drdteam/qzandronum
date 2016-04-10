@@ -9340,11 +9340,7 @@ scriptwait:
 				{
 					S_Sound (activator, CHAN_AUTO,
 							 lookup,
-							 (float)(STACK(1)) / 127.f, ATTN_NORM);
-
-					// [BC] If we're the server, tell clients to play this sound.
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_SoundActor( activator, CHAN_AUTO, lookup, (float)STACK( 1 ) / 127.f, ATTN_NORM );
+							 (float)(STACK(1)) / 127.f, ATTN_NORM, true);	// [BC] Inform the clients.
 				}
 				else
 				{
@@ -9538,11 +9534,7 @@ scriptwait:
 				{
 					S_Sound (spot, CHAN_AUTO,
 							 lookup,
-							 (float)(STACK(1))/127.f, ATTN_NORM);
-
-					// If we're the server, tell clients to play this sound.
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_SoundActor( spot, CHAN_AUTO, (char *)lookup, (float)STACK( 1 ) / 127.f, ATTN_NORM );
+							 (float)(STACK(1))/127.f, ATTN_NORM, true);	// [BC] Inform the clients.
 				}
 			}
 			sp -= 3;

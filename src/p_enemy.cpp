@@ -2039,19 +2039,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_Look)
 	{
 		if (self->flags2 & MF2_BOSS)
 		{ // full volume
-			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NONE);
-
-			// [BC] Play the sound for clients.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, S_GetName( self->SeeSound ), 1, ATTN_NONE );
+			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NONE, true );	// [BC] Inform the clients.
 		}
 		else
 		{
-			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NORM);
-
-			// [BC] Play the sound for clients.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, S_GetName( self->SeeSound ), 1, ATTN_NORM );
+			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NORM, true );	// [BC] Inform the clients.
 		}
 	}
 
@@ -2253,18 +2245,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_LookEx)
 	{
 		if (flags & LOF_FULLVOLSEESOUND)
 		{ // full volume
-			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NONE);
+			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NONE, true );	// [TP] Inform the clients.
 		}
 		else
 		{
-			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NORM);
-		}
-
-		// [TP] If we're the server, play the sound
-		if ( NETWORK_GetState() == NETSTATE_SERVER )
-		{
-			SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, self->SeeSound, 1,
-				(flags & LOF_FULLVOLSEESOUND) ? ATTN_NONE : ATTN_NORM );
+			S_Sound (self, CHAN_VOICE, self->SeeSound, 1, ATTN_NORM, true );	// [TP] Inform the clients.
 		}
 	}
 
@@ -2789,13 +2774,11 @@ void A_DoChase (VMFrameStack *stack, AActor *actor, bool fastchase, FState *mele
 		if (meleestate && actor->CheckMeleeRange ())
 		{
 			if (actor->AttackSound)
-				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM);
+				S_Sound (actor, CHAN_WEAPON, actor->AttackSound, 1, ATTN_NORM, true );	// [BC] Inform the clients.
 
-			// [BC] If we are the server, tell clients about the state change, and play
-			// the attack sound.
+			// [BC] If we are the server, tell clients about the state change.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
-				SERVERCOMMANDS_SoundActor( actor, CHAN_WEAPON, S_GetName( actor->AttackSound ), 1, ATTN_NORM );
 				SERVERCOMMANDS_SetThingFrame( actor, meleestate );
 				SERVERCOMMANDS_MoveThing( actor, CM_X|CM_Y|CM_Z );
 			}

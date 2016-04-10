@@ -27,12 +27,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ReaverRanged)
 		int pitch;
 
 		A_FaceTarget (self);
-
-		// [BC] If we're the server, play the sound to clients.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "reaver/attack", 1, ATTN_NORM );
-
-		S_Sound (self, CHAN_WEAPON, "reaver/attack", 1, ATTN_NORM);
+		S_Sound (self, CHAN_WEAPON, "reaver/attack", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		bangle = self->angle;
 		pitch = P_AimLineAttack (self, bangle, MISSILERANGE);
 

@@ -138,25 +138,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_JabDagger)
 	{
 		S_Sound (self, CHAN_WEAPON,
 			linetarget->flags & MF_NOBLOOD ? "misc/metalhit" : "misc/meathit",
-			1, ATTN_NORM);
+			1, ATTN_NORM, true);	// [BC] Inform the clients.
 		self->angle = self->AngleTo(linetarget);
 		self->flags |= MF_JUSTATTACKED;
 		P_DaggerAlert (self, linetarget);
 
-		// [BC] Play the hit sound to clients.
+		// [BC] Ensure the clients have the correct thing angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
-			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, ( linetarget->flags & MF_NOBLOOD ) ? "misc/metalhit" : "misc/meathit", 1, ATTN_NORM );
 			SERVERCOMMANDS_SetThingAngleExact( self );
 		}
 	}
 	else
 	{
-		S_Sound (self, CHAN_WEAPON, "misc/swish", 1, ATTN_NORM);
-
-		// [BC] Play the hit sound to clients.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "misc/swish", 1, ATTN_NORM );
+		S_Sound (self, CHAN_WEAPON, "misc/swish", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 	}
 	return 0;
 }

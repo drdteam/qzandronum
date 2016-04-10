@@ -1867,16 +1867,14 @@ void APowerRegeneration::DoEffect()
 	{
 		if (P_GiveBody(Owner, Strength/FRACUNIT))
 		{
-			S_Sound(Owner, CHAN_ITEM, "*regenerate", 1, ATTN_NORM );
-
-			// [BC] If we're the server, send out the health change, and play the
-			// health sound.
+			// [BC] If we're the server, send out the health change.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				if ( Owner->player )
 					SERVERCOMMANDS_SetPlayerHealth( Owner->player - players );
-				SERVERCOMMANDS_SoundActor( Owner, CHAN_ITEM, "*regenerate", 1, ATTN_NORM );
 			}
+
+			S_Sound(Owner, CHAN_ITEM, "*regenerate", 1, ATTN_NORM, true );	// [BC] Inform the clients.
 		}
 	}
 }

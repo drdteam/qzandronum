@@ -29,11 +29,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ShootGun)
 	if (self->target == NULL)
 		return 0;
 
-	// [BC] Play this sound to clients.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "monsters/rifle", 1, ATTN_NORM );
-
-	S_Sound (self, CHAN_WEAPON, "monsters/rifle", 1, ATTN_NORM);
+	S_Sound (self, CHAN_WEAPON, "monsters/rifle", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 	A_FaceTarget (self);
 	pitch = P_AimLineAttack (self, self->angle, MISSILERANGE);
 	P_LineAttack (self, self->angle + (pr_shootgun.Random2() << 19),

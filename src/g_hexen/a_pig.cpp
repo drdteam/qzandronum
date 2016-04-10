@@ -93,11 +93,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 
 		if(puff != NULL)
 		{ // Bit something
-			S_Sound(player->mo, CHAN_VOICE, "PigAttack", 1, ATTN_NORM);
-
-			// [Dusk] tell clients of the attack sound
-			if (NETWORK_GetState() == NETSTATE_SERVER)
-				SERVERCOMMANDS_SoundActor (player->mo, CHAN_VOICE, "PigAttack", 1, ATTN_NORM);
+			S_Sound(player->mo, CHAN_VOICE, "PigAttack", 1, ATTN_NORM, true);	// [TP] Inform the clients.
 		}
 	}
 	return 0;

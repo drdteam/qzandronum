@@ -457,12 +457,7 @@ bool P_CheckKeys (AActor *owner, int keynum, bool remote)
 				int snd = S_FindSkinnedSound(owner, failsound[i]);
 				if (snd != 0)
 				{
-					S_Sound (owner, CHAN_VOICE, snd, 1, ATTN_NORM);
-
-					// [BB] If we're the server, tell the clients to play the sound
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_SoundActor( owner, CHAN_VOICE, S_GetName( snd ), 1, ATTN_NORM );
-
+					S_Sound (owner, CHAN_VOICE, snd, 1, ATTN_NORM, true);	// [BB] Inform the clients.
 					break;
 				}
 			}

@@ -288,11 +288,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MageAttack)
 	MStaffSpawn2 (self, angle);
 	MStaffSpawn2 (self, angle-ANGLE_1*5);
 	MStaffSpawn2 (self, angle+ANGLE_1*5);
-	S_Sound (self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM);
-
-	// [BB] If we're the server, tell the clients to play the sound.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SoundActor( self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM );
+	S_Sound (self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 
 	return 0;
 }

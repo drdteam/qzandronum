@@ -472,12 +472,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_GetHurt)
 	self->flags4 |= MF4_INCOMBAT;
 	if ((pr_gethurt() % 5) == 0)
 	{
-		S_Sound (self, CHAN_VOICE, self->PainSound, 1, ATTN_NORM);
-
-		// [BB] If we're the server, tell clients to play the sound.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, S_GetName( self->PainSound ), 1, ATTN_NORM );
-
+		S_Sound (self, CHAN_VOICE, self->PainSound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		self->health--;
 	}
 	if (self->health <= 0)

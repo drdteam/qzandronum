@@ -126,15 +126,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_SerpentHumpDecide)
 		}
 		else
 		{	
-			// [BB] If we're the server, set the thing's state and play the sound.
+			// [BB] If we're the server, set the thing's state.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				SERVERCOMMANDS_SetThingFrame( self, self->FindState ("Hump") );
-				SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "SerpentActive", 1, ATTN_NORM );
 			}
 
 			self->SetState (self->FindState ("Hump"));
-			S_Sound (self, CHAN_BODY, "SerpentActive", 1, ATTN_NORM);
+			S_Sound (self, CHAN_BODY, "SerpentActive", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 		}
 	}
 	return 0;
@@ -258,11 +257,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SerpentMeleeAttack)
 		int damage = pr_serpentmeattack.HitDice (5);
 		int newdam = P_DamageMobj (self->target, self, self, damage, NAME_Melee);
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
-		S_Sound (self, CHAN_BODY, "SerpentMeleeHit", 1, ATTN_NORM);
-
-		// [BB] If we're the server, tell the clients to play the sound.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundActor( self, CHAN_BODY, "SerpentMeleeHit", 1, ATTN_NORM );
+		S_Sound (self, CHAN_BODY, "SerpentMeleeHit", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 	}
 	if (pr_serpentmeattack() < 96)
 	{

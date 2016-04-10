@@ -6752,25 +6752,11 @@ AActor *P_SpawnPuff (AActor *source, PClassActor *pufftype, fixed_t x, fixed_t y
 
 		if ((flags & PF_HITTHING) && puff->SeeSound)
 		{ // Hit thing sound
-			S_Sound (puff, CHAN_BODY, puff->SeeSound, 1, ATTN_NORM);
-
-		// [BC] If we're the server, play this sound.
-		if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-			( bTellClientToSpawn ))
-		{
-			SERVERCOMMANDS_SoundActor( puff, CHAN_BODY, S_GetName( puff->SeeSound ), 1, ATTN_NORM );
-		}
+			S_Sound (puff, CHAN_BODY, puff->SeeSound, 1, ATTN_NORM, bTellClientToSpawn );	// [BC] Inform the clients.
 		}
 		else if (puff->AttackSound)
 		{
-			S_Sound (puff, CHAN_BODY, puff->AttackSound, 1, ATTN_NORM);
-
-			// [BC] If we're the server, play this sound.
-			if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-				( bTellClientToSpawn ))
-			{
-				SERVERCOMMANDS_SoundActor( puff, CHAN_BODY, S_GetName( puff->AttackSound ), 1, ATTN_NORM );
-			}
+			S_Sound (puff, CHAN_BODY, puff->AttackSound, 1, ATTN_NORM, bTellClientToSpawn );	// [BC] Inform the clients.
 		}
 	}
 
@@ -7195,16 +7181,15 @@ foundone:
 	}
 	if (mo)
 	{
-		S_Sound (mo, CHAN_ITEM, smallsplash ?
-			splash->SmallSplashSound : splash->NormalSplashSound,
-			1, ATTN_IDLE);
-
-		// [BC] Tell clients to spawn the splash and play the sound.
+		// [BC] Tell clients to spawn the splash.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
 			SERVERCOMMANDS_SpawnThing( mo );
-			SERVERCOMMANDS_SoundActor( mo, CHAN_ITEM, smallsplash ? S_GetName( splash->SmallSplashSound ) : S_GetName( splash->NormalSplashSound ), 1, ATTN_IDLE );
 		}
+
+		S_Sound (mo, CHAN_ITEM, smallsplash ?
+			splash->SmallSplashSound : splash->NormalSplashSound,
+			1, ATTN_IDLE, true );	// [BC] Inform the clients.
 	}
 	else
 	{

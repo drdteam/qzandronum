@@ -519,14 +519,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_KSpiritRoam)
 
 	if (self->health-- <= 0)
 	{
-		// [BC] Play the sound and set the thing's state.
+		S_Sound (self, CHAN_VOICE, "SpiritDie", 1, ATTN_NORM, true);	// [BC] Inform the clients.
+
+		// [BC] Set the thing's state.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
-			SERVERCOMMANDS_SoundActor( self, CHAN_VOICE, "SpiritDie", 1, ATTN_NORM );
 			SERVERCOMMANDS_SetThingFrame( self, self->FindState("Death") );
 		}
 
-		S_Sound (self, CHAN_VOICE, "SpiritDie", 1, ATTN_NORM);
 		self->SetState (self->FindState("Death"));
 	}
 	else
