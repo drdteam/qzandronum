@@ -62,7 +62,6 @@
 #include "v_font.h"
 #include "r_data/colormaps.h"
 #include "farchive.h"
-#include "portal.h"
 // [BC] New #includes.
 #include "sv_commands.h"
 

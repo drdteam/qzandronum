@@ -52,6 +52,7 @@
 
 // [EP] New #includes.
 #include "gl/gl_functions.h"
+#include "doomstat.h"
 
 void gl_SetTextureMode(int type);
 

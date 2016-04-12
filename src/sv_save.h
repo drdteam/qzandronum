@@ -51,7 +51,7 @@
 #ifndef __SV_SAVE_H__
 #define __SV_SAVE_H__
 
-#include "network.h"
+#include "sv_main.h"
 
 //*****************************************************************************
 //	STRUCTURES

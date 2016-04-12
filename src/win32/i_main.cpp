@@ -82,7 +82,7 @@
 #include "r_utility.h"
 // [BB] New #includes.
 #include "serverconsole/serverconsole.h"
-#include "network.h"
+#include "sv_main.h"
 #include "p_acs.h"
 
 #include "stats.h"

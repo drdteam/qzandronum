@@ -36,7 +36,7 @@
 #include "c_console.h"
 #include "c_consolebuffer.h"
 // [BB] New #includes.
-#include "network.h"
+#include "sv_main.h"
 
 
 // [BB] Add a timestamp to every string printed to the logfile.

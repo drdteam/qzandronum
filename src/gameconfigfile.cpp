@@ -63,7 +63,7 @@ extern HWND Window;
 #include "gi.h"
 #include "d_main.h"
 // [BC] New #includes.
-#include "network.h"
+#include "sv_main.h"
 #include "g_shared/pwo.h"
 // [RC] For name cleaning
 #include "v_text.h"

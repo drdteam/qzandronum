@@ -51,12 +51,13 @@
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
-#include "c_cvars.h"
-#include "d_player.h"
-#include "i_net.h"
 #include "p_setup.h"
-#include "sv_main.h"
+#include "networkshared.h"
 #include "tflags.h"
+
+class AActor;
+class player_t;
+struct ticcmd_t;
 
 //*****************************************************************************
 //	DEFINES

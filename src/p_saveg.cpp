@@ -55,7 +55,6 @@
 #include "p_lnspec.h"
 #include "p_acs.h"
 #include "p_terrain.h"
-#include "portal.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "cl_demo.h"

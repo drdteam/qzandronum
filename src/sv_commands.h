@@ -57,6 +57,7 @@
 #include "p_spec.h"
 #include "vectors.h"
 #include "a_weaponpiece.h"
+#include "sv_main.h"
 
 #include "tflags.h"
 
