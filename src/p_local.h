@@ -41,6 +41,7 @@ struct sector_t;
 struct msecnode_t;
 struct secplane_t;
 struct FCheckPosition;
+struct FTranslatedLineTarget;
 
 #include <stdlib.h>
 
@@ -182,7 +183,7 @@ AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, PClassAct
 AActor *P_SpawnPlayerMissile (AActor* source, PClassActor *type);
 AActor *P_SpawnPlayerMissile (AActor *source, PClassActor *type, angle_t angle, bool bSpawnSound = true );
 AActor *P_SpawnPlayerMissile (AActor *source, fixed_t x, fixed_t y, fixed_t z, PClassActor *type, angle_t angle, 
-							  AActor **pLineTarget = NULL, AActor **MissileActor = NULL, bool nofreeaim = false, bool noautoaim = false, bool bSpawnSound = true, bool bSpawnOnClient = true);
+							  FTranslatedLineTarget *pLineTarget = NULL, AActor **MissileActor = NULL, bool nofreeaim = false, bool noautoaim = false, int aimflags = 0, bool bSpawnSound = true, bool bSpawnOnClient = true);
 
 // [BB]
 inline void P_SpawnPlayerMissileWithPossibleSpread (AActor* source, PClassActor *type)
@@ -342,7 +343,7 @@ void	P_FindFloorCeiling (AActor *actor, int flags=0);
 
 bool	P_ChangeSector (sector_t* sector, int crunch, int amt, int floorOrCeil, bool isreset);
 
-fixed_t P_AimLineAttack (AActor *t1, angle_t angle, fixed_t distance, AActor **pLineTarget = NULL, fixed_t vrange=0, int flags = 0, AActor *target=NULL, AActor *friender=NULL);
+fixed_t P_AimLineAttack (AActor *t1, angle_t angle, fixed_t distance, FTranslatedLineTarget *pLineTarget = NULL, fixed_t vrange=0, int flags = 0, AActor *target=NULL, AActor *friender=NULL);
 
 enum	// P_AimLineAttack flags
 {
@@ -351,6 +352,7 @@ enum	// P_AimLineAttack flags
 	ALF_CHECKNONSHOOTABLE = 4,
 	ALF_CHECKCONVERSATION = 8,
 	ALF_NOFRIENDS = 16,
+	ALF_PORTALRESTRICT = 32,	// only work through portals with a global offset (to be used for stuff that cannot remember the calculated FTranslatedLineTarget info)
 };
 
 enum	// P_LineAttack flags
@@ -360,11 +362,12 @@ enum	// P_LineAttack flags
 	LAF_NOIMPACTDECAL = 4
 };
 
-AActor *P_LineAttack (AActor *t1, angle_t angle, fixed_t distance, int pitch, int damage, FName damageType, PClassActor *pufftype, int flags = 0, AActor **victim = NULL, int *actualdamage = NULL);
-AActor *P_LineAttack (AActor *t1, angle_t angle, fixed_t distance, int pitch, int damage, FName damageType, FName pufftype, int flags = 0, AActor **victim = NULL, int *actualdamage = NULL);
+AActor *P_LineAttack (AActor *t1, angle_t angle, fixed_t distance, int pitch, int damage, FName damageType, PClassActor *pufftype, int flags = 0, FTranslatedLineTarget *victim = NULL, int *actualdamage = NULL);
+AActor *P_LineAttack (AActor *t1, angle_t angle, fixed_t distance, int pitch, int damage, FName damageType, FName pufftype, int flags = 0, FTranslatedLineTarget *victim = NULL, int *actualdamage = NULL);
 void	P_TraceBleed (int damage, fixed_t x, fixed_t y, fixed_t z, AActor *target, angle_t angle, int pitch);
 void	P_TraceBleed (int damage, AActor *target, angle_t angle, int pitch);
 void	P_TraceBleed (int damage, AActor *target, AActor *missile);		// missile version
+void	P_TraceBleed(int damage, FTranslatedLineTarget *t, AActor *puff);		// hitscan version
 void	P_TraceBleed (int damage, AActor *target);		// random direction version
 bool	P_HitFloor (AActor *thing);
 bool	P_HitWater (AActor *thing, sector_t *sec, fixed_t splashx = FIXED_MIN, fixed_t splashy = FIXED_MIN, fixed_t splashz=FIXED_MIN, bool checkabove = false, bool alert = true, bool force = false);
@@ -424,7 +427,7 @@ extern BYTE*			rejectmatrix;	// for fast sight rejection
 // P_INTER
 //
 void P_TouchSpecialThing (AActor *special, AActor *toucher);
-int  P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage, FName mod, int flags=0);
+int  P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage, FName mod, int flags=0, angle_t angle = 0);
 void P_PoisonMobj (AActor *target, AActor *inflictor, AActor *source, int damage, int duration, int period, FName type);
 bool P_GiveBody (AActor *actor, int num, int max=0);
 bool P_PoisonPlayer (player_t *player, AActor *poisoner, AActor *source, int poison);
@@ -441,6 +444,7 @@ enum EDmgFlags
 	DMG_FOILINVUL = 64,
 	DMG_FOILBUDDHA = 128,
 	DMG_NO_PROTECT = 256,
+	DMG_USEANGLE = 512,
 };
 
 

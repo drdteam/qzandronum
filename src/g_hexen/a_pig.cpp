@@ -18,8 +18,6 @@ static FRandom pr_snoutattack ("SnoutAttack");
 static FRandom pr_pigattack ("PigAttack");
 static FRandom pr_pigplayerthink ("PigPlayerThink");
 
-extern void AdjustPlayerAngle (AActor *, AActor *);
-
 // Pig player ---------------------------------------------------------------
 
 class APigPlayer : public APlayerPawn
@@ -67,7 +65,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 	int slope;
 	player_t *player;
 	AActor *puff;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -76,16 +74,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_SnoutAttack)
 
 	damage = 3+(pr_snoutattack()&3);
 	angle = player->mo->angle;
-	slope = P_AimLineAttack(player->mo, angle, MELEERANGE, &linetarget);
-	puff = P_LineAttack(player->mo, angle, MELEERANGE, slope, damage, NAME_Melee, "SnoutPuff", true, &linetarget);
+	slope = P_AimLineAttack(player->mo, angle, MELEERANGE);
+	puff = P_LineAttack(player->mo, angle, MELEERANGE, slope, damage, NAME_Melee, "SnoutPuff", true, &t);
 	S_Sound(player->mo, CHAN_VOICE, "PigActive", 1, ATTN_NORM);
 
 	// [Dusk] clients aren't properly aware of linetarget, thus they stop here.
 	if ( NETWORK_InClientMode() ) return 0;
 
-	if(linetarget)
+	if(t.linetarget)
 	{
-		AdjustPlayerAngle(player->mo, linetarget);
+		AdjustPlayerAngle(player->mo, &t);
 
 		// [Dusk] update angle
 		if (NETWORK_GetState() == NETSTATE_SERVER)

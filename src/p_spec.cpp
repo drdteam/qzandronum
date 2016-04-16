@@ -271,7 +271,7 @@ bool CheckIfExitIsGood (AActor *self, level_info_t *info)
 //
 //============================================================================
 
-bool P_ActivateLine (line_t *line, AActor *mo, int side, int activationType)
+bool P_ActivateLine (line_t *line, AActor *mo, int side, int activationType, fixedvec3 *optpos)
 {
 	int lineActivation;
 	INTBOOL repeat;
@@ -282,7 +282,7 @@ bool P_ActivateLine (line_t *line, AActor *mo, int side, int activationType)
 	if ( GAMEMODE_IsHandledSpecial (mo, line->special) == false )
 		return false;
 
-	if (!P_TestActivateLine (line, mo, side, activationType))
+	if (!P_TestActivateLine (line, mo, side, activationType, optpos))
 	{
 		return false;
 	}
@@ -352,7 +352,7 @@ bool P_ActivateLine (line_t *line, AActor *mo, int side, int activationType)
 //
 //============================================================================
 
-bool P_TestActivateLine (line_t *line, AActor *mo, int side, int activationType)
+bool P_TestActivateLine (line_t *line, AActor *mo, int side, int activationType, fixedvec3 *optpos)
 {
  	int lineActivation = line->activation;
 
@@ -381,7 +381,7 @@ bool P_TestActivateLine (line_t *line, AActor *mo, int side, int activationType)
 	}
 	if (activationType == SPAC_Use || activationType == SPAC_UseBack)
 	{
-		if (!P_CheckSwitchRange(mo, line, side))
+		if (!P_CheckSwitchRange(mo, line, side, optpos))
 		{
 			return false;
 		}
@@ -2673,11 +2673,15 @@ void DPusher::Tick ()
 		// Seek out all pushable things within the force radius of this
 		// point pusher. Crosses sectors, so use blockmap.
 
-		FBlockThingsIterator it(FBoundingBox(m_X, m_Y, m_Radius));
-		AActor *thing;
+		FPortalGroupArray check(FPortalGroupArray::PGA_NoSectorPortals);	// no sector portals because this thing is utterly z-unaware.
+		FMultiBlockThingsIterator it(check, m_X, m_Y, 0, 0, m_Radius);
+		FMultiBlockThingsIterator::CheckResult cres;
 
-		while ((thing = it.Next()))
+
+		while (it.Next(&cres))
 		{
+			AActor *thing = cres.thing;
+
 			// [BB] While predicting, only handle the body of the predicted player.
 			if ( CLIENT_PREDICT_IsPredicting() && ( ( thing->player == false ) || ( static_cast<int>( thing->player - players ) != consoleplayer ) ) )
 				continue;

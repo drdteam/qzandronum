@@ -63,6 +63,7 @@ static FListMenuDescriptor DefaultListMenuSettings;	// contains common settings 
 static FOptionMenuDescriptor DefaultOptionMenuSettings;	// contains common settings for all Option menus
 FOptionMenuSettings OptionSettings;
 FOptionMap OptionValues;
+bool mustPrintErrors;
 
 void I_BuildALDeviceList(FOptionValues *opt);
 
@@ -102,7 +103,7 @@ static FTextureID GetMenuTexture(const char* const name)
 {
 	const FTextureID texture = TexMan.CheckForTexture(name, FTexture::TEX_MiscPatch);
 
-	if (!texture.Exists())
+	if (!texture.Exists() && mustPrintErrors)
 	{
 		Printf("Missing menu texture: \"%s\"\n", name);
 	}
@@ -1013,10 +1014,14 @@ void M_ParseMenuDefs()
 
 	atterm(	DeinitMenus);
 	DeinitMenus();
+
+	int IWADMenu = Wads.CheckNumForName("MENUDEF", ns_global, FWadCollection::IWAD_FILENUM);
+
 	while ((lump = Wads.FindLump ("MENUDEF", &lastlump)) != -1)
 	{
 		FScanner sc(lump);
 
+		mustPrintErrors = lump >= IWADMenu;
 		sc.SetCMode(true);
 		while (sc.GetString())
 		{

@@ -213,7 +213,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 	PARAM_ACTION_PROLOGUE;
 
 	player_t *player;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -225,10 +225,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
 			return 0;
 	}
-	AActor *missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor("HolyMissile"), self->angle, &linetarget);
-	if (missile != NULL)
+	AActor *missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor("HolyMissile"), self->angle, &t);
+	if (missile != NULL && !t.unlinked)
 	{
-		missile->tracer = linetarget;
+		missile->tracer = t.linetarget;
 	}
 
 	// [BC] Weapons are handled by the server.
@@ -243,13 +243,17 @@ DEFINE_ACTION_FUNCTION(AActor, A_CHolyAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle + ( ANGLE_45 / 3 ), &linetarget);
-		if ( missile != NULL )
-			missile->tracer = linetarget;
+		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle + ( ANGLE_45 / 3 ), &t);
+		if (missile != NULL && !t.unlinked)
+		{
+			missile->tracer = t.linetarget;
+		}
 
-		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle - ( ANGLE_45 / 3 ), &linetarget);
-		if ( missile != NULL )
-			missile->tracer = linetarget;
+		missile = P_SpawnPlayerMissile (self, 0,0,0, PClass::FindActor ("HolyMissile"), self->angle - ( ANGLE_45 / 3 ), &t);
+		if (missile != NULL && !t.unlinked)
+		{
+			missile->tracer = t.linetarget;
+		}
 	}
 
 	weapon->CHolyCount = 3;

@@ -199,11 +199,22 @@ static inline fixed_t GetCoefficientClosestPointInLine24(line_t *ld, fixedvec2 p
 
 static inline fixedvec2 FindRefPoint(line_t *ld, fixedvec2 pos)
 {
-	if (!((((ld->frontsector->floorplane.a | ld->frontsector->floorplane.b) |
-		(ld->backsector->floorplane.a | ld->backsector->floorplane.b) |
-		(ld->frontsector->ceilingplane.a | ld->frontsector->ceilingplane.b) |
-		(ld->backsector->ceilingplane.a | ld->backsector->ceilingplane.b)) == 0)
-		&& ld->backsector->e->XFloor.ffloors.Size() == 0 && ld->frontsector->e->XFloor.ffloors.Size() == 0))
+	// If there's any chance of slopes getting in the way we need to get a proper refpoint, otherwise we can save the work.
+	// Slopes can get in here when:
+	// - the actual sector planes are sloped
+	// - there's 3D floors in this sector
+	// - there's a crossable floor portal (for which the dropoff needs to be calculated within P_LineOpening, and the lower sector can easily have slopes)
+	if (
+		(((ld->frontsector->floorplane.a | ld->frontsector->floorplane.b) |
+			(ld->backsector->floorplane.a | ld->backsector->floorplane.b) |
+			(ld->frontsector->ceilingplane.a | ld->frontsector->ceilingplane.b) |
+			(ld->backsector->ceilingplane.a | ld->backsector->ceilingplane.b)) != 0)
+		||
+			ld->backsector->e->XFloor.ffloors.Size() != 0 
+		||
+			ld->frontsector->e->XFloor.ffloors.Size() != 0
+		|| 
+			!ld->frontsector->PortalBlocksMovement(sector_t::floor))
 	{
 		fixed_t r = GetCoefficientClosestPointInLine24(ld, pos);
 		if (r <= 0)
@@ -875,8 +886,8 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 	if (!ld->backsector)
 	{ // One sided line
 
-		// Needed for polyobject portals. Having two-sided lines just for portals on otherwise solid polyobjects is a messy subject.
-		if ((cres.line->sidedef[0]->Flags & WALLF_POLYOBJ) && cres.line->isLinePortal())
+		// Needed for polyobject portals.
+		if (cres.line->isLinePortal())
 		{
 			spechit_t spec;
 			spec.line = ld;
@@ -987,7 +998,7 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 
 	// If the floor planes on both sides match we should recalculate open.bottom at the actual position we are checking
 	// This is to avoid bumpy movement when crossing a linedef with the same slope on both sides.
-	if (open.frontfloorplane == open.backfloorplane)
+	if (open.frontfloorplane == open.backfloorplane && open.bottom > FIXED_MIN)
 	{
 		open.bottom = open.frontfloorplane.ZatPoint(cres.position.x, cres.position.y);
 	}
@@ -1038,7 +1049,9 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 		}
 
 		if (open.lowfloor < tm.dropoffz)
+		{
 			tm.dropoffz = open.lowfloor;
+		}
 	}
 
 	// if contacted a special line, add it to the list
@@ -4383,7 +4396,7 @@ void aim_t::AimTraverse(fixed_t startx, fixed_t starty, fixed_t endx, fixed_t en
 //
 //============================================================================
 
-fixed_t P_AimLineAttack(AActor *t1, angle_t angle, fixed_t distance, AActor **pLineTarget, fixed_t vrange,
+fixed_t P_AimLineAttack(AActor *t1, angle_t angle, fixed_t distance, FTranslatedLineTarget *pLineTarget, fixed_t vrange,
 	int flags, AActor *target, AActor *friender)
 {
 	fixed_t x2;
@@ -4481,7 +4494,18 @@ fixed_t P_AimLineAttack(AActor *t1, angle_t angle, fixed_t distance, AActor **pL
 	}
 	if (pLineTarget)
 	{
-		*pLineTarget = aim.linetarget;
+		if (aim.linetarget)
+		{
+			pLineTarget->linetarget = aim.linetarget;
+			pLineTarget->hitangle = angle;
+			pLineTarget->targetPosFromSrc = aim.linetarget->Pos();
+			pLineTarget->targetAngleFromSrc = aim.linetarget->angle;
+			pLineTarget->sourcePosFromTarget = t1->Pos();
+			pLineTarget->sourceAngleFromTarget = t1->angle;
+			pLineTarget->unlinked = false;
+		}
+		else
+			memset(pLineTarget, 0, sizeof(*pLineTarget));
 	}
 
 	// [Spleen]
@@ -4540,7 +4564,7 @@ static ETraceStatus CheckForActor(FTraceResults &res, void *userdata)
 //==========================================================================
 
 AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
-	int pitch, int damage, FName damageType, PClassActor *pufftype, int flags, AActor **victim, int *actualdamage)
+	int pitch, int damage, FName damageType, PClassActor *pufftype, int flags, FTranslatedLineTarget*victim, int *actualdamage)
 {
 	// [BB] The only reason the client should try to execute P_LineAttack, is the online hitscan decal fix. 
 	// [CK] And also predicted puffs and blood decals.
@@ -4565,7 +4589,7 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 
 	if (victim != NULL)
 	{
-		*victim = NULL;
+		memset(victim, 0, sizeof(*victim));
 	}
 	if (actualdamage != NULL)
 	{
@@ -4820,6 +4844,7 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 					puff = P_SpawnPuff(t1, pufftype, hitx, hity, hitz, angle - ANG180, 2, puffFlags | PF_HITTHING | PF_TEMPORARY, NULL, bTellClientToSpawn );
 					killPuff = true;
 				}
+#pragma message("damage angle")
 				newdam = P_DamageMobj(trace.Actor, puff ? puff : t1, t1, damage, damageType, dmgflags);
 				if (actualdamage != NULL)
 				{
@@ -4868,7 +4893,13 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 			}
 			if (victim != NULL)
 			{
-				*victim = trace.Actor;
+				victim->linetarget = trace.Actor;
+				victim->hitangle = angle;
+				victim->targetPosFromSrc = trace.Actor->Pos();
+				victim->targetAngleFromSrc = trace.Actor->angle;
+				victim->sourcePosFromTarget = t1->Pos();
+				victim->sourceAngleFromTarget = t1->angle;
+				victim->unlinked = false;
 			}
 		}
 		if (trace.Crossed3DWater || trace.CrossedWater)
@@ -4905,22 +4936,22 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 }
 
 AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
-	int pitch, int damage, FName damageType, FName pufftype, int flags, AActor **victim, int *actualdamage)
+	int pitch, int damage, FName damageType, FName pufftype, int flags, FTranslatedLineTarget *victim, int *actualdamage)
 {
 	PClassActor *type = PClass::FindActor(pufftype);
-	if (victim != NULL)
-	{
-		*victim = NULL;
-	}
 	if (type == NULL)
 	{
+		if (victim != NULL)
+		{
+			memset(victim, 0, sizeof(*victim));
+		}
 		Printf("Attempt to spawn unknown actor type '%s'\n", pufftype.GetChars());
+		return NULL;
 	}
 	else
 	{
 		return P_LineAttack(t1, angle, distance, pitch, damage, damageType, type, flags, victim, actualdamage);
 	}
-	return NULL;
 }
 
 //==========================================================================
@@ -5098,6 +5129,24 @@ void P_TraceBleed(int damage, AActor *target, AActor *missile)
 	P_TraceBleed(damage, target->X(), target->Y(), target->Z() + target->height / 2,
 		target, missile->AngleTo(target),
 		pitch);
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+
+void P_TraceBleed(int damage, FTranslatedLineTarget *t, AActor *puff)
+{
+	if (t->linetarget == NULL || puff->flags3 & MF3_BLOODLESSIMPACT)
+	{
+		return;
+	}
+
+	fixed_t randpitch = (pr_tracebleed() - 128) << 16;
+	P_TraceBleed(damage, t->linetarget->X(), t->linetarget->Y(), t->linetarget->Z() + t->linetarget->height / 2,
+		t->linetarget, t->SourceAngleToTarget(), 0);
 }
 
 //==========================================================================
@@ -5303,6 +5352,7 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 				if ( instagib )
 					damage = 999;
 
+#pragma message("damage angle")
 				int newdam = P_DamageMobj(hitactor, thepuff ? thepuff : source, source, damage, damagetype, dmgFlagPass);
 
 				if (bleed)
@@ -5530,37 +5580,25 @@ void P_AimCamera(AActor *t1, fixed_t &CameraX, fixed_t &CameraY, fixed_t &Camera
 
 bool P_TalkFacing(AActor *player)
 {
-	AActor *linetarget;
+	static const int angleofs[] = { 0, ANGLE_90 >> 4, - ANGLE_90 >> 4 };
+	FTranslatedLineTarget t;
 
-	P_AimLineAttack(player, player->angle, TALKRANGE, &linetarget, ANGLE_1 * 35, ALF_FORCENOSMART | ALF_CHECKCONVERSATION);
-	if (linetarget == NULL)
+	for (int angle : angleofs)
 	{
-		P_AimLineAttack(player, player->angle + (ANGLE_90 >> 4), TALKRANGE, &linetarget, ANGLE_1 * 35, ALF_FORCENOSMART | ALF_CHECKCONVERSATION);
-		if (linetarget == NULL)
+		P_AimLineAttack(player, player->angle + angle, TALKRANGE, &t, ANGLE_1 * 35, ALF_FORCENOSMART | ALF_CHECKCONVERSATION | ALF_PORTALRESTRICT);
+		if (t.linetarget != NULL)
 		{
-			P_AimLineAttack(player, player->angle - (ANGLE_90 >> 4), TALKRANGE, &linetarget, ANGLE_1 * 35, ALF_FORCENOSMART | ALF_CHECKCONVERSATION);
-			if (linetarget == NULL)
+			if (t.linetarget->health > 0 && // Dead things can't talk.
+				t.linetarget->flags4 & MF4_INCOMBAT && // Fighting things don't talk either.
+				t.linetarget->Conversation != NULL)
 			{
-				return false;
+				// Give the NPC a chance to play a brief animation
+				t.linetarget->ConversationAnimation(0);
+				P_StartConversation(t.linetarget, player, true, true);
+				return true;
 			}
+			return false;
 		}
-	}
-	// Dead things can't talk.
-	if (linetarget->health <= 0)
-	{
-		return false;
-	}
-	// Fighting things don't talk either.
-	if (linetarget->flags4 & MF4_INCOMBAT)
-	{
-		return false;
-	}
-	if (linetarget->Conversation != NULL)
-	{
-		// Give the NPC a chance to play a brief animation
-		linetarget->ConversationAnimation(0);
-		P_StartConversation(linetarget, player, true, true);
-		return true;
 	}
 	return false;
 }
@@ -5571,10 +5609,11 @@ bool P_TalkFacing(AActor *player)
 //
 //==========================================================================
 
-bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline)
+bool P_UseTraverse(AActor *usething, fixed_t startx, fixed_t starty, fixed_t endx, fixed_t endy, bool &foundline)
 {
-	FPathTraverse it(usething->X(), usething->Y(), endx, endy, PT_ADDLINES | PT_ADDTHINGS);
+	FPathTraverse it(startx, starty, endx, endy, PT_ADDLINES | PT_ADDTHINGS);
 	intercept_t *in;
+	fixedvec3 xpos = { startx, starty, usething->Z() };
 
 	while ((in = it.Next()))
 	{
@@ -5592,6 +5631,10 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 				if (P_ActivateThingSpecial(in->d.thing, usething))
 					return true;
 			}
+			continue;
+		}
+		if (it.PortalRelocate(in, PT_ADDLINES | PT_ADDTHINGS, &xpos))
+		{
 			continue;
 		}
 
@@ -5624,7 +5667,7 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 					return true;
 				}
 
-				sec = P_PointOnLineSide(usething->X(), usething->Y(), in->d.line) == 0 ?
+				sec = P_PointOnLineSide(xpos.x, xpos.y, in->d.line) == 0 ?
 					in->d.line->frontsector : in->d.line->backsector;
 
 				if (sec != NULL && sec->SecActTarget &&
@@ -5647,7 +5690,7 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 			continue;			// not a special line, but keep checking
 		}
 
-		if (P_PointOnLineSide(usething->X(), usething->Y(), in->d.line) == 1)
+		if (P_PointOnLineSide(xpos.x, xpos.y, in->d.line) == 1)
 		{
 			if (!(in->d.line->activation & SPAC_UseBack))
 			{
@@ -5657,7 +5700,7 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 			}
 			else
 			{
-				P_ActivateLine(in->d.line, usething, 1, SPAC_UseBack);
+				P_ActivateLine(in->d.line, usething, 1, SPAC_UseBack, &xpos);
 				return true;
 			}
 		}
@@ -5668,7 +5711,7 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 				goto blocked; // Line cannot be used from front side so treat it as a non-trigger line
 			}
 
-			P_ActivateLine(in->d.line, usething, 0, SPAC_Use);
+			P_ActivateLine(in->d.line, usething, 0, SPAC_Use, &xpos);
 
 			//WAS can't use more than one special line in a row
 			//jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -5705,9 +5748,9 @@ bool P_UseTraverse(AActor *usething, fixed_t endx, fixed_t endy, bool &foundline
 //
 //==========================================================================
 
-bool P_NoWayTraverse(AActor *usething, fixed_t endx, fixed_t endy)
+bool P_NoWayTraverse(AActor *usething, fixed_t startx, fixed_t starty, fixed_t endx, fixed_t endy)
 {
-	FPathTraverse it(usething->X(), usething->Y(), endx, endy, PT_ADDLINES);
+	FPathTraverse it(startx, starty, endx, endy, PT_ADDLINES);
 	intercept_t *in;
 
 	while ((in = it.Next()))
@@ -5718,6 +5761,7 @@ bool P_NoWayTraverse(AActor *usething, fixed_t endx, fixed_t endy)
 		// [GrafZahl] de-obfuscated. Was I the only one who was unable to make sense out of
 		// this convoluted mess?
 		if (ld->special) continue;
+		if (ld->isLinePortal()) return false;
 		if (ld->flags&(ML_BLOCKING | ML_BLOCKEVERYTHING | ML_BLOCK_PLAYERS)) return true;
 		P_LineOpening(open, NULL, ld, it.Trace().x + FixedMul(it.Trace().dx, in->frac),
 			it.Trace().y + FixedMul(it.Trace().dy, in->frac));
@@ -5736,12 +5780,16 @@ bool P_NoWayTraverse(AActor *usething, fixed_t endx, fixed_t endy)
 //
 //==========================================================================
 
+CVAR(Int, userange, 0, 0);
+
 void P_UseLines(player_t *player)
 {
 	bool foundline = false;
 
+	// If the player is transitioning a portal, use the group that is at its vertical center.
+	fixedvec2 start = player->mo->GetPortalTransition(player->mo->height / 2);
 	// [NS] Now queries the Player's UseRange.
-	fixedvec2 end = player->mo->Vec2Angle(player->mo->UseRange, player->mo->angle, true);
+	fixedvec2 end = start + Vec2Angle(userange > 0? fixed_t(userange<<FRACBITS) : player->mo->UseRange, player->mo->angle);
 
 	// old code:
 	//
@@ -5749,7 +5797,7 @@ void P_UseLines(player_t *player)
 	//
 	// This added test makes the "oof" sound work on 2s lines -- killough:
 
-	if (!P_UseTraverse(player->mo, end.x, end.y, foundline))
+	if (!P_UseTraverse(player->mo, start.x, start.y, end.x, end.y, foundline))
 	{ // [RH] Give sector a chance to eat the use
 		sector_t *sec = player->mo->Sector;
 		int spac = SECSPAC_Use;
@@ -5757,7 +5805,7 @@ void P_UseLines(player_t *player)
 		// [BC] Don't try to trigger sector actions in client mode.
 		if (( NETWORK_InClientMode() ||
 			!sec->SecActTarget || !sec->SecActTarget->TriggerAction(player->mo, spac)) &&
-			P_NoWayTraverse(player->mo, end.x, end.y))
+			P_NoWayTraverse(player->mo, start.x, start.y, end.x, end.y))
 		{
 			S_Sound(player->mo, CHAN_VOICE, "*usefail", 1, ATTN_IDLE);
 

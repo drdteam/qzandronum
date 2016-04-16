@@ -5,8 +5,6 @@
 #include "thingdef/thingdef.h"
 */
 
-extern void AdjustPlayerAngle (AActor *pmo, AActor *linetarget);
-
 static FRandom pr_maceatk ("CMaceAttack");
 
 //===========================================================================
@@ -24,7 +22,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CMaceAttack)
 	int slope;
 	int i;
 	player_t *player;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -36,48 +34,29 @@ DEFINE_ACTION_FUNCTION(AActor, A_CMaceAttack)
 	damage = 25+(pr_maceatk()&15);
 	for (i = 0; i < 16; i++)
 	{
-		angle = player->mo->angle+i*(ANG45/16);
-		slope = P_AimLineAttack (player->mo, angle, 2*MELEERANGE, &linetarget);
-		if (linetarget)
+		for (int j = 1; j >= -1; j -= 2)
 		{
-			P_LineAttack (player->mo, angle, 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true, &linetarget);
-			if (linetarget != NULL)
+			angle = player->mo->angle + j*i*(ANG45 / 16);
+			slope = P_AimLineAttack(player->mo, angle, 2 * MELEERANGE, &t);
+			if (t.linetarget)
 			{
-				AdjustPlayerAngle (player->mo, linetarget);
-
-				// [BC] Apply spread.
-				if ( player->cheats2 & CF2_SPREAD )
+				P_LineAttack(player->mo, angle, 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true, &t);
+				if (t.linetarget != NULL)
 				{
-					P_LineAttack (player->mo, angle + ( ANGLE_45 / 3 ), 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
-					AdjustPlayerAngle (player->mo, linetarget);
+					AdjustPlayerAngle(player->mo, &t);
 
-					P_LineAttack (player->mo, angle - ( ANGLE_45 / 3 ), 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
-					AdjustPlayerAngle (player->mo, linetarget);
+					// [BC] Apply spread.
+					if (player->cheats2 & CF2_SPREAD)
+					{
+						P_LineAttack(player->mo, angle + (ANGLE_45 / 3), 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
+						AdjustPlayerAngle(player->mo, &t);
+
+						P_LineAttack(player->mo, angle - (ANGLE_45 / 3), 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
+						AdjustPlayerAngle(player->mo, &t);
+					}
+
+					goto macedone;
 				}
-
-				goto macedone;
-			}
-		}
-		angle = player->mo->angle-i*(ANG45/16);
-		slope = P_AimLineAttack (player->mo, angle, 2*MELEERANGE, &linetarget);
-		if (linetarget)
-		{
-			P_LineAttack (player->mo, angle, 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true, &linetarget);
-			if (linetarget != NULL)
-			{
-				AdjustPlayerAngle (player->mo, linetarget);
-
-				// [BC] Apply spread.
-				if ( player->cheats2 & CF2_SPREAD )
-				{
-					P_LineAttack (player->mo, angle + ( ANGLE_45 / 3 ), 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
-					AdjustPlayerAngle (player->mo, linetarget);
-
-					P_LineAttack (player->mo, angle - ( ANGLE_45 / 3 ), 2*MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
-					AdjustPlayerAngle (player->mo, linetarget);
-				}
-
-				goto macedone;
 			}
 		}
 	}
@@ -85,7 +64,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CMaceAttack)
 	player->mo->weaponspecial = 0;
 
 	angle = player->mo->angle;
-	slope = P_AimLineAttack (player->mo, angle, MELEERANGE, &linetarget);
+	slope = P_AimLineAttack (player->mo, angle, MELEERANGE);
 	P_LineAttack (player->mo, angle, MELEERANGE, slope, damage, NAME_Melee, hammertime);
 
 	// [BC] Apply spread.

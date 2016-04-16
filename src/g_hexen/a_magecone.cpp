@@ -60,7 +60,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 	AActor *mo;
 	bool conedone=false;
 	player_t *player;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -89,14 +89,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 	for (i = 0; i < 16; i++)
 	{
 		angle = self->angle+i*(ANG45/16);
-		slope = P_AimLineAttack (self, angle, MELEERANGE, &linetarget, 0, ALF_CHECK3D);
-		if (linetarget)
+		slope = P_AimLineAttack (self, angle, MELEERANGE, &t, 0, ALF_CHECK3D);
+		if (t.linetarget)
 		{
-			P_DamageMobj (linetarget, self, self, damage, NAME_Ice);
+			P_DamageMobj (t.linetarget, self, self, damage, NAME_Ice, DMG_USEANGLE, t.SourceAngleToTarget());
 
 			// [BC] Apply spread.
 			if ( player->cheats2 & CF2_SPREAD )
-				P_DamageMobj (linetarget, self, self, damage * 2, NAME_Ice);
+				P_DamageMobj (t.linetarget, self, self, damage * 2, NAME_Ice);
 
 			conedone = true;
 			break;

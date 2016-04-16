@@ -1107,7 +1107,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfCloser)
 	else
 	{
 		// Does the player aim at something that can be shot?
-		P_BulletSlope(self, &target);
+		FTranslatedLineTarget t;
+		P_BulletSlope(self, &t, ALF_PORTALRESTRICT);
+		target = t.linetarget;
 	}
 	return DoJumpIfCloser(target, VM_ARGS_NAMES);
 }
@@ -1981,17 +1983,18 @@ void A_FireCustomMissileHelper ( AActor * self,
 								 PClassActor * ti,
 								 const angle_t Angle,
 								 const int Flags,
-								 AActor *&linetarget )
+								 FTranslatedLineTarget &t )
 {
 	// [BB] Don't tell the clients to spawn the missile yet. This is done later
 	// after we are done manipulating angle and velocity.
-	AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &linetarget,	NULL, false, (Flags & FPF_NOAUTOAIM) != 0, true, false);
+	AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &t, NULL, false, (Flags & FPF_NOAUTOAIM) != 0, 0, true, false);
 
 	// automatic handling of seeker missiles
 	if (misl)
 	{
 		if (Flags & FPF_TRANSFERTRANSLATION) misl->Translation = self->Translation;
-		if (linetarget && misl->flags2&MF2_SEEKERMISSILE) misl->tracer=linetarget;
+		if (t.linetarget && !t.unlinked && (misl->flags2 & MF2_SEEKERMISSILE))
+			misl->tracer = t.linetarget;
 		if (!(Flags & FPF_AIMATANGLE))
 		{
 			// This original implementation is to aim straight ahead and then offset
@@ -2027,7 +2030,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 
 	player_t *player = self->player;
 	AWeapon *weapon = player->ReadyWeapon;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 		// Only use ammo if called from a weapon
 	if (useammo && ACTION_CALL_FROM_WEAPON() && weapon)
@@ -2054,18 +2057,18 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 		fixed_t saved_player_pitch = self->pitch;
 		self->pitch -= pitch;
 
-		A_FireCustomMissileHelper( self, x, y, z, shootangle, ti, angle , flags, linetarget );
+		A_FireCustomMissileHelper( self, x, y, z, shootangle, ti, angle , flags, t );
 
 		if (NULL != self->player )
 		{
 			if ( self->player->cheats2 & CF2_SPREAD )
 			{
-				A_FireCustomMissileHelper( self, x, y, z, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, linetarget );
-				A_FireCustomMissileHelper( self, x, y, z, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, linetarget );
+				A_FireCustomMissileHelper( self, x, y, z, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, x, y, z, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
 			}
 		}
 
-		//AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &linetarget, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
+		//AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &t, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
 		self->pitch = saved_player_pitch;
 /*
 
@@ -2074,8 +2077,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 		{
 			if (flags & FPF_TRANSFERTRANSLATION)
 				misl->Translation = self->Translation;
-			if (linetarget && (misl->flags2 & MF2_SEEKERMISSILE))
-				misl->tracer = linetarget;
+			if (t.linetarget && !t.unlinked && (misl->flags2 & MF2_SEEKERMISSILE))
+				misl->tracer = t.linetarget;
 			if (!(flags & FPF_AIMATANGLE))
 			{
 				// This original implementation is to aim straight ahead and then offset
@@ -2139,7 +2142,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 
 	angle_t 	angle;
 	int 		pitch;
-	AActor *	linetarget;
+	FTranslatedLineTarget t;
 	int			actualdamage;
 
 	// [BC] Weapons are handled by the server.
@@ -2155,10 +2158,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 	angle = self->angle + (pr_cwpunch.Random2() << 18);
 	if (range == 0)
 		range = MELEERANGE;
-	pitch = P_AimLineAttack (self, angle, range, &linetarget);
+	pitch = P_AimLineAttack (self, angle, range, &t);
 
 	// only use ammo when actually hitting something!
-	if ((flags & CPF_USEAMMO) && linetarget && weapon && ACTION_CALL_FROM_WEAPON())
+	if ((flags & CPF_USEAMMO) && t.linetarget && weapon && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo(weapon->bAltFire, true))
 			return 0;	// out of ammo
@@ -2177,9 +2180,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 		pufftype = PClass::FindActor(NAME_BulletPuff);
 	int puffFlags = LAF_ISMELEEATTACK | ((flags & CPF_NORANDOMPUFFZ) ? LAF_NORANDOMPUFFZ : 0);
 
-	P_LineAttack (self, angle, range, pitch, damage, NAME_Melee, pufftype, puffFlags, &linetarget, &actualdamage);
+	P_LineAttack (self, angle, range, pitch, damage, NAME_Melee, pufftype, puffFlags, &t, &actualdamage);
 
-	if (!linetarget)
+	if (!t.linetarget)
 	{
 		if (MissSound) S_Sound(self, CHAN_WEAPON, MissSound, 1, ATTN_NORM);
 	}
@@ -2189,7 +2192,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 		// [EP] Is the actor's health changed by the life steal?
 		const int prevhealth = self->health;
 
-		if (lifesteal && !(linetarget->flags5 & MF5_DONTDRAIN))
+		if (lifesteal && !(t.linetarget->flags5 & MF5_DONTDRAIN))
 		{
 			if (flags & CPF_STEALARMOR)
 			{
@@ -2226,11 +2229,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 		if (!(flags & CPF_NOTURN))
 		{
 			// turn to face target
-			self->angle = self->AngleTo(linetarget);
+			self->angle = t.SourceAngleToTarget();
 		}
 
 		if (flags & CPF_PULLIN) self->flags |= MF_JUSTATTACKED;
-		if (flags & CPF_DAGGER) P_DaggerAlert (self, linetarget);
+		if (flags & CPF_DAGGER) P_DaggerAlert (self, t.linetarget);
 		// [BC] Inform the clients about the correct angle and the updated health.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
@@ -2348,7 +2351,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 	if (range == 0) range = 8192*FRACUNIT;
 	if (sparsity == 0) sparsity = 1;
 
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	fixedvec3 savedpos = self->Pos();
 	angle_t saved_angle = self->angle;
@@ -2371,8 +2374,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 	{
 		self->angle = self->AngleTo(self->target);
 	}
-	self->pitch = P_AimLineAttack (self, self->angle, MISSILERANGE, &linetarget, ANGLE_1*60, 0, aim ? self->target : NULL);
-	if (linetarget == NULL && aim)
+	self->pitch = P_AimLineAttack (self, self->angle, MISSILERANGE, &t, ANGLE_1*60, 0, aim ? self->target : NULL);
+	if (t.linetarget == NULL && aim)
 	{
 		// We probably won't hit the target, but aim at it anyway so we don't look stupid.
 		fixedvec2 pos = self->Vec2To(self->target);
@@ -4635,6 +4638,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInLOS)
 
 	angle_t an;
 	AActor *target, *viewport;
+	FTranslatedLineTarget t;
 
 	bool doCheckSight;
 
@@ -4670,12 +4674,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfTargetInLOS)
 	else
 	{
 		// Does the player aim at something that can be shot?
-		P_AimLineAttack(self, self->angle, MISSILERANGE, &target, (flags & JLOSF_NOAUTOAIM) ? ANGLE_1/2 : 0);
+		P_AimLineAttack(self, self->angle, MISSILERANGE, &t, (flags & JLOSF_NOAUTOAIM) ? ANGLE_1/2 : 0, ALF_PORTALRESTRICT);
 		
-		if (!target)
+		if (!t.linetarget)
 		{
 			ACTION_RETURN_STATE(NULL);
 		}
+		target = t.linetarget;
 
 		switch (flags & (JLOSF_TARGETLOS|JLOSF_FLIPFOV))
 		{
@@ -6373,10 +6378,14 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusGive)
 	}
 	else
 	{
-		FBlockThingsIterator it(FBoundingBox(self->X(), self->Y(), distance));
-		while ((thing = it.Next()))
+		FPortalGroupArray check(FPortalGroupArray::PGA_Full3d);
+		fixed_t mid = self->Z() + self->height / 2;
+		FMultiBlockThingsIterator it(check, self->X(), self->Y(), mid-distance, mid+distance, distance);
+		FMultiBlockThingsIterator::CheckResult cres;
+
+		while ((it.Next(&cres)))
 		{
-			given += DoRadiusGive(self, thing, item, amount, distance, flags, filter, species, mindist);
+			given += DoRadiusGive(self, cres.thing, item, amount, distance, flags, filter, species, mindist);
 		}
 	}
 	ACTION_RETURN_INT(given);

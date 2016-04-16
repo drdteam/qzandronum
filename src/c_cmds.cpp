@@ -1235,23 +1235,23 @@ CCMD (wdir)
 //-----------------------------------------------------------------------------
 CCMD(linetarget)
 {
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (CheckCheatmode () || players[consoleplayer].mo == NULL) return;
-	P_AimLineAttack(players[consoleplayer].mo,players[consoleplayer].mo->angle,MISSILERANGE, &linetarget, 0);
-	if (linetarget)
+	P_AimLineAttack(players[consoleplayer].mo,players[consoleplayer].mo->angle,MISSILERANGE, &t, 0);
+	if (t.linetarget)
 	{
 		// [TP] If we're the client, ask the server for information about the linetarget.
-		if ( NETWORK_GetState() == NETSTATE_CLIENT && linetarget->lNetID != -1 )
+		if ( NETWORK_GetState() == NETSTATE_CLIENT && t.linetarget->lNetID != -1 )
 		{
-			CLIENTCOMMANDS_InfoCheat( linetarget, false );
+			CLIENTCOMMANDS_InfoCheat( t.linetarget, false );
 			return;
 		}
 
 		Printf("Target=%s, Health=%d, Spawnhealth=%d\n",
-			linetarget->GetClass()->TypeName.GetChars(),
-			linetarget->health,
-			linetarget->SpawnHealth());
+			t.linetarget->GetClass()->TypeName.GetChars(),
+			t.linetarget->health,
+			t.linetarget->SpawnHealth());
 	}
 	else Printf("No target found\n");
 }
@@ -1259,25 +1259,25 @@ CCMD(linetarget)
 // As linetarget, but also give info about non-shootable actors
 CCMD(info)
 {
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (CheckCheatmode () || players[consoleplayer].mo == NULL) return;
 	P_AimLineAttack(players[consoleplayer].mo,players[consoleplayer].mo->angle,MISSILERANGE, 
-		&linetarget, 0,	ALF_CHECKNONSHOOTABLE|ALF_FORCENOSMART);
-	if (linetarget)
+		&t, 0,	ALF_CHECKNONSHOOTABLE|ALF_FORCENOSMART);
+	if (t.linetarget)
 	{
 		// [TP] If we're the client, ask the server for information about the linetarget.
-		if ( NETWORK_GetState() == NETSTATE_CLIENT && linetarget->lNetID != -1 )
+		if ( NETWORK_GetState() == NETSTATE_CLIENT && t.linetarget->lNetID != -1 )
 		{
-			CLIENTCOMMANDS_InfoCheat( linetarget, true );
+			CLIENTCOMMANDS_InfoCheat( t.linetarget, true );
 			return;
 		}
 
 		Printf("Target=%s, Health=%d, Spawnhealth=%d\n",
-			linetarget->GetClass()->TypeName.GetChars(),
-			linetarget->health,
-			linetarget->SpawnHealth());
-		PrintMiscActorInfo(linetarget);
+			t.linetarget->GetClass()->TypeName.GetChars(),
+			t.linetarget->health,
+			t.linetarget->SpawnHealth());
+		PrintMiscActorInfo(t.linetarget);
 	}
 	else Printf("No target found. Info cannot find actors that have "
 				"the NOBLOCKMAP flag or have height/radius of 0.\n");

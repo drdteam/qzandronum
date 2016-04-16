@@ -1032,7 +1032,7 @@ int A_GunFlash(AActor *self, FState *flash, const int flags)
 // the height of the intended target
 //
 
-angle_t P_BulletSlope (AActor *mo, AActor **pLineTarget)
+angle_t P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimflags)
 {
 	static const int angdiff[15] = {
 		AUTOAIM_MINANGLE * -1, AUTOAIM_MINANGLE * 1, AUTOAIM_MINANGLE * -2, AUTOAIM_MINANGLE * 2,
@@ -1042,19 +1042,20 @@ angle_t P_BulletSlope (AActor *mo, AActor **pLineTarget)
 	int i;
 	angle_t an;
 	angle_t pitch;
-	AActor *linetarget;
+	FTranslatedLineTarget scratch;
 	int endIndex = zacompatflags & ZACOMPATF_AUTOAIM ? 12 : 0; // [CK/TP] Our ending index depends on compatflags.
 
 	// [Spleen]
 	UNLAGGED_Reconcile( mo );
 	UNLAGGED_AddReconciliationBlocker( );
 
+	if (pLineTarget == NULL) pLineTarget = &scratch;
 	// see which target is to be aimed at
 	i = 14; // [TP/CK] Now 14
 	do
 	{
 		an = mo->angle + angdiff[i];
-		pitch = P_AimLineAttack (mo, an, 16*64*FRACUNIT, &linetarget);
+		pitch = P_AimLineAttack (mo, an, 16*64*FRACUNIT, pLineTarget, 0, aimflags);
 
 		if (mo->player != NULL &&
 			level.IsFreelookAllowed() &&
@@ -1062,11 +1063,8 @@ angle_t P_BulletSlope (AActor *mo, AActor **pLineTarget)
 		{
 			break;
 		}
-	} while (linetarget == NULL && --i >= endIndex); // [TP] 0 changed to endIndex
-	if (pLineTarget != NULL)
-	{
-		*pLineTarget = linetarget;
-	}
+	} while (pLineTarget->linetarget == NULL && --i >= endIndex); // [TP] 0 changed to endIndex
+
 
 	// [Spleen]
 	UNLAGGED_RemoveReconciliationBlocker( );

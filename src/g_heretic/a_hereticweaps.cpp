@@ -66,7 +66,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_StaffAttack)
 	angle_t angle;
 	int slope;
 	player_t *player;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -95,8 +95,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_StaffAttack)
 
 	angle = self->angle;
 	angle += pr_sap.Random2() << 18;
-	slope = P_AimLineAttack (self, angle, MELEERANGE, &linetarget);
-	P_LineAttack (self, angle, MELEERANGE, slope, damage, NAME_Melee, puff, true, &linetarget);
+	slope = P_AimLineAttack (self, angle, MELEERANGE);
+	P_LineAttack (self, angle, MELEERANGE, slope, damage, NAME_Melee, puff, true, &t);
 
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
@@ -105,11 +105,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_StaffAttack)
 		P_LineAttack(self, angle - ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, puff, true);
 	}
 
-	if (linetarget)
+	if (t.linetarget)
 	{
 		//S_StartSound(player->mo, sfx_stfhit);
 		// turn to face target
-		self->angle = self->AngleTo(linetarget);
+		self->angle = t.SourceAngleToTarget();
 
 		// [BC] If we're the server, tell clients to adjust the player's angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -363,7 +363,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 	fixed_t dist;
 	player_t *player;
 	PClassActor *pufftype;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 	int actualdamage = 0;
 
 	if (NULL == (player = self->player))
@@ -396,9 +396,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 		angle += pr_gatk.Random2() << 18;
 		pufftype = PClass::FindActor("GauntletPuff1");
 	}
-	slope = P_AimLineAttack (self, angle, dist, &linetarget);
-	P_LineAttack (self, angle, dist, slope, damage, NAME_Melee, pufftype, false, &linetarget, &actualdamage);
-	if (!linetarget)
+	slope = P_AimLineAttack (self, angle, dist);
+	P_LineAttack (self, angle, dist, slope, damage, NAME_Melee, pufftype, false, &t, &actualdamage);
+	if (!t.linetarget)
 	{
 		if (pr_gatk() > 64)
 		{
@@ -429,7 +429,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 			// [EP] Save the current health value for bandwidth.
 			const int prevhealth = self->health;
 
-			if (!(linetarget->flags5 & MF5_DONTDRAIN)) P_GiveBody (self, actualdamage>>1);
+			if (!(t.linetarget->flags5 & MF5_DONTDRAIN)) P_GiveBody (self, actualdamage>>1);
 			S_Sound (self, CHAN_AUTO, "weapons/gauntletspowhit", 1, ATTN_NORM);
 
 			// [EP] Inform the clients about the sound and the possible health change.
@@ -450,7 +450,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 		}
 	}
 	// turn to face target
-	angle = self->AngleTo(linetarget);
+	angle = t.SourceAngleToTarget();
 	if (angle-self->angle > ANG180)
 	{
 		if ((int)(angle-self->angle) < -ANG90/20)
@@ -901,7 +901,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMacePL2)
 
 	AActor *mo;
 	player_t *player;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -922,16 +922,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMacePL2)
 		return 0;
 	}
 
-	mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle, &linetarget);
+	mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle, &t);
 	if (mo)
 	{
 		mo->velx += self->velx;
 		mo->vely += self->vely;
 		mo->velz = 2*FRACUNIT+
 			clamp<fixed_t>(finetangent[FINEANGLES/4-(self->pitch>>ANGLETOFINESHIFT)], -5*FRACUNIT, 5*FRACUNIT);
-		if (linetarget)
+		if (t.linetarget && !t.unlinked)
 		{
-			mo->tracer = linetarget;
+			mo->tracer = t.linetarget;
 		}
 	}
 	S_Sound (self, CHAN_WEAPON, "weapons/maceshoot", 1, ATTN_NORM);
@@ -945,16 +945,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMacePL2)
 
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle + ( ANGLE_45 / 3 ), &linetarget);
+		mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle + ( ANGLE_45 / 3 ), &t);
 		if (mo)
 		{
 			mo->velx += self->velx;
 			mo->vely += self->vely;
 			mo->velz = 2*FRACUNIT+
 				clamp<fixed_t>(finetangent[FINEANGLES/4-(self->pitch>>ANGLETOFINESHIFT)], -5*FRACUNIT, 5*FRACUNIT);
-			if (linetarget)
+			if (t.linetarget && !t.unlinked)
 			{
-				mo->tracer = linetarget;
+				mo->tracer = t.linetarget;
 			}
 
 			// [BC] If we're the server, play the sound.
@@ -962,16 +962,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMacePL2)
 				SERVERCOMMANDS_MoveThingExact( mo, CM_X|CM_Y|CM_Z|CM_VELX|CM_VELY|CM_VELZ );
 		}
 
-		mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle - ( ANGLE_45 / 3 ), &linetarget);
+		mo = P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AMaceFX4), self->angle - ( ANGLE_45 / 3 ), &t);
 		if (mo)
 		{
 			mo->velx += self->velx;
 			mo->vely += self->vely;
 			mo->velz = 2*FRACUNIT+
 				clamp<fixed_t>(finetangent[FINEANGLES/4-(self->pitch>>ANGLETOFINESHIFT)], -5*FRACUNIT, 5*FRACUNIT);
-			if (linetarget)
+			if (t.linetarget && !t.unlinked)
 			{
-				mo->tracer = linetarget;
+				mo->tracer = t.linetarget;
 			}
 
 			// [BC] If we're the server, play the sound.
@@ -996,7 +996,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 	AActor *target;
 	angle_t angle = 0;
 	bool newAngle;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	// [BC] Let the server handle this.
 	if ( NETWORK_InClientMode() )
@@ -1055,11 +1055,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 			angle = 0;
 			for (i = 0; i < 16; i++)
 			{
-				P_AimLineAttack (self, angle, 10*64*FRACUNIT, &linetarget, 0, ALF_NOFRIENDS, NULL, self->target);
-				if (linetarget && self->target != linetarget)
+				P_AimLineAttack (self, angle, 10*64*FRACUNIT, &t, 0, ALF_NOFRIENDS|ALF_PORTALRESTRICT, NULL, self->target);
+				if (t.linetarget && self->target != t.linetarget)
 				{
-					self->tracer = linetarget;
-					angle = self->AngleTo(linetarget);
+					self->tracer = t.linetarget;
+					angle = t.SourceAngleToTarget();
 					newAngle = true;
 					break;
 				}
@@ -1394,7 +1394,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 
 	player_t *player;
 	AActor *MissileActor;
-	AActor *linetarget;
+	FTranslatedLineTarget t;
 
 	if (NULL == (player = self->player))
 	{
@@ -1413,7 +1413,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 		return 0;
 	}
 
-	P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle, &linetarget, &MissileActor);
+	P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle, &t, &MissileActor);
 	// Use MissileActor instead of the return value from
 	// P_SpawnPlayerMissile because we need to give info to the mobj
 	// even if it exploded immediately.
@@ -1425,9 +1425,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SetThingSpecial2( MissileActor );
 
-		if (linetarget)
+		if (t.linetarget && !t.unlinked)
 		{
-			MissileActor->tracer = linetarget;
+			MissileActor->tracer = t.linetarget;
 		}
 		S_Sound (MissileActor, CHAN_WEAPON, "weapons/hornrodpowshoot", 1, ATTN_NORM);
 
@@ -1439,7 +1439,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle + ( ANGLE_45 / 3 ), &linetarget, &MissileActor);
+		P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle + ( ANGLE_45 / 3 ), &t, &MissileActor);
 		// Use MissileActor instead of the return value from
 		// P_SpawnPlayerMissile because we need to give info to the mobj
 		// even if it exploded immediately.
@@ -1451,9 +1451,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_SetThingSpecial2( MissileActor );
 
-			if (linetarget)
+			if (t.linetarget && !t.unlinked)
 			{
-				MissileActor->tracer = linetarget;
+				MissileActor->tracer = t.linetarget;
 			}
 			S_Sound (MissileActor, CHAN_WEAPON, "weapons/hornrodpowshoot", 1, ATTN_NORM);
 
@@ -1462,7 +1462,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 				SERVERCOMMANDS_SoundActor( MissileActor, CHAN_WEAPON, "weapons/hornrodpowshoot", 1, ATTN_NORM );
 		}
 
-		P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle - ( ANGLE_45 / 3 ), &linetarget, &MissileActor);
+		P_SpawnPlayerMissile (self, 0,0,0, RUNTIME_CLASS(AHornRodFX2), self->angle - ( ANGLE_45 / 3 ), &t, &MissileActor);
 		// Use MissileActor instead of the return value from
 		// P_SpawnPlayerMissile because we need to give info to the mobj
 		// even if it exploded immediately.
@@ -1474,9 +1474,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireSkullRodPL2)
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_SetThingSpecial2( MissileActor );
 
-			if (linetarget)
+			if (t.linetarget && !t.unlinked)
 			{
-				MissileActor->tracer = linetarget;
+				MissileActor->tracer = t.linetarget;
 			}
 			S_Sound (MissileActor, CHAN_WEAPON, "weapons/hornrodpowshoot", 1, ATTN_NORM);
 
