@@ -7556,9 +7556,10 @@ static void client_SpawnBlood( BYTESTREAM_s *pByteStream )
 static void client_SpawnBloodSplatter( BYTESTREAM_s *pByteStream, bool bIsBloodSplatter2 )
 {
 	// Read in the XYZ location of the blood.
-	fixed_t X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	fixed_t Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	fixed_t Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	fixedvec3 pos;
+	pos.x = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	pos.y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	pos.z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
 	// Read in the NetID of the originator.
 	LONG lID = NETWORK_ReadShort( pByteStream );
@@ -7569,9 +7570,9 @@ static void client_SpawnBloodSplatter( BYTESTREAM_s *pByteStream, bool bIsBloodS
 	if ( pOriginator )
 	{
 		if ( bIsBloodSplatter2 )
-			P_BloodSplatter2 (X, Y, Z, pOriginator);
+			P_BloodSplatter2 (pos, pOriginator);
 		else
-			P_BloodSplatter (X, Y, Z, pOriginator);
+			P_BloodSplatter (pos, pOriginator);
 	}
 }
 
