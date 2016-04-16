@@ -922,9 +922,9 @@ fixed_t sector_t::HighestCeilingAt(fixed_t x, fixed_t y, sector_t **resultsec)
 	// Continue until we find a blocking portal or a portal below where we actually are.
 	while (!check->PortalBlocksMovement(ceiling) && planeheight < check->SkyBoxes[ceiling]->threshold)
 	{
-		FDisplacement &disp = check->CeilingDisplacement();
-		x += disp.pos.x;
-		y += disp.pos.y;
+		fixedvec2 pos = check->CeilingDisplacement();
+		x += pos.x;
+		y += pos.y;
 		planeheight = check->SkyBoxes[ceiling]->threshold;
 		check = P_PointInSector(x, y);
 	}
@@ -946,9 +946,9 @@ fixed_t sector_t::LowestFloorAt(fixed_t x, fixed_t y, sector_t **resultsec)
 	// Continue until we find a blocking portal or a portal above where we actually are.
 	while (!check->PortalBlocksMovement(floor) && planeheight > check->SkyBoxes[floor]->threshold)
 	{
-		FDisplacement &disp = check->FloorDisplacement();
-		x += disp.pos.x;
-		y += disp.pos.y;
+		fixedvec2 pos = check->FloorDisplacement();
+		x += pos.x;
+		y += pos.y;
 		planeheight = check->SkyBoxes[floor]->threshold;
 		check = P_PointInSector(x, y);
 	}
@@ -985,9 +985,9 @@ fixed_t sector_t::NextHighestCeilingAt(fixed_t x, fixed_t y, fixed_t z, int flag
 		}
 		else
 		{
-			FDisplacement &disp = sec->CeilingDisplacement();
-			x += disp.pos.x;
-			y += disp.pos.y;
+			fixedvec2 pos = sec->CeilingDisplacement();
+			x += pos.x;
+			y += pos.y;
 			planeheight = sec->SkyBoxes[ceiling]->threshold;
 			sec = P_PointInSector(x, y);
 		}
@@ -1028,9 +1028,9 @@ fixed_t sector_t::NextLowestFloorAt(fixed_t x, fixed_t y, fixed_t z, int flags, 
 		}
 		else
 		{
-			FDisplacement &disp = sec->FloorDisplacement();
-			x += disp.pos.x;
-			y += disp.pos.y;
+			fixedvec2 pos = sec->FloorDisplacement();
+			x += pos.x;
+			y += pos.y;
 			planeheight = sec->SkyBoxes[floor]->threshold;
 			sec = P_PointInSector(x, y);
 		}
