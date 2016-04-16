@@ -512,9 +512,7 @@ int A_RestoreSpecialPosition ( AActor *self )
 	}
 	// Do not interpolate from the position the actor was at when it was
 	// picked up, in case that is different from where it is now.
-	self->PrevX = self->X();
-	self->PrevY = self->Y();
-	self->PrevZ = self->Z();
+	self->ClearInterpolation();
 	return 0;
 }
 

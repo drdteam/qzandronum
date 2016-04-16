@@ -1039,6 +1039,8 @@ public:
 		return ret;
 	}
 
+	void ClearInterpolation();
+
 	void Move(fixed_t dx, fixed_t dy, fixed_t dz)
 	{
 		SetOrigin(X() + dx, Y() + dy, Z() + dz, true);
@@ -1288,6 +1290,7 @@ public:
 	// [RH] Used to interpolate the view to get >35 FPS
 	fixed_t PrevX, PrevY, PrevZ;
 	angle_t PrevAngle;
+	int PrevPortalGroup;
 
 	// [BB] Last tic in which the server sent a xyz-position / movedir update about this actor to the clients.
 	int	lastNetXUpdateTic, lastNetYUpdateTic, lastNetZUpdateTic, lastNetVelXUpdateTic, lastNetVelYUpdateTic, lastNetVelZUpdateTic, lastNetMovedirUpdateTic;
@@ -1446,11 +1449,6 @@ public:
 		__pos.y = npos.y;
 		__pos.z = npos.z;
 	}
-	void SetMovement(fixed_t x, fixed_t y, fixed_t z)
-	{
-		// not yet implemented
-	}
-
 
 	// begin of GZDoom specific additions
 	TArray<TObjPtr<AActor> >		dynamiclights;

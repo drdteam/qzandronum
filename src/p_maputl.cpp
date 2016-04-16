@@ -426,6 +426,7 @@ bool AActor::FixMapthingPos()
 				// Get the distance we have to move the object away from the wall
 				distance = radius - distance;
 				SetXY(X() + FixedMul(distance, finecosine[finean]), Y() + FixedMul(distance, finesine[finean]));
+				ClearInterpolation();
 				success = true;
 			}
 		}
@@ -543,9 +544,9 @@ void AActor::SetOrigin (fixed_t ix, fixed_t iy, fixed_t iz, bool moving)
 {
 	UnlinkFromWorld ();
 	SetXYZ(ix, iy, iz);
-	if (moving) SetMovement(ix - X(), iy - Y(), iz - Z());
 	LinkToWorld ();
 	P_FindFloorCeiling(this, FFCF_ONLYSPAWNPOS);
+	if (!moving) ClearInterpolation();
 
 	// [BC] Flag this actor as having moved.
 	ulSTFlags |= STFL_POSITIONCHANGED;
@@ -1410,7 +1411,7 @@ intercept_t *FPathTraverse::Next()
 //
 //===========================================================================
 
-FPathTraverse::FPathTraverse (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags)
+void FPathTraverse::init (fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags)
 {
 	fixed_t 	xt1, xt2;
 	fixed_t 	yt1, yt2;

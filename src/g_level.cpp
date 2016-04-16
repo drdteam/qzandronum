@@ -1941,6 +1941,7 @@ void G_FinishTravel ()
 		oldpawn->Destroy();
 		pawndup->Destroy ();
 		pawn->LinkToWorld ();
+		pawn->ClearInterpolation();
 		pawn->AddToHash ();
 		pawn->SetState(pawn->SpawnState);
 		pawn->player->SendPitchLimits();

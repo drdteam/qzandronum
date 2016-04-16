@@ -532,9 +532,7 @@ bool P_Move (AActor *actor)
 	// so make it switchable
 	if (nomonsterinterpolation)
 	{
-		actor->PrevX = actor->X();
-		actor->PrevY = actor->Y();
-		actor->PrevZ = actor->Z();
+		actor->ClearInterpolation();
 	}
 
 	if (try_ok && friction > ORIG_FRICTION)
@@ -2857,6 +2855,7 @@ void A_DoChase (VMFrameStack *stack, AActor *actor, bool fastchase, FState *mele
 		// CANTLEAVEFLOORPIC handling was completely missing in the non-serpent functions.
 		fixed_t oldX = actor->X();
 		fixed_t oldY = actor->Y();
+		int oldgroup = actor->PrevPortalGroup;
 		FTextureID oldFloor = actor->floorpic;
 
 		// [BC] In client mode, just keep walking until the server tells us to
@@ -2888,6 +2887,7 @@ void A_DoChase (VMFrameStack *stack, AActor *actor, bool fastchase, FState *mele
 					{
 						actor->PrevX = oldX;
 						actor->PrevY = oldY;
+					actor->PrevPortalGroup = oldgroup;
 					}
 				}
 				if (!(flags & CHF_STOPIFBLOCKED))

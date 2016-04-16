@@ -530,10 +530,7 @@ void AActor::Serialize (FArchive &arc)
 				Speed = GetDefault()->Speed;
 			}
 		}
-		PrevX = X();
-		PrevY = Y();
-		PrevZ = Z();
-		PrevAngle = angle;
+		ClearInterpolation();
 		UpdateWaterLevel(Z(), false);
 	}
 }
@@ -4251,6 +4248,7 @@ void AActor::CheckPortalTransition(bool islinked)
 			PrevY += Y() - oldpos.y;
 			PrevZ += Z() - oldpos.z;
 			Sector = P_PointInSector(X(), Y());
+			PrevPortalGroup = Sector->PortalGroup;
 			moved = true;
 		}
 		else break;
@@ -4269,6 +4267,7 @@ void AActor::CheckPortalTransition(bool islinked)
 				PrevY += Y() - oldpos.y;
 				PrevZ += Z() - oldpos.z;
 				Sector = P_PointInSector(X(), Y());
+				PrevPortalGroup = Sector->PortalGroup;
 				moved = true;
 			}
 			else break;
@@ -4318,10 +4317,7 @@ void AActor::Tick ()
 
 	// This is necessary to properly interpolate movement outside this function
 	// like from an ActorMover
-	PrevX = X();
-	PrevY = Y();
-	PrevZ = Z();
-	PrevAngle = angle;
+	ClearInterpolation();
 
 	// [BC] There are times when we don't want to tick this actor if it's a player.
 	// [BB] Voodoo dolls are an exemption.
@@ -4362,7 +4358,6 @@ void AActor::Tick ()
 		flags |= MF_NOBLOCKMAP;
 		SetXYZ(Vec3Offset(velx, vely, velz));
 		CheckPortalTransition(false);
-		SetMovement(velx, vely, velz);
 		LinkToWorld ();
 	}
 	else
@@ -5212,9 +5207,6 @@ AActor *AActor::StaticSpawn (PClassActor *type, fixed_t ix, fixed_t iy, fixed_t 
 		actor->Conversation = NULL;
 	}
 
-	actor->PrevX = ix;
-	actor->PrevY = iy;
-	actor->PrevZ = iz;
 	actor->SetXYZ(ix, iy, iz);
 
 	// [CK] Desync issues occur due to not having marked spawning actors with
@@ -5260,6 +5252,7 @@ AActor *AActor::StaticSpawn (PClassActor *type, fixed_t ix, fixed_t iy, fixed_t 
 	actor->InitialState = actor->state;
 	// set subsector and/or block links
 	actor->LinkToWorld (SpawningMapThing);
+	actor->ClearInterpolation();
 
 	actor->dropoffz =			// killough 11/98: for tracking dropoffs
 	actor->floorz = actor->Sector->floorplane.ZatPoint (ix, iy);
@@ -7424,6 +7417,7 @@ bool P_CheckMissileSpawn (AActor* th, fixed_t maxdist, bool bExplode)
 			return false;
 		}
 	}
+	th->ClearInterpolation();
 	return true;
 }
 
