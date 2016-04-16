@@ -869,6 +869,7 @@ public:
 	bool IsHostile (AActor *other);
 
 	inline bool IsNoClip2() const;
+	void CheckPortalTransition(bool islinked);
 
 	// What species am I?
 	virtual FName GetSpecies();

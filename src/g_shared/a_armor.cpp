@@ -599,3 +599,11 @@ void AHexenArmor::AbsorbDamage (int damage, FName damageType, int &newdamage)
 		SERVERCOMMANDS_SetHexenArmorSlots( Owner->player - players, this );
 }
 
+
+void AHexenArmor::DepleteOrDestroy()
+{
+	for (int i = 0; i < 4; i++)
+	{
+		Slots[i] = 0;
+	}
+}
