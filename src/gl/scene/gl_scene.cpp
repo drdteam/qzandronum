@@ -98,7 +98,8 @@ CVAR( Bool, cl_disallowfullpitch, false, CVAR_ARCHIVE )
 EXTERN_CVAR (Bool, cl_oldfreelooklimit)
 
 extern int viewpitch;
- 
+extern bool NoInterpolateView;
+
 DWORD			gl_fixedcolormap;
 area_t			in_area;
 TArray<BYTE> currentmapsection;
@@ -944,18 +945,22 @@ void FGLRenderer::RenderView (player_t* player)
 
 	GLRenderer->mLights->Clear();
 
+	// NoInterpolateView should have no bearing on camera textures, but needs to be preserved for the main view below.
+	bool saved_niv = NoInterpolateView;
+	NoInterpolateView = false;
 	// prepare all camera textures that have been used in the last frame
 	FCanvasTextureInfo::UpdateAll();
+	NoInterpolateView = saved_niv;
 
 
 	// I stopped using BaseRatioSizes here because the information there wasn't well presented.
 	//							4:3				16:9		16:10		17:10		5:4
-	static float ratios[]={1.333333f, 1.777777f, 1.6f, 1.7f, 1.25f};
+	static float ratios[]={1.333333f, 1.777777f, 1.6f, 1.7f, 1.25f, 1.7f, 2.333333f};
 
 	// now render the main view
 	float fovratio;
 	float ratio = ratios[WidescreenRatio];
-	if (!(WidescreenRatio&4))
+	if (! Is54Aspect(WidescreenRatio))
 	{
 		fovratio = 1.333333f;
 	}
