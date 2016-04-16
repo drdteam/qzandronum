@@ -245,7 +245,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FAxeAttack)
 				{
 					if (t.linetarget->flags3&MF3_ISMONSTER || t.linetarget->player)
 					{
-						P_ThrustMobj(t.linetarget, t.hitangle, power);
+						P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 					}
 					AdjustPlayerAngle(pmo, &t);
 
@@ -255,14 +255,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_FAxeAttack)
 						P_LineAttack(pmo, angle + (ANGLE_45 / 3), AXERANGE, slope, damage, NAME_Melee, pufftype, true);
 						if (t.linetarget->flags3&MF3_ISMONSTER || t.linetarget->player)
 						{
-							P_ThrustMobj(t.linetarget, t.hitangle, power);
+							P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 						}
 						AdjustPlayerAngle(pmo, &t);
 
 						P_LineAttack(pmo, angle - (ANGLE_45 / 3), AXERANGE, slope, damage, NAME_Melee, pufftype, true);
 						if (t.linetarget->flags3&MF3_ISMONSTER || t.linetarget->player)
 						{
-							P_ThrustMobj(t.linetarget, t.hitangle, power);
+							P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 						}
 						AdjustPlayerAngle(pmo, &t);
 					}

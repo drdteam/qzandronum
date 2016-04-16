@@ -334,7 +334,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_M_Saw)
 		S_Sound (self, CHAN_WEAPON, hitsound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
 			
 		// turn to face target
-		angle = t.SourceAngleToTarget();
+		angle = t.angleFromSource;
 		if (angle - self->angle > ANG180)
 		{
 			if (angle - self->angle < (angle_t)(-ANG90/20))
@@ -391,7 +391,7 @@ static void MarinePunch(AActor *self, int damagemul)
 	if (t.linetarget)
 	{
 		S_Sound (self, CHAN_WEAPON, "*fist", 1, ATTN_NORM, true);	// [BC] Inform the clients.
-		self->angle = t.SourceAngleToTarget();
+		self->angle = t.angleFromSource;
 		// [BB] Update the thing's angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			SERVERCOMMANDS_SetThingAngle( self );

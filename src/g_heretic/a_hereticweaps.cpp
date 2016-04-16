@@ -109,7 +109,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_StaffAttack)
 	{
 		//S_StartSound(player->mo, sfx_stfhit);
 		// turn to face target
-		self->angle = t.SourceAngleToTarget();
+		self->angle = t.angleFromSource;
 
 		// [BC] If we're the server, tell clients to adjust the player's angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -450,7 +450,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_GauntletAttack)
 		}
 	}
 	// turn to face target
-	angle = t.SourceAngleToTarget();
+	angle = t.angleFromSource;
 	if (angle-self->angle > ANG180)
 	{
 		if ((int)(angle-self->angle) < -ANG90/20)
@@ -1059,7 +1059,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 				if (t.linetarget && self->target != t.linetarget)
 				{
 					self->tracer = t.linetarget;
-					angle = t.SourceAngleToTarget();
+					angle = t.angleFromSource;
 					newAngle = true;
 					break;
 				}

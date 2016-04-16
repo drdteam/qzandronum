@@ -92,7 +92,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireConePL1)
 		slope = P_AimLineAttack (self, angle, MELEERANGE, &t, 0, ALF_CHECK3D);
 		if (t.linetarget)
 		{
-			P_DamageMobj (t.linetarget, self, self, damage, NAME_Ice, DMG_USEANGLE, t.SourceAngleToTarget());
+			P_DamageMobj (t.linetarget, self, self, damage, NAME_Ice, DMG_USEANGLE, t.angleFromSource);
 
 			// [BC] Apply spread.
 			if ( player->cheats2 & CF2_SPREAD )

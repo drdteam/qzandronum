@@ -698,6 +698,7 @@ xx(Max_10_Exp)
 xx(__decorate_internal_int__)
 xx(__decorate_internal_bool__)
 xx(__decorate_internal_state__)
+xx(__decorate_internal_float__)
 
 // [BB] Zandronum userinfo settings.
 xx(RailColor)

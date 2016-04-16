@@ -57,7 +57,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FHammerAttack)
 				AdjustPlayerAngle(pmo, &t);
 				if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 				{
-					P_ThrustMobj(t.linetarget, t.hitangle, power);
+					P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 				}
 
 				// [BC] Apply spread.
@@ -67,14 +67,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_FHammerAttack)
 					AdjustPlayerAngle(pmo, &t);
 					if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 					{
-						P_ThrustMobj(t.linetarget, t.hitangle + ( ANGLE_45 / 3 ), power );
+						P_ThrustMobj(t.linetarget, t.angleFromSource + ( ANGLE_45 / 3 ), power );
 					}
 
 					P_LineAttack (pmo, angle - ( ANGLE_45 / 3 ), HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true);
 					AdjustPlayerAngle(pmo, &t);
 					if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 					{
-						P_ThrustMobj(t.linetarget, t.hitangle - ( ANGLE_45 / 3 ), power );
+						P_ThrustMobj(t.linetarget, t.angleFromSource - ( ANGLE_45 / 3 ), power );
 					}
 				}
 
@@ -92,7 +92,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FHammerAttack)
 				AdjustPlayerAngle(pmo, &t);
 				if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 				{
-					P_ThrustMobj(t.linetarget, t.hitangle, power);
+					P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 				}
 
 				// [BC] Apply spread.
@@ -102,14 +102,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_FHammerAttack)
 					AdjustPlayerAngle(pmo, &t);
 					if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 					{
-						P_ThrustMobj(t.linetarget, t.hitangle + ( ANGLE_45 / 3 ), power );
+						P_ThrustMobj(t.linetarget, t.angleFromSource + ( ANGLE_45 / 3 ), power );
 					}
 
 					P_LineAttack(pmo, angle - ( ANGLE_45 / 3 ), HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true);
 					AdjustPlayerAngle(pmo, &t);
 					if (t.linetarget->flags3 & MF3_ISMONSTER || t.linetarget->player)
 					{
-						P_ThrustMobj(t.linetarget, t.hitangle - ( ANGLE_45 / 3 ), power );
+						P_ThrustMobj(t.linetarget, t.angleFromSource - ( ANGLE_45 / 3 ), power );
 					}
 				}
 

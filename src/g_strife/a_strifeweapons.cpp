@@ -139,7 +139,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_JabDagger)
 		S_Sound (self, CHAN_WEAPON,
 			t.linetarget->flags & MF_NOBLOOD ? "misc/metalhit" : "misc/meathit",
 			1, ATTN_NORM, true);	// [BC] Inform the clients.
-		self->angle = t.SourceAngleToTarget();
+		self->angle = t.angleFromSource;
 		self->flags |= MF_JUSTATTACKED;
 		P_DaggerAlert (self, t.linetarget);
 

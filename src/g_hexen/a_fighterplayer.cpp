@@ -30,7 +30,7 @@ void AdjustPlayerAngle (AActor *pmo, FTranslatedLineTarget *t)
 	angle_t angle;
 	int difference;
 
-	angle = t->SourceAngleToTarget();
+	angle = t->angleFromSource;
 	difference = (int)angle - (int)pmo->angle;
 	if (abs(difference) > MAX_ANGLE_ADJUST)
 	{
@@ -82,7 +82,7 @@ static bool TryPunch(APlayerPawn *pmo, angle_t angle, int damage, fixed_t power)
 			if (t.linetarget->player != NULL || 
 				(t.linetarget->Mass != INT_MAX && (t.linetarget->flags3 & MF3_ISMONSTER)))
 			{
-				P_ThrustMobj (t.linetarget, t.hitangle, power);
+				P_ThrustMobj (t.linetarget, t.angleFromSource, power);
 			}
 
 			// [BC] Apply spread.
@@ -92,14 +92,14 @@ static bool TryPunch(APlayerPawn *pmo, angle_t angle, int damage, fixed_t power)
 				if (t.linetarget->player != NULL ||
 					(t.linetarget->Mass != INT_MAX && (t.linetarget->flags3 & MF3_ISMONSTER)))
 				{
-					P_ThrustMobj(t.linetarget, t.hitangle, power);
+					P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 				}
 
 				P_LineAttack (pmo, angle - ( ANGLE_45 / 3 ), 2*MELEERANGE, slope, damage, NAME_Melee, pufftype, true);
 				if (t.linetarget->player != NULL ||
 					(t.linetarget->Mass != INT_MAX && (t.linetarget->flags3 & MF3_ISMONSTER)))
 				{
-					P_ThrustMobj(t.linetarget, t.hitangle, power);
+					P_ThrustMobj(t.linetarget, t.angleFromSource, power);
 				}
 			}
 
