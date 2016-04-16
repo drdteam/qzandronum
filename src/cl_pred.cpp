@@ -210,9 +210,9 @@ void CLIENT_PREDICT_PlayerPredict( void )
 		pPlayer->ServerXYZ[2] );
 
 	// Set the player's velocity as told to him by the server.
-	pPlayer->mo->velx = pPlayer->ServerXYZVel[0];
-	pPlayer->mo->vely = pPlayer->ServerXYZVel[1];
-	pPlayer->mo->velz = pPlayer->ServerXYZVel[2];
+	pPlayer->mo->vel.x = pPlayer->ServerXYZVel[0];
+	pPlayer->mo->vel.y = pPlayer->ServerXYZVel[1];
+	pPlayer->mo->vel.z = pPlayer->ServerXYZVel[2];
 
 	// If we don't want to do any prediction, just tick the player and get out.
 	if ( cl_predict_players == false )
@@ -348,7 +348,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 
 	// [BB] The server gave us z-velocity, so don't glue us to a floor or an actor for this tic.
-	if ( pPlayer->mo->velz > 0 )
+	if ( pPlayer->mo->vel.z > 0 )
 	{
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 		g_bSavedOnMobj[lTick % CLIENT_PREDICTION_TICS] = false;

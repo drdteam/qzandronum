@@ -3288,7 +3288,7 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 
 		// Whenever blood spawns, its velz is always 2 * FRACUNIT.
 		if ( stricmp( pType->TypeName.GetChars( ), "blood" ) == 0 )
-			pActor->velz = FRACUNIT*2;
+			pActor->vel.z = FRACUNIT*2;
 
 		// Allow for client-side body removal in invasion mode.
 		if ( invasion )
@@ -3331,9 +3331,9 @@ void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, f
 	}
 
 	// Set the thing's velocity.
-	pActor->velx = VelX;
-	pActor->vely = VelY;
-	pActor->velz = VelZ;
+	pActor->vel.x = VelX;
+	pActor->vel.y = VelY;
+	pActor->vel.z = VelZ;
 
 	// Derive the thing's angle from its velocity.
 	pActor->angle = R_PointToAngle2( 0, 0, VelX, VelY );
@@ -3608,8 +3608,8 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->viewheight = 0;
 	pPlayer->deltaviewheight = 0;
 	pPlayer->bob = 0;
-	pPlayer->velx = 0;
-	pPlayer->vely = 0;
+	pPlayer->vel.x = 0;
+	pPlayer->vel.y = 0;
 	pPlayer->centering = 0;
 	pPlayer->turnticks = 0;
 	pPlayer->oldbuttons = 0;
@@ -4233,8 +4233,8 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	pPlayer->Uncrouch( );
 
 	// killough 10/98: initialize bobbing to 0.
-	pPlayer->velx = 0;
-	pPlayer->vely = 0;
+	pPlayer->vel.x = 0;
+	pPlayer->vel.y = 0;
 /*
 	// If the console player is being respawned, place the camera back in his own body.
 	if ( ulPlayer == consoleplayer )
@@ -4423,9 +4423,9 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	players[ulPlayer].mo->angle = Angle;
 
 	// Set the player's XYZ velocity.
-	players[ulPlayer].mo->velx = VelX;
-	players[ulPlayer].mo->vely = VelY;
-	players[ulPlayer].mo->velz = VelZ;
+	players[ulPlayer].mo->vel.x = VelX;
+	players[ulPlayer].mo->vel.y = VelY;
+	players[ulPlayer].mo->vel.z = VelZ;
 
 	// Is the player crouching?
 	players[ulPlayer].crouchdir = ( bCrouching ) ? 1 : -1;
@@ -5620,9 +5620,9 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 		// sure that the spectator body doesn't get stuck.
 		CLIENT_MoveThing ( pPlayer->mo, X, Y, Z );
 
-		pPlayer->mo->velx = VelX;
-		pPlayer->mo->vely = VelY;
-		pPlayer->mo->velz = VelZ;
+		pPlayer->mo->vel.x = VelX;
+		pPlayer->mo->vel.y = VelY;
+		pPlayer->mo->vel.z = VelZ;
 	}
 }
 
@@ -6157,18 +6157,18 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
-		pActor->velx = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->vel.x = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 	if ( lBits & CM_VELY )
-		pActor->vely = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->vel.y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 	if ( lBits & CM_VELZ )
-		pActor->velz = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->vel.z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
 
 	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
-	if ((pActor->player != NULL) && (pActor->velx == 0) && (pActor->vely == 0)) {
-		pActor->player->velx = 0;
-		pActor->player->vely = 0;
+	if ((pActor->player != NULL) && (pActor->vel.x == 0) && (pActor->vel.y == 0)) {
+		pActor->player->vel.x = 0;
+		pActor->player->vel.y = 0;
 	}
 
 	// Read in the pitch data.
@@ -6278,18 +6278,18 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
-		pActor->velx = NETWORK_ReadLong( pByteStream );
+		pActor->vel.x = NETWORK_ReadLong( pByteStream );
 	if ( lBits & CM_VELY )
-		pActor->vely = NETWORK_ReadLong( pByteStream );
+		pActor->vel.y = NETWORK_ReadLong( pByteStream );
 	if ( lBits & CM_VELZ )
-		pActor->velz = NETWORK_ReadLong( pByteStream );
+		pActor->vel.z = NETWORK_ReadLong( pByteStream );
 
 	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
-	if ((pActor->player != NULL) && (pActor->velx == 0) && (pActor->vely == 0)) {
-		pActor->player->velx = 0;
-		pActor->player->vely = 0;
+	if ((pActor->player != NULL) && (pActor->vel.x == 0) && (pActor->vel.y == 0)) {
+		pActor->player->vel.x = 0;
+		pActor->player->vel.y = 0;
 	}
 
 	// Read in the pitch data.
@@ -7368,15 +7368,15 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	}
 
 	// Set the thing's new velocity.
-	pActor->velx = NewVelX;
-	pActor->vely = NewVelY;
-	pActor->velz = NewVelZ;
+	pActor->vel.x = NewVelX;
+	pActor->vel.y = NewVelY;
+	pActor->vel.z = NewVelZ;
 
 	// Also, if this is a player, set his bobbing appropriately.
 	if ( pActor->player )
 	{
-		pActor->player->velx = NewVelX;
-		pActor->player->vely = NewVelY;
+		pActor->player->vel.x = NewVelX;
+		pActor->player->vel.y = NewVelY;
 
 		// [BB] If the server is teleporting us, don't let our prediction get messed up.
 		if ( pActor == players[consoleplayer].mo )

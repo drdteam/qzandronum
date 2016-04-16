@@ -174,10 +174,10 @@ inline AActor *P_SpawnMissileXYZ(const fixedvec3 &pos, AActor *source, AActor *d
 {
 	return P_SpawnMissileXYZ(pos.x, pos.y, pos.z, source, dest, type, checkspawn, owner, bSpawnOnClient); // [BB] Added bSpawnOnClient.
 }
-AActor *P_SpawnMissileAngle (AActor *source, PClassActor *type, angle_t angle, fixed_t velz, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
-AActor *P_SpawnMissileAngleSpeed (AActor *source, PClassActor *type, angle_t angle, fixed_t velz, fixed_t speed);
-AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z, PClassActor *type, angle_t angle, fixed_t velz, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
-AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z, PClassActor *type, angle_t angle, fixed_t velz, fixed_t speed, AActor *owner=NULL, bool checkspawn = true, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
+AActor *P_SpawnMissileAngle (AActor *source, PClassActor *type, angle_t angle, fixed_t vz, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
+AActor *P_SpawnMissileAngleSpeed (AActor *source, PClassActor *type, angle_t angle, fixed_t vz, fixed_t speed);
+AActor *P_SpawnMissileAngleZ (AActor *source, fixed_t z, PClassActor *type, angle_t angle, fixed_t vz, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
+AActor *P_SpawnMissileAngleZSpeed (AActor *source, fixed_t z, PClassActor *type, angle_t angle, fixed_t vz, fixed_t speed, AActor *owner=NULL, bool checkspawn = true, const bool bSpawnOnClient = false ); // [BB] Added bSpawnOnClient.
 AActor *P_SpawnMissileZAimed (AActor *source, fixed_t z, AActor *dest, PClassActor *type, bool bSpawnOnClient = false); // [BB] Added bSpawnOnClient.
 
 AActor *P_SpawnPlayerMissile (AActor* source, PClassActor *type);

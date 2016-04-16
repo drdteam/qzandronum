@@ -321,11 +321,11 @@ void RemoveUnnecessaryPositionUpdateFlags( AActor *pActor, ULONG &ulBits )
 		ulBits  &= ~CM_Y;
 	if ( (pActor->lastNetZUpdateTic == gametic) && (pActor->lastZ == pActor->Z()) )
 		ulBits  &= ~CM_Z;
-	if ( (pActor->lastNetVelXUpdateTic == gametic) && (pActor->lastVelx == pActor->velx) )
+	if ( (pActor->lastNetVelXUpdateTic == gametic) && (pActor->lastVelx == pActor->vel.x) )
 		ulBits  &= ~CM_VELX;
-	if ( (pActor->lastNetVelYUpdateTic == gametic) && (pActor->lastVely == pActor->vely) )
+	if ( (pActor->lastNetVelYUpdateTic == gametic) && (pActor->lastVely == pActor->vel.y) )
 		ulBits  &= ~CM_VELY;
-	if ( (pActor->lastNetVelZUpdateTic == gametic) && (pActor->lastVelz == pActor->velz) )
+	if ( (pActor->lastNetVelZUpdateTic == gametic) && (pActor->lastVelz == pActor->vel.z) )
 		ulBits  &= ~CM_VELZ;
 	if ( (pActor->lastNetMovedirUpdateTic == gametic) && (pActor->lastMovedir == pActor->movedir) )
 		ulBits  &= ~CM_MOVEDIR;
@@ -455,17 +455,17 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 	if ( ulBits & CM_VELX )
 	{
 		pActor->lastNetVelXUpdateTic = gametic;
-		pActor->lastVelx = pActor->velx;
+		pActor->lastVelx = pActor->vel.x;
 	}
 	if ( ulBits & CM_VELY )
 	{
 		pActor->lastNetVelYUpdateTic = gametic;
-		pActor->lastVely = pActor->vely;
+		pActor->lastVely = pActor->vel.y;
 	}
 	if ( ulBits & CM_VELZ )
 	{
 		pActor->lastNetVelZUpdateTic = gametic;
-		pActor->lastVelz = pActor->velz;
+		pActor->lastVelz = pActor->vel.z;
 	}
 	if ( ulBits & CM_MOVEDIR )
 	{
@@ -605,9 +605,9 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	fullCommand.addLong( players[ulPlayer].mo->Y() );
 	fullCommand.addShort( players[ulPlayer].mo->Z() >> FRACBITS );
 	fullCommand.addLong( players[ulPlayer].mo->angle );
-	fullCommand.addShort( players[ulPlayer].mo->velx >> FRACBITS );
-	fullCommand.addShort( players[ulPlayer].mo->vely >> FRACBITS );
-	fullCommand.addShort( players[ulPlayer].mo->velz >> FRACBITS );
+	fullCommand.addShort( players[ulPlayer].mo->vel.x >> FRACBITS );
+	fullCommand.addShort( players[ulPlayer].mo->vel.y >> FRACBITS );
+	fullCommand.addShort( players[ulPlayer].mo->vel.z >> FRACBITS );
 	fullCommand.addByte(( players[ulPlayer].crouchdir >= 0 ) ? true : false );
 
 	NetCommand stubCommand( SVC_MOVEPLAYER );
@@ -1258,9 +1258,9 @@ void SERVERCOMMANDS_MoveLocalPlayer( ULONG ulPlayer )
 	command.addLong( players[ulPlayer].mo->Z() );
 
 	// Write velocity.
-	command.addLong( players[ulPlayer].mo->velx );
-	command.addLong( players[ulPlayer].mo->vely );
-	command.addLong( players[ulPlayer].mo->velz );
+	command.addLong( players[ulPlayer].mo->vel.x );
+	command.addLong( players[ulPlayer].mo->vel.y );
+	command.addLong( players[ulPlayer].mo->vel.z );
 	command.sendCommandToOneClient( ulPlayer );
 }
 
@@ -1602,11 +1602,11 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
-		command.addShort( pActor->velx >> FRACBITS );
+		command.addShort( pActor->vel.x >> FRACBITS );
 	if ( ulBits & CM_VELY )
-		command.addShort( pActor->vely >> FRACBITS );
+		command.addShort( pActor->vel.y >> FRACBITS );
 	if ( ulBits & CM_VELZ )
-		command.addShort( pActor->velz >> FRACBITS );
+		command.addShort( pActor->vel.z >> FRACBITS );
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
@@ -1669,11 +1669,11 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
-		command.addLong( pActor->velx );
+		command.addLong( pActor->vel.x );
 	if ( ulBits & CM_VELY )
-		command.addLong( pActor->vely );
+		command.addLong( pActor->vel.y );
 	if ( ulBits & CM_VELZ )
-		command.addLong( pActor->velz );
+		command.addLong( pActor->vel.z );
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
@@ -2223,9 +2223,9 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 	command.addShort( pActor->X() >> FRACBITS );
 	command.addShort( pActor->Y() >> FRACBITS );
 	command.addShort( pActor->Z() >> FRACBITS );
-	command.addShort( pActor->velx >> FRACBITS );
-	command.addShort( pActor->vely >> FRACBITS );
-	command.addShort( pActor->velz >> FRACBITS );
+	command.addShort( pActor->vel.x >> FRACBITS );
+	command.addShort( pActor->vel.y >> FRACBITS );
+	command.addShort( pActor->vel.z >> FRACBITS );
 	command.addShort( pActor->reactiontime );
 	command.addLong( pActor->angle );
 	command.addByte( bSourceFog );
@@ -2769,9 +2769,9 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 	command.addShort( pMissile->X() >> FRACBITS );
 	command.addShort( pMissile->Y() >> FRACBITS );
 	command.addShort( pMissile->Z() >> FRACBITS );
-	command.addLong( pMissile->velx );
-	command.addLong( pMissile->vely );
-	command.addLong( pMissile->velz );
+	command.addLong( pMissile->vel.x );
+	command.addLong( pMissile->vel.y );
+	command.addLong( pMissile->vel.z );
 	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
 	command.addShort( pMissile->lNetID );
 
@@ -2784,7 +2784,7 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->velx, pMissile->vely ))
+ 	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->vel.x, pMissile->vel.y ))
 		SERVERCOMMANDS_SetThingAngle( pMissile, ulPlayerExtra, flags );
 }
 
@@ -2799,9 +2799,9 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 	command.addLong( pMissile->X() );
 	command.addLong( pMissile->Y() );
 	command.addLong( pMissile->Z() );
-	command.addLong( pMissile->velx );
-	command.addLong( pMissile->vely );
-	command.addLong( pMissile->velz );
+	command.addLong( pMissile->vel.x );
+	command.addLong( pMissile->vel.y );
+	command.addLong( pMissile->vel.z );
 	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
 	command.addShort( pMissile->lNetID );
 
@@ -2814,7 +2814,7 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->velx, pMissile->vely ) )
+ 	if( pMissile->angle != R_PointToAngle2( 0, 0, pMissile->vel.x, pMissile->vel.y ) )
 		SERVERCOMMANDS_SetThingAngleExact( pMissile, ulPlayerExtra, flags );
 }
 

@@ -42,7 +42,7 @@ bool AArtiDarkServant::Use (bool pickup)
 	{
 		mo->target = Owner;
 		mo->tracer = Owner;
-		mo->velz = 5*FRACUNIT;
+		mo->vel.z = 5*FRACUNIT;
 
 		// [BC] If we're the server, send clients this missile's updated properties.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

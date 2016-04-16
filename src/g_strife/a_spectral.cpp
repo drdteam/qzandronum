@@ -28,7 +28,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightningTail)
 {
 	PARAM_ACTION_PROLOGUE;
 
-	AActor *foo = Spawn("SpectralLightningHTail", self->Vec3Offset(-self->velx, -self->vely, 0), ALLOW_REPLACE);
+	AActor *foo = Spawn("SpectralLightningHTail", self->Vec3Offset(-self->vel.x, -self->vel.y, 0), ALLOW_REPLACE);
 
 	foo->angle = self->angle;
 	foo->FriendPlayer = self->FriendPlayer;
@@ -67,8 +67,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 	if (self->threshold != 0)
 		--self->threshold;
 
-	self->velx += pr_zap5.Random2(3) << FRACBITS;
-	self->vely += pr_zap5.Random2(3) << FRACBITS;
+	self->vel.x += pr_zap5.Random2(3) << FRACBITS;
+	self->vel.y += pr_zap5.Random2(3) << FRACBITS;
 
 	// [CW] Tell clients to spawn the actor.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -82,7 +82,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 		PClass::FindActor(NAME_SpectralLightningV1), pos.x, pos.y, ONCEILINGZ, ALLOW_REPLACE);
 
 	flash->target = self->target;
-	flash->velz = -18*FRACUNIT;
+	flash->vel.z = -18*FRACUNIT;
 	flash->FriendPlayer = self->FriendPlayer;
 
 	flash = Spawn(NAME_SpectralLightningV2, self->X(), self->Y(), ONCEILINGZ, ALLOW_REPLACE);
@@ -93,7 +93,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectralLightning)
 
 
 	flash->target = self->target;
-	flash->velz = -18*FRACUNIT;
+	flash->vel.z = -18*FRACUNIT;
 	flash->FriendPlayer = self->FriendPlayer;
 	return 0;
 
@@ -145,8 +145,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Tracer2)
 	}
 
 	exact = self->angle >> ANGLETOFINESHIFT;
-	self->velx = FixedMul (self->Speed, finecosine[exact]);
-	self->vely = FixedMul (self->Speed, finesine[exact]);
+	self->vel.x = FixedMul (self->Speed, finecosine[exact]);
+	self->vel.y = FixedMul (self->Speed, finesine[exact]);
 
 	if (!(self->flags3 & (MF3_FLOORHUGGER|MF3_CEILINGHUGGER)))
 	{
@@ -165,13 +165,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_Tracer2)
 		{
 			slope = (dest->Z() + self->height*2/3 - self->Z()) / dist;
 		}
-		if (slope < self->velz)
+		if (slope < self->vel.z)
 		{
-			self->velz -= FRACUNIT/8;
+			self->vel.z -= FRACUNIT/8;
 		}
 		else
 		{
-			self->velz += FRACUNIT/8;
+			self->vel.z += FRACUNIT/8;
 		}
 	}
 

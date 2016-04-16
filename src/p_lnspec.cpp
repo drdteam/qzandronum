@@ -1152,12 +1152,12 @@ static void ThrustThingHelper (AActor *it, angle_t angle, int force, INTBOOL nol
 		return;
 
 	angle >>= ANGLETOFINESHIFT;
-	it->velx += force * finecosine[angle];
-	it->vely += force * finesine[angle];
+	it->vel.x += force * finecosine[angle];
+	it->vel.y += force * finesine[angle];
 	if (!nolimit)
 	{
-		it->velx = clamp<fixed_t> (it->velx, -MAXMOVE, MAXMOVE);
-		it->vely = clamp<fixed_t> (it->vely, -MAXMOVE, MAXMOVE);
+		it->vel.x = clamp<fixed_t> (it->vel.x, -MAXMOVE, MAXMOVE);
+		it->vel.y = clamp<fixed_t> (it->vel.y, -MAXMOVE, MAXMOVE);
 	}
 
 	// [BC] If we're the server, update the thing's velocity.
@@ -1185,9 +1185,9 @@ FUNC(LS_ThrustThingZ)	// [BC]
 			if ( NETWORK_GetState( ) != NETSTATE_CLIENT )
 			{
 				if (!arg3)
-					victim->velz = thrust;
+					victim->vel.z = thrust;
 				else
-					victim->velz += thrust;
+					victim->vel.z += thrust;
 			}
 
 			// [BC] If we're the server, update the thing's velocity.
@@ -1204,9 +1204,9 @@ FUNC(LS_ThrustThingZ)	// [BC]
 		if ( ( NETWORK_IsConsolePlayerOrNotInClientMode ( it->player ) ) || ( it->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) )
 		{
 			if (!arg3)
-				it->velz = thrust;
+				it->vel.z = thrust;
 			else
-				it->velz += thrust;
+				it->vel.z += thrust;
 		}
 
 		// [BC] If we're the server, update the thing's velocity.
@@ -1795,8 +1795,8 @@ FUNC(LS_Thing_Stop)
 	{
 		if (it != NULL)
 		{
-			it->velx = it->vely = it->velz = 0;
-			if (it->player != NULL) it->player->velx = it->player->vely = 0;
+			it->vel.x = it->vel.y = it->vel.z = 0;
+			if (it->player != NULL) it->player->vel.x = it->player->vel.y = 0;
 
 			// [Dusk] tell the clients about this
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1811,8 +1811,8 @@ FUNC(LS_Thing_Stop)
 
 		while ( (target = iterator.Next ()) )
 		{
-			target->velx = target->vely = target->velz = 0;
-			if (target->player != NULL) target->player->velx = target->player->vely = 0;
+			target->vel.x = target->vel.y = target->vel.z = 0;
+			if (target->player != NULL) target->player->vel.x = target->player->vel.y = 0;
 
 			// [Dusk] tell the clients about this
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -3682,9 +3682,9 @@ FUNC(LS_GlassBreak)
 				glass->angle = an;
 				an >>= ANGLETOFINESHIFT;
 				speed = pr_glass() & 3;
-				glass->velx = finecosine[an] * speed;
-				glass->vely = finesine[an] * speed;
-				glass->velz = (pr_glass() & 7) << FRACBITS;
+				glass->vel.x = finecosine[an] * speed;
+				glass->vel.y = finesine[an] * speed;
+				glass->vel.z = (pr_glass() & 7) << FRACBITS;
 				// [RH] Let the shards stick around longer than they did in Strife.
 				glass->tics += pr_glass();
 			}

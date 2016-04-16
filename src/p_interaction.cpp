@@ -1231,7 +1231,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		{
 			target->tics = 1;
 			target->flags6 |= MF6_SHATTERING;
-			target->velx = target->vely = target->velz = 0;
+			target->vel.x = target->vel.y = target->vel.z = 0;
 
 			// [BC] If we're the server, tell clients to update this thing's tics and
 			// velocity.
@@ -1300,7 +1300,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	if ( (target->flags & MF_SKULLFLY)
 	     && ( NETWORK_InClientMode() == false ) )
 	{
-		target->velx = target->vely = target->velz = 0;
+		target->vel.x = target->vel.y = target->vel.z = 0;
 
 		// [BC] If we're the server, tell clients to update this thing's velocity
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1458,7 +1458,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		if (kickback)
 		{
 			// [BB] Safe the original z-velocity of the target. This way we can check if we need to update it.
-			const fixed_t oldTargetVelz = target->velz;
+			const fixed_t oldTargetVelz = target->vel.z;
 
 			AActor *origin = (source && (flags & DMG_INFLICTOR_IS_PUFF))? source : inflictor;
 
@@ -1512,24 +1512,24 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				(source->player->ReadyWeapon->WeaponFlags & WIF_STAFF2_KICKBACK))
 			{
 				// Staff power level 2
-				target->velx += FixedMul (10*FRACUNIT, finecosine[ang]);
-				target->vely += FixedMul (10*FRACUNIT, finesine[ang]);
+				target->vel.x += FixedMul (10*FRACUNIT, finecosine[ang]);
+				target->vel.y += FixedMul (10*FRACUNIT, finesine[ang]);
 				if (!(target->flags & MF_NOGRAVITY))
 				{
-					target->velz += 5*FRACUNIT;
+					target->vel.z += 5*FRACUNIT;
 				}
 			}
 			else
 			{
-				target->velx += FixedMul (thrust, finecosine[ang]);
-				target->vely += FixedMul (thrust, finesine[ang]);
+				target->vel.x += FixedMul (thrust, finecosine[ang]);
+				target->vel.y += FixedMul (thrust, finesine[ang]);
 			}
 
 			// [BC] Set the thing's velocity.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				// [BB] Only update z-velocity if it has changed.
-				SERVER_UpdateThingVelocity ( target, oldTargetVelz != target->velz );
+				SERVER_UpdateThingVelocity ( target, oldTargetVelz != target->vel.z );
 			}
 		}
 	}

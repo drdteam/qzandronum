@@ -291,8 +291,7 @@ player_t::player_t()
   viewheight(0),
   deltaviewheight(0),
   bob(0),
-  velx(0),
-  vely(0),
+  vel({ 0,0 }),
   centering(0),
   turnticks(0),
   attackdown(0),
@@ -414,8 +413,8 @@ player_t &player_t::operator=(const player_t &p)
 	viewheight = p.viewheight;
 	deltaviewheight = p.deltaviewheight;
 	bob = p.bob;
-	velx = p.velx;
-	vely = p.vely;
+	vel.x = p.vel.x;
+	vel.y = p.vel.y;
 	centering = p.centering;
 	turnticks = p.turnticks;
 	attackdown = p.attackdown;
@@ -2463,7 +2462,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 	// Handle the different player death screams
 	if ((((level.flags >> 15) | (dmflags)) &
 		(DF_FORCE_FALLINGZD | DF_FORCE_FALLINGHX)) &&
-		self->velz <= -39*FRACUNIT)
+		self->vel.z <= -39*FRACUNIT)
 	{
 		sound = S_FindSkinnedSound (self, "*splat");
 		chan = CHAN_BODY;
@@ -2535,9 +2534,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 	self->flags &= ~MF_SOLID;
 	mo = (APlayerPawn *)Spawn (spawntype, self->PosPlusZ(48*FRACUNIT), NO_REPLACE);
 	//mo->target = self;
-	mo->velx = pr_skullpop.Random2() << 9;
-	mo->vely = pr_skullpop.Random2() << 9;
-	mo->velz = 2*FRACUNIT + (pr_skullpop() << 6);
+	mo->vel.x = pr_skullpop.Random2() << 9;
+	mo->vel.y = pr_skullpop.Random2() << 9;
+	mo->vel.z = 2*FRACUNIT + (pr_skullpop() << 6);
 	// Attach player mobj to bloody skull
 	player = self->player;
 	self->player = NULL;
@@ -2677,8 +2676,8 @@ void P_SideThrust (player_t *player, angle_t angle, fixed_t move)
 {
 	angle = (angle - ANGLE_90) >> ANGLETOFINESHIFT;
 
-	player->mo->velx += FixedMul (move, finecosine[angle]);
-	player->mo->vely += FixedMul (move, finesine[angle]);
+	player->mo->vel.x += FixedMul (move, finecosine[angle]);
+	player->mo->vel.y += FixedMul (move, finesine[angle]);
 }
 
 void P_ForwardThrust (player_t *player, angle_t angle, fixed_t move)
@@ -2692,11 +2691,11 @@ void P_ForwardThrust (player_t *player, angle_t angle, fixed_t move)
 		fixed_t zpush = FixedMul (move, finesine[pitch]);
 		if (player->mo->waterlevel && player->mo->waterlevel < 2 && zpush < 0)
 			zpush = 0;
-		player->mo->velz -= zpush;
+		player->mo->vel.z -= zpush;
 		move = FixedMul (move, finecosine[pitch]);
 	}
-	player->mo->velx += FixedMul (move, finecosine[angle]);
-	player->mo->vely += FixedMul (move, finesine[angle]);
+	player->mo->vel.x += FixedMul (move, finecosine[angle]);
+	player->mo->vel.y += FixedMul (move, finesine[angle]);
 }
 
 //
@@ -2722,8 +2721,8 @@ void P_Bob (player_t *player, angle_t angle, fixed_t move, bool forward)
 
 	angle >>= ANGLETOFINESHIFT;
 
-	player->velx += FixedMul(move, finecosine[angle]);
-	player->vely += FixedMul(move, finesine[angle]);
+	player->vel.x += FixedMul(move, finecosine[angle]);
+	player->vel.y += FixedMul(move, finesine[angle]);
 }
 
 /*
@@ -2774,7 +2773,7 @@ void P_CalcHeight (player_t *player)
 	}
 	else
 	{
-		player->bob = DMulScale16 (player->velx, player->velx, player->vely, player->vely);
+		player->bob = DMulScale16 (player->vel.x, player->vel.x, player->vel.y, player->vel.y);
 		if (player->bob == 0)
 		{
 			still = true;
@@ -3017,19 +3016,19 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 	{
 		if (player->mo->waterlevel >= 2)
 		{
-			player->mo->velz = FixedMul(4*FRACUNIT, player->mo->Speed);
+			player->mo->vel.z = FixedMul(4*FRACUNIT, player->mo->Speed);
 
 			// [Leo] Apply cl_spectatormove here.
 			if ( player->bSpectating )
-				player->mo->velz = FixedMul(player->mo->velz, spectatormove);
+				player->mo->vel.z = FixedMul(player->mo->vel.z, spectatormove);
 		}
 		else if (player->mo->flags2 & MF2_FLY)
 		{
-			player->mo->velz = 3*FRACUNIT;
+			player->mo->vel.z = 3*FRACUNIT;
 
 			// [Leo] Apply cl_spectatormove here.
 			if ( player->bSpectating )
-				player->mo->velz = FixedMul(player->mo->velz, spectatormove);
+				player->mo->vel.z = FixedMul(player->mo->vel.z, spectatormove);
 		}
 		// [Leo] Spectators shouldn't be limited by the server settings.
 		else if ((player->bSpectating || level.IsJumpingAllowed()) && player->onground && player->jumpTics == 0)
@@ -3061,7 +3060,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			if ( player->mo->floorsector->GetFlags(sector_t::floor) & PLANEF_SPRINGPAD )
 				ulJumpTicks = 0;
 
-			player->mo->velz += JumpVelz;
+			player->mo->vel.z += JumpVelz;
 			player->jumpTics = ulJumpTicks;
 		}
 	}
@@ -3094,7 +3093,7 @@ void P_FallingDamage (AActor *actor)
 	if (actor->floorsector->Flags & SECF_NOFALLINGDAMAGE)
 		return;
 
-	vel = abs(actor->velz);
+	vel = abs(actor->vel.z);
 
 	// Since Hexen falling damage is stronger than ZDoom's, it takes
 	// precedence. ZDoom falling damage may not be as strong, but it
@@ -3115,7 +3114,7 @@ void P_FallingDamage (AActor *actor)
 		{
 			vel = FixedMul (vel, 16*FRACUNIT/23);
 			damage = ((FixedMul (vel, vel) / 10) >> FRACBITS) - 24;
-			if (actor->velz > -39*FRACUNIT && damage > actor->health
+			if (actor->vel.z > -39*FRACUNIT && damage > actor->health
 				&& actor->health != 1)
 			{ // No-death threshold
 				damage = actor->health-1;
@@ -3829,17 +3828,17 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 			}
 			if (player->mo->waterlevel >= 2 || (player->mo->flags2 & MF2_FLY) || (player->cheats & CF_NOCLIP2))
 			{
-				player->mo->velz = FixedMul(player->mo->Speed, cmd->ucmd.upmove << 9);
+				player->mo->vel.z = FixedMul(player->mo->Speed, cmd->ucmd.upmove << 9);
 
 				// [Leo] Apply cl_spectatormove here.
 				if ( player->bSpectating )
-					player->mo->velz = FixedMul(player->mo->velz, FLOAT2FIXED(cl_spectatormove));
+					player->mo->vel.z = FixedMul(player->mo->vel.z, FLOAT2FIXED(cl_spectatormove));
 
 				if (player->mo->waterlevel < 2 && !(player->mo->flags & MF_NOGRAVITY))
 				{
 					player->mo->flags2 |= MF2_FLY;
 					player->mo->flags |= MF_NOGRAVITY;
-					if ((player->mo->velz <= -39 * FRACUNIT) && !CLIENT_PREDICT_IsPredicting( )) // [BB] Adapted prediction.
+					if ((player->mo->vel.z <= -39 * FRACUNIT) && !CLIENT_PREDICT_IsPredicting( )) // [BB] Adapted prediction.
 					{ // Stop falling scream
 						S_StopSound (player->mo, CHAN_VOICE);
 					}
@@ -3878,8 +3877,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 			// Player must be touching the floor
 			P_PlayerOnSpecialFlat(player, P_GetThingFloorType(player->mo));
 		}
-		if (player->mo->velz <= -player->mo->FallingScreamMinSpeed &&
-			player->mo->velz >= -player->mo->FallingScreamMaxSpeed && !player->morphTics &&
+		if (player->mo->vel.z <= -player->mo->FallingScreamMinSpeed &&
+			player->mo->vel.z >= -player->mo->FallingScreamMaxSpeed && !player->morphTics &&
 			player->mo->waterlevel == 0)
 		{
 			int id = S_FindSkinnedSound (player->mo, "*falling");
@@ -4008,13 +4007,13 @@ void P_PredictionLerpReset()
 
 bool P_LerpCalculate(PredictPos from, PredictPos to, PredictPos &result, float scale)
 {
-	TVector3<double> vecFrom(FIXED2DBL(from.x), FIXED2DBL(from.y), FIXED2DBL(from.z));
-	TVector3<double> vecTo(FIXED2DBL(to.x), FIXED2DBL(to.y), FIXED2DBL(to.z));
-	TVector3<double> vecResult;
+	DVector3 vecFrom(FIXED2DBL(from.x), FIXED2DBL(from.y), FIXED2DBL(from.z));
+	DVector3 vecTo(FIXED2DBL(to.x), FIXED2DBL(to.y), FIXED2DBL(to.z));
+	DVector3 vecResult;
 	vecResult = vecTo - vecFrom;
 	vecResult *= scale;
 	vecResult = vecResult + vecFrom;
-	TVector3<double> delta = vecResult - vecTo;
+	DVector3 delta = vecResult - vecTo;
 
 	result.x = FLOAT2FIXED(vecResult.X);
 	result.y = FLOAT2FIXED(vecResult.Y);
@@ -4330,8 +4329,8 @@ void player_t::Serialize (FArchive &arc)
 		<< viewheight
 		<< deltaviewheight
 		<< bob
-		<< velx
-		<< vely
+		<< vel.x
+		<< vel.y
 		<< centering
 		<< health
 		<< inventorytics;

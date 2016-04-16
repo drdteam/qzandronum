@@ -33,12 +33,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectreChunkSmall)
 		int t;
 
 		t = pr_spectrechunk() & 15;
-		foo->velx = (t - (pr_spectrechunk() & 7)) << FRACBITS;
+		foo->vel.x = (t - (pr_spectrechunk() & 7)) << FRACBITS;
 		
 		t = pr_spectrechunk() & 15;
-		foo->vely = (t - (pr_spectrechunk() & 7)) << FRACBITS;
+		foo->vel.y = (t - (pr_spectrechunk() & 7)) << FRACBITS;
 
-		foo->velz = (pr_spectrechunk() & 15) << FRACBITS;
+		foo->vel.z = (pr_spectrechunk() & 15) << FRACBITS;
 
 		// [BB] Tell clients to spawn the actor.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -62,12 +62,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpectreChunkLarge)
 		int t;
 
 		t = pr_spectrechunk() & 7;
-		foo->velx = (t - (pr_spectrechunk() & 15)) << FRACBITS;
+		foo->vel.x = (t - (pr_spectrechunk() & 15)) << FRACBITS;
 		
 		t = pr_spectrechunk() & 7;
-		foo->vely = (t - (pr_spectrechunk() & 15)) << FRACBITS;
+		foo->vel.y = (t - (pr_spectrechunk() & 15)) << FRACBITS;
 
-		foo->velz = (pr_spectrechunk() & 7) << FRACBITS;
+		foo->vel.z = (pr_spectrechunk() & 7) << FRACBITS;
 
 		// [BB] Tell clients to spawn the actor.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -85,7 +85,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Spectre3Attack)
 
 	AActor *foo = Spawn("SpectralLightningV2", self->PosPlusZ(32*FRACUNIT), ALLOW_REPLACE);
 
-	foo->velz = -12*FRACUNIT;
+	foo->vel.z = -12*FRACUNIT;
 	foo->target = self;
 	foo->FriendPlayer = 0;
 	foo->tracer = self->target;

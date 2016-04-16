@@ -782,7 +782,7 @@ bool EV_MovePolyTo(line_t *line, int polyNum, int speed, fixed_t targx, fixed_t 
 {
 	DMovePolyTo *pe = NULL;
 	FPolyObj *poly;
-	TVector2<double> dist;
+	DVector2 dist;
 	double distlen;
 
 	if ((poly = PO_GetPolyobj(polyNum)) == NULL)
@@ -1234,8 +1234,8 @@ void FPolyObj::ThrustMobj (AActor *actor, side_t *side)
 
 	thrustX = FixedMul (force, finecosine[thrustAngle]);
 	thrustY = FixedMul (force, finesine[thrustAngle]);
-	actor->velx += thrustX;
-	actor->vely += thrustY;
+	actor->vel.x += thrustX;
+	actor->vel.y += thrustY;
 	if (crush && ( NETWORK_InClientMode() == false ))
 	{
 		fixedvec2 pos = actor->Vec2Offset(thrustX, thrustY);
