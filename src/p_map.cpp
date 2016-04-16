@@ -1107,8 +1107,8 @@ static bool PIT_CheckPortal(FMultiBlockLinesIterator &mit, FMultiBlockLinesItera
 	line_t *lp = cres.line->getPortalDestination();
 	fixed_t zofs = 0;
 
-	P_TranslatePortalXY(cres.line, lp, cres.position.x, cres.position.y);
-	P_TranslatePortalZ(cres.line, lp, zofs);
+	P_TranslatePortalXY(cres.line, cres.position.x, cres.position.y);
+	P_TranslatePortalZ(cres.line, zofs);
 
 	// fudge a bit with the portal line so that this gets included in the checks that normally only get run on two-sided lines
 	sector_t *sec = lp->backsector;
@@ -2473,14 +2473,13 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 			}
 			else if (!portalcrossed)
 			{
-				line_t *out = port->mDestination;
 				fixedvec3 pos = { tm.x, tm.y, thing->Z() };
 				fixedvec3 oldthingpos = thing->Pos();
 				fixedvec2 thingpos = oldthingpos;
 				
-				P_TranslatePortalXY(ld, out, pos.x, pos.y);
-				P_TranslatePortalXY(ld, out, thingpos.x, thingpos.y);
-				P_TranslatePortalZ(ld, out, pos.z);
+				P_TranslatePortalXY(ld, pos.x, pos.y);
+				P_TranslatePortalXY(ld, thingpos.x, thingpos.y);
+				P_TranslatePortalZ(ld, pos.z);
 				thing->SetXYZ(thingpos.x, thingpos.y, pos.z);
 				if (!P_CheckPosition(thing, pos.x, pos.y, true))	// check if some actor blocks us on the other side. (No line checks, because of the mess that'd create.)
 				{
@@ -2490,8 +2489,8 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 				}
 				thing->UnlinkFromWorld();
 				thing->SetXYZ(pos);
-				P_TranslatePortalVXVY(ld, out, thing->velx, thing->vely);
-				P_TranslatePortalAngle(ld, out, thing->angle);
+				P_TranslatePortalVXVY(ld, thing->velx, thing->vely);
+				P_TranslatePortalAngle(ld, thing->angle);
 				thing->LinkToWorld();
 				P_FindFloorCeiling(thing);
 				thing->ClearInterpolation();
@@ -2503,7 +2502,6 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 			{
 				divline_t dl1 = { besthit.oldrefpos.x,besthit. oldrefpos.y, besthit.refpos.x - besthit.oldrefpos.x, besthit.refpos.y - besthit.oldrefpos.y };
 				fixedvec3a hit = { dl1.x + FixedMul(dl1.dx, bestfrac), dl1.y + FixedMul(dl1.dy, bestfrac), 0, 0 };
-				line_t *out = port->mDestination;
 
 				R_AddInterpolationPoint(hit);
 				if (port->mType == PORTT_LINKED)
@@ -2513,10 +2511,10 @@ bool P_TryMove(AActor *thing, fixed_t x, fixed_t y,
 				}
 				else
 				{
-					P_TranslatePortalXY(ld, out, hit.x, hit.y);
-					P_TranslatePortalZ(ld, out, hit.z);
+					P_TranslatePortalXY(ld, hit.x, hit.y);
+					P_TranslatePortalZ(ld, hit.z);
 					players[consoleplayer].viewz += hit.z;	// needs to be done here because otherwise the renderer will not catch the change.
-					P_TranslatePortalAngle(ld, out, hit.angle);
+					P_TranslatePortalAngle(ld, hit.angle);
 				}
 				R_AddInterpolationPoint(hit);
 			}
@@ -4043,6 +4041,8 @@ bool P_BounceActor(AActor *mo, AActor *BlockingMobj, bool ontop)
 //
 //============================================================================
 
+CVAR(Bool, aimdebug, false, 0)
+
 struct AimTarget : public FTranslatedLineTarget
 {
 	angle_t pitch;
@@ -4285,12 +4285,14 @@ struct aim_t
 		newtrace.startfrac = frac + FixedDiv(FRACUNIT, attackrange);	// this is to skip the transition line to the portal which would produce a bogus opening
 		newtrace.lastsector = P_PointInSector(newtrace.startpos.x + FixedMul(aimtrace.x, newtrace.startfrac) , newtrace.startpos.y + FixedMul(aimtrace.y, newtrace.startfrac));
 		newtrace.limitz = portal->threshold;
-		Printf("-----Entering %s portal from sector %d to sector %d\n", position ? "ceiling" : "floor", lastsector->sectornum, newtrace.lastsector->sectornum);
+		if (aimdebug)
+			Printf("-----Entering %s portal from sector %d to sector %d\n", position ? "ceiling" : "floor", lastsector->sectornum, newtrace.lastsector->sectornum);
 		newtrace.AimTraverse();
 		SetResult(linetarget, newtrace.linetarget);
 		SetResult(thing_friend, newtrace.thing_friend);
 		SetResult(thing_other, newtrace.thing_other);
-		Printf("-----Exiting %s portal\n", position ? "ceiling" : "floor");
+		if (aimdebug)
+			Printf("-----Exiting %s portal\n", position ? "ceiling" : "floor");
 	}
 
 	//============================================================================
@@ -4305,7 +4307,7 @@ struct aim_t
 		aim_t newtrace = Clone();
 
 		FLinePortal *port = li->getPortal();
-		line_t *dest = port->mDestination;
+		if (port->mType != PORTT_LINKED && (flags & ALF_PORTALRESTRICT)) return;
 
 		newtrace.toppitch = toppitch;
 		newtrace.bottompitch = bottompitch;
@@ -4313,9 +4315,9 @@ struct aim_t
 		newtrace.unlinked = (port->mType != PORTT_LINKED);
 		newtrace.startpos = startpos;
 		newtrace.aimtrace = aimtrace;
-		P_TranslatePortalXY(li, dest, newtrace.startpos.x, newtrace.startpos.y);
-		P_TranslatePortalZ(li, dest, newtrace.startpos.z);
-		P_TranslatePortalVXVY(li, dest, newtrace.aimtrace.x, newtrace.aimtrace.y);
+		P_TranslatePortalXY(li, newtrace.startpos.x, newtrace.startpos.y);
+		P_TranslatePortalZ(li, newtrace.startpos.z);
+		P_TranslatePortalVXVY(li, newtrace.aimtrace.x, newtrace.aimtrace.y);
 
 		newtrace.startfrac = frac + FixedDiv(FRACUNIT, attackrange);	// this is to skip the transition line to the portal which would produce a bogus opening
 
@@ -4323,8 +4325,9 @@ struct aim_t
 		fixed_t y = newtrace.startpos.y + FixedMul(newtrace.aimtrace.y, newtrace.startfrac);
 
 		newtrace.lastsector = P_PointInSector(x, y);
-		P_TranslatePortalZ(li, dest, limitz);
-		Printf("-----Entering line portal from sector %d to sector %d\n", lastsector->sectornum, newtrace.lastsector->sectornum);
+		P_TranslatePortalZ(li, limitz);
+		if (aimdebug)
+			Printf("-----Entering line portal from sector %d to sector %d\n", lastsector->sectornum, newtrace.lastsector->sectornum);
 		newtrace.AimTraverse();
 		SetResult(linetarget, newtrace.linetarget);
 		SetResult(thing_friend, newtrace.thing_friend);
@@ -4379,9 +4382,11 @@ struct aim_t
 		FPathTraverse it(startpos.x, startpos.y, aimtrace.x, aimtrace.y, PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBLE | PT_DELTA, startfrac);
 		intercept_t *in;
 
-		Printf("Start AimTraverse, start = %f,%f,%f, vect = %f,%f,%f\n",
-			startpos.x / 65536., startpos.y / 65536., startpos.y / 65536.,
-			aimtrace.x / 65536., aimtrace.y / 65536.);
+		if (aimdebug)
+			Printf("Start AimTraverse, start = %f,%f,%f, vect = %f,%f,%f\n",
+				startpos.x / 65536., startpos.y / 65536., startpos.y / 65536.,
+				aimtrace.x / 65536., aimtrace.y / 65536.);
+		
 		while ((in = it.Next()))
 		{
 			line_t* 			li;
@@ -4399,7 +4404,8 @@ struct aim_t
 				li = in->d.line;
 				int frontflag = P_PointOnLineSidePrecise(startpos.x, startpos.y, li);
 
-				Printf("Found line %d: toppitch = %f, bottompitch = %f\n", int(li - lines), ANGLE2DBL(toppitch), ANGLE2DBL(bottompitch));
+				if (aimdebug)
+					Printf("Found line %d: toppitch = %f, bottompitch = %f\n", int(li - lines), ANGLE2DBL(toppitch), ANGLE2DBL(bottompitch));
 
 				if (li->isLinePortal() && frontflag == 0)
 				{
@@ -4442,7 +4448,8 @@ struct aim_t
 				if (!AimTraverse3DFloors(it.Trace(), in, frontflag, &planestocheck))
 					return;
 
-				Printf("After line %d: toppitch = %f, bottompitch = %f, planestocheck = %d\n", int(li - lines), ANGLE2DBL(toppitch), ANGLE2DBL(bottompitch), planestocheck);
+				if (aimdebug)
+					Printf("After line %d: toppitch = %f, bottompitch = %f, planestocheck = %d\n", int(li - lines), ANGLE2DBL(toppitch), ANGLE2DBL(bottompitch), planestocheck);
 
 				sector_t *entersec = frontflag ? li->frontsector : li->backsector;
 				sector_t *exitsec = frontflag ? li->backsector : li->frontsector;
@@ -4602,20 +4609,23 @@ struct aim_t
 					if (sv_smartaim < 3)
 					{
 						// don't autoaim at barrels and other shootable stuff unless no monsters have been found
-						Printf("Hit other %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
+						if (aimdebug)
+							Printf("Hit other %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
 						SetResult(thing_other, in->frac, th, thingpitch);
 					}
 				}
 				else
 				{
-					Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
+					if (aimdebug)
+						Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
 					SetResult(linetarget, in->frac, th, thingpitch);
 					return;
 				}
 			}
 			else
 			{
-				Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
+				if (aimdebug)
+					Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X() / 65536., th->Y() / 65536., th->Z() / 65536.);
 				SetResult(linetarget, in->frac, th, thingpitch);
 				return;
 			}
@@ -4940,12 +4950,7 @@ AActor *P_LineAttack(AActor *t1, angle_t angle, fixed_t distance,
 				if ( NETWORK_InClientMode() )
 					return NULL;
 
-				// Using the puff's position is not accurate enough.
-				// Instead make it splash at the actual hit position
-				hitx = t1->X() + FixedMul(vx, trace.Distance);
-				hity = t1->Y() + FixedMul(vy, trace.Distance);
-				hitz = shootz + FixedMul(vz, trace.Distance);
-				P_HitWater(puff, P_PointInSector(hitx, hity), hitx, hity, hitz);
+				P_HitWater(puff, trace.Sector, trace.X, trace.Y, trace.Z);
 			}
 			// [BB] Decal has been spawned, so the client stops here. 
 			if ( NETWORK_InClientMode() )
@@ -5176,7 +5181,7 @@ AActor *P_LinePickActor(AActor *t1, angle_t angle, fixed_t distance, int pitch,
 	TData.hitGhosts = true;
 	
 	if (Trace(t1->X(), t1->Y(), shootz, t1->Sector, vx, vy, vz, distance,
-		actorMask, wallMask, t1, trace, TRACE_NoSky, CheckForActor, &TData))
+		actorMask, wallMask, t1, trace, TRACE_NoSky | TRACE_PortalRestrict, CheckForActor, &TData))
 	{
 		if (trace.HitType == TRACE_HitActor)
 		{
@@ -5621,8 +5626,7 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 			trace.CrossedWater == NULL &&
 			trace.Sector->heightsec == NULL)
 		{
-			thepuff->SetOrigin(trace.X, trace.Y, trace.Z, false);
-			P_HitWater(thepuff, trace.Sector);
+			P_HitWater(thepuff, trace.Sector, trace.X, trace.Y, trace.Z);
 		}
 		if (trace.Crossed3DWater || trace.CrossedWater)
 		{
@@ -7584,11 +7588,10 @@ static void SpawnDeepSplash(AActor *t1, const FTraceResults &trace, AActor *puff
 
 		if (hitdist >= 0 && hitdist <= trace.Distance)
 		{
-			fixed_t hitx = t1->X() + FixedMul(vx, hitdist);
-			fixed_t hity = t1->Y() + FixedMul(vy, hitdist);
+			fixedvec2 hitpos = t1->Vec2Offset(FixedMul(vx, hitdist), FixedMul(vy, hitdist));
 			fixed_t hitz = shootz + FixedMul(vz, hitdist);
 
-			P_HitWater(puff != NULL ? puff : t1, P_PointInSector(hitx, hity), hitx, hity, hitz);
+			P_HitWater(puff != NULL ? puff : t1, P_PointInSector(hitpos.x, hitpos.y), hitpos.x, hitpos.y, hitz);
 		}
 	}
 }
