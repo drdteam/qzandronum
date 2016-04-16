@@ -365,7 +365,7 @@ enum
 
 // [RH] Compatibility flags.
 // [RC] NOTE: If adding a flag, be sure to add a stub in serverconsole_dmflags.cpp.
-enum
+enum : unsigned int
 {
 	COMPATF_SHORTTEX		= 1 << 0,	// Use Doom's shortest texture around behavior?
 	COMPATF_STAIRINDEX		= 1 << 1,	// Don't fix loop index for stair building?
