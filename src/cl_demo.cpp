@@ -334,7 +334,7 @@ void CLIENTDEMO_WriteUserInfo( void )
 	NETWORK_WriteString( &g_ByteStream, players[consoleplayer].userinfo.GetName() );
 	NETWORK_WriteByte( &g_ByteStream, players[consoleplayer].userinfo.GetGender() );
 	NETWORK_WriteLong( &g_ByteStream, players[consoleplayer].userinfo.GetColor() );
-	NETWORK_WriteLong( &g_ByteStream, players[consoleplayer].userinfo.GetAimDist() );
+	NETWORK_WriteFloat( &g_ByteStream, static_cast<float> ( players[consoleplayer].userinfo.GetAimDist() ) );
 	NETWORK_WriteString( &g_ByteStream, skins[players[consoleplayer].userinfo.GetSkin()].name );
 	NETWORK_WriteLong( &g_ByteStream, players[consoleplayer].userinfo.GetRailColor() );
 	NETWORK_WriteByte( &g_ByteStream, players[consoleplayer].userinfo.GetHandicap() );
@@ -353,7 +353,7 @@ void CLIENTDEMO_ReadUserInfo( void )
 	// [BB] Make sure that the gender is valid.
 	*static_cast<FIntCVar *>(info[NAME_Gender]) = clamp ( NETWORK_ReadByte( &g_ByteStream ), 0, 2 );
 	info.ColorChanged( NETWORK_ReadLong( &g_ByteStream ) );
-	*static_cast<FFloatCVar *>(info[NAME_Autoaim]) = static_cast<float> ( NETWORK_ReadLong( &g_ByteStream ) ) / ANGLE_1 ;
+	*static_cast<FFloatCVar *>(info[NAME_Autoaim]) = NETWORK_ReadFloat( &g_ByteStream );
 	*static_cast<FIntCVar *>(info[NAME_Skin]) = R_FindSkin( NETWORK_ReadString( &g_ByteStream ), players[consoleplayer].CurrentPlayerClass );
 	*static_cast<FIntCVar *>(info[NAME_RailColor]) = NETWORK_ReadLong( &g_ByteStream );
 	*static_cast<FIntCVar *>(info[NAME_Handicap]) = NETWORK_ReadByte( &g_ByteStream );
@@ -374,8 +374,7 @@ void CLIENTDEMO_ReadUserInfo( void )
 			GetDefaultByType (players[consoleplayer].cls)->SpawnState->sprite)
 		{ // Only change the sprite if the player is using a standard one
 			players[consoleplayer].mo->sprite = skins[players[consoleplayer].userinfo.GetSkin()].sprite;
-			players[consoleplayer].mo->scaleX = skins[players[consoleplayer].userinfo.GetSkin()].ScaleX;
-			players[consoleplayer].mo->scaleY = skins[players[consoleplayer].userinfo.GetSkin()].ScaleY;
+			players[consoleplayer].mo->Scale = skins[players[consoleplayer].userinfo.GetSkin()].Scale;
 		}
 	}
 }
@@ -535,7 +534,7 @@ void CLIENTDEMO_ReadPacket( void )
 			case CLD_LCMD_CENTERVIEW:
 
 				if ( players[consoleplayer].mo )
-					players[consoleplayer].mo->pitch = 0;
+					players[consoleplayer].mo->Angles.Pitch = 0.;
 				break;
 			case CLD_LCMD_TAUNT:
 
@@ -964,8 +963,8 @@ CCMD( demo_spectatefreely )
 		player_t *p = &g_demoCameraPlayer;
 		p->bSpectating = true;
 		p->cls = PlayerClasses[p->CurrentPlayerClass].Type;
-		p->mo = static_cast<APlayerPawn *> (Spawn (p->cls, pCamera->PosPlusZ ( pCamera->height ), NO_REPLACE));
-		p->mo->angle = pCamera->angle;
+		p->mo = static_cast<APlayerPawn *> (Spawn (p->cls, pCamera->PosPlusZ ( pCamera->Height ), NO_REPLACE));
+		p->mo->Angles.Yaw = pCamera->Angles.Yaw;
 		p->mo->flags |= (MF_NOGRAVITY);
 		p->mo->player = p;
 		p->DesiredFOV = p->FOV = 90.f;

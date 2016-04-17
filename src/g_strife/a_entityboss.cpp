@@ -85,9 +85,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_SpawnEntity)
 	AActor *entity = Spawn("EntityBoss", self->PosPlusZ(70*FRACUNIT), ALLOW_REPLACE);
 	if (entity != NULL)
 	{
-		entity->angle = self->angle;
+		entity->Angles.Yaw = self->Angles.Yaw;
 		entity->CopyFriendliness(self, true);
-		entity->vel.z = 5*FRACUNIT;
+		entity->Vel.Z = 5;
 		entity->tracer = self;
 
 		// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
@@ -102,8 +102,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 	PARAM_ACTION_PROLOGUE;
 
 	AActor *second;
-	fixed_t secondRadius = GetDefaultByName("EntitySecond")->radius * 2;
-	angle_t an;
+	double secondRadius = FIXED2DBL(GetDefaultByName("EntitySecond")->_f_radius() * 2);
+
+	static const double turns[3] = { 0, 90, -90 };
+	const double velmul[3] = { 4.8828125f, secondRadius*4, secondRadius*4 };
 
 	// [CW] Clients may not do this.
 	if ( NETWORK_InClientMode() )
@@ -112,46 +114,28 @@ DEFINE_ACTION_FUNCTION(AActor, A_EntityDeath)
 	AActor *spot = self->tracer;
 	if (spot == NULL) spot = self;
 
-	fixedvec3 pos = spot->Vec3Angle(secondRadius, self->angle, self->tracer? 70*FRACUNIT : 0);
-	
-	an = self->angle >> ANGLETOFINESHIFT;
-	second = Spawn("EntitySecond", pos, ALLOW_REPLACE);
-	second->CopyFriendliness(self, true);
-	//second->target = self->target;
-	A_FaceTarget (second);
-	an = second->angle >> ANGLETOFINESHIFT;
-	second->vel.x += FixedMul (finecosine[an], 320000);
-	second->vel.y += FixedMul (finesine[an], 320000);
+	for (int i = 0; i < 3; i++)
+	{
+		DAngle an = self->Angles.Yaw + turns[i];
+		DVector3 pos = spot->Vec3Angle(secondRadius, an, self->tracer ? 70. : 0.);
+	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
+	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		SERVERCOMMANDS_SpawnMissile( second );
+
 
 	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissile( second );
 
-	pos = spot->Vec3Angle(secondRadius, self->angle + ANGLE_90, self->tracer? 70*FRACUNIT : 0);
-	an = (self->angle + ANGLE_90) >> ANGLETOFINESHIFT;
-	second = Spawn("EntitySecond", pos, ALLOW_REPLACE);
-	second->CopyFriendliness(self, true);
-	//second->target = self->target;
-	second->vel.x = FixedMul (secondRadius, finecosine[an]) << 2;
-	second->vel.y = FixedMul (secondRadius, finesine[an]) << 2;
-	A_FaceTarget (second);
+		second = Spawn("EntitySecond", pos, ALLOW_REPLACE);
+		second->CopyFriendliness(self, true);
 
 	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_SpawnMissile( second );
 
-	pos = spot->Vec3Angle(secondRadius, self->angle - ANGLE_90, self->tracer? 70*FRACUNIT : 0);
-	an = (self->angle - ANGLE_90) >> ANGLETOFINESHIFT;
-	second = Spawn("EntitySecond", pos, ALLOW_REPLACE);
-	second->CopyFriendliness(self, true);
-	//second->target = self->target;
-	second->vel.x = FixedMul (secondRadius, finecosine[an]) << 2;
-	second->vel.y = FixedMul (secondRadius, finesine[an]) << 2;
-
-	// [CW] Tell clients to spawn the actor. (Treat it as a missile so its velocity is sent to the clients.)
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_SpawnMissile( second );
-
-	A_FaceTarget (second);
+		A_FaceTarget(second);
+		second->VelFromAngle(an, velmul[i]);
+	}
 	return 0;
 }

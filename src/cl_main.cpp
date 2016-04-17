@@ -2959,7 +2959,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 					const FDecalTemplate* tpl = DecalLibrary.GetDecalByName( decalName );
 
 					if ( actor && tpl )
-						ShootDecal( tpl, actor, actor->Sector, actor->X(), actor->Y(), z, angle, tracedist, permanent );
+						ShootDecal( tpl, actor, actor->Sector, actor->_f_X(), actor->_f_Y(), z, angle, tracedist, permanent );
 				}
 				break;
 
@@ -3288,7 +3288,7 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 
 		// Whenever blood spawns, its velz is always 2 * FRACUNIT.
 		if ( stricmp( pType->TypeName.GetChars( ), "blood" ) == 0 )
-			pActor->vel.z = FRACUNIT*2;
+			pActor->Vel.Z = 2;
 
 		// Allow for client-side body removal in invasion mode.
 		if ( invasion )
@@ -3331,12 +3331,12 @@ void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, f
 	}
 
 	// Set the thing's velocity.
-	pActor->vel.x = VelX;
-	pActor->vel.y = VelY;
-	pActor->vel.z = VelZ;
+	pActor->Vel.X = FIXED2FLOAT ( VelX );
+	pActor->Vel.Y = FIXED2FLOAT ( VelY );
+	pActor->Vel.Z = FIXED2FLOAT ( VelZ );
 
 	// Derive the thing's angle from its velocity.
-	pActor->angle = R_PointToAngle2( 0, 0, VelX, VelY );
+	pActor->Angles.Yaw = ANGLE2FLOAT ( R_PointToAngle2( 0, 0, VelX, VelY ) );
 
 	pActor->lNetID = lNetID;
 	g_NetIDList.useID ( lNetID, pActor );
@@ -3362,7 +3362,7 @@ void CLIENT_MoveThing( AActor *pActor, fixed_t X, fixed_t Y, fixed_t Z )
 	{
 		// [BB] Unfortunately, P_OldAdjustFloorCeil messes up the floorz value under some circumstances.
 		// Save the old value, so that we can restore it if necessary.
-		fixed_t oldfloorz = pActor->floorz;
+		double oldfloorz = pActor->floorz;
 		P_OldAdjustFloorCeil( pActor );
 		// [BB] An actor can't be below its floorz, if the value is correct.
 		// In this case, P_OldAdjustFloorCeil apparently didn't work, so revert to the old value.
@@ -3608,8 +3608,8 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	pPlayer->viewheight = 0;
 	pPlayer->deltaviewheight = 0;
 	pPlayer->bob = 0;
-	pPlayer->vel.x = 0;
-	pPlayer->vel.y = 0;
+	pPlayer->Vel.X = 0;
+	pPlayer->Vel.Y = 0;
 	pPlayer->centering = 0;
 	pPlayer->turnticks = 0;
 	pPlayer->oldbuttons = 0;
@@ -4170,8 +4170,8 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// [RH] set color translations for player sprites
 		pActor->Translation = TRANSLATION( TRANSLATION_Players, ulPlayer );
 	}
-	pActor->angle = Angle;
-	pActor->pitch = pActor->roll = 0;
+	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
+	pActor->Angles.Pitch = pActor->Angles.Roll = 0.;
 	pActor->health = pPlayer->health;
 	pActor->lFixedColormap = NOFIXEDCOLORMAP;
 
@@ -4202,8 +4202,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	if ( !bMorph )
 	{
 		pActor->sprite = skins[lSkin].sprite;
-		pActor->scaleX = skins[lSkin].ScaleX;
-		pActor->scaleY = skins[lSkin].ScaleY;
+		pActor->Scale = skins[lSkin].Scale;
 	}
 
 	pPlayer->DesiredFOV = pPlayer->FOV = 90.f;
@@ -4233,8 +4232,8 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	pPlayer->Uncrouch( );
 
 	// killough 10/98: initialize bobbing to 0.
-	pPlayer->vel.x = 0;
-	pPlayer->vel.y = 0;
+	pPlayer->Vel.X = 0;
+	pPlayer->Vel.Y = 0;
 /*
 	// If the console player is being respawned, place the camera back in his own body.
 	if ( ulPlayer == consoleplayer )
@@ -4270,12 +4269,12 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !bMorph && !bPlayerWasMorphed )
 	{
 		// Spawn the respawn fog.
-		unsigned an = pActor->angle >> ANGLETOFINESHIFT;
+		unsigned an = pActor->_f_angle() >> ANGLETOFINESHIFT;
 		// [CK] Don't spawn fog for facing west spawners online, if compatflag is on.
-		if (!(pActor->angle == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
-			Spawn( "TeleportFog", pActor->X() + 20 * finecosine[an],
-				pActor->Y() + 20 * finesine[an],
-				pActor->Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
+		if (!(pActor->_f_angle() == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
+			Spawn( "TeleportFog", pActor->_f_X() + 20 * finecosine[an],
+				pActor->_f_Y() + 20 * finesine[an],
+				pActor->_f_Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
 	}
 
 	pPlayer->playerstate = PST_LIVE;
@@ -4319,7 +4318,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	// If this is the consoleplayer, set the realorigin and ServerXYZVel.
 	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
 	{
-		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->X(), pPlayer->mo->Y(), pPlayer->mo->Z() );
+		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->_f_X(), pPlayer->mo->_f_Y(), pPlayer->mo->_f_Z() );
 
 		pPlayer->ServerXYZVel[0] = 0;
 		pPlayer->ServerXYZVel[1] = 0;
@@ -4420,12 +4419,12 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	CLIENT_MoveThing( players[ulPlayer].mo, X, Y, Z );
 
 	// Set the player's angle.
-	players[ulPlayer].mo->angle = Angle;
+	players[ulPlayer].mo->Angles.Yaw = ANGLE2FLOAT ( Angle );
 
 	// Set the player's XYZ velocity.
-	players[ulPlayer].mo->vel.x = VelX;
-	players[ulPlayer].mo->vel.y = VelY;
-	players[ulPlayer].mo->vel.z = VelZ;
+	players[ulPlayer].mo->Vel.X = FIXED2FLOAT ( VelX );
+	players[ulPlayer].mo->Vel.Y = FIXED2FLOAT ( VelY );
+	players[ulPlayer].mo->Vel.Z = FIXED2FLOAT ( VelZ );
 
 	// Is the player crouching?
 	players[ulPlayer].crouchdir = ( bCrouching ) ? 1 : -1;
@@ -4911,8 +4910,7 @@ static void client_SetPlayerUserInfo( BYTESTREAM_s *pByteStream )
 		if ( pPlayer->mo )
 		{
 			pPlayer->mo->sprite = skins[lSkin].sprite;
-			pPlayer->mo->scaleX = skins[lSkin].ScaleX;
-			pPlayer->mo->scaleY = skins[lSkin].ScaleY;
+			pPlayer->mo->Scale = skins[lSkin].Scale;
 		}
 	}
 
@@ -5513,7 +5511,7 @@ static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
 		if (lPitch > ANGLE_1*56)
 			lPitch = ANGLE_1*56;
 	}
-	players[ulPlayer].mo->pitch = lPitch;
+	players[ulPlayer].mo->Angles.Pitch = ANGLE2FLOAT ( lPitch );
 	players[ulPlayer].mo->waterlevel = ulWaterLevel;
 	// [BB] The attack buttons are now already set in *_MovePlayer, so additionally setting
 	// them here is obsolete. I don't want to change this before 97D2 final though.
@@ -5521,7 +5519,7 @@ static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
 //	players[ulPlayer].velx = lMomX;
 //	players[ulPlayer].vely = lMomY;
 	players[ulPlayer].viewz = lViewZ;
-	players[ulPlayer].bob = lBob;
+	players[ulPlayer].bob = FIXED2FLOAT ( lBob );
 }
 
 //*****************************************************************************
@@ -5620,9 +5618,9 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 		// sure that the spectator body doesn't get stuck.
 		CLIENT_MoveThing ( pPlayer->mo, X, Y, Z );
 
-		pPlayer->mo->vel.x = VelX;
-		pPlayer->mo->vel.y = VelY;
-		pPlayer->mo->vel.z = VelZ;
+		pPlayer->mo->Vel.X = FIXED2FLOAT ( VelX );
+		pPlayer->mo->Vel.Y = FIXED2FLOAT ( VelY );
+		pPlayer->mo->Vel.Z = FIXED2FLOAT ( VelZ );
 	}
 }
 
@@ -6107,9 +6105,9 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->X();
-	Y = pActor->Y();
-	Z = pActor->Z();
+	X = pActor->_f_X();
+	Y = pActor->_f_Y();
+	Z = pActor->_f_Z();
 
 	// Read in the position data.
 	if ( lBits & CM_X )
@@ -6153,27 +6151,27 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 
 	// Read in the angle data.
 	if ( lBits & CM_ANGLE )
-		pActor->angle = NETWORK_ReadLong( pByteStream );
+		pActor->Angles.Yaw = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
-		pActor->vel.x = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->Vel.X = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 	if ( lBits & CM_VELY )
-		pActor->vel.y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->Vel.Y = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 	if ( lBits & CM_VELZ )
-		pActor->vel.z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+		pActor->Vel.Z = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 
 	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
-	if ((pActor->player != NULL) && (pActor->vel.x == 0) && (pActor->vel.y == 0)) {
-		pActor->player->vel.x = 0;
-		pActor->player->vel.y = 0;
+	if ((pActor->player != NULL) && (pActor->Vel.X == 0) && (pActor->Vel.Y == 0)) {
+		pActor->player->Vel.X = 0;
+		pActor->player->Vel.Y = 0;
 	}
 
 	// Read in the pitch data.
 	if ( lBits & CM_PITCH )
-		pActor->pitch = NETWORK_ReadLong( pByteStream );
+		pActor->Angles.Pitch = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the movedir data.
 	if ( lBits & CM_MOVEDIR )
@@ -6228,9 +6226,9 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->X();
-	Y = pActor->Y();
-	Z = pActor->Z();
+	X = pActor->_f_X();
+	Y = pActor->_f_Y();
+	Z = pActor->_f_Z();
 
 	// Read in the position data.
 	if ( lBits & CM_X )
@@ -6274,27 +6272,27 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 
 	// Read in the angle data.
 	if ( lBits & CM_ANGLE )
-		pActor->angle = NETWORK_ReadLong( pByteStream );
+		pActor->Angles.Yaw = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
-		pActor->vel.x = NETWORK_ReadLong( pByteStream );
+		pActor->Vel.X = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 	if ( lBits & CM_VELY )
-		pActor->vel.y = NETWORK_ReadLong( pByteStream );
+		pActor->Vel.Y = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 	if ( lBits & CM_VELZ )
-		pActor->vel.z = NETWORK_ReadLong( pByteStream );
+		pActor->Vel.Z = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 
 	// [Dusk] if the actor that's being moved is a player and his velocity
 	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
 	// as well.
-	if ((pActor->player != NULL) && (pActor->vel.x == 0) && (pActor->vel.y == 0)) {
-		pActor->player->vel.x = 0;
-		pActor->player->vel.y = 0;
+	if ((pActor->player != NULL) && (pActor->Vel.X == 0) && (pActor->Vel.Y == 0)) {
+		pActor->player->Vel.X = 0;
+		pActor->player->Vel.Y = 0;
 	}
 
 	// Read in the pitch data.
 	if ( lBits & CM_PITCH )
-		pActor->pitch = NETWORK_ReadLong( pByteStream );
+		pActor->Angles.Pitch = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the movedir data.
 	if ( lBits & CM_MOVEDIR )
@@ -6568,7 +6566,7 @@ static void client_SetThingAngle( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the angle.
-	pActor->angle = Angle;
+	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
 }
 
 //*****************************************************************************
@@ -6594,7 +6592,7 @@ static void client_SetThingAngleExact( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the angle.
-	pActor->angle = Angle;
+	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
 }
 
 //*****************************************************************************
@@ -6787,7 +6785,7 @@ static void client_SetThingProperty( BYTESTREAM_s *pByteStream )
 	{
 	case APROP_Speed:
 
-		pActor->Speed = ulPropertyValue;
+		pActor->Speed = FIXED2FLOAT ( ulPropertyValue );
 		break;
 	case APROP_Alpha:
 
@@ -6800,7 +6798,7 @@ static void client_SetThingProperty( BYTESTREAM_s *pByteStream )
 	case APROP_JumpZ:
 
 		if ( pActor->IsKindOf( RUNTIME_CLASS( APlayerPawn )))
-			static_cast<APlayerPawn *>( pActor )->JumpZ = ulPropertyValue;
+			static_cast<APlayerPawn *>( pActor )->JumpZ = FIXED2FLOAT ( ulPropertyValue );
 		break;
 	default:
 
@@ -7023,7 +7021,7 @@ static void client_SetThingGravity( BYTESTREAM_s *pByteStream )
 	}
 
 	// Set the actor's gravity.
-	pActor->gravity = lGravity;
+	pActor->Gravity = FIXED2FLOAT ( lGravity );
 }
 
 //*****************************************************************************
@@ -7187,9 +7185,9 @@ static void client_SetThingScale( BYTESTREAM_s *pByteStream )
 
 	// Finally, set the actor's scale.
 	if ( ActorScaleFlags & ACTORSCALE_X )
-		mo->scaleX = scaleX;
+		mo->Scale.X = FIXED2FLOAT ( scaleX );
 	if ( ActorScaleFlags & ACTORSCALE_Y )
-		mo->scaleY = scaleY;
+		mo->Scale.Y = FIXED2FLOAT ( scaleY );
 }
 
 //*****************************************************************************
@@ -7253,7 +7251,7 @@ static void client_ThingIsCorpse( BYTESTREAM_s *pByteStream )
 	// Do some other stuff done in AActor::Die.
 	pActor->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY|MF_NOGRAVITY);
 	pActor->flags |= MF_CORPSE|MF_DROPOFF;
-	pActor->height >>= 2;
+	pActor->Height *= 0.25;;
 
 	// Set the thing to the last frame of its death state.
 	CLIENT_SetActorToLastDeathStateFrame ( pActor );
@@ -7361,22 +7359,22 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 		// Spawn the fog slightly in front of the thing's destination.
 		Angle = NewAngle >> ANGLETOFINESHIFT;
 
-		Spawn<ATeleportFog>( pActor->X() + ( 20 * finecosine[Angle] ),
-			pActor->Y() + ( 20 * finesine[Angle] ),
-			pActor->Z() + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ),
+		Spawn<ATeleportFog>( pActor->_f_X() + ( 20 * finecosine[Angle] ),
+			pActor->_f_Y() + ( 20 * finesine[Angle] ),
+			pActor->_f_Z() + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ),
 			ALLOW_REPLACE );
 	}
 
 	// Set the thing's new velocity.
-	pActor->vel.x = NewVelX;
-	pActor->vel.y = NewVelY;
-	pActor->vel.z = NewVelZ;
+	pActor->Vel.X = FIXED2FLOAT ( NewVelX );
+	pActor->Vel.Y = FIXED2FLOAT ( NewVelY );
+	pActor->Vel.Z = FIXED2FLOAT ( NewVelZ );
 
 	// Also, if this is a player, set his bobbing appropriately.
 	if ( pActor->player )
 	{
-		pActor->player->vel.x = NewVelX;
-		pActor->player->vel.y = NewVelY;
+		pActor->player->Vel.X = FIXED2FLOAT ( NewVelX );
+		pActor->player->Vel.Y = FIXED2FLOAT ( NewVelY );
 
 		// [BB] If the server is teleporting us, don't let our prediction get messed up.
 		if ( pActor == players[consoleplayer].mo )
@@ -7387,7 +7385,7 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	pActor->reactiontime = lNewReactionTime;
 
 	// Set the thing's new angle.
-	pActor->angle = NewAngle;
+	pActor->Angles.Yaw = ANGLE2FLOAT ( NewAngle );
 
 	// User variable to do a weird zoom thingy when you teleport.
 	if (( bTeleZoom ) && ( telezoom ) && ( pActor->player ))
@@ -8732,7 +8730,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	// Read in flags.
 	int flags = NETWORK_ReadByte( pByteStream );
 
-	angle_t angle = source->angle;
+	angle_t angle = source->_f_angle();
 	PClassActor* spawnclass = NULL;
 	int duration = 0;
 	float sparsity = 1.0f;
@@ -8741,7 +8739,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	if ( flags & 0x80 )
 	{
 		// [TP] The server has signaled that more information follows
-		angle = source->angle + NETWORK_ReadLong( pByteStream );
+		angle = source->_f_angle() + NETWORK_ReadLong( pByteStream );
 		spawnclass = NETWORK_GetClassFromIdentification( NETWORK_ReadShort( pByteStream ));
 		duration = NETWORK_ReadShort( pByteStream );
 		sparsity = NETWORK_ReadFloat( pByteStream );

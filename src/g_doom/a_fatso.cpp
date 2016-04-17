@@ -15,7 +15,7 @@
 // firing three missiles in three different directions?
 // Doesn't look like it.
 //
-#define FATSPREAD (ANG90/8)
+#define FATSPREAD (90./8)
 
 DEFINE_ACTION_FUNCTION(AActor, A_FatRaise)
 {
@@ -32,7 +32,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack1)
 	PARAM_CLASS_OPT(spawntype, AActor)	{ spawntype = NULL; }
 
 	AActor *missile;
-	angle_t an;
 
 	if (!self->target)
 		return 0;
@@ -41,16 +40,14 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack1)
 
 	A_FaceTarget (self);
 	// Change direction  to ...
-	self->angle += FATSPREAD;
+	self->Angles.Yaw += FATSPREAD;
 	P_SpawnMissile (self, self->target, spawntype, NULL, true); // [BB] Inform clients
 
 	missile = P_SpawnMissile (self, self->target, spawntype);
 	if (missile != NULL)
 	{
-		missile->angle += FATSPREAD;
-		an = missile->angle >> ANGLETOFINESHIFT;
-		missile->vel.x = FixedMul (missile->Speed, finecosine[an]);
-		missile->vel.y = FixedMul (missile->Speed, finesine[an]);
+		missile->Angles.Yaw += FATSPREAD;
+		missile->VelFromAngle();
 
 		// [BC] If we're the server, tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -65,7 +62,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack2)
 	PARAM_CLASS_OPT(spawntype, AActor)	{ spawntype = NULL; }
 
 	AActor *missile;
-	angle_t an;
 
 	if (!self->target)
 		return 0;
@@ -74,16 +70,14 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack2)
 
 	A_FaceTarget (self);
 	// Now here choose opposite deviation.
-	self->angle -= FATSPREAD;
+	self->Angles.Yaw -= FATSPREAD;
 	P_SpawnMissile (self, self->target, spawntype, NULL, true); // [BB] Inform clients
 
 	missile = P_SpawnMissile (self, self->target, spawntype);
 	if (missile != NULL)
 	{
-		missile->angle -= FATSPREAD*2;
-		an = missile->angle >> ANGLETOFINESHIFT;
-		missile->vel.x = FixedMul (missile->Speed, finecosine[an]);
-		missile->vel.y = FixedMul (missile->Speed, finesine[an]);
+		missile->Angles.Yaw -= FATSPREAD*2;
+		missile->VelFromAngle();
 
 		// [BC] If we're the server, tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -98,7 +92,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack3)
 	PARAM_CLASS_OPT(spawntype, AActor)	{ spawntype = NULL; }
 
 	AActor *missile;
-	angle_t an;
 
 	if (!self->target)
 		return 0;
@@ -110,10 +103,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack3)
 	missile = P_SpawnMissile (self, self->target, spawntype);
 	if (missile != NULL)
 	{
-		missile->angle -= FATSPREAD/2;
-		an = missile->angle >> ANGLETOFINESHIFT;
-		missile->vel.x = FixedMul (missile->Speed, finecosine[an]);
-		missile->vel.y = FixedMul (missile->Speed, finesine[an]);
+		missile->Angles.Yaw -= FATSPREAD/2;
+		missile->VelFromAngle();
 
 		// [BC] If we're the server, tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -123,10 +114,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FatAttack3)
 	missile = P_SpawnMissile (self, self->target, spawntype);
 	if (missile != NULL)
 	{
-		missile->angle += FATSPREAD/2;
-		an = missile->angle >> ANGLETOFINESHIFT;
-		missile->vel.x = FixedMul (missile->Speed, finecosine[an]);
-		missile->vel.y = FixedMul (missile->Speed, finesine[an]);
+		missile->Angles.Yaw += FATSPREAD/2;
+		missile->VelFromAngle();
 
 		// [BC] If we're the server, tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -153,8 +142,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Mushroom)
 	PARAM_CLASS_OPT	(spawntype, AActor)		{ spawntype = NULL; }
 	PARAM_INT_OPT	(n)						{ n = 0; }
 	PARAM_INT_OPT	(flags)					{ flags = 0; }
-	PARAM_FIXED_OPT	(vrange)				{ vrange = 4*FRACUNIT; }
-	PARAM_FIXED_OPT	(hrange)				{ hrange = FRACUNIT/2; }
+	PARAM_FLOAT_OPT	(vrange)				{ vrange = 4; }
+	PARAM_FLOAT_OPT	(hrange)				{ hrange = 0.5; }
 
 	int i, j;
 
@@ -168,20 +157,20 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Mushroom)
 	}
 
 	P_RadiusAttack (self, self->target, 128, 128, self->DamageType, (flags & MSF_DontHurt) ? 0 : RADF_HURTSOURCE);
-	P_CheckSplash(self, 128<<FRACBITS);
+	P_CheckSplash(self, 128.);
 
 	// Now launch mushroom cloud
 	AActor *target = Spawn("Mapspot", self->Pos(), NO_REPLACE);	// We need something to aim at.
 	AActor *master = (flags & MSF_DontHurt) ? (AActor*)(self->target) : self;
-	target->height = self->height;
+	target->Height = self->Height;
  	for (i = -n; i <= n; i += 8)
 	{
  		for (j = -n; j <= n; j += 8)
 		{
 			AActor *mo;
 			target->SetXYZ(
-				self->X() + (i << FRACBITS),    // Aim in many directions from source
-				self->Y() + (j << FRACBITS),
+				self->X() + i,    // Aim in many directions from source
+				self->Y() + j,
 				self->Z() + (P_AproxDistance(i,j) * vrange)); // Aim up fairly high
 			if ((flags & MSF_Classic) || // Flag explicitely set, or no flags and compat options
 				(flags == 0 && (self->state->DefineFlags & SDF_DEHACKED) && (i_compatflags & COMPATF_MUSHROOM)))
@@ -194,9 +183,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Mushroom)
 			}
 			if (mo != NULL)
 			{	// Slow it down a bit
-				mo->vel.x = FixedMul(mo->vel.x, hrange);
-				mo->vel.y = FixedMul(mo->vel.y, hrange);
-				mo->vel.z = FixedMul(mo->vel.z, hrange);
+				mo->Vel *= hrange;
 				mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
 			}
 		}

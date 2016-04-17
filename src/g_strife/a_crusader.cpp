@@ -34,20 +34,20 @@ DEFINE_ACTION_FUNCTION(AActor, A_CrusaderChoose)
 	if (CrusaderCheckRange (self))
 	{
 		A_FaceTarget (self);
-		self->angle -= ANGLE_180/16;
-		P_SpawnMissileZAimed (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"), true); // [BB] Inform clients;
+		self->Angles.Yaw -= 180./16;
+		P_SpawnMissileZAimed (self, self->_f_Z() + 40*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"), true); // [BB] Inform clients;
 	}
 	else
 	{
 		if (P_CheckMissileRange (self))
 		{
 			A_FaceTarget (self);
-			P_SpawnMissileZAimed (self, self->Z() + 56*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
-			self->angle -= ANGLE_45/32;
-			P_SpawnMissileZAimed (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
-			self->angle += ANGLE_45/16;
-			P_SpawnMissileZAimed (self, self->Z() + 40*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
-			self->angle -= ANGLE_45/16;
+			P_SpawnMissileZAimed (self, self->_f_Z() + 56*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
+			self->Angles.Yaw -= 45./32;
+			P_SpawnMissileZAimed (self, self->_f_Z() + 40*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
+			self->Angles.Yaw += 45./16;
+			P_SpawnMissileZAimed (self, self->_f_Z() + 40*FRACUNIT, self->target, PClass::FindActor("CrusaderMissile"), true); // [BB] Inform clients;
+			self->Angles.Yaw -= 45./16;
 			self->reactiontime += 15;
 		}
 
@@ -70,11 +70,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_CrusaderSweepLeft)
 		return 0;
 	}
 
-	self->angle += ANGLE_90/16;
-	AActor *misl = P_SpawnMissileZAimed (self, self->Z() + 48*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"));
+	self->Angles.Yaw += 90./16;
+	AActor *misl = P_SpawnMissileZAimed (self, self->_f_Z() + 48*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"));
 	if (misl != NULL)
 	{
-		misl->vel.z += FRACUNIT;
+		misl->Vel.Z += 1;
 
 		// [BC] Tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -93,11 +93,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_CrusaderSweepRight)
 		return 0;
 	}
 
-	self->angle -= ANGLE_90/16;
-	AActor *misl = P_SpawnMissileZAimed (self, self->Z() + 48*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"));
+	self->Angles.Yaw -= 90./16;
+	AActor *misl = P_SpawnMissileZAimed (self, self->_f_Z() + 48*FRACUNIT, self->target, PClass::FindActor("FastFlameMissile"));
 	if (misl != NULL)
 	{
-		misl->vel.z += FRACUNIT;
+		misl->Vel.Z += 1;
 
 		// [BC] Tell clients to spawn the missile.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

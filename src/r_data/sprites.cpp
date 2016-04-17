@@ -649,8 +649,8 @@ void R_InitSkins (void)
 				}
 				else if (0 == stricmp (key, "scale"))
 				{
-					skins[i].ScaleX = clamp<fixed_t> (FLOAT2FIXED(atof (sc.String)), 1, 256*FRACUNIT);
-					skins[i].ScaleY = skins[i].ScaleX;
+					skins[i].Scale.X = clamp(atof (sc.String), 1./65536, 256.);
+					skins[i].Scale.Y = skins[i].Scale.X;
 				}
 				else if (0 == stricmp (key, "game"))
 				{
@@ -1009,8 +1009,7 @@ static void R_CreateSkin()
 	PClassPlayerPawn *type = PlayerClasses[0].Type;
 	skin.range0start = type->ColorRangeStart;
 	skin.range0end = type->ColorRangeEnd;
-	skin.ScaleX = GetDefaultByType (type)->scaleX;
-	skin.ScaleY = GetDefaultByType (type)->scaleY;
+	skin.Scale = GetDefaultByType (type)->Scale;
 
 	// [BC/BB] We need to initialize the default sprite, because when we create a skin
 	// using SKININFO, we don't necessarily specify a sprite.
@@ -1103,8 +1102,7 @@ void R_InitSprites ()
 		}
 		skins[i].range0start = basetype->ColorRangeStart;
 		skins[i].range0end = basetype->ColorRangeEnd;
-		skins[i].ScaleX = GetDefaultByType (basetype)->scaleX;
-		skins[i].ScaleY = GetDefaultByType (basetype)->scaleY;
+		skins[i].Scale = GetDefaultByType (basetype)->Scale;
 		skins[i].sprite = GetDefaultByType (basetype)->SpawnState->sprite;
 		skins[i].namespc = ns_global;
 
@@ -1223,9 +1221,9 @@ void R_InitSprites ()
 			continue;
 
 		AActor* def = GetDefaultByType( PlayerClasses[classSkinIdx].Type );
-		fixed_t maxAllowedHeight = FixedMul( maxheightfactor, def->height );
+		fixed_t maxAllowedHeight = FixedMul( maxheightfactor, def->_f_height() );
 		// [BB] 2*radius is approximately the actor width.
-		fixed_t maxAllowedWidth = FixedMul( maxwidthfactor, 2 * def->radius );
+		fixed_t maxAllowedWidth = FixedMul( maxwidthfactor, 2 * def->_f_radius() );
 		FPlayerSkin& skin = skins[skinIdx];
 
 		// [BB] If a skin sprite violates the limits, just downsize it.
@@ -1234,32 +1232,32 @@ void R_InitSprites ()
 		// Massmouth is very big, so we have to be pretty lenient here with the checks.
 		// [TP] Also, allow 1px lee-way so that we won't complain about scale being off by a
 		// fraction of a pixel (would cause messages such as "52px, max is 52px").
-		if ( maxheight * skin.ScaleY > maxAllowedHeight + FRACUNIT )
+		if ( maxheight * FLOAT2FIXED ( skin.Scale.Y ) > maxAllowedHeight + FRACUNIT )
 		{
 			sizeLimitsExceeded = true;
 			Printf ( "\\cgSprite %s of skin %s is too tall (%dpx, max is %dpx). Downsizing.\n",
 				maxheightSprite.GetChars(),
 				skin.name,
-				( maxheight * skin.ScaleY ) >> FRACBITS,
+				( maxheight * FLOAT2FIXED(skin.Scale.Y)) >> FRACBITS,
 				maxAllowedHeight >> FRACBITS );
-			const fixed_t oldScaleY = skin.ScaleY;
-			skin.ScaleY = maxAllowedHeight / maxheight;
+			const fixed_t oldScaleY = FLOAT2FIXED(skin.Scale.Y);
+			skin.Scale.Y = FIXED2FLOAT ( maxAllowedHeight ) / FIXED2FLOAT( maxheight );
 			// [BB] Preserve the aspect ration of the sprites.
-			skin.ScaleX *= FIXED2FLOAT( skin.ScaleY ) / FIXED2FLOAT( oldScaleY );
+			skin.Scale.X *= skin.Scale.Y / FIXED2FLOAT( oldScaleY );
 		}
 
-		if ( maxwidth * skin.ScaleX > maxAllowedWidth + FRACUNIT )
+		if ( maxwidth * FLOAT2FIXED(skin.Scale.X) > maxAllowedWidth + FRACUNIT )
 		{
 			sizeLimitsExceeded = true;
 			Printf ( "\\cgSprite %s of skin %s is too wide (%dpx, max is %dpx). Downsizing.\n",
 				maxwidthSprite.GetChars(),
 				skin.name,
-				( maxwidth * skin.ScaleX ) >> FRACBITS,
+				( maxwidth * FLOAT2FIXED(skin.Scale.X)) >> FRACBITS,
 				( maxAllowedWidth ) >> FRACBITS );
-			const fixed_t oldScaleX = skin.ScaleX;
-			skin.ScaleX = maxAllowedWidth / maxwidth;
+			const fixed_t oldScaleX = FLOAT2FIXED(skin.Scale.X);
+			skin.Scale.X = FIXED2FLOAT( maxAllowedWidth ) / FIXED2FLOAT( maxwidth );
 			// [BB] Preserve the aspect ration of the sprites.
-			skin.ScaleY *= FIXED2FLOAT( skin.ScaleX ) / FIXED2FLOAT( oldScaleX );
+			skin.Scale.Y *= skin.Scale.X / FIXED2FLOAT( oldScaleX );
 		}
 
 		// [BB] Don't allow the base skin sprites of the player classes to exceed the limits.
@@ -1334,8 +1332,7 @@ CUSTOM_CVAR( Int, cl_skins, 1, CVAR_ARCHIVE )
 		if (( lSkin >= 0 ) && ( static_cast<unsigned> (lSkin) < skins.Size() ))
 		{
 			players[ulIdx].mo->sprite = skins[lSkin].sprite;
-			players[ulIdx].mo->scaleX = skins[lSkin].ScaleX;
-			players[ulIdx].mo->scaleY = skins[lSkin].ScaleY;
+			players[ulIdx].mo->Scale = skins[lSkin].Scale;
 /*
 			// Make sure the player doesn't change sprites when his state changes.
 			if ( lSkin == R_FindSkin( "base", players[ulIdx].CurrentPlayerClass ))

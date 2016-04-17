@@ -1041,9 +1041,9 @@ void APowerFlight::InitEffect ()
 	Owner->flags |= MF_NOGRAVITY;
 	if (Owner->Z() <= Owner->floorz)
 	{
-		Owner->vel.z = 4*FRACUNIT;	// thrust the player in the air a bit
+		Owner->Vel.Z = 4;;	// thrust the player in the air a bit
 	}
-	if (Owner->vel.z <= -35*FRACUNIT)
+	if (Owner->Vel.Z <= -35)
 	{ // stop falling scream
 		S_StopSound (Owner, CHAN_VOICE);
 	}
@@ -1284,10 +1284,10 @@ void APowerSpeed::Serialize(FArchive &arc)
 //
 //===========================================================================
 
-fixed_t APowerSpeed ::GetSpeedFactor ()
+double APowerSpeed ::GetSpeedFactor ()
 {
 	if (Inventory != NULL)
-		return FixedMul(Speed, Inventory->GetSpeedFactor());
+		return Speed * Inventory->GetSpeedFactor();
 	else
 		return Speed;
 }
@@ -1325,12 +1325,12 @@ void APowerSpeed::DoEffect ()
 		}
 	}
 
-	if (P_AproxDistance (Owner->vel.x, Owner->vel.y) <= 12*FRACUNIT)
+	if (Owner->Vel.LengthSquared() <= 12*12)
 		return;
 	// [BC] Skulltag powerups, such as the turbosphere, require to move at least SOME to
 	// create a speed trail.
-	else if (( Owner->vel.x == 0 ) &&
-			 ( Owner->vel.y == 0 ))
+	else if (( Owner->Vel.X == 0 ) &&
+			 ( Owner->Vel.Y == 0 ))
 	{
 		return;
 	}
@@ -1338,16 +1338,15 @@ void APowerSpeed::DoEffect ()
 	AActor *speedMo = Spawn<APlayerSpeedTrail> (Owner->Pos(), NO_REPLACE);
 	if (speedMo)
 	{
-		speedMo->angle = Owner->angle;
+		speedMo->Angles.Yaw = Owner->Angles.Yaw;
 		speedMo->Translation = Owner->Translation;
 		speedMo->target = Owner;
 		speedMo->sprite = Owner->sprite;
 		speedMo->frame = Owner->frame;
-		speedMo->floorclip = Owner->floorclip;
+		speedMo->Floorclip = Owner->Floorclip;
 
 		// [BC] Also get the scale from the owner.
-		speedMo->scaleX = Owner->scaleX;
-		speedMo->scaleY = Owner->scaleY;
+		speedMo->Scale = Owner->Scale;
 
 		if (Owner == players[consoleplayer].camera &&
 			!(Owner->player->cheats & CF_CHASECAM))
@@ -1388,10 +1387,10 @@ void APowerTargeter::InitEffect ()
 		P_SetPsprite (player, ps_targetright, state + 2);
 	}
 
-	player->psprites[ps_targetcenter].sx = (160-3)*FRACUNIT;
+	player->psprites[ps_targetcenter].sx = (160-3);
 	player->psprites[ps_targetcenter].sy =
 		player->psprites[ps_targetleft].sy =
-		player->psprites[ps_targetright].sy = (100-3)*FRACUNIT;
+		player->psprites[ps_targetright].sy = (100-3);
 	PositionAccuracy ();
 }
 
@@ -1454,8 +1453,8 @@ void APowerTargeter::PositionAccuracy ()
 
 	if (player != NULL)
 	{
-		player->psprites[ps_targetleft].sx = (160-3)*FRACUNIT - ((100 - player->mo->accuracy) << FRACBITS);
-		player->psprites[ps_targetright].sx = (160-3)*FRACUNIT + ((100 - player->mo->accuracy) << FRACBITS);
+		player->psprites[ps_targetleft].sx = (160-3) - ((100 - player->mo->accuracy));
+		player->psprites[ps_targetright].sx = (160-3)+ ((100 - player->mo->accuracy));
 	}
 }
 

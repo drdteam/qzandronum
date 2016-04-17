@@ -148,7 +148,7 @@ void CLIENTCOMMANDS_UserInfo( ULONG ulFlags )
 	if ( ulFlags & USERINFO_COLOR )
 		NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].userinfo.GetColor() );
 	if ( ulFlags & USERINFO_AIMDISTANCE )
-		NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].userinfo.GetAimDist() );
+		NETWORK_WriteFloat( &CLIENT_GetLocalBuffer( )->ByteStream, static_cast<float> ( players[consoleplayer].userinfo.GetAimDist() ) );
 	if ( ulFlags & USERINFO_SKIN )
 		NETWORK_WriteString( &CLIENT_GetLocalBuffer( )->ByteStream, skins[players[consoleplayer].userinfo.GetSkin()].name );
 	if ( ulFlags & USERINFO_RAILCOLOR )
@@ -291,8 +291,8 @@ void CLIENTCOMMANDS_ClientMove( void )
 	if ( ulBits & CLIENT_UPDATE_UPMOVE )
 		NETWORK_WriteShort( &CLIENT_GetLocalBuffer( )->ByteStream, pCmd->ucmd.upmove );
 
-	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->angle );
-	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->pitch );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->_f_angle() );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->_f_pitch() );
 	// [BB] Send the checksum of our ticcmd we calculated when we originally generated the ticcmd from the user input.
 	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, g_sdwCheckCmd );
 

@@ -30,9 +30,9 @@ int AWhirlwind::DoSpecialDamage (AActor *target, int damage, FName damagetype)
 
 	if (!(target->flags7 & MF7_DONTTHRUST))
 	{
-		target->angle += pr_foo.Random2() << 20;
-		target->vel.x += pr_foo.Random2() << 10;
-		target->vel.y += pr_foo.Random2() << 10;
+		target->Angles.Yaw += pr_foo.Random2() * (360 / 4096.);
+		target->Vel.X += pr_foo.Random2() / 64.;
+		target->Vel.Y += pr_foo.Random2() / 64.;
 	}
 
 	if ((level.time & 16) && !(target->flags2 & MF2_BOSS) && !(target->flags7 & MF7_DONTTHRUST))
@@ -42,10 +42,10 @@ int AWhirlwind::DoSpecialDamage (AActor *target, int damage, FName damagetype)
 		{
 			randVal = 160;
 		}
-		target->vel.z += randVal << 11;
-		if (target->vel.z > 12*FRACUNIT)
+		target->Vel.Z += randVal / 32.;
+		if (target->Vel.Z > 12)
 		{
-			target->vel.z = 12*FRACUNIT;
+			target->Vel.Z = 12;
 		}
 	}
 	if (!(level.time & 7))
@@ -73,7 +73,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 	int randAttack;
 	static const int atkResolve1[] = { 50, 150 };
 	static const int atkResolve2[] = { 150, 200 };
-	int dist;
 
 	// [BB] This is server-side.
 	if ( NETWORK_InClientMode() )
@@ -99,7 +98,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 		P_TraceBleed (newdam > 0 ? newdam : damage, target, self);
 		return 0;
 	}
-	dist = self->AproxDistance (target) > 8*64*FRACUNIT;
+	int dist = self->Distance2D(target) > 8 * 64;
 	randAttack = pr_atk ();
 	if (randAttack < atkResolve1[dist])
 	{ // Ice ball
@@ -127,10 +126,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 					S_Sound (self, CHAN_BODY, "ironlich/attack1", 1, ATTN_NORM, true);	// [BB] Inform the clients.
 				}
 				fire->target = baseFire->target;
-				fire->angle = baseFire->angle;
-				fire->vel.x = baseFire->vel.x;
-				fire->vel.y = baseFire->vel.y;
-				fire->vel.z = baseFire->vel.z;
+				fire->Angles.Yaw = baseFire->Angles.Yaw;
+				fire->Vel = baseFire->Vel;
 				fire->Damage = NULL;
 				fire->health = (i+1) * 2;
 
@@ -148,7 +145,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 		mo = P_SpawnMissile (self, target, RUNTIME_CLASS(AWhirlwind));
 		if (mo != NULL)
 		{
-			mo->AddZ(-32*FRACUNIT, false);
+			mo->AddZ(-32);
 			mo->tracer = target;
 			mo->health = 20*TICRATE; // Duration
 			S_Sound (self, CHAN_BODY, "ironlich/attack3", 1, ATTN_NORM, true);	// [BB] Inform the clients.
@@ -176,21 +173,21 @@ DEFINE_ACTION_FUNCTION(AActor, A_WhirlwindSeek)
 	self->health -= 3;
 	if (self->health < 0)
 	{
-		self->vel.x = self->vel.y = self->vel.z = 0;
-		self->SetState (self->FindState(NAME_Death));
+		self->Vel.Zero();
+		self->SetState(self->FindState(NAME_Death));
 		self->flags &= ~MF_MISSILE;
 		return 0;
 	}
 	if ((self->threshold -= 3) < 0)
 	{
 		self->threshold = 58 + (pr_seek() & 31);
-		S_Sound (self, CHAN_BODY, "ironlich/attack3", 1, ATTN_NORM);
+		S_Sound(self, CHAN_BODY, "ironlich/attack3", 1, ATTN_NORM);
 	}
 	if (self->tracer && self->tracer->flags&MF_SHADOW)
 	{
 		return 0;
 	}
-	P_SeekerMissile (self, ANGLE_1*10, ANGLE_1*30);
+	P_SeekerMissile(self, ANGLE_1 * 10, ANGLE_1 * 30);
 	return 0;
 }
 
@@ -205,19 +202,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichIceImpact)
 	PARAM_ACTION_PROLOGUE;
 
 	unsigned int i;
-	angle_t angle;
 	AActor *shard;
 
 	for (i = 0; i < 8; i++)
 	{
 		shard = Spawn("HeadFX2", self->Pos(), ALLOW_REPLACE);
-		angle = i*ANG45;
 		shard->target = self->target;
-		shard->angle = angle;
-		angle >>= ANGLETOFINESHIFT;
-		shard->vel.x = FixedMul (shard->Speed, finecosine[angle]);
-		shard->vel.y = FixedMul (shard->Speed, finesine[angle]);
-		shard->vel.z = -FRACUNIT*6/10;
+		shard->Angles.Yaw = i*45.;
+		shard->VelFromAngle();
+		shard->Vel.Z = -.6;
 		P_CheckMissileSpawn (shard, self->radius);
 	}
 	return 0;
@@ -240,7 +233,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichFireGrow)
 	}
 
 	self->health--;
-	self->AddZ(9*FRACUNIT);
+	self->AddZ(9.);
 
 	// [BB] Tell clients of the changed z coord.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

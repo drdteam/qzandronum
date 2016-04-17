@@ -88,7 +88,7 @@ struct FTraceResults
 	fixedvec3 Crossed3DWaterPos;
 
 	// [BB] If Actor was reconciled while hit, we store the reconciliation offset here.
-	TVector3<fixed_t> unlaggedHitOffset;
+	TVector3<double> unlaggedHitOffset;
 
 	void CopyIfCloser(FTraceResults *other)
 	{

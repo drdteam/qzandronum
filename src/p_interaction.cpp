@@ -111,11 +111,11 @@ FName MeansOfDeath;
 //
 void P_TouchSpecialThing (AActor *special, AActor *toucher)
 {
-	fixed_t delta = special->Z() - toucher->Z();
+	fixed_t delta = special->_f_Z() - toucher->_f_Z();
 
 	// The pickup is at or above the toucher's feet OR
 	// The pickup is below the toucher.
-	if (delta > toucher->height || delta < MIN(-32*FRACUNIT, -special->height))
+	if (delta > toucher->_f_height() || delta < MIN(-32*FRACUNIT, -special->_f_height()))
 	{ // out of reach
 		return;
 	}
@@ -485,7 +485,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 	flags6 |= MF6_KILLED;
 
 	// [RH] Allow the death height to be overridden using metadata.
-	fixed_t metaheight = -1;
+	double metaheight = -1;
 	if (DamageType == NAME_Fire)
 	{
 		metaheight = GetClass()->BurnHeight;
@@ -496,11 +496,11 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 	}
 	if (metaheight < 0)
 	{
-		height >>= 2;
+		Height *= 0.25;
 	}
 	else
 	{
-		height = MAX<fixed_t> (metaheight, 0);
+		Height = MAX<double> (metaheight, 0);
 	}
 
 	// [RH] If the thing has a special, execute and remove it
@@ -750,9 +750,9 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 		}
 
 		// [BC] Keep track of where we died for the "same spot respawn" dmflags.
-		player->SpawnX = X();
-		player->SpawnY = Y();
-		player->SpawnAngle = angle;
+		player->SpawnX = _f_X();
+		player->SpawnY = _f_Y();
+		player->SpawnAngle = _f_angle();
 		player->bSpawnOkay = true;
 
 		// Death script execution, care of Skull Tag
@@ -1174,9 +1174,9 @@ static inline bool isFakePain(AActor *target, AActor *inflictor, int damage)
 
 // Returns the amount of damage actually inflicted upon the target, or -1 if
 // the damage was cancelled.
-int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage, FName mod, int flags, angle_t angle)
+int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage, FName mod, int flags, DAngle angle)
 {
-	unsigned ang;
+	DAngle ang;
 	player_t *player = NULL;
 	fixed_t thrust;
 	int temp;
@@ -1231,7 +1231,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		{
 			target->tics = 1;
 			target->flags6 |= MF6_SHATTERING;
-			target->vel.x = target->vel.y = target->vel.z = 0;
+			target->Vel.Zero();
 
 			// [BC] If we're the server, tell clients to update this thing's tics and
 			// velocity.
@@ -1300,7 +1300,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	if ( (target->flags & MF_SKULLFLY)
 	     && ( NETWORK_InClientMode() == false ) )
 	{
-		target->vel.x = target->vel.y = target->vel.z = 0;
+		target->Vel.Zero();
 
 		// [BC] If we're the server, tell clients to update this thing's velocity
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1458,7 +1458,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 		if (kickback)
 		{
 			// [BB] Safe the original z-velocity of the target. This way we can check if we need to update it.
-			const fixed_t oldTargetVelz = target->vel.z;
+			const double oldTargetVelz = target->Vel.Z;
 
 			AActor *origin = (source && (flags & DMG_INFLICTOR_IS_PUFF))? source : inflictor;
 
@@ -1471,7 +1471,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				// If the origin and target are in exactly the same spot, choose a random direction.
 				// (Most likely cause is from telefragging somebody during spawning because they
 				// haven't moved from their spawn spot at all.)
-				ang = pr_kickbackdir.GenRand32();
+				ang = pr_kickbackdir.GenRand_Real2() * 360.;
 			}
 			else
 			{
@@ -1495,7 +1495,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 
 			// make fall forwards sometimes
 			if ((damage < 40) && (damage > target->health)
-				 && (target->Z() - origin->Z() > 64*FRACUNIT)
+				 && (target->Z() - origin->Z() > 64)
 				 && (pr_damagemobj()&1)
 				 // [RH] But only if not too fast and not flying
 				 && thrust < 10*FRACUNIT
@@ -1503,33 +1503,30 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				 && (inflictor == NULL || !(inflictor->flags5 & MF5_NOFORWARDFALL))
 				 )
 			{
-				ang += ANG180;
+				ang += 180.;
 				thrust *= 4;
 			}
-			ang >>= ANGLETOFINESHIFT;
 			if (source && source->player && (flags & DMG_INFLICTOR_IS_PUFF)
 				&& source->player->ReadyWeapon != NULL &&
 				(source->player->ReadyWeapon->WeaponFlags & WIF_STAFF2_KICKBACK))
 			{
 				// Staff power level 2
-				target->vel.x += FixedMul (10*FRACUNIT, finecosine[ang]);
-				target->vel.y += FixedMul (10*FRACUNIT, finesine[ang]);
+				target->Thrust(ang, 10);
 				if (!(target->flags & MF_NOGRAVITY))
 				{
-					target->vel.z += 5*FRACUNIT;
+					target->Vel.Z += 5.;
 				}
 			}
 			else
 			{
-				target->vel.x += FixedMul (thrust, finecosine[ang]);
-				target->vel.y += FixedMul (thrust, finesine[ang]);
+				target->Thrust(ang, FIXED2DBL(thrust));
 			}
 
 			// [BC] Set the thing's velocity.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 			{
 				// [BB] Only update z-velocity if it has changed.
-				SERVER_UpdateThingVelocity ( target, oldTargetVelz != target->vel.z );
+				SERVER_UpdateThingVelocity ( target, oldTargetVelz != target->Vel.Z );
 			}
 		}
 	}
@@ -2682,7 +2679,7 @@ void PLAYER_SetSpectator( player_t *pPlayer, bool bBroadcast, bool bDeadSpectato
 				// (whatever source killed the player possibly moved the body after the player's death).
 				// If that's the case, don't move the spectator to the old body position, but to the place
 				// where G_DoReborn spawned him.
-				fixedvec3 playerSpawnPos = pPlayer->mo->Pos();
+				DVector3 playerSpawnPos = pPlayer->mo->Pos();
 				pPlayer->mo->SetOrigin( pOldBody->Pos(), false );
 				if ( P_TestMobjLocation ( pPlayer->mo ) == false )
 					pPlayer->mo->SetOrigin( playerSpawnPos, false );
@@ -2762,15 +2759,15 @@ void PLAYER_SetDefaultSpectatorValues( player_t *pPlayer )
 	pPlayer->mo->RenderStyle = STYLE_None;
 
 	// [BB] Speed and viewheight of spectators should be independent of the player class.
-	pPlayer->mo->Speed = FRACUNIT;
-	pPlayer->mo->ForwardMove1 = pPlayer->mo->ForwardMove2 = FRACUNIT;
-	pPlayer->mo->SideMove1 = pPlayer->mo->SideMove2 = FRACUNIT;
+	pPlayer->mo->Speed = 1;
+	pPlayer->mo->ForwardMove1 = pPlayer->mo->ForwardMove2 = 1;
+	pPlayer->mo->SideMove1 = pPlayer->mo->SideMove2 = 1;
 	pPlayer->mo->ViewHeight = 41*FRACUNIT;
 	// [BB] Also can't hurt to reset gravity.
-	pPlayer->mo->gravity = FRACUNIT;
+	pPlayer->mo->Gravity = 1;
 
 	// Make the player flat, so he can travel under doors and such.
-	pPlayer->mo->height = 0;
+	pPlayer->mo->Height = 0;
 
 	// [Dusk] Player is now a spectator so he no longer is damaged by anything.
 	pPlayer->mo->DamageType = NAME_None;

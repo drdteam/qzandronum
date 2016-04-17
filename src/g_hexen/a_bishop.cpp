@@ -151,15 +151,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopDoBlur)
 	self->special1 = (pr_doblur() & 3) + 3; // Random number of blurs
 	if (pr_doblur() < 120)
 	{
-		P_ThrustMobj (self, self->angle + ANG90, 11*FRACUNIT);
+		self->Thrust(self->Angles.Yaw + 90, 11);
 	}
 	else if (pr_doblur() > 125)
 	{
-		P_ThrustMobj (self, self->angle - ANG90, 11*FRACUNIT);
+		self->Thrust(self->Angles.Yaw - 90, 11);
 	}
 	else
 	{ // Thrust forward
-		P_ThrustMobj (self, self->angle, 11*FRACUNIT);
+		self->Thrust(11);
 	}
 
 	// [BB] If we're the server, update the thing's velocity.
@@ -192,8 +192,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopSpawnBlur)
 
 	if (!--self->special1)
 	{
-		self->vel.x = 0;
-		self->vel.y = 0;
+		self->Vel.X = self->Vel.Y = 0;
 
 		// [BB] If we're the server, update the thing's velocity.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -219,7 +218,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopSpawnBlur)
 	mo = Spawn ("BishopBlur", self->Pos(), ALLOW_REPLACE);
 	if (mo)
 	{
-		mo->angle = self->angle;
+		mo->Angles.Yaw = self->Angles.Yaw;
 
 		// [BB] If we're the server, tell the clients to spawn the thing and set its angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -248,10 +247,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopChase)
 		return 0;
 	}
 
-	fixed_t newz = self->Z() - finesine[self->special2 << BOBTOFINESHIFT] * 4;
+	fixed_t newz = self->_f_Z() - finesine[self->special2 << BOBTOFINESHIFT] * 4;
 	self->special2 = (self->special2 + 4) & 63;
 	newz += finesine[self->special2 << BOBTOFINESHIFT] * 4;
-	self->SetZ(newz);
+	self->_f_SetZ(newz);
 
 	// [BB] If we're the server, update the thing's z coordinate.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -275,7 +274,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPuff)
 	mo = Spawn ("BishopPuff", self->PosPlusZ(40*FRACUNIT), ALLOW_REPLACE);
 	if (mo)
 	{
-		mo->vel.z = FRACUNIT/2;
+		mo->Vel.Z = -.5;
 	}
 	return 0;
 }
@@ -313,7 +312,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_BishopPainBlur)
 	mo = Spawn ("BishopPainBlur", self->Vec3Offset(xo, yo, zo), ALLOW_REPLACE);
 	if (mo)
 	{
-		mo->angle = self->angle;
+		mo->Angles.Yaw = self->Angles.Yaw;
 
 		// [BB] If we're the server, tell the clients to spawn the thing and set its angle.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

@@ -95,8 +95,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_WizAtk3)
 	mo = P_SpawnMissile (self, self->target, fx, NULL, true); // [BB] Inform clients
 	if (mo != NULL)
 	{
-		P_SpawnMissileAngle(self, fx, mo->angle-(ANG45/8), mo->vel.z, true); // [BB] Inform clients
-		P_SpawnMissileAngle(self, fx, mo->angle+(ANG45/8), mo->vel.z, true); // [BB] Inform clients
+		P_SpawnMissileAngle(self, fx, mo->Angles.Yaw - 45. / 8, mo->Vel.Z, true); // [BB] Inform clients
+		P_SpawnMissileAngle(self, fx, mo->Angles.Yaw + 45. / 8, mo->Vel.Z, true); // [BB] Inform clients
 	}
 	return 0;
 }

@@ -1,6 +1,8 @@
 #ifndef __RES_SPRITES_H
 #define __RES_SPRITES_H
 
+#include "vectors.h"
+
 // [BC] This is the maximum length a skin name can be.
 #define	MAX_SKIN_NAME					24
 
@@ -55,8 +57,7 @@ public:
 	BYTE		range0start;
 	BYTE		range0end;
 	bool		othergame;	// [GRB]
-	fixed_t		ScaleX;
-	fixed_t		ScaleY;
+	DVector2	Scale;
 	int			sprite;
 	int			crouchsprite;
 	int			namespc;	// namespace for this skin

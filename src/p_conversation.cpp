@@ -1097,8 +1097,8 @@ void P_StartConversation (AActor *npc, AActor *pc, bool facetalker, bool saveang
 			return;
 	}
 
-	pc->vel.x = pc->vel.y = 0;	// Stop moving
-	pc->player->vel.x = pc->player->vel.y = 0;
+	pc->Vel.Zero();
+	pc->player->Vel.Zero();
 	static_cast<APlayerPawn*>(pc)->PlayIdle ();
 
 	pc->player->ConversationPC = pc;
@@ -1116,14 +1116,14 @@ void P_StartConversation (AActor *npc, AActor *pc, bool facetalker, bool saveang
 	pc->player->ConversationFaceTalker = facetalker;
 	if (saveangle)
 	{
-		pc->player->ConversationNPCAngle = npc->angle;
+		pc->player->ConversationNPCAngle = npc->Angles.Yaw;
 	}
 	oldtarget = npc->target;
 	npc->target = pc;
 	if (facetalker)
 	{
 		A_FaceTarget (npc);
-		pc->angle = pc->AngleTo(npc);
+		pc->Angles.Yaw = pc->AngleTo(npc);
 	}
 	if ((npc->flags & MF_FRIENDLY) || (npc->flags4 & MF4_NOHATEPLAYERS))
 	{
@@ -1233,7 +1233,7 @@ static void HandleReply(player_t *player, bool isconsole, int nodenum, int reply
 	if (reply == NULL)
 	{
 		// The default reply was selected
-		npc->angle = player->ConversationNPCAngle;
+		npc->Angles.Yaw = player->ConversationNPCAngle;
 		npc->flags5 &= ~MF5_INCONVERSATION;
 		return;
 	}
@@ -1249,7 +1249,7 @@ static void HandleReply(player_t *player, bool isconsole, int nodenum, int reply
 				TerminalResponse(reply->QuickNo);
 			}
 			npc->ConversationAnimation(2);
-			npc->angle = player->ConversationNPCAngle;
+			npc->Angles.Yaw = player->ConversationNPCAngle;
 			npc->flags5 &= ~MF5_INCONVERSATION;
 			return;
 		}
@@ -1377,7 +1377,7 @@ static void HandleReply(player_t *player, bool isconsole, int nodenum, int reply
 		}
 	}
 
-	npc->angle = player->ConversationNPCAngle;
+	npc->Angles.Yaw = player->ConversationNPCAngle;
 
 	// [CW] Set these to NULL because we're not using to them
 	// anymore. However, this can interfere with slideshows
@@ -1388,7 +1388,7 @@ static void HandleReply(player_t *player, bool isconsole, int nodenum, int reply
 		player->ConversationFaceTalker = false;
 		player->ConversationNPC = NULL;
 		player->ConversationPC = NULL;
-		player->ConversationNPCAngle = 0;
+		player->ConversationNPCAngle = 0.;
 	}
 
 	if (isconsole)
@@ -1427,7 +1427,7 @@ void P_ConversationCommand (int netcode, int pnum, BYTE **stream)
 		assert(netcode == DEM_CONVNULL || netcode == DEM_CONVCLOSE);
 		if (player->ConversationNPC != NULL)
 		{
-			player->ConversationNPC->angle = player->ConversationNPCAngle;
+			player->ConversationNPC->Angles.Yaw = player->ConversationNPCAngle;
 			player->ConversationNPC->flags5 &= ~MF5_INCONVERSATION;
 		}
 		if (netcode == DEM_CONVNULL)
@@ -1435,7 +1435,7 @@ void P_ConversationCommand (int netcode, int pnum, BYTE **stream)
 			player->ConversationFaceTalker = false;
 			player->ConversationNPC = NULL;
 			player->ConversationPC = NULL;
-			player->ConversationNPCAngle = 0;
+			player->ConversationNPCAngle = 0.;
 		}
 	}
 }

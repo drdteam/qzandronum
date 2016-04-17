@@ -81,16 +81,16 @@ static	ULONG		g_ulGameTick;
 
 // Store crucial player attributes for prediction.
 static	ticcmd_t	g_SavedTiccmd[CLIENT_PREDICTION_TICS];
-static	angle_t		g_SavedAngle[CLIENT_PREDICTION_TICS];
-static	fixed_t		g_SavedPitch[CLIENT_PREDICTION_TICS];
-static	fixed_t		g_SavedCrouchfactor[CLIENT_PREDICTION_TICS];
+static	DAngle		g_SavedAngle[CLIENT_PREDICTION_TICS];
+static	DAngle		g_SavedPitch[CLIENT_PREDICTION_TICS];
+static	double		g_SavedCrouchfactor[CLIENT_PREDICTION_TICS];
 static	LONG		g_lSavedJumpTicks[CLIENT_PREDICTION_TICS];
 static	LONG		g_lSavedTurnTicks[CLIENT_PREDICTION_TICS];
 static	LONG		g_lSavedReactionTime[CLIENT_PREDICTION_TICS];
 static	LONG		g_lSavedWaterLevel[CLIENT_PREDICTION_TICS];
 static	bool		g_bSavedOnFloor[CLIENT_PREDICTION_TICS];
 static	bool		g_bSavedOnMobj[CLIENT_PREDICTION_TICS];
-static	fixed_t		g_SavedFloorZ[CLIENT_PREDICTION_TICS];
+static	double		g_SavedFloorZ[CLIENT_PREDICTION_TICS];
 
 #ifdef	_DEBUG
 CVAR( Bool, cl_showpredictionsuccess, false, 0 );
@@ -111,7 +111,7 @@ static	void	client_predict_SaveOnGroundStatus( const player_t *pPlayer, const UL
 void CLIENT_PREDICT_Construct( void )
 {
 	for ( int i = 0; i < CLIENT_PREDICTION_TICS; ++i )
-		g_SavedCrouchfactor[i] = FRACUNIT;
+		g_SavedCrouchfactor[i] = 1;
 }
 
 //*****************************************************************************
@@ -210,9 +210,9 @@ void CLIENT_PREDICT_PlayerPredict( void )
 		pPlayer->ServerXYZ[2] );
 
 	// Set the player's velocity as told to him by the server.
-	pPlayer->mo->vel.x = pPlayer->ServerXYZVel[0];
-	pPlayer->mo->vel.y = pPlayer->ServerXYZVel[1];
-	pPlayer->mo->vel.z = pPlayer->ServerXYZVel[2];
+	pPlayer->mo->Vel.X = FIXED2FLOAT ( pPlayer->ServerXYZVel[0] );
+	pPlayer->mo->Vel.Y = FIXED2FLOAT ( pPlayer->ServerXYZVel[1] );
+	pPlayer->mo->Vel.Z = FIXED2FLOAT ( pPlayer->ServerXYZVel[2] );
 
 	// If we don't want to do any prediction, just tick the player and get out.
 	if ( cl_predict_players == false )
@@ -288,7 +288,7 @@ bool CLIENT_PREDICT_IsPredicting( void )
 //*****************************************************************************
 //*****************************************************************************
 //
-static fixed_t client_predict_GetPredictedFloorZ( player_t *pPlayer, const ULONG Tick )
+static double client_predict_GetPredictedFloorZ( player_t *pPlayer, const ULONG Tick )
 {
 	// [BB] Using g_SavedFloorZ when the player is on a lowering floor seems to make things very laggy,
 	// this does not happen when using mo->floorz.
@@ -322,8 +322,8 @@ static void client_predict_SaveOnGroundStatus( const player_t *pPlayer, const UL
 //
 static void client_predict_BeginPrediction( player_t *pPlayer )
 {
-	g_SavedAngle[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->mo->angle;
-	g_SavedPitch[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->mo->pitch;
+	g_SavedAngle[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->mo->Angles.Yaw;
+	g_SavedPitch[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->mo->Angles.Pitch;
 	g_SavedCrouchfactor[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->crouchfactor;
 	g_lSavedJumpTicks[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->jumpTics;
 	g_lSavedTurnTicks[g_ulGameTick % CLIENT_PREDICTION_TICS] = pPlayer->turnticks;
@@ -348,7 +348,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 
 	// [BB] The server gave us z-velocity, so don't glue us to a floor or an actor for this tic.
-	if ( pPlayer->mo->vel.z > 0 )
+	if ( pPlayer->mo->Vel.Z > 0 )
 	{
 		g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] = false;
 		g_bSavedOnMobj[lTick % CLIENT_PREDICTION_TICS] = false;
@@ -368,8 +368,8 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		g_bPredicting = true;
 
 		// Use backed up values for prediction.
-		pPlayer->mo->angle = g_SavedAngle[lTick % CLIENT_PREDICTION_TICS];
-		pPlayer->mo->pitch = g_SavedPitch[lTick % CLIENT_PREDICTION_TICS];
+		pPlayer->mo->Angles.Yaw = g_SavedAngle[lTick % CLIENT_PREDICTION_TICS];
+		pPlayer->mo->Angles.Pitch = g_SavedPitch[lTick % CLIENT_PREDICTION_TICS];
 		// [BB] Crouch prediction seems to be very tricky. While predicting, we don't recalculate
 		// crouchfactor, but just use the value we already calculated before.
 		pPlayer->crouchfactor = g_SavedCrouchfactor[( lTick + 1 )% CLIENT_PREDICTION_TICS];
@@ -401,8 +401,8 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 //
 static void client_predict_EndPrediction( player_t *pPlayer )
 {
-	pPlayer->mo->angle = g_SavedAngle[g_ulGameTick % CLIENT_PREDICTION_TICS];
-	pPlayer->mo->pitch = g_SavedPitch[g_ulGameTick % CLIENT_PREDICTION_TICS];
+	pPlayer->mo->Angles.Yaw = g_SavedAngle[g_ulGameTick % CLIENT_PREDICTION_TICS];
+	pPlayer->mo->Angles.Pitch = g_SavedPitch[g_ulGameTick % CLIENT_PREDICTION_TICS];
 	pPlayer->crouchfactor = g_SavedCrouchfactor[g_ulGameTick % CLIENT_PREDICTION_TICS];
 	pPlayer->jumpTics = g_lSavedJumpTicks[g_ulGameTick % CLIENT_PREDICTION_TICS];
 	pPlayer->turnticks = g_lSavedTurnTicks[g_ulGameTick % CLIENT_PREDICTION_TICS];

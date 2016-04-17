@@ -201,8 +201,8 @@ void UNLAGGED_Reconcile( AActor *actor )
 				//We need to correct for that.
 			{
 				//current server floorz/ceilingz before reconciliation
-				fixed_t serverFloorZ = actor->floorz;
-				fixed_t serverCeilingZ = actor->ceilingz;
+				double serverFloorZ = actor->floorz;
+				double serverCeilingZ = actor->ceilingz;
 
 				// [BB] Try to reset floorz/ceilingz to account for the fact that the sector the actor is in was possibly reconciled.
 				actor->floorz = actor->Sector->floorplane.ZatPoint (actor);
@@ -212,7 +212,7 @@ void UNLAGGED_Reconcile( AActor *actor )
 				//force the shooter out of the floor/ceiling - a client has to mispredict in this case,
 				//because not mispredicting would mean the client would think he's inside the floor/ceiling
 				if (actor->Top() > actor->ceilingz)
-					actor->SetZ ( actor->ceilingz - actor->height );
+					actor->SetZ ( actor->ceilingz - actor->Height );
 
 				if (actor->Z() < actor->floorz)
 					actor->SetZ( actor->floorz );
@@ -224,7 +224,7 @@ void UNLAGGED_Reconcile( AActor *actor )
 				{
 					//shooter was standing on the floor, let's pull him down to his floor if
 					//he wasn't falling
-					if ( (actor->Z() == serverFloorZ) && (actor->vel.z >= 0) )
+					if ( (actor->Z() == serverFloorZ) && (actor->Vel.Z >= 0) )
 						actor->SetZ( actor->floorz );
 
 					//todo: more correction for floor moving up
@@ -359,7 +359,7 @@ bool UNLAGGED_DrawRailClientside ( AActor *attacker )
 }
 
 // [BB] If reconciliation moved the actor we hit, this function calculates the offset.
-void UNLAGGED_GetHitOffset ( const AActor *attacker, const FTraceResults &trace, TVector3<fixed_t> &hitOffset )
+void UNLAGGED_GetHitOffset ( const AActor *attacker, const FTraceResults &trace, TVector3<double> &hitOffset )
 {
 	hitOffset.Zero();
 

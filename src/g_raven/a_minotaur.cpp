@@ -214,14 +214,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk1)
 //
 //----------------------------------------------------------------------------
 
-#define MNTR_CHARGE_SPEED (13*FRACUNIT)
+#define MNTR_CHARGE_SPEED (13.)
 
 DEFINE_ACTION_FUNCTION(AActor, A_MinotaurDecide)
 {
 	PARAM_ACTION_PROLOGUE;
 
 	bool friendly = !!(self->flags5 & MF5_SUMMONEDMONSTER);
-	angle_t angle;
 	AActor *target;
 	int dist;
 
@@ -264,9 +263,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurDecide)
 				SERVERCOMMANDS_SetThingFlags( self, FLAGSET_FLAGS2 );
 		}
 		A_FaceTarget (self);
-		angle = self->angle>>ANGLETOFINESHIFT;
-		self->vel.x = FixedMul (MNTR_CHARGE_SPEED, finecosine[angle]);
-		self->vel.y = FixedMul (MNTR_CHARGE_SPEED, finesine[angle]);
+		self->VelFromAngle(MNTR_CHARGE_SPEED);
 		self->special1 = TICRATE/2; // Charge duration
 
 		// [BB] If we're the server, update the thing's velocity and set the MF_SKULLFLY flag.
@@ -331,7 +328,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurCharge)
 			type = PClass::FindActor("PunchPuff");
 		}
 		puff = Spawn (type, self->Pos(), ALLOW_REPLACE);
-		puff->vel.z = 2*FRACUNIT;
+		puff->Vel.Z = 2;
 		self->special1--;
 
 		// [BC] If we're the server, tell clients to spawn the puff.
@@ -396,7 +393,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk2)
 		P_TraceBleed (newdam > 0 ? newdam : damage, self->target, self);
 		return 0;
 	}
-	z = self->Z() + 40*FRACUNIT;
+	z = self->_f_Z() + 40*FRACUNIT;
 	PClassActor *fx = PClass::FindActor("MinotaurFX1");
 	if (fx)
 	{
@@ -404,8 +401,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk2)
 		if (mo != NULL)
 		{
 //			S_Sound (mo, CHAN_WEAPON, "minotaur/attack2", 1, ATTN_NORM);
-			vz = mo->vel.z;
-			angle = mo->angle;
+			vz = mo->_f_velz();
+			angle = mo->_f_angle();
 			P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/8), vz, true); // [BB] Inform clients
 			P_SpawnMissileAngleZ (self, z, fx, angle+(ANG45/8), vz, true); // [BB] Inform clients
 			P_SpawnMissileAngleZ (self, z, fx, angle-(ANG45/16), vz, true); // [BB] Inform clients
@@ -457,7 +454,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_MinotaurAtk3)
 	}
 	else
 	{
-		if (self->floorclip > 0 && (i_compatflags & COMPATF_MINOTAUR))
+		if (self->Floorclip > 0 && (i_compatflags & COMPATF_MINOTAUR))
 		{
 			// only play the sound. 
 			S_Sound (self, CHAN_WEAPON, "minotaur/fx2hit", 1, ATTN_NORM, true);	// [BC] Inform the clients.
@@ -508,12 +505,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_MntrFloorFire)
 	}
 
 	self->SetZ(self->floorz);
-	fixedvec2 pos = self->Vec2Offset(
-		(pr_fire.Random2 () << 10),
-		(pr_fire.Random2 () << 10));
-	mo = Spawn("MinotaurFX3", pos.x, pos.y, self->floorz, ALLOW_REPLACE);
+	double x = pr_fire.Random2() / 64.;
+	double y = pr_fire.Random2() / 64.;
+	
+	mo = Spawn("MinotaurFX3", self->Vec2OffsetZ(x, y, self->floorz), ALLOW_REPLACE);
 	mo->target = self->target;
-	mo->vel.x = 1; // Force block checking
+	mo->Vel.X = MinVel; // Force block checking
 
 	// [BC] If we're the server, tell clients to spawn this thing.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -531,8 +528,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_MntrFloorFire)
 
 void P_MinotaurSlam (AActor *source, AActor *target)
 {
-	angle_t angle;
-	fixed_t thrust;
+	DAngle angle;
+	double thrust;
 	int damage;
 
 	// [BC] Don't do this in client mode.
@@ -542,13 +539,11 @@ void P_MinotaurSlam (AActor *source, AActor *target)
 	}
 
 	angle = source->AngleTo(target);
-	angle >>= ANGLETOFINESHIFT;
-	thrust = 16*FRACUNIT+(pr_minotaurslam()<<10);
-	target->vel.x += FixedMul (thrust, finecosine[angle]);
-	target->vel.y += FixedMul (thrust, finesine[angle]);
+	thrust = 16 + pr_minotaurslam() / 64.;
+	target->VelFromAngle(angle, thrust);
 	damage = pr_minotaurslam.HitDice (static_cast<AMinotaur *>(source) ? 4 : 6);
 	int newdam = P_DamageMobj (target, NULL, NULL, damage, NAME_Melee);
-	P_TraceBleed (newdam > 0 ? newdam : damage, target, angle, 0);
+	P_TraceBleed (newdam > 0 ? newdam : damage, target, angle, 0.);
 	if (target->player)
 	{
 		target->reactiontime = 14+(pr_minotaurslam()&7);

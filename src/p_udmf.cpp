@@ -473,7 +473,7 @@ public:
 		FString arg0str, arg1str;
 
 		memset(th, 0, sizeof(*th));
-		th->gravity = FRACUNIT;
+		th->Gravity = 1;
 		th->RenderStyle = STYLE_Count;
 		th->alpha = -1;
 		th->health = 1;
@@ -521,7 +521,7 @@ public:
 
 			case NAME_Gravity:
 				CHECK_N(Zd | Zdt)
-				th->gravity = CheckFixed(key);
+				th->Gravity = CheckFloat(key);
 				break;
 
 			case NAME_Arg0:
@@ -720,15 +720,15 @@ public:
 				break;
 
 			case NAME_ScaleX:
-				th->scaleX = CheckFixed(key);
+				th->Scale.X = CheckFloat(key);
 				break;
 
 			case NAME_ScaleY:
-				th->scaleY = CheckFixed(key);
+				th->Scale.Y = CheckFloat(key);
 				break;
 
 			case NAME_Scale:
-				th->scaleX = th->scaleY = CheckFixed(key);
+				th->Scale.X = th->Scale.Y = CheckFloat(key);
 				break;
 
 			default:
@@ -1308,7 +1308,7 @@ public:
 		if (floordrop) sec->Flags = SECF_FLOORDROP;
 		// killough 3/7/98: end changes
 
-		sec->gravity = 1.f;	// [RH] Default sector gravity of 1.0
+		sec->gravity = 1.;	// [RH] Default sector gravity of 1.0
 		sec->ZoneNumber = 0xFFFF;
 
 		// killough 8/28/98: initialize all sectors to normal friction
@@ -1446,7 +1446,7 @@ public:
 					continue;
 
 				case NAME_Gravity:
-					sec->gravity = float(CheckFloat(key));
+					sec->gravity = CheckFloat(key);
 					continue;
 
 				case NAME_Lightcolor:

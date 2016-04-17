@@ -376,7 +376,7 @@ CCMD (centerview)
 	else
 	{
 		if ( players[consoleplayer].mo )
-			players[consoleplayer].mo->pitch = 0;
+			players[consoleplayer].mo->Angles.Pitch = 0.;
 
 		if ( CLIENTDEMO_IsRecording( ))
 			CLIENTDEMO_WriteLocalCommand( CLD_LCMD_CENTERVIEW, NULL );
@@ -1646,9 +1646,9 @@ void G_Ticker ()
 
 				// [BB] In case the speed of the player is increased by 50 percent, lMaxThreshold is multiplied by 4,
 				// exactly like it was done with CF_SPEED before.
-				if ( (players[i].mo) && (players[i].mo->Inventory) && (players[i].mo->Inventory->GetSpeedFactor() > FRACUNIT) )
+				if ( (players[i].mo) && (players[i].mo->Inventory) && (players[i].mo->Inventory->GetSpeedFactor() > 1) )
 				{
-					float floatSpeedFactor = static_cast<float>(players[i].mo->Inventory->GetSpeedFactor())/static_cast<float>(FRACUNIT);
+					double floatSpeedFactor = players[i].mo->Inventory->GetSpeedFactor();
 					lMaxThreshold *= (6.*floatSpeedFactor-5.);
 				}
 
@@ -2264,13 +2264,13 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 	if (!players[playernum].mo)
 	{ // first spawn of level, before corpses
 		for (i = 0; i < playernum; i++)
-			if (players[i].mo && players[i].mo->X() == x && players[i].mo->Y() == y)
+			if (players[i].mo && players[i].mo->_f_X() == x && players[i].mo->_f_Y() == y)
 				return false;
 		return true;
 	}
 
-	oldz = players[playernum].mo->Z();	// [RH] Need to save corpse's z-height
-	players[playernum].mo->SetZ(z);		// [RH] Checks are now full 3-D
+	oldz = players[playernum].mo->_f_Z();	// [RH] Need to save corpse's z-height
+	players[playernum].mo->_f_SetZ(z);		// [RH] Checks are now full 3-D
 
 	// killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
 	// corpse to detect collisions with other players in DM starts
@@ -2282,7 +2282,7 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 	players[playernum].mo->flags |=  MF_SOLID;
 	i = P_CheckPosition(players[playernum].mo, x, y);
 	players[playernum].mo->flags &= ~MF_SOLID;
-	players[playernum].mo->SetZ(oldz);	// [RH] Restore corpse's height
+	players[playernum].mo->_f_SetZ(oldz);	// [RH] Restore corpse's height
 	if (!i)
 		return false;
 
@@ -2733,8 +2733,8 @@ FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 		const AActor *const defaultActor = body->GetDefault();
 		const FPlayerSkin &skin = skins[skinidx];
 
-		body->scaleX = Scale(body->scaleX, skin.ScaleX, defaultActor->scaleX);
-		body->scaleY = Scale(body->scaleY, skin.ScaleY, defaultActor->scaleY);
+		body->Scale.X *= skin.Scale.X / defaultActor->Scale.X;
+		body->Scale.Y *= skin.Scale.Y / defaultActor->Scale.Y;
 	}
 
 	bodyqueslot++;
@@ -3220,35 +3220,6 @@ void GAME_CheckMode( void )
 				PLAYER_SetTeam( &players[ulIdx], TEAM_ChooseBestTeamForPlayer( ), true );
 		}
 	}
-}
-
-//*****************************************************************************
-//
-bool GAME_ZPositionMatchesOriginal( AActor *pActor )
-{
-	fixed_t		Space;
-
-	// Determine the Z position to spawn this actor in.
-	if ( pActor->flags & MF_SPAWNCEILING )
-		return ( pActor->Z() == ( pActor->Sector->ceilingplane.ZatPoint( pActor ) - pActor->height - ( pActor->SpawnPoint[2] )));
-	else if ( pActor->flags2 & MF2_SPAWNFLOAT )
-	{
-		Space = pActor->Sector->ceilingplane.ZatPoint( pActor ) - pActor->height - pActor->Sector->floorplane.ZatPoint( pActor );
-		if ( Space > ( 48 * FRACUNIT ))
-		{
-			Space -= ( 40 * FRACUNIT );
-			if (( pActor->Z() >= MulScale8( Space, 0 ) + ( pActor->Sector->floorplane.ZatPoint( pActor ) + 40 * FRACUNIT )) ||
-				( pActor->Z() <= MulScale8( Space, INT_MAX ) + ( pActor->Sector->floorplane.ZatPoint( pActor ) + 40 * FRACUNIT )))
-			{
-				return ( true );
-			}
-			return ( false );
-		}
-		else
-			return ( pActor->Z() == pActor->Sector->floorplane.ZatPoint( pActor ));
-	}
-	else
-		return ( pActor->Z() == ( pActor->Sector->floorplane.ZatPoint( pActor ) + ( pActor->SpawnPoint[2] )));
 }
 
 //*****************************************************************************
@@ -3835,7 +3806,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				pNewActor->SpawnPoint[2] = pActor->SpawnPoint[2];
 				pNewActor->SpawnAngle = pActor->SpawnAngle;
 				pNewActor->SpawnFlags = pActor->SpawnFlags;
-				pNewActor->angle = ANG45 * ( pActor->SpawnAngle / 45 );
+				pNewActor->Angles.Yaw = static_cast<double>(pActor->SpawnAngle);
 				pNewActor->tid = pActor->SavedTID;
 				pNewActor->SavedTID = pActor->SavedTID;
 				pNewActor->special = pActor->SavedSpecial;
@@ -3858,7 +3829,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 					SERVERCOMMANDS_SpawnThing( pNewActor );
 
 					// Check and see if it's important that the client know the angle of the object.
-					if ( pNewActor->angle != 0 )
+					if ( pNewActor->Angles.Yaw != 0 )
 						SERVERCOMMANDS_SetThingAngle( pNewActor );
 				}
 			}
@@ -3972,7 +3943,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			// onto a 3D floor (see MAP07.wad). On the other hand, some maps like thing_z_misprediction_test_02.wad
 			// require this to be true.
 			P_FindFloorCeiling ( pNewActor, pNewActor->Sector ? !(pNewActor->Sector->e->XFloor.ffloors.Size()) : true );
-			pNewActor->angle = ANG45 * ( pActor->SpawnAngle / 45 );
+			pNewActor->Angles.Yaw = static_cast<double> ( pActor->SpawnAngle );
 			pNewActor->tid = pActor->SavedTID;
 			pNewActor->SavedTID = pActor->SavedTID;
 			pNewActor->special = pActor->SavedSpecial;
@@ -4031,7 +4002,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 					SERVERCOMMANDS_SetThingSpawnPoint( pNewActor, MAXPLAYERS, 0 );
 
 				// Check and see if it's important that the client know the angle of the object.
-				if ( pNewActor->angle != 0 )
+				if ( pNewActor->Angles.Yaw != 0 )
 					SERVERCOMMANDS_SetThingAngle( pNewActor );
 
 				// [BB] The server reset the args of the old actor, inform the clients about this.

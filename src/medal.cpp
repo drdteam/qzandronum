@@ -1309,7 +1309,7 @@ void medal_SelectIcon( ULONG ulPlayer )
 			{
 				if ( pPlayer->pIcon == NULL )
 				{
-					pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->PosPlusZ ( pPlayer->mo->height + ( 4 * FRACUNIT ) ), NO_REPLACE );
+					pPlayer->pIcon = Spawn<AFloatyIcon>( pPlayer->mo->PosPlusZ ( pPlayer->mo->Height + 4 ), NO_REPLACE );
 					if ( pTeamItem )
 					{
 						pPlayer->pIcon->bTeamItemFloatyIcon = true;

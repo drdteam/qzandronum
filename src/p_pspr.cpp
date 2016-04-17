@@ -40,8 +40,8 @@
 
 // MACROS ------------------------------------------------------------------
 
-#define LOWERSPEED				FRACUNIT*6
-#define RAISESPEED				FRACUNIT*6
+#define LOWERSPEED				6.
+#define RAISESPEED				6.
 
 // [CK] The minimum binary angle for autoaim to trigger against other players.
 // This was determined by making a triangle from the max autoaim range (1024) by
@@ -194,11 +194,11 @@ void P_SetPsprite (player_t *player, int position, FState *state, bool nofunctio
 
 		if (state->GetMisc1())
 		{ // Set coordinates.
-			psp->sx = state->GetMisc1()<<FRACBITS;
+			psp->sx = state->GetMisc1();
 		}
 		if (state->GetMisc2())
 		{
-			psp->sy = state->GetMisc2()<<FRACBITS;
+			psp->sy = state->GetMisc2();
 		}
 
 		// [BB] Some action functions rely on the fact that ReadyWeapon is not NULL.
@@ -451,7 +451,7 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 	// [RH] Smooth transitions between bobbing and not-bobbing frames.
 	// This also fixes the bug where you can "stick" a weapon off-center by
 	// shooting it when it's at the peak of its swing.
-	bobtarget = (player->WeaponState & WF_WEAPONBOBBING) ? player->bob : 0;
+	bobtarget = (player->WeaponState & WF_WEAPONBOBBING) ? FLOAT2FIXED(player->bob) : 0;
 	if (curbob != bobtarget)
 	{
 		if (abs (bobtarget - curbob) <= 1*FRACUNIT)
@@ -474,8 +474,8 @@ void P_BobWeapon (player_t *player, pspdef_t *psp, fixed_t *x, fixed_t *y)
 
 	if (curbob != 0)
 	{
-		fixed_t bobx = FixedMul(player->bob, rangex);
-		fixed_t boby = FixedMul(player->bob, rangey);
+		fixed_t bobx = fixed_t(player->bob * rangex);
+		fixed_t boby = fixed_t(player->bob * rangey);
 		switch (bobstyle)
 		{
 		case AWeapon::BobNormal:
@@ -1032,16 +1032,16 @@ int A_GunFlash(AActor *self, FState *flash, const int flags)
 // the height of the intended target
 //
 
-angle_t P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimflags)
+DAngle P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimflags)
 {
-	static const int angdiff[15] = {
+	static const double angdiff[15] = { 
 		AUTOAIM_MINANGLE * -1, AUTOAIM_MINANGLE * 1, AUTOAIM_MINANGLE * -2, AUTOAIM_MINANGLE * 2,
 		AUTOAIM_MINANGLE * -3, AUTOAIM_MINANGLE * 3, AUTOAIM_MINANGLE * -4, AUTOAIM_MINANGLE * 4,
 		AUTOAIM_MINANGLE * -5, AUTOAIM_MINANGLE * 5, AUTOAIM_MINANGLE * -6, AUTOAIM_MINANGLE * 6,
-		-(1<<26), 1<<26, 0 }; // [CK] New angles
+		-5.625f, 5.625f, 0 }; // [CK] New angles
 	int i;
-	angle_t an;
-	angle_t pitch;
+	DAngle an;
+	DAngle pitch;
 	FTranslatedLineTarget scratch;
 	int endIndex = zacompatflags & ZACOMPATF_AUTOAIM ? 12 : 0; // [CK/TP] Our ending index depends on compatflags.
 
@@ -1054,12 +1054,12 @@ angle_t P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimfl
 	i = 14; // [TP/CK] Now 14
 	do
 	{
-		an = mo->angle + angdiff[i];
-		pitch = P_AimLineAttack (mo, an, 16*64*FRACUNIT, pLineTarget, 0, aimflags);
+		an = mo->Angles.Yaw + angdiff[i];
+		pitch = P_AimLineAttack (mo, an, 16.*64, pLineTarget, 0., aimflags);
 
 		if (mo->player != NULL &&
 			level.IsFreelookAllowed() &&
-			mo->player->userinfo.GetAimDist() <= ANGLE_1/2)
+			mo->player->userinfo.GetAimDist() <= 0.5)
 		{
 			break;
 		}
@@ -1077,17 +1077,17 @@ angle_t P_BulletSlope (AActor *mo, FTranslatedLineTarget *pLineTarget, int aimfl
 //
 // P_GunShot
 //
-void P_GunShot (AActor *mo, bool accurate, PClassActor *pufftype, angle_t pitch)
+void P_GunShot (AActor *mo, bool accurate, PClassActor *pufftype, DAngle pitch)
 {
-	angle_t 	angle;
+	DAngle 	angle;
 	int 		damage;
 		
 	damage = 5*(pr_gunshot()%3+1);
-	angle = mo->angle;
+	angle = mo->Angles.Yaw;
 
 	if (!accurate)
 	{
-		angle += pr_gunshot.Random2 () << 18;
+		angle += pr_gunshot.Random2 () * (5.625 / 256);
 	}
 
 	P_LineAttack (mo, angle, PLAYERMISSILERANGE, pitch, damage, NAME_Hitscan, pufftype);

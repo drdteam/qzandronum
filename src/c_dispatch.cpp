@@ -616,7 +616,7 @@ void C_DoCommand (const char *cmd, int keynum)
 					else
 					{
 						if ( players[consoleplayer].mo )
-							players[consoleplayer].mo->pitch = 0;
+							players[consoleplayer].mo->Angles.Pitch = 0.;
 
 						// [BB] We need to record this for the demo.
 						if ( CLIENTDEMO_IsRecording( ))

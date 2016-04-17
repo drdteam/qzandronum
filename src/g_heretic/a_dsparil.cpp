@@ -67,8 +67,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	PARAM_ACTION_PROLOGUE;
 
 	AActor *mo;
-	fixed_t vz;
-	angle_t angle;
+	DAngle angle;
 
 	// [BC] Don't do this in client mode.
 	if ( NETWORK_InClientMode() )
@@ -92,17 +91,16 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr1Attack)
 	PClassActor *fx = PClass::FindActor("SorcererFX1");
 	if (self->health > (self->SpawnHealth()/3)*2)
 	{ // Spit one fireball
-		P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx, true); // [BB] Inform clients
+		P_SpawnMissileZ (self, self->Z() + 48, self->target, fx, true); // [BB] Inform clients
 	}
 	else
 	{ // Spit three fireballs
-		mo = P_SpawnMissileZ (self, self->Z() + 48*FRACUNIT, self->target, fx, true); // [BB] Inform clients
+		mo = P_SpawnMissileZ (self, self->Z() + 48, self->target, fx, true); // [BB] Inform clients
 		if (mo != NULL)
 		{
-			vz = mo->vel.z;
-			angle = mo->angle;
-			P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle-ANGLE_1*3, vz, true); // [BB] Inform clients
-			P_SpawnMissileAngleZ (self, self->Z() + 48*FRACUNIT, fx, angle+ANGLE_1*3, vz, true); // [BB] Inform clients
+			angle = mo->Angles.Yaw;
+			P_SpawnMissileAngleZ(self, self->Z() + 48, fx, angle - 3, mo->Vel.Z, true); // [BB] Inform clients
+			P_SpawnMissileAngleZ(self, self->Z() + 48, fx, angle + 3, mo->Vel.Z, true); // [BB] Inform clients
 		}
 		if (self->health < self->SpawnHealth()/3)
 		{ // Maybe attack again
@@ -148,7 +146,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SorcererRise)
 	mo = Spawn("Sorcerer2", self->Pos(), ALLOW_REPLACE);
 	mo->Translation = self->Translation;
 	mo->SetState (mo->FindState("Rise"));
-	mo->angle = self->angle;
+	mo->Angles.Yaw = self->Angles.Yaw;
 	mo->CopyFriendliness (self, true);
 
 	// [BC/BB] If we're the server, spawn the sorcerer for clients and also set the state.
@@ -169,9 +167,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_SorcererRise)
 
 void P_DSparilTeleport (AActor *actor)
 {
-	fixed_t prevX;
-	fixed_t prevY;
-	fixed_t prevZ;
+	DVector3 prev;
 	AActor *mo;
 	AActor *spot;
 
@@ -184,15 +180,13 @@ void P_DSparilTeleport (AActor *actor)
 	DSpotState *state = DSpotState::GetSpotState();
 	if (state == NULL) return;
 
-	spot = state->GetSpotWithMinMaxDistance(PClass::FindClass("BossSpot"), actor->X(), actor->Y(), 128*FRACUNIT, 0);
+	spot = state->GetSpotWithMinMaxDistance(PClass::FindClass("BossSpot"), actor->X(), actor->Y(), 128, 0);
 	if (spot == NULL) return;
 
-	prevX = actor->X();
-	prevY = actor->Y();
-	prevZ = actor->Z();
+	prev = actor->Pos();
 	if (P_TeleportMove (actor, spot->Pos(), false))
 	{
-		mo = Spawn("Sorcerer2Telefade", prevX, prevY, prevZ, ALLOW_REPLACE);
+		mo = Spawn("Sorcerer2Telefade", prev, ALLOW_REPLACE);
 		if (mo) mo->Translation = actor->Translation;
 
 		// [BC] Spawn the actor to clients.
@@ -206,9 +200,9 @@ void P_DSparilTeleport (AActor *actor)
 		S_Sound (mo, CHAN_BODY, "misc/teleport", 1, ATTN_NORM, true);	// [BC] Inform the clients.
 		actor->SetState (actor->FindState("Teleport"));
 		S_Sound (actor, CHAN_BODY, "misc/teleport", 1, ATTN_NORM, true);	// [BC] Inform the clients.
-		actor->SetZ(actor->floorz, false);
-		actor->angle = spot->angle;
-		actor->vel.x = actor->vel.y = actor->vel.z = 0;
+		actor->SetZ(actor->floorz);
+		actor->Angles.Yaw = spot->Angles.Yaw;
+		actor->Vel.Zero();
 
 		// [BB] Tell clients of the new position of "actor".
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -288,8 +282,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Srcr2Attack)
 		PClassActor *fx = PClass::FindActor("Sorcerer2FX2");
 		if (fx)
 		{
-			P_SpawnMissileAngle (self, fx, self->angle-ANG45, FRACUNIT/2, true); // [BB] Inform clients
-			P_SpawnMissileAngle (self, fx, self->angle+ANG45, FRACUNIT/2, true); // [BB] Inform clients
+			P_SpawnMissileAngle(self, fx, self->Angles.Yaw - 45, 0.5, true); // [BB] Inform clients
+			P_SpawnMissileAngle(self, fx, self->Angles.Yaw + 45, 0.5, true); // [BB] Inform clients
 		}
 	}
 	else
@@ -321,9 +315,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_BlueSpark)
 	for (i = 0; i < 2; i++)
 	{
 		mo = Spawn("Sorcerer2FXSpark", self->Pos(), ALLOW_REPLACE);
-		mo->vel.x = pr_bluespark.Random2() << 9;
-		mo->vel.y = pr_bluespark.Random2() << 9;
-		mo->vel.z = FRACUNIT + (pr_bluespark()<<8);
+		mo->Vel.X = pr_bluespark.Random2() / 128.;
+		mo->Vel.Y = pr_bluespark.Random2() / 128.;
+		mo->Vel.Z = 1. + pr_bluespark() / 256.;
 
 		// [BC]
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -353,7 +347,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 	mo = Spawn("Wizard", self->Pos(), ALLOW_REPLACE);
 	if (mo != NULL)
 	{
-		mo->AddZ(-mo->GetDefault()->height / 2, false);
+		mo->AddZ(-mo->GetDefault()->Height / 2, false);
 		if (!P_TestMobjLocation (mo))
 		{ // Didn't fit
 			mo->ClearCounters();
@@ -363,7 +357,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 		{ // [RH] Make the new wizards inherit D'Sparil's target
 			mo->CopyFriendliness (self->target, true);
 
-			self->vel.x = self->vel.y = self->vel.z = 0;
+			self->Vel.Zero();
 			self->SetState (self->FindState(NAME_Death));
 			self->flags &= ~MF_MISSILE;
 			mo->master = self->target;

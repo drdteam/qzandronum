@@ -334,20 +334,20 @@ void P_ThinkParticles ()
 		if (!particle->subsector->sector->PortalBlocksMovement(sector_t::ceiling))
 		{
 			AActor *skybox = particle->subsector->sector->SkyBoxes[sector_t::ceiling];
-			if (particle->z > skybox->threshold)
+			if (particle->z > FLOAT2FIXED(skybox->specialf1))
 			{
-				particle->x += skybox->scaleX;
-				particle->y += skybox->scaleY;
+				particle->x += FLOAT2FIXED(skybox->Scale.X);
+				particle->y += FLOAT2FIXED(skybox->Scale.Y);
 				particle->subsector = NULL;
 			}
 		}
 		else if (!particle->subsector->sector->PortalBlocksMovement(sector_t::floor))
 		{
 			AActor *skybox = particle->subsector->sector->SkyBoxes[sector_t::floor];
-			if (particle->z < skybox->threshold)
+			if (particle->z < FLOAT2FIXED(skybox->specialf1))
 			{
-				particle->x += skybox->scaleX;
-				particle->y += skybox->scaleY;
+				particle->x += FLOAT2FIXED(skybox->Scale.X);
+				particle->y += FLOAT2FIXED(skybox->Scale.Y);
 				particle->subsector = NULL;
 			}
 		}
@@ -510,7 +510,7 @@ static void MakeFountain (fixed_t x, fixed_t y, fixed_t z, fixed_t radius, fixed
 		fixed_t out = FixedMul (radius, M_Random()<<8);
 
 		/* [BB] ZDoom's generalization of this function, doesn't fit with refactoring.
-		fixedvec3 pos = actor->Vec3Offset(FixedMul(out, finecosine[an]), FixedMul(out, finesine[an]), actor->height + FRACUNIT);
+		fixedvec3 pos = actor->Vec3Offset(FixedMul(out, finecosine[an]), FixedMul(out, finesine[an]), actor->_f_height() + FRACUNIT);
 		particle->x = pos.x;
 		particle->y = pos.y;
 		particle->z = pos.z;
@@ -539,22 +539,12 @@ static void MakeFountain (AActor *actor, int color1, int color2)
 		return;
 
 	// [CK] We now use a general function
-	MakeFountain(actor->X(), actor->Y(), actor->Z(), actor->radius, actor->height, color1, color2);
+	MakeFountain(actor->_f_X(), actor->_f_Y(), actor->_f_Z(), actor->_f_radius(), actor->_f_height(), color1, color2);
 }
 
 void P_RunEffect (AActor *actor, int effects)
 {
-	angle_t moveangle;
-	
-	// 512 is the limit below which R_PointToAngle2 does no longer returns usable values.
-	if (abs(actor->vel.x) > 512 || abs(actor->vel.y) > 512)
-	{
-		moveangle = R_PointToAngle2(0,0,actor->vel.x,actor->vel.y);
-	}
-	else
-	{
-		moveangle = actor->angle;
-	}
+	DAngle moveangle = actor->Vel.Angle();
 
 	particle_t *particle;
 	int i;
@@ -562,28 +552,26 @@ void P_RunEffect (AActor *actor, int effects)
 	if ((effects & FX_ROCKET) && (cl_rockettrails & 1))
 	{
 		// Rocket trail
+		double backx = -actor->radius * 2 * moveangle.Cos();
+		double backy = -actor->radius * 2 * moveangle.Sin();
+		double backz = actor->Height * ((2. / 3) - actor->Vel.Z / 8);
 
-
-		fixed_t backx = - FixedMul (finecosine[(moveangle)>>ANGLETOFINESHIFT], actor->radius*2);
-		fixed_t backy = - FixedMul (finesine[(moveangle)>>ANGLETOFINESHIFT], actor->radius*2);
-		fixed_t backz = - (actor->height>>3) * (actor->vel.z>>16) + (2*actor->height)/3;
-
-		angle_t an = (moveangle + ANG90) >> ANGLETOFINESHIFT;
+		DAngle an = moveangle + 90.;
 		int speed;
 
 		particle = JitterParticle (3 + (M_Random() & 31));
 		if (particle) {
 			fixed_t pathdist = M_Random()<<8;
 			fixedvec3 pos = actor->Vec3Offset(
-				backx - FixedMul(actor->vel.x, pathdist),
-				backy - FixedMul(actor->vel.y, pathdist),
-				backz - FixedMul(actor->vel.z, pathdist));
+				FLOAT2FIXED(backx) - fixed_t(actor->Vel.X * pathdist),
+				FLOAT2FIXED(backy) - fixed_t(actor->Vel.Y * pathdist),
+				FLOAT2FIXED(backz) - fixed_t(actor->Vel.Z * pathdist));
 			particle->x = pos.x;
 			particle->y = pos.y;
 			particle->z = pos.z;
 			speed = (M_Random () - 128) * (FRACUNIT/200);
-			particle->vel.x += FixedMul (speed, finecosine[an]);
-			particle->vel.y += FixedMul (speed, finesine[an]);
+			particle->vel.x += fixed_t(speed * an.Cos());
+			particle->vel.y += fixed_t(speed * an.Sin());
 			particle->vel.z -= FRACUNIT/36;
 			particle->accz -= FRACUNIT/20;
 			particle->color = yellow;
@@ -594,15 +582,15 @@ void P_RunEffect (AActor *actor, int effects)
 			if (particle) {
 				fixed_t pathdist = M_Random()<<8;
 				fixedvec3 pos = actor->Vec3Offset(
-					backx - FixedMul(actor->vel.x, pathdist),
-					backy - FixedMul(actor->vel.y, pathdist),
-					backz - FixedMul(actor->vel.z, pathdist) + (M_Random() << 10));
+					FLOAT2FIXED(backx) - fixed_t(actor->Vel.X * pathdist),
+					FLOAT2FIXED(backy) - fixed_t(actor->Vel.Y * pathdist),
+					FLOAT2FIXED(backz) - fixed_t(actor->Vel.Z * pathdist) + (M_Random() << 10));
 				particle->x = pos.x;
 				particle->y = pos.y;
 				particle->z = pos.z;
 				speed = (M_Random () - 128) * (FRACUNIT/200);
-				particle->vel.x += FixedMul (speed, finecosine[an]);
-				particle->vel.y += FixedMul (speed, finesine[an]);
+				particle->vel.x += fixed_t(speed * an.Cos());
+				particle->vel.y += fixed_t(speed * an.Sin());
 				particle->vel.z += FRACUNIT/80;
 				particle->accz += FRACUNIT/40;
 				if (M_Random () & 7)
@@ -618,11 +606,11 @@ void P_RunEffect (AActor *actor, int effects)
 	{
 		// Grenade trail
 
-		fixedvec3 pos = actor->Vec3Angle(-actor->radius * 2, moveangle,
-			-(actor->height >> 3) * (actor->vel.z >> 16) + (2 * actor->height) / 3);
+		fixedvec3 pos = actor->_f_Vec3Angle(-actor->_f_radius() * 2, moveangle.BAMs(),
+			fixed_t(-(actor->_f_height() >> 3) * (actor->Vel.Z) + (2 * actor->_f_height()) / 3));
 
 		P_DrawSplash2 (6, pos.x, pos.y, pos.z,
-			moveangle + ANG180, 2, 2);
+			moveangle.BAMs() + ANG180, 2, 2);
 	}
 	if (effects & FX_FOUNTAINMASK)
 	{
@@ -653,7 +641,7 @@ void P_RunEffect (AActor *actor, int effects)
 			if (particle != NULL)
 			{
 				angle_t ang = M_Random () << (32-ANGLETOFINESHIFT-8);
-				fixedvec3 pos = actor->Vec3Offset(FixedMul (actor->radius, finecosine[ang]), FixedMul (actor->radius, finesine[ang]), 0);
+				fixedvec3 pos = actor->Vec3Offset(FixedMul (actor->_f_radius(), finecosine[ang]), FixedMul (actor->_f_radius(), finesine[ang]), 0);
 				particle->x = pos.x;
 				particle->y = pos.y;
 				particle->z = pos.z;
@@ -663,7 +651,7 @@ void P_RunEffect (AActor *actor, int effects)
 				particle->size = 1;
 				if (M_Random () < 128)
 				{ // make particle fall from top of actor
-					particle->z += actor->height;
+					particle->z += actor->_f_height();
 					particle->vel.z = -particle->vel.z;
 					particle->accz = -particle->accz;
 				}
@@ -786,7 +774,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 
 	dir = end - start;
 	lengthsquared = dir | dir;
-	length = sqrt(lengthsquared);
+	length = g_sqrt(lengthsquared);
 	steps = xs_FloorToInt(length / 3);
 	fullbright = !!(flags & RAF_FULLBRIGHT);
 
@@ -809,8 +797,8 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 			double r;
 			double dirz;
 
-			if (abs(mo->X() - FLOAT2FIXED(start.X)) < 20 * FRACUNIT
-				&& (mo->Y() - FLOAT2FIXED(start.Y)) < 20 * FRACUNIT)
+			if (fabs(mo->X() - start.X) < 20
+				&& fabs(mo->Y() - start.Y) < 20)
 			{ // This player (probably) fired the railgun
 				S_Sound (mo, CHAN_WEAPON, sound, 1, ATTN_NORM);
 			}
@@ -820,7 +808,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 				// Only consider sound in 2D (for now, anyway)
 				// [BB] You have to divide by lengthsquared here, not multiply with it.
 
-				r = ((start.Y - FIXED2DBL(mo->Y())) * (-dir.Y) - (start.X - FIXED2DBL(mo->X())) * (dir.X)) / lengthsquared;
+				r = ((start.Y - mo->Y()) * (-dir.Y) - (start.X - mo->X()) * (dir.X)) / lengthsquared;
 				r = clamp<double>(r, 0., 1.);
 
 				dirz = dir.Z;
@@ -871,7 +859,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 			color1 = color1 == 0 ? -1 : ParticleColor(color1);
 
 		pos = start;
-		deg = TAngle<double>(SpiralOffset);
+		deg = (double)SpiralOffset;
 		for (i = spiral_steps; i; i--)
 		{
 			particle_t *p = NewParticle ();
@@ -897,7 +885,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 			p->y = FLOAT2FIXED(tempvec.Y);
 			p->z = FLOAT2FIXED(tempvec.Z);
 			pos += spiral_step;
-			deg += TAngle<double>(r_rail_spiralsparsity * 14);
+			deg += double(r_rail_spiralsparsity * 14);
 
 			if (color1 == -1)
 			{
@@ -1023,7 +1011,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 
 			AActor *thing = Spawn (spawnclass, FLOAT2FIXED(postmp.X), FLOAT2FIXED(postmp.Y), FLOAT2FIXED(postmp.Z), ALLOW_REPLACE);
 			if (thing)
-				thing->angle = angle;
+				thing->Angles.Yaw = ANGLE2DBL(angle);
 			pos += trail_step;
 		}
 	}
@@ -1044,9 +1032,9 @@ void P_DisconnectEffect (AActor *actor)
 			break;
 
 		
-		fixed_t xo = ((M_Random() - 128) << 9) * (actor->radius >> FRACBITS);
-		fixed_t yo = ((M_Random() - 128) << 9) * (actor->radius >> FRACBITS);
-		fixed_t zo = (M_Random() << 8) * (actor->height >> FRACBITS);
+		fixed_t xo = ((M_Random() - 128) << 9) * (actor->_f_radius() >> FRACBITS);
+		fixed_t yo = ((M_Random() - 128) << 9) * (actor->_f_radius() >> FRACBITS);
+		fixed_t zo = (M_Random() << 8) * (actor->_f_height() >> FRACBITS);
 		fixedvec3 pos = actor->Vec3Offset(xo, yo, zo);
 		p->x = pos.x;
 		p->y = pos.y;

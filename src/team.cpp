@@ -91,7 +91,7 @@ void	SERVERCONSOLE_UpdateScoreboard( void );
 
 static	bool	g_bSimpleCTFSTMode;
 static	bool	g_bWhiteFlagTaken;
-static	fixedvec3	g_WhiteFlagOrigin;
+static	DVector3	g_WhiteFlagOrigin;
 static	ULONG	g_ulWhiteFlagReturnTicks;
 
 // Are we spawning a temporary flag? If so, ignore return zones.
@@ -121,9 +121,9 @@ void TEAM_Construct( void )
 		TEAM_SetAnnouncedLeadState( i, false );
 		TEAM_SetAssistPlayer( i, MAXPLAYERS );
 
-		teams[i].g_Origin.x = 0;
-		teams[i].g_Origin.y = 0;
-		teams[i].g_Origin.z = 0;
+		teams[i].g_Origin.X = 0;
+		teams[i].g_Origin.Y = 0;
+		teams[i].g_Origin.Z = 0;
 
 		switch ( i )
 		{
@@ -185,9 +185,9 @@ void TEAM_Reset( void )
 		TEAM_SetAnnouncedLeadState( i, false );
 		TEAM_SetAssistPlayer( i, MAXPLAYERS );
 
-		teams[i].g_Origin.x = 0;
-		teams[i].g_Origin.y = 0;
-		teams[i].g_Origin.z = 0;
+		teams[i].g_Origin.X = 0;
+		teams[i].g_Origin.Y = 0;
+		teams[i].g_Origin.Z = 0;
 
 		switch ( i )
 		{
@@ -473,7 +473,7 @@ ULONG TEAM_ChooseBestTeamForPlayer( const bool bIgnoreTeamStartsAvailability )
 void TEAM_ScoreSkulltagPoint( player_t *pPlayer, ULONG ulNumPoints, AActor *pPillar )
 {
 	char				szString[256];
-	fixedvec3			SkullOrigin;
+	DVector3			SkullOrigin;
 	DHUDMessageFadeOut	*pMsg;
 	AActor				*pActor;
 	AInventory			*pInventory = NULL;
@@ -620,7 +620,7 @@ void TEAM_ScoreSkulltagPoint( player_t *pPlayer, ULONG ulNumPoints, AActor *pPil
 	// Respawn the skull.
 	SkullOrigin = TEAM_GetItemOrigin( ulTeamIdx );
 
-	pActor = Spawn( TEAM_GetItem( ulTeamIdx ), SkullOrigin.x, SkullOrigin.y, SkullOrigin.z, NO_REPLACE );
+	pActor = Spawn( TEAM_GetItem( ulTeamIdx ), SkullOrigin, NO_REPLACE );
 
 	// Since all inventory spawns with the MF_DROPPED flag, we need to unset it.
 	if ( pActor )
@@ -1414,28 +1414,28 @@ void TEAM_SetWhiteFlagTaken( bool bTaken )
 
 //*****************************************************************************
 //
-fixedvec3 TEAM_GetItemOrigin( ULONG ulTeamIdx )
+DVector3 TEAM_GetItemOrigin( ULONG ulTeamIdx )
 {
 	return ( teams[ulTeamIdx].g_Origin );
 }
 
 //*****************************************************************************
 //
-void TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, fixedvec3 Origin )
+void TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, DVector3 Origin )
 {
 	teams[ulTeamIdx].g_Origin = Origin;
 }
 
 //*****************************************************************************
 //
-fixedvec3 TEAM_GetWhiteFlagOrigin( void )
+DVector3 TEAM_GetWhiteFlagOrigin( void )
 {
 	return ( g_WhiteFlagOrigin );
 }
 
 //*****************************************************************************
 //
-void TEAM_SetWhiteFlagOrigin( fixedvec3 Origin )
+void TEAM_SetWhiteFlagOrigin( DVector3 Origin )
 {
 	g_WhiteFlagOrigin = Origin;
 }

@@ -197,7 +197,7 @@ void ABaseMonsterInvasionSpot::Tick( void )
 			lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = angle;
+		pActor->Angles.Yaw = Angles.Yaw;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
@@ -367,7 +367,7 @@ void ABasePickupInvasionSpot::Tick( void )
 		lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = angle;
+		pActor->Angles.Yaw = Angles.Yaw;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
@@ -533,7 +533,7 @@ void ABaseWeaponInvasionSpot::Tick( void )
 		lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = angle;
+		pActor->Angles.Yaw = Angles.Yaw;
 		if (( this->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
@@ -1014,7 +1014,7 @@ void INVASION_BeginWave( ULONG ulWave )
 			pMonsterSpot->lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = pMonsterSpot->angle;
+		pActor->Angles.Yaw = pMonsterSpot->Angles.Yaw;
 		if (( pMonsterSpot->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( pMonsterSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
@@ -1095,7 +1095,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		pPickupSpot->lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = pPickupSpot->angle;
+		pActor->Angles.Yaw = pPickupSpot->Angles.Yaw;
 		if (( pPickupSpot->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( pPickupSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );
@@ -1144,7 +1144,7 @@ void INVASION_BeginWave( ULONG ulWave )
 		pWeaponSpot->lNextSpawnTick = -1;
 
 		// Set the proper angle, and spawn the teleport fog.
-		pActor->angle = pWeaponSpot->angle;
+		pActor->Angles.Yaw = pWeaponSpot->Angles.Yaw;
 		if (( pWeaponSpot->flags & MF_AMBUSH ) == false )
 		{
 			pFog = Spawn<ATeleportFog>( pWeaponSpot->PosPlusZ ( TELEFOGHEIGHT ), ALLOW_REPLACE );

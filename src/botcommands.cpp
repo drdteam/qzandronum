@@ -1025,9 +1025,9 @@ static void botcmd_LookForPlayerEnemies( CSkullBot *pBot )
 		{
 			angle_t	Angle;
 
-			Angle = pBot->GetPlayer( )->mo->AngleTo ( players[ulIdx].mo );
+			Angle = pBot->GetPlayer( )->mo->__f_AngleTo( players[ulIdx].mo );
 
-			Angle -= pBot->GetPlayer( )->mo->angle;
+			Angle -= pBot->GetPlayer( )->mo->_f_angle();
 
 			// If he's within our view range, tell the bot.
 			if (( Angle <= ANG45 ) || ( Angle >= ((ULONG)ANGLE_1 * 315 )))
@@ -1072,9 +1072,9 @@ static void botcmd_GetClosestPlayerEnemy( CSkullBot *pBot )
 		if ( P_CheckSight( pBot->GetPlayer( )->mo, players[ulIdx].mo, SF_SEEPASTBLOCKEVERYTHING ) == false )
 			continue;
 
-		Angle = pBot->GetPlayer( )->mo->AngleTo ( players[ulIdx].mo );
+		Angle = pBot->GetPlayer( )->mo->__f_AngleTo( players[ulIdx].mo );
 
-		Angle -= pBot->GetPlayer( )->mo->angle;
+		Angle -= pBot->GetPlayer( )->mo->_f_angle();
 
 		// If this player can't be seen, skip him.
 		if (( Angle > ANG45 ) && ( Angle < ((ULONG)ANGLE_1 * 315 )))
@@ -1218,15 +1218,15 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	if ( lAngle < 0 )
 		lAngle = ANGLE_MAX - labs( lAngle );
 
-	Angle = pBot->GetPlayer( )->mo->angle;
+	Angle = pBot->GetPlayer( )->mo->_f_angle();
 	Angle += lAngle;
 
 	Angle >>= ANGLETOFINESHIFT;
 
-	DestX = pBot->GetPlayer( )->mo->X() * finecosine[Angle];
-	DestY = pBot->GetPlayer( )->mo->Y() * finesine[Angle];
+	DestX = pBot->GetPlayer( )->mo->_f_X() * finecosine[Angle];
+	DestY = pBot->GetPlayer( )->mo->_f_Y() * finesine[Angle];
 
-	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), DestX, DestY );
+	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), DestX, DestY );
 }
 
 //*****************************************************************************
@@ -1263,7 +1263,7 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 		ASTAR_ClearPath( pBot->GetPlayer( ) - players );
 		pBot->m_ulPathType = BOTPATHTYPE_ITEM;
 
-		pBot->m_PathGoalPos = pBot->m_pGoalActor->Pos();
+		pBot->m_PathGoalPos = pBot->m_pGoalActor->_f_Pos();
 	}
 
 	ReturnVal = ASTAR_Path( pBot->GetPlayer( ) - players, pBot->m_PathGoalPos, botdebug_maxsearchnodes, 0 );//1 );//MAX_NODES_TO_SEARCH );
@@ -1295,17 +1295,17 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = pBot->GetPlayer( )->mo->AngleTo ( GoalPos.x, GoalPos.y );
+	Angle = pBot->GetPlayer( )->mo->__f_AngleTo ( GoalPos.x, GoalPos.y );
 
-	pBot->GetPlayer( )->mo->angle = Angle;
+	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->X() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )
@@ -1399,12 +1399,12 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = pBot->GetPlayer( )->mo->AngleTo ( GoalPos.x, GoalPos.y );
+	Angle = pBot->GetPlayer( )->mo->__f_AngleTo ( GoalPos.x, GoalPos.y );
 
-	pBot->GetPlayer( )->mo->angle = Angle;
+	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
-	Distance = pBot->GetPlayer( )->mo->radius;
+	Distance = pBot->GetPlayer( )->mo->_f_radius();
 	if (( abs( pBot->GetPlayer( )->mo->X() - GoalPos.x ) >= Distance ) || ( abs( pBot->GetPlayer( )->mo->Y() - GoalPos.y ) >= Distance ))
 		g_iReturnInt = PATH_COMPLETE;
 	else
@@ -1415,10 +1415,10 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->Y() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = pBot->GetPlayer( )->mo->_f_Y() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )
@@ -1496,7 +1496,7 @@ static void botcmd_Roam( CSkullBot *pBot )
 		pBot->m_pGoalActor = NULL;
 
 		// Select a random map location to roam to.
-		ASTAR_SelectRandomMapLocation( &pBot->m_PathGoalPos, pBot->GetPlayer( )->mo->X(), pBot->GetPlayer( )->mo->Y() );
+		ASTAR_SelectRandomMapLocation( &pBot->m_PathGoalPos, pBot->GetPlayer( )->mo->_f_X(), pBot->GetPlayer( )->mo->_f_Y() );
 	}
 
 	ReturnVal = ASTAR_Path( pBot->GetPlayer( ) - players, pBot->m_PathGoalPos, botdebug_maxsearchnodes, botdebug_maxroamgiveupnodes );
@@ -1533,21 +1533,21 @@ static void botcmd_Roam( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = pBot->GetPlayer( )->mo->AngleTo ( GoalPos.x, GoalPos.y );
+	Angle = pBot->GetPlayer( )->mo->__f_AngleTo ( GoalPos.x, GoalPos.y );
 
-	pBot->GetPlayer( )->mo->angle = Angle;
+	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
-	Distance = pBot->GetPlayer( )->mo->radius;
+	Distance = pBot->GetPlayer( )->mo->_f_radius();
 	if (( abs( pBot->GetPlayer( )->mo->X() - GoalPos.x ) < Distance ) && ( abs( pBot->GetPlayer( )->mo->Y() - GoalPos.y ) < Distance ))
 		pBot->m_ulPathType = BOTPATHTYPE_NONE;
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->X() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( USERANGE >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( USERANGE >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )
@@ -1605,8 +1605,8 @@ static void botcmd_GetPathingCostToItem( CSkullBot *pBot )
 		return;
 	}
 
-	GoalPos.x = pActor->X();
-	GoalPos.y = pActor->Y();
+	GoalPos.x = pActor->_f_X();
+	GoalPos.y = pActor->_f_Y();
 
 	ASTAR_ClearPath(( pBot->GetPlayer( ) - players ) + MAXPLAYERS );
 
@@ -1689,9 +1689,9 @@ static void botcmd_IsItemVisible( CSkullBot *pBot )
 		{
 			angle_t	Angle;
 
-			Angle = pBot->GetPlayer( )->mo->AngleTo ( pActor );
+			Angle = pBot->GetPlayer( )->mo->__f_AngleTo ( pActor );
 
-			Angle -= pBot->GetPlayer( )->mo->angle;
+			Angle -= pBot->GetPlayer( )->mo->_f_angle();
 
 			// If the object within our view range, tell the bot.
 			if (( Angle <= ANG45 ) || ( Angle >= ((ULONG)ANGLE_1 * 315 )))
@@ -1761,16 +1761,16 @@ static void botcmd_Turn( CSkullBot *pBot )
 
 	// Adjust the bot's angle.
 	if ( lBuffer < 0 )
-		pBot->GetPlayer( )->mo->angle -= ANGLE_1 * labs( lBuffer );
+		pBot->GetPlayer( )->mo->Angles.Yaw -= labs( lBuffer );
 	else
-		pBot->GetPlayer( )->mo->angle += ANGLE_1 * lBuffer;
+		pBot->GetPlayer( )->mo->Angles.Yaw += lBuffer;
 }
 
 //*****************************************************************************
 //
 static void botcmd_GetCurrentAngle( CSkullBot *pBot )
 {
-	g_iReturnInt = ( pBot->GetPlayer( )->mo->angle / ANGLE_1 );
+	g_iReturnInt = ( pBot->GetPlayer( )->mo->_f_angle() / ANGLE_1 );
 }
 
 //*****************************************************************************

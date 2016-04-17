@@ -96,6 +96,11 @@ static	bool		botpath_CheckLine( line_t *pLine );
 
 // [BB] Todo: Get rid of P_BoxOnLineSide, P_BlockLinesIterator and P_BlockThingsIterator!
 
+// MAXRADIUS is for precalculated sector block boxes
+// the spider demon is larger,
+// but we do not have any moving sectors nearby
+#define MAXRADIUS		0/*32*FRACUNIT*/
+
 //==========================================================================
 //
 // P_BoxOnLineSide
@@ -315,10 +320,10 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 	g_PathX = DestX;
 	g_PathY = DestY;
 
-	g_BoundingBox[BOXTOP] = DestY + pActor->radius;
-	g_BoundingBox[BOXBOTTOM] = DestY - pActor->radius;
-	g_BoundingBox[BOXRIGHT] = DestX + pActor->radius;
-	g_BoundingBox[BOXLEFT] = DestX - pActor->radius;
+	g_BoundingBox[BOXTOP] = DestY + pActor->_f_radius();
+	g_BoundingBox[BOXBOTTOM] = DestY - pActor->_f_radius();
+	g_BoundingBox[BOXRIGHT] = DestX + pActor->_f_radius();
+	g_BoundingBox[BOXLEFT] = DestX - pActor->_f_radius();
 
 	pNewSector = R_PointInSubsector( DestX, DestY );
 	
@@ -481,7 +486,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 	OneStepDeltaY = YDistance / lNumSteps;
 
 	// [Dusk] Calculate the jump height the bot has instead of relying on a hardcoded 60.
-	fixed_t jumpheight = ( pActor->IsKindOf (RUNTIME_CLASS (APlayerPawn)) ) ? static_cast<APlayerPawn*>( pActor )->CalcJumpHeight( ) : 60;
+	fixed_t jumpheight = ( pActor->IsKindOf (RUNTIME_CLASS (APlayerPawn)) ) ? FLOAT2FIXED ( static_cast<APlayerPawn*>( pActor )->CalcJumpHeight( ) ) : 60;
 
 	do
 	{
@@ -541,7 +546,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 		// If we can't fit into this sector because the ceiling is too low, or the sector's 
 		// ceiling is below our top, potentially flag the path as being obstructed.
 //		bObstructingIfNotDoor = false;
-		if ((( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->height ) || (( g_PathSectorCeilingZ - pActor->Z() ) < pActor->height ))
+		if ((( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->_f_height() ) || (( g_PathSectorCeilingZ - pActor->_f_Z() ) < pActor->_f_height() ))
 		{
 			LONG	lIdx;
 
@@ -673,7 +678,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 						{
 							// If the ceiling is too low, we can't jump there
 							// and the path is obstructed.
-							if ( pFrontSector->ceilingplane.ZatPoint( 0, 0 ) - mid3d_top < pActor->height )
+							if ( pFrontSector->ceilingplane.ZatPoint( 0, 0 ) - mid3d_top < pActor->_f_height() )
 								return ( ulFlags | BOTPATH_OBSTRUCTED );
 
 							ulFlags |= BOTPATH_JUMPABLELEDGE;
@@ -835,7 +840,7 @@ static bool botpath_CheckThing( AActor *pThing )
 	if (( pThing->flags & MF_SOLID ) == false )
 		return ( true );
 
-	blockdist = pThing->radius + g_pPathActor->radius;
+	blockdist = pThing->_f_radius() + g_pPathActor->_f_radius();
 	if (( abs( pThing->X() - g_PathX ) >= blockdist ) || ( abs( pThing->Y() - g_PathY ) >= blockdist ))
 	{
 		// Didn't come into contact with the thing.
@@ -937,7 +942,7 @@ static bool botpath_CheckLine( line_t *pLine )
 		}
 		else if (r >= (1<<24))
 		{
-			BOTPATH_LineOpening( pLine, sx = pLine->v2->x, sy = pLine->v2->y, g_pPathActor->X(), g_pPathActor->Y() );
+			BOTPATH_LineOpening( pLine, sx = pLine->v2->x, sy = pLine->v2->y, g_pPathActor->_f_X(), g_pPathActor->_f_Y() );
 		}
 		else
 		{

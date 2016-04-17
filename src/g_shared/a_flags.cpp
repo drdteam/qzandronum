@@ -713,13 +713,13 @@ void AFlag::ResetReturnTicks( void )
 
 void AFlag::ReturnFlag( AActor *pReturner )
 {
-	fixedvec3	FlagOrigin;
+	DVector3	FlagOrigin;
 	AFlag	*pActor;
 
 	// Respawn the flag.
 	FlagOrigin = TEAM_GetItemOrigin( TEAM_GetTeamFromItem( this ));
 
-	pActor = (AFlag *)Spawn( this->GetClass( ), FlagOrigin.x, FlagOrigin.y, FlagOrigin.z, NO_REPLACE );
+	pActor = (AFlag *)Spawn( this->GetClass( ), FlagOrigin, NO_REPLACE );
 
 	// If we're the server, tell clients to spawn the new skull.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pActor ))
@@ -1118,12 +1118,12 @@ void AWhiteFlag::ResetReturnTicks( void )
 
 void AWhiteFlag::ReturnFlag( AActor *pReturner )
 {
-	fixedvec3	WhiteFlagOrigin;
+	DVector3	WhiteFlagOrigin;
 	AActor	*pActor;
 
 	// Respawn the white flag.
 	WhiteFlagOrigin = TEAM_GetWhiteFlagOrigin( );
-	pActor = Spawn( this->GetClass( ), WhiteFlagOrigin.x, WhiteFlagOrigin.y, WhiteFlagOrigin.z, NO_REPLACE );
+	pActor = Spawn( this->GetClass( ), WhiteFlagOrigin, NO_REPLACE );
 
 	// If we're the server, tell clients to spawn the new skull.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pActor ))
@@ -1322,13 +1322,13 @@ void ASkull::ResetReturnTicks( void )
 
 void ASkull::ReturnFlag( AActor *pReturner )
 {
-	fixedvec3	SkullOrigin;
+	DVector3	SkullOrigin;
 	ASkull	*pActor;
 
 	// Respawn the skull.
 	SkullOrigin = TEAM_GetItemOrigin( TEAM_GetTeamFromItem( this ));
 
-	pActor = (ASkull *)Spawn( this->GetClass( ), SkullOrigin.x, SkullOrigin.y, SkullOrigin.z, NO_REPLACE );
+	pActor = (ASkull *)Spawn( this->GetClass( ), SkullOrigin, NO_REPLACE );
 
 	// If we're the server, tell clients to spawn the new skull.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( pActor ))

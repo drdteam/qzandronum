@@ -39,7 +39,7 @@ bool AArtiTeleport::Use (bool pickup)
 {
 	fixed_t destX;
 	fixed_t destY;
-	angle_t destAngle;
+	int destAngle;
 
 	// [BC] Let the server decide where we go.
 	if ( NETWORK_InClientMode() )
@@ -66,7 +66,7 @@ bool AArtiTeleport::Use (bool pickup)
 		unsigned int i = pr_tele() % selections;
 		destX = deathmatchstarts[i].x;
 		destY = deathmatchstarts[i].y;
-		destAngle = ANG45 * (deathmatchstarts[i].angle/45);
+		destAngle = deathmatchstarts[i].angle;
 	}
 	else
 	{
@@ -82,12 +82,12 @@ bool AArtiTeleport::Use (bool pickup)
 		{
 			destX = pSpot->x;
 			destY = pSpot->y;
-			destAngle = ANG45 * (pSpot->angle/45);
+			destAngle = pSpot->angle;
 		}
 		else
 			I_Error( "ArtiTeleport: No player start found!" );
 	}
-	P_Teleport (Owner, destX, destY, ONFLOORZ, destAngle, TELF_SOURCEFOG | TELF_DESTFOG);
+	P_Teleport (Owner, destX, destY, ONFLOORZ, (double)destAngle, TELF_SOURCEFOG | TELF_DESTFOG);
 	bool canlaugh = true;
  	if (Owner->player->morphTics && (Owner->player->MorphStyle & MORPH_UNDOBYCHAOSDEVICE))
  	{ // Teleporting away will undo any morph effects (pig)

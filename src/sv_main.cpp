@@ -2150,7 +2150,7 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 	if ( ulFlags & USERINFO_COLOR )
 		pPlayer->userinfo.ColorChanged ( NETWORK_ReadLong( pByteStream ) );
 	if ( ulFlags & USERINFO_AIMDISTANCE )
-		*static_cast<FFloatCVar *>(pPlayer->userinfo[NAME_Autoaim]) = static_cast<float> ( NETWORK_ReadLong( pByteStream ) ) / ANGLE_1 ;
+		*static_cast<FFloatCVar *>(pPlayer->userinfo[NAME_Autoaim]) = NETWORK_ReadFloat( pByteStream );
 
 	// Read in the player's skin, and make sure it's valid.
 	if ( ulFlags & USERINFO_SKIN )
@@ -2582,13 +2582,13 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 				// [WS/BB] Always inform client of the actor's lastX/Y/Z.
 				ULONG ulBits = CM_LAST_X|CM_LAST_Y|CM_LAST_Z;
 
-				if ( pActor->vel.x != 0 )
+				if ( pActor->Vel.X != 0 )
 					ulBits |= CM_VELX;
 
-				if ( pActor->vel.y != 0 )
+				if ( pActor->Vel.Y != 0 )
 					ulBits |= CM_VELY;
 
-				if ( pActor->vel.z != 0 )
+				if ( pActor->Vel.Z != 0 )
 					ulBits |= CM_VELZ;
 
 				if ( pActor->movedir != 0 )
@@ -2671,7 +2671,7 @@ void SERVER_SendFullUpdate( ULONG ulClient )
 		}
 
 		// Check and see if it's important that the client know the angle of the object.
-		if ( pActor->angle != 0 )
+		if ( pActor->Angles.Yaw != 0 )
 			SERVERCOMMANDS_SetThingAngle( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 
 		// Spawned monster is a corpse.
@@ -3400,7 +3400,7 @@ void SERVER_UpdateActorProperties( AActor *pActor, ULONG ulClient )
 		SERVERCOMMANDS_SetThingProperty( pActor, APROP_JumpZ, ulClient, SVCF_ONLYTHISCLIENT );
 
 	// [BB] Update the actor's gravity if it's changed.
-	if ( pActor->gravity != pActor->GetDefault( )->gravity )
+	if ( pActor->Gravity != pActor->GetDefault( )->Gravity )
 		SERVERCOMMANDS_SetThingGravity ( pActor, ulClient, SVCF_ONLYTHISCLIENT );
 
 	// [WS] Update the actor's see sound if it's changed.
@@ -4711,13 +4711,13 @@ void SERVER_SetThingNonZeroAngleAndVelocity( AActor *pActor )
 {
 	ULONG ulBits = 0;
 
-	if ( pActor->angle != 0 )
+	if ( pActor->Angles.Yaw != 0 )
 		ulBits |= CM_ANGLE;
-	if ( pActor->vel.x != 0 )
+	if ( pActor->Vel.X != 0 )
 		ulBits |= CM_VELX;
-	if ( pActor->vel.y != 0 )
+	if ( pActor->Vel.Y != 0 )
 		ulBits |= CM_VELY;
-	if ( pActor->vel.z != 0 )
+	if ( pActor->Vel.Z != 0 )
 		ulBits |= CM_VELZ;
 
 	if ( ulBits )
@@ -5186,7 +5186,7 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 			// [BB] Ignore the angle and pitch sent by the client if the client isn't authenticated yet.
 			// In this case the client still sends these values based on the previous map.
 			if (SERVER_GetClient(ulClient)->State == CLS_SPAWNED) {
-				pPlayer->mo->pitch = moveCmd.pitch;
+				pPlayer->mo->Angles.Pitch = ANGLE2FLOAT( moveCmd.pitch );
 				// [HYP] Lock angle if speed is above sr40
 				if (pCmd->ucmd.sidemove > 10240 || pCmd->ucmd.sidemove < -10240)
 				{
@@ -5194,15 +5194,15 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 				}
 				else //only update angle if speed is at or below sr40, disregard angle changes for speeds above
 				{
-					pPlayer->mo->angle = moveCmd.angle;
+					pPlayer->mo->Angles.Yaw = ANGLE2FLOAT ( moveCmd.angle );
 				}
 			}
 
 			// Makes sure the pitch is valid (should we kick them if it's not?)
-			if ( pPlayer->mo->pitch < ( -ANGLE_1 * 90 ))
-				pPlayer->mo->pitch = -ANGLE_1*90;
-			else if ( pPlayer->mo->pitch > ( ANGLE_1 * 90 ))
-				pPlayer->mo->pitch = ( ANGLE_1 * 90 );
+			if ( pPlayer->mo->Angles.Pitch < -90. )
+				pPlayer->mo->Angles.Pitch = -90.;
+			else if ( pPlayer->mo->Angles.Pitch > 90. )
+				pPlayer->mo->Angles.Pitch = 90.;
 
 			P_PlayerThink( pPlayer );
 
@@ -5920,10 +5920,8 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 		else
 		{
 			const AActor	 *pDef = GetDefaultByType( pType );
-					
-			pActor = Spawn( pType, pSource->X() + FixedMul( pDef->radius * 2 + pSource->radius, finecosine[pSource->angle>>ANGLETOFINESHIFT] ),
-						pSource->Y() + FixedMul( pDef->radius * 2 + pSource->radius, finesine[pSource->angle>>ANGLETOFINESHIFT] ),
-						pSource->Z() + 8 * FRACUNIT, ALLOW_REPLACE );
+			fixedvec3 spawnpos = pSource->_f_Vec3Angle(pDef->_f_radius() * 2 + pSource->_f_radius(), pSource->_f_angle(), 8 * FRACUNIT);
+			pActor = Spawn(pType, spawnpos, ALLOW_REPLACE);
 
 			// [BB] If this is the summonfriend cheat, we have to make the monster friendly.
 			if (pActor != NULL && lType != CLC_SUMMONCHEAT)
@@ -5956,9 +5954,9 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 
 				if ( bSetAngle )
 				{
-					pActor->angle = pSource->angle - (ANGLE_1 * sAngle);
+					pActor->Angles.Yaw = pSource->Angles.Yaw - sAngle;
 					// [BB] If the angle is not zero, we have to inform the clients.
-					if ( pActor->angle != 0 )
+					if ( pActor->Angles.Yaw != 0 )
 						SERVERCOMMANDS_SetThingAngle( pActor );
 				}
 			}

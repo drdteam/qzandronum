@@ -272,7 +272,7 @@ CCMD (playerclasses)
 //
 
 // 16 pixels of bob
-#define MAXBOB			0x100000
+#define MAXBOB			16.
 
 FArchive &operator<< (FArchive &arc, player_t *&p)
 {
@@ -291,7 +291,7 @@ player_t::player_t()
   viewheight(0),
   deltaviewheight(0),
   bob(0),
-  vel({ 0,0 }),
+  Vel(0, 0),
   centering(0),
   turnticks(0),
   attackdown(0),
@@ -345,7 +345,7 @@ player_t::player_t()
   crouchviewdelta(0),
   ConversationNPC(0),
   ConversationPC(0),
-  ConversationNPCAngle(0),
+  ConversationNPCAngle(0.),
   ConversationFaceTalker(0),
   // [BC] Initialize ST's additional properties.
   bOnTeam( 0 ),
@@ -413,8 +413,7 @@ player_t &player_t::operator=(const player_t &p)
 	viewheight = p.viewheight;
 	deltaviewheight = p.deltaviewheight;
 	bob = p.bob;
-	vel.x = p.vel.x;
-	vel.y = p.vel.y;
+	Vel = p.Vel;
 	centering = p.centering;
 	turnticks = p.turnticks;
 	attackdown = p.attackdown;
@@ -773,8 +772,8 @@ void player_t::SendPitchLimits() const
 		const unsigned int playerIndex = this - players;
 		if ( playerIndex < MAXPLAYERS )
 		{
-			players[playerIndex].MinPitch = Renderer->GetMaxViewPitch(false) * -ANGLE_1;
-			players[playerIndex].MaxPitch = Renderer->GetMaxViewPitch(true) * ANGLE_1;
+			players[playerIndex].MinPitch = static_cast<double>(Renderer->GetMaxViewPitch(false));
+			players[playerIndex].MaxPitch = static_cast<double>(Renderer->GetMaxViewPitch(true));
 		}
 	}
 }
@@ -911,13 +910,13 @@ void APlayerPawn::Tick()
 	{
 		// [BC] Make the player flat, so he can travel under doors and such.
 		if ( player->bSpectating )
-			height = 0;
+			Height = 0;
 		else
-			height = FixedMul(GetDefault()->height, player->crouchfactor);
+			Height = GetDefault()->Height * player->crouchfactor;
 	}
 	else
 	{
-		if (health > 0) height = GetDefault()->height;
+		if (health > 0) Height = GetDefault()->Height;
 	}
 	Super::Tick();
 }
@@ -2225,7 +2224,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 				SCOREBOARD_RefreshHUD( );
 
 			// Spawn a new flag.
-			pTeamItem = Spawn( PClass::FindActor( "WhiteFlag" ), X(), Y(), ONFLOORZ, NO_REPLACE );
+			pTeamItem = Spawn( PClass::FindActor( "WhiteFlag" ), FLOAT2FIXED(X()), FLOAT2FIXED(Y()), ONFLOORZ, NO_REPLACE );
 			if ( pTeamItem )
 			{
 				pTeamItem->flags |= MF_DROPPED;
@@ -2303,47 +2302,48 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 //
 //===========================================================================
 
-void APlayerPawn::TweakSpeeds (int &forward, int &side)
+void APlayerPawn::TweakSpeeds (double &forward, double &side)
 {
 	// [Dusk] Let the user move at whatever speed they desire when spectating.
 	if (player->bSpectating) {
-		fixed_t factor = FLOAT2FIXED(cl_spectatormove);
-		forward = FixedMul(forward, factor);
-		side = FixedMul(side, factor);
+		forward *= cl_spectatormove;
+		side *= cl_spectatormove;
 		return;
 	}
 
-	// Strife's player can't run when its healh is below 10
+	// Strife's player can't run when its health is below 10
 	if (health <= RunHealth)
 	{
-		forward = clamp(forward, -0x1900, 0x1900);
-		side = clamp(side, -0x1800, 0x1800);
+		forward = clamp<double>(forward, -0x1900, 0x1900);
+		side = clamp<double>(side, -0x1800, 0x1800);
 	}
 
 	// [GRB]
-	if ((unsigned int)(forward + 0x31ff) < 0x63ff)
+	if (fabs(forward) < 0x3200)
 	{
-		forward = FixedMul (forward, ForwardMove1);
+		forward *= ForwardMove1;
 	}
 	else
 	{
-		forward = FixedMul (forward, ForwardMove2);
+		forward *= ForwardMove2;
 	}
+
+	if (fabs(side) < 0x2800)
 	if ((unsigned int)(side + 0x27ff) < 0x4fff)
 	{
-		side = FixedMul (side, SideMove1);
+		side *= SideMove1;
 	}
 	else
 	{
-		side = FixedMul (side, SideMove2);
+		side *= SideMove2;
 	}
 
 	// [BC] This comes out to 50%, so we can use this for the turbosphere.
 	if (!player->morphTics && Inventory != NULL)
 	{
-		fixed_t factor = Inventory->GetSpeedFactor ();
-		forward = FixedMul(forward, factor);
-		side = FixedMul(side, factor);
+		double factor = Inventory->GetSpeedFactor ();
+		forward *= factor;
+		side *= factor;
 	}
 
 	// [BC] Apply the 25% speed increase power.
@@ -2380,9 +2380,9 @@ void APlayerPawn::Destroy( void )
 // [Dusk] This is in a separate function now.
 //
 //===========================================================================
-fixed_t APlayerPawn::CalcJumpVelz()
+double APlayerPawn::CalcJumpVelz()
 {
-	fixed_t z = JumpZ * 35 / TICRATE;
+	double z = JumpZ * 35 / TICRATE;
 
 	// [BC] If the player has the high jump power, double his jump velocity.
 	if ( player->cheats & CF_HIGHJUMP )
@@ -2400,13 +2400,13 @@ fixed_t APlayerPawn::CalcJumpVelz()
 // [Dusk] Calculate the height a player can reach with a jump
 //
 //===========================================================================
-fixed_t APlayerPawn::CalcJumpHeight( bool bAddStepZ )
+double APlayerPawn::CalcJumpHeight( bool bAddStepZ )
 {
 	// To get the jump height we simulate a jump with the player's jumpZ with
 	// the environment's gravity. The grav equation was copied from p_mobj.cpp.
 	// Should it be made a function?
-	fixed_t velz = CalcJumpVelz(),
-	        grav = (fixed_t)(level.gravity * Sector->gravity * FIXED2FLOAT(gravity) * 81.92),
+	double velz = CalcJumpVelz(),
+	        grav = (level.gravity * Sector->gravity * Gravity * 81.92),
 	        z = 0;
 
 	// This hangs if grav is 0. I'm not sure what to return in such a scenario
@@ -2425,7 +2425,7 @@ fixed_t APlayerPawn::CalcJumpHeight( bool bAddStepZ )
 	// max step height. I guess the bare max Z value can also be of interest
 	// so the step Z an optional, yes-defaulting parameter.
 	if ( bAddStepZ )
-		z += MaxStepHeight;
+		z += FIXED2FLOAT ( MaxStepHeight );
 
 	return z;
 }
@@ -2462,7 +2462,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_PlayerScream)
 	// Handle the different player death screams
 	if ((((level.flags >> 15) | (dmflags)) &
 		(DF_FORCE_FALLINGZD | DF_FORCE_FALLINGHX)) &&
-		self->vel.z <= -39*FRACUNIT)
+		self->Vel.Z <= -39)
 	{
 		sound = S_FindSkinnedSound (self, "*splat");
 		chan = CHAN_BODY;
@@ -2534,16 +2534,16 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 	self->flags &= ~MF_SOLID;
 	mo = (APlayerPawn *)Spawn (spawntype, self->PosPlusZ(48*FRACUNIT), NO_REPLACE);
 	//mo->target = self;
-	mo->vel.x = pr_skullpop.Random2() << 9;
-	mo->vel.y = pr_skullpop.Random2() << 9;
-	mo->vel.z = 2*FRACUNIT + (pr_skullpop() << 6);
+	mo->Vel.X = pr_skullpop.Random2() / 128.;
+	mo->Vel.Y = pr_skullpop.Random2() / 128.;
+	mo->Vel.Z = 2. + (pr_skullpop() / 1024.);
 	// Attach player mobj to bloody skull
 	player = self->player;
 	self->player = NULL;
 	mo->ObtainInventory (self);
 	mo->player = player;
 	mo->health = self->health;
-	mo->angle = self->angle;
+	mo->Angles.Yaw = self->Angles.Yaw;
 	if (player != NULL)
 	{
 		player->mo = mo;
@@ -2589,7 +2589,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckPlayerDone)
 //
 //===========================================================================
 
-void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t &scaley)
+void P_CheckPlayerSprite(AActor *actor, int &spritenum, DVector2 &scale)
 {
 	LONG	lSkin;
 
@@ -2626,14 +2626,13 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 	if (lSkin != 0 && ( !(player->mo->flags4 & MF4_NOSKIN) || ( player->ReadyWeapon && ( player->ReadyWeapon->PreferredSkin != NAME_None ) ) ) )
 	{
 		// Convert from default scale to skin scale.
-		fixed_t defscaleY = actor->GetDefault()->scaleY;
-		fixed_t defscaleX = actor->GetDefault()->scaleX;
-		scaley = Scale(scaley, skins[lSkin].ScaleY, defscaleY);
-		scalex = Scale(scalex, skins[lSkin].ScaleX, defscaleX);
+		DVector2 defscale = actor->GetDefault()->Scale;
+		scale.X *= skins[lSkin].Scale.X / defscale.X;
+		scale.Y *= skins[lSkin].Scale.Y / defscale.Y;
 	}
 
 	// Set the crouch sprite?
-	if (player->crouchfactor < FRACUNIT*3/4)
+	if (player->crouchfactor < 0.75)
 	{
 		if (spritenum == actor->SpawnState->sprite || spritenum == player->mo->crouchsprite) 
 		{
@@ -2655,9 +2654,9 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 		{
 			spritenum = crouchspriteno;
 		}
-		else if (player->playerstate != PST_DEAD && player->crouchfactor < FRACUNIT*3/4)
+		else if (player->playerstate != PST_DEAD && player->crouchfactor < 0.75)
 		{
-			scaley /= 2;
+			scale.Y *= 0.5;
 		}
 	}
 }
@@ -2672,30 +2671,23 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, fixed_t &scalex, fixed_t
 ==================
 */
 
-void P_SideThrust (player_t *player, angle_t angle, fixed_t move)
+void P_SideThrust (player_t *player, DAngle angle, double move)
 {
-	angle = (angle - ANGLE_90) >> ANGLETOFINESHIFT;
-
-	player->mo->vel.x += FixedMul (move, finecosine[angle]);
-	player->mo->vel.y += FixedMul (move, finesine[angle]);
+	player->mo->Thrust(angle-90, move);
 }
 
-void P_ForwardThrust (player_t *player, angle_t angle, fixed_t move)
+void P_ForwardThrust (player_t *player, DAngle angle, double move)
 {
-	angle >>= ANGLETOFINESHIFT;
-
 	if ((player->mo->waterlevel || (player->mo->flags & MF_NOGRAVITY))
-		&& player->mo->pitch != 0)
+		&& player->mo->Angles.Pitch != 0)
 	{
-		angle_t pitch = (angle_t)player->mo->pitch >> ANGLETOFINESHIFT;
-		fixed_t zpush = FixedMul (move, finesine[pitch]);
+		double zpush = move * player->mo->Angles.Pitch.Sin();
 		if (player->mo->waterlevel && player->mo->waterlevel < 2 && zpush < 0)
 			zpush = 0;
-		player->mo->vel.z -= zpush;
-		move = FixedMul (move, finecosine[pitch]);
+		player->mo->Vel.Z -= zpush;
+		move *= player->mo->Angles.Pitch.Cos();
 	}
-	player->mo->vel.x += FixedMul (move, finecosine[angle]);
-	player->mo->vel.y += FixedMul (move, finesine[angle]);
+	player->mo->Thrust(angle, move);
 }
 
 //
@@ -2709,20 +2701,15 @@ void P_ForwardThrust (player_t *player, angle_t angle, fixed_t move)
 // reduced at a regular rate, even on ice (where the player coasts).
 //
 
-void P_Bob (player_t *player, angle_t angle, fixed_t move, bool forward)
+void P_Bob (player_t *player, DAngle angle, double move, bool forward)
 {
 	if (forward
 		&& (player->mo->waterlevel || (player->mo->flags & MF_NOGRAVITY))
-		&& player->mo->pitch != 0)
+		&& player->mo->Angles.Pitch != 0)
 	{
-		angle_t pitch = (angle_t)player->mo->pitch >> ANGLETOFINESHIFT;
-		move = FixedMul (move, finecosine[pitch]);
+		move *= player->mo->Angles.Pitch.Cos();
 	}
-
-	angle >>= ANGLETOFINESHIFT;
-
-	player->vel.x += FixedMul(move, finecosine[angle]);
-	player->vel.y += FixedMul(move, finesine[angle]);
+	player->Vel += angle.ToVector(move);
 }
 
 /*
@@ -2738,8 +2725,8 @@ Calculate the walking / running height adjustment
 
 void P_CalcHeight (player_t *player) 
 {
-	int 		angle;
-	fixed_t 	bob;
+	DAngle		angle;
+	double	 	bob;
 	bool		still = false;
 
 	// [BB] Clients don't calculate the viewheight of the player whose eyes they are looking through
@@ -2769,11 +2756,11 @@ void P_CalcHeight (player_t *player)
 	}
 	else if ((player->mo->flags & MF_NOGRAVITY) && !player->onground)
 	{
-		player->bob = FRACUNIT / 2;
+		player->bob = 0.5;
 	}
 	else
 	{
-		player->bob = DMulScale16 (player->vel.x, player->vel.x, player->vel.y, player->vel.y);
+		player->bob = player->Vel.LengthSquared();
 		if (player->bob == 0)
 		{
 			still = true;
@@ -2781,9 +2768,9 @@ void P_CalcHeight (player_t *player)
 		else
 		{
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				player->bob = FixedMul( player->bob, 16384 );
+				player->bob *= FIXED2FLOAT ( 16384 );
 			else
-				player->bob = FixedMul (player->bob, player->userinfo.GetMoveBob());
+				player->bob *= player->userinfo.GetMoveBob();
 
 			// [BB] I've seen bob becoming negative for a high ping clients (250+) on low gravity servers (sv_gravity 200)
 			// when moving forward in the air for too long. Overflow problem? Nevertheless, setting negative values
@@ -2797,10 +2784,10 @@ void P_CalcHeight (player_t *player)
 
 	if (player->cheats & CF_NOVELOCITY)
 	{
-		player->viewz = player->mo->Z() + defaultviewheight;
+		player->viewz = player->mo->_f_Z() + defaultviewheight;
 
-		if (player->viewz > player->mo->ceilingz-4*FRACUNIT)
-			player->viewz = player->mo->ceilingz-4*FRACUNIT;
+		if (player->viewz > player->mo->_f_ceilingz()-4*FRACUNIT)
+			player->viewz = player->mo->_f_ceilingz()-4*FRACUNIT;
 
 		return;
 	}
@@ -2809,10 +2796,8 @@ void P_CalcHeight (player_t *player)
 	{
 		if (player->health > 0)
 		{
-			// [BC] We need to cap level.time, because if it gets too big, DivScale
-			// can crash.
-			angle = DivScale13 (level.time % 65536, 120*TICRATE/35) & FINEMASK;
-			bob = FixedMul (player->userinfo.GetStillBob(), finesine[angle]);
+			angle = level.time / (120 * TICRATE / 35.) * 360.;
+			bob = player->userinfo.GetStillBob() * angle.Sin();
 		}
 		else
 		{
@@ -2821,11 +2806,8 @@ void P_CalcHeight (player_t *player)
 	}
 	else
 	{
-		// DivScale 13 because FINEANGLES == (1<<13)
-		// [BC] We need to cap level.time, because if it gets too big, DivScale
-		// can crash.
-		angle = DivScale13 (level.time % 65536, 20*TICRATE/35) & FINEMASK;
-		bob = FixedMul (player->bob>>(player->mo->waterlevel > 1 ? 2 : 1), finesine[angle]);
+		angle = level.time / (20 * TICRATE / 35.) * 360.;
+		bob = player->bob * angle.Sin() * (player->mo->waterlevel > 1 ? 0.25f : 0.5f);
 	}
 
 	// move viewheight
@@ -2857,19 +2839,19 @@ void P_CalcHeight (player_t *player)
 	{
 		bob = 0;
 	}
-	player->viewz = player->mo->Z() + player->viewheight + bob;
-	if (player->mo->floorclip && player->playerstate != PST_DEAD
+	player->viewz = player->mo->_f_Z() + player->viewheight + FLOAT2FIXED(bob);
+	if (player->mo->Floorclip && player->playerstate != PST_DEAD
 		&& player->mo->Z() <= player->mo->floorz)
 	{
-		player->viewz -= player->mo->floorclip;
+		player->viewz -= player->mo->_f_floorclip();
 	}
-	if (player->viewz > player->mo->ceilingz - 4*FRACUNIT)
+	if (player->viewz > player->mo->_f_ceilingz() - 4*FRACUNIT)
 	{
-		player->viewz = player->mo->ceilingz - 4*FRACUNIT;
+		player->viewz = player->mo->_f_ceilingz() - 4*FRACUNIT;
 	}
-	if (player->viewz < player->mo->floorz + 4*FRACUNIT)
+	if (player->viewz < player->mo->_f_floorz() + 4*FRACUNIT)
 	{
-		player->viewz = player->mo->floorz + 4*FRACUNIT;
+		player->viewz = player->mo->_f_floorz() + 4*FRACUNIT;
 	}
 }
 
@@ -2882,7 +2864,7 @@ void P_CalcHeight (player_t *player)
 */
 CUSTOM_CVAR (Float, sv_aircontrol, 0.00390625f, CVAR_SERVERINFO|CVAR_NOSAVE)
 {
-	level.aircontrol = (fixed_t)(self * 65536.f);
+	level.aircontrol = self;
 	G_AirControlChanged ();
 
 	// [BB] Let the clients know about the change.
@@ -2911,11 +2893,11 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 	if (player->turnticks)
 	{
 		player->turnticks--;
-		mo->angle += (ANGLE_180 / TURN180_TICKS);
+		mo->Angles.Yaw += (180. / TURN180_TICKS);
 	}
 	else
 	{
-		mo->angle += cmd->ucmd.yaw << 16;
+		mo->Angles.Yaw += cmd->ucmd.yaw * (360./65536.);
 	}
 
 	// [TP] Allow spectators to move freely even if the game is suspended.
@@ -2933,20 +2915,20 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 
 	if (cmd->ucmd.forwardmove | cmd->ucmd.sidemove)
 	{
-		fixed_t forwardmove, sidemove;
-		int bobfactor;
-		int friction, movefactor;
-		int fm, sm;
+		double forwardmove, sidemove;
+		double bobfactor;
+		double friction, movefactor;
+		double fm, sm;
 
 		movefactor = P_GetMoveFactor (mo, &friction);
-		bobfactor = friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
+		bobfactor = friction < ORIG_FRICTION ? movefactor : fORIG_FRICTION_FACTOR;
 		if (!player->onground && !(player->mo->flags & MF_NOGRAVITY) && !player->mo->waterlevel)
 		{
 			// [RH] allow very limited movement if not on ground.
 			if ( zacompatflags & ZACOMPATF_LIMITED_AIRMOVEMENT )
 			{
-				movefactor = FixedMul (movefactor, level.aircontrol);
-				bobfactor = FixedMul (bobfactor, level.aircontrol);
+				movefactor *= level.aircontrol;
+				bobfactor*= level.aircontrol;
 			}
 			else
 			{
@@ -2959,34 +2941,34 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 		fm = cmd->ucmd.forwardmove;
 		sm = cmd->ucmd.sidemove;
 		mo->TweakSpeeds (fm, sm);
-		fm = FixedMul (fm, player->mo->Speed);
-		sm = FixedMul (sm, player->mo->Speed);
+		fm *= player->mo->Speed / 256;
+		sm *= player->mo->Speed / 256;
 
 		// When crouching, speed and bobbing have to be reduced
-		if (player->CanCrouch() && player->crouchfactor != FRACUNIT)
+		if (player->CanCrouch() && player->crouchfactor != 1)
 		{
-			fm = FixedMul(fm, player->crouchfactor);
-			sm = FixedMul(sm, player->crouchfactor);
-			bobfactor = FixedMul(bobfactor, player->crouchfactor);
+			fm *= player->crouchfactor;
+			sm *= player->crouchfactor;
+			bobfactor *= player->crouchfactor;
 		}
 
-		forwardmove = Scale (fm, movefactor * 35, TICRATE << 8);
-		sidemove = Scale (sm, movefactor * 35, TICRATE << 8);
+		forwardmove = fm * movefactor * (35 / TICRATE);
+		sidemove = sm * movefactor * (35 / TICRATE);
 
 		if (forwardmove)
 		{
-			P_Bob (player, mo->angle, (cmd->ucmd.forwardmove * bobfactor) >> 8, true);
-			P_ForwardThrust (player, mo->angle, forwardmove);
+			P_Bob(player, mo->Angles.Yaw, cmd->ucmd.forwardmove * bobfactor / 256., true);
+			P_ForwardThrust(player, mo->Angles.Yaw, forwardmove);
 		}
 		if (sidemove)
 		{
-			P_Bob (player, mo->angle-ANG90, (cmd->ucmd.sidemove * bobfactor) >> 8, false);
-			P_SideThrust (player, mo->angle, sidemove);
+			P_Bob(player, mo->Angles.Yaw - 90, cmd->ucmd.sidemove * bobfactor / 256., false);
+			P_SideThrust(player, mo->Angles.Yaw, sidemove);
 		}
 /*
 		if (debugfile)
 		{
-			fprintf (debugfile, "move player for pl %d%c: (%d,%d,%d) (%d,%d) %d %d w%d [", int(player-players),
+			fprintf (debugfile, "move player for pl %d%c: (%f,%f,%f) (%f,%f) %f %f w%d [", int(player-players),
 				player->cheats&CF_PREDICTING?'p':' ',
 				player->mo->X(), player->mo->Y(), player->mo->Z(),forwardmove, sidemove, movefactor, friction, player->mo->waterlevel);
 			msecnode_t *n = player->mo->touching_sectorlist;
@@ -2999,7 +2981,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 		}
 */
 		// [BB] Spectators shall stay in their spawn state and don't execute any code pointers.
-		if ( (CLIENT_PREDICT_IsPredicting( ) == false) && (forwardmove|sidemove) && (player->bSpectating == false) )//(!(player->cheats & CF_PREDICTING))
+		if ( (CLIENT_PREDICT_IsPredicting( ) == false) && (forwardmove != 0 || sidemove != 0) && (player->bSpectating == false) )//(!(player->cheats & CF_PREDICTING))
 		{
 			player->mo->PlayRunning ();
 		}
@@ -3016,24 +2998,24 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 	{
 		if (player->mo->waterlevel >= 2)
 		{
-			player->mo->vel.z = FixedMul(4*FRACUNIT, player->mo->Speed);
+			player->mo->Vel.Z = 4 * player->mo->Speed;
 
 			// [Leo] Apply cl_spectatormove here.
 			if ( player->bSpectating )
-				player->mo->vel.z = FixedMul(player->mo->vel.z, spectatormove);
+				player->mo->Vel.Z = player->mo->Vel.Z * FIXED2FLOAT ( spectatormove );
 		}
 		else if (player->mo->flags2 & MF2_FLY)
 		{
-			player->mo->vel.z = 3*FRACUNIT;
+			player->mo->Vel.Z = 3.;
 
 			// [Leo] Apply cl_spectatormove here.
 			if ( player->bSpectating )
-				player->mo->vel.z = FixedMul(player->mo->vel.z, spectatormove);
+				player->mo->Vel.Z = player->mo->Vel.Z * FIXED2DBL ( spectatormove );
 		}
 		// [Leo] Spectators shouldn't be limited by the server settings.
 		else if ((player->bSpectating || level.IsJumpingAllowed()) && player->onground && player->jumpTics == 0)
 		{
-			fixed_t	JumpVelz;
+			double	JumpVelz;
 			ULONG	ulJumpTicks;
 
 			// Set base jump velocity.
@@ -3060,7 +3042,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			if ( player->mo->floorsector->GetFlags(sector_t::floor) & PLANEF_SPRINGPAD )
 				ulJumpTicks = 0;
 
-			player->mo->vel.z += JumpVelz;
+			player->mo->Vel.Z += FIXED2FLOAT ( JumpVelz );
 			player->jumpTics = ulJumpTicks;
 		}
 	}
@@ -3093,7 +3075,7 @@ void P_FallingDamage (AActor *actor)
 	if (actor->floorsector->Flags & SECF_NOFALLINGDAMAGE)
 		return;
 
-	vel = abs(actor->vel.z);
+	vel = abs(actor->_f_velz());
 
 	// Since Hexen falling damage is stronger than ZDoom's, it takes
 	// precedence. ZDoom falling damage may not be as strong, but it
@@ -3114,7 +3096,7 @@ void P_FallingDamage (AActor *actor)
 		{
 			vel = FixedMul (vel, 16*FRACUNIT/23);
 			damage = ((FixedMul (vel, vel) / 10) >> FRACBITS) - 24;
-			if (actor->vel.z > -39*FRACUNIT && damage > actor->health
+			if (actor->_f_velz() > -39*FRACUNIT && damage > actor->health
 				&& actor->health != 1)
 			{ // No-death threshold
 				damage = actor->health-1;
@@ -3176,8 +3158,7 @@ void P_FallingDamage (AActor *actor)
 void P_DeathThink (player_t *player)
 {
 	int dir;
-	angle_t delta;
-	int lookDelta;
+	DAngle delta;
 
 	P_MovePsprites (player);
 
@@ -3188,10 +3169,10 @@ void P_DeathThink (player_t *player)
 		player->deltaviewheight = 0;
 		if (player->onground)
 		{
-			if (player->mo->pitch > -(int)ANGLE_1*19)
+			if (player->mo->Angles.Pitch > -19.)
 			{
-				lookDelta = (-(int)ANGLE_1*19 - player->mo->pitch) / 8;
-				player->mo->pitch += lookDelta;
+				DAngle lookDelta = (-19. - player->mo->Angles.Pitch) / 8;
+				player->mo->Angles.Pitch += lookDelta;
 			}
 		}
 	}
@@ -3206,17 +3187,17 @@ void P_DeathThink (player_t *player)
 		{
 			player->viewheight = 6*FRACUNIT;
 		}
-		if (player->mo->pitch < 0)
+		if (player->mo->Angles.Pitch < 0)
 		{
-			player->mo->pitch += ANGLE_1*3;
+			player->mo->Angles.Pitch += 3;
 		}
-		else if (player->mo->pitch > 0)
+		else if (player->mo->Angles.Pitch > 0)
 		{
-			player->mo->pitch -= ANGLE_1*3;
+			player->mo->Angles.Pitch -= 3;
 		}
-		if (abs(player->mo->pitch) < ANGLE_1*3)
+		if (fabs(player->mo->Angles.Pitch) < 3)
 		{
-			player->mo->pitch = 0;
+			player->mo->Angles.Pitch = 0.;
 		}
 	}
 	P_CalcHeight (player);
@@ -3224,7 +3205,7 @@ void P_DeathThink (player_t *player)
 	if (player->attacker && player->attacker != player->mo)
 	{ // Watch killer
 		dir = P_FaceMobj (player->mo, player->attacker, &delta);
-		if (delta < ANGLE_1*10)
+		if (delta < 10)
 		{ // Looking at killer, so fade damage and poison counters
 			if (player->damagecount)
 			{
@@ -3236,17 +3217,17 @@ void P_DeathThink (player_t *player)
 			}
 		}
 		delta /= 8;
-		if (delta > ANGLE_1*5)
+		if (delta > 5.)
 		{
-			delta = ANGLE_1*5;
+			delta = 5.;
 		}
 		if (dir)
 		{ // Turn clockwise
-			player->mo->angle += delta;
+			player->mo->Angles.Yaw += delta;
 		}
 		else
 		{ // Turn counter clockwise
-			player->mo->angle -= delta;
+			player->mo->Angles.Yaw -= delta;
 		}
 	}
 	else
@@ -3426,19 +3407,19 @@ bool PLAYER_Responder( event_t *pEvent )
 
 void P_CrouchMove(player_t * player, int direction)
 {
-	fixed_t defaultheight = player->mo->GetDefault()->height;
-	fixed_t savedheight = player->mo->height;
-	fixed_t crouchspeed = direction * CROUCHSPEED;
+	double defaultheight = player->mo->GetDefault()->Height;
+	double savedheight = player->mo->Height;
+	double crouchspeed = direction * CROUCHSPEED;
 	fixed_t oldheight = player->viewheight;
 
 	player->crouchdir = (signed char) direction;
 	player->crouchfactor += crouchspeed;
 
 	// check whether the move is ok
-	player->mo->height = FixedMul(defaultheight, player->crouchfactor);
-	if (!P_TryMove(player->mo, player->mo->X(), player->mo->Y(), false, NULL))
+	player->mo->Height  = defaultheight * player->crouchfactor;
+	if (!P_TryMove(player->mo, player->mo->_f_X(), player->mo->_f_Y(), false, NULL))
 	{
-		player->mo->height = savedheight;
+		player->mo->Height = savedheight;
 		if (direction > 0)
 		{
 			// doesn't fit
@@ -3446,14 +3427,14 @@ void P_CrouchMove(player_t * player, int direction)
 			return;
 		}
 	}
-	player->mo->height = savedheight;
+	player->mo->Height = savedheight;
 
-	player->crouchfactor = clamp<fixed_t>(player->crouchfactor, FRACUNIT/2, FRACUNIT);
-	player->viewheight = FixedMul(player->mo->ViewHeight, player->crouchfactor);
+	player->crouchfactor = clamp(player->crouchfactor, 0.5, 1.);
+	player->viewheight = fixed_t(player->mo->ViewHeight * player->crouchfactor);
 	player->crouchviewdelta = player->viewheight - player->mo->ViewHeight;
 
 	// Check for eyes going above/below fake floor due to crouching motion.
-	P_CheckFakeFloorTriggers(player->mo, player->mo->Z() + oldheight, true);
+	P_CheckFakeFloorTriggers(player->mo, player->mo->_f_Z() + oldheight, true);
 }
 
 //----------------------------------------------------------------------------
@@ -3504,8 +3485,8 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	if (debugfile && !(player->cheats & CF_PREDICTING))
 	{
 		fprintf (debugfile, "tic %d for pl %d: (%d, %d, %d, %u) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
-			gametic, (int)(player-players), player->mo->X(), player->mo->Y(), player->mo->Z(),
-			player->mo->angle>>ANGLETOFINESHIFT, player->cmd.ucmd.buttons,
+			gametic, (int)(player-players), player->mo->_f_X(), player->mo->_f_Y(), player->mo->_f_Z(),
+			player->mo->_f_angle()>>ANGLETOFINESHIFT, player->cmd.ucmd.buttons,
 			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
 			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
 	}
@@ -3661,12 +3642,12 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 				{
 					player->crouching = 0;
 				}
-				if (crouchdir == 1 && player->crouchfactor < FRACUNIT &&
+				if (crouchdir == 1 && player->crouchfactor < 1 &&
 					player->mo->Top() < player->mo->ceilingz)
 				{
 					P_CrouchMove(player, 1);
 				}
-				else if (crouchdir == -1 && player->crouchfactor > FRACUNIT/2)
+				else if (crouchdir == -1 && player->crouchfactor > 0.5)
 				{
 					P_CrouchMove(player, -1);
 				}
@@ -3678,7 +3659,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		}
 	}
 
-	player->crouchoffset = -FixedMul(player->mo->ViewHeight, (FRACUNIT - player->crouchfactor));
+	player->crouchoffset = -fixed_t(player->mo->ViewHeight * (1 - player->crouchfactor));
 
 	// MUSINFO stuff
 	if (player->MUSINFOtics >= 0 && player->MUSINFOactor != NULL)
@@ -3731,62 +3712,45 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	// [RH] Look up/down stuff
 	if (!level.IsFreelookAllowed() && player->bSpectating == false)
 	{
-		player->mo->pitch = 0;
+		player->mo->Angles.Pitch = 0.;
 	}
 	else
 	{
 		// Servers read in the pitch value. It is not calculated.
 		if (( NETWORK_GetState( ) != NETSTATE_SERVER ) || ( player->pSkullBot != NULL ))
 		{
-			int look = cmd->ucmd.pitch << 16;
-
 			// The player's view pitch is clamped between -32 and +56 degrees,
 			// which translates to about half a screen height up and (more than)
 			// one full screen height down from straight ahead when view panning
 			// is used.
-			if (look)
+			int clook = cmd->ucmd.pitch;
+			if (clook != 0)
 			{
-				if (look == -32768 << 16)
+				if (clook == -32768)
 				{ // center view
-					player->mo->pitch = 0;
+					player->mo->Angles.Pitch = 0.;
 				}
 				else
 				{
-					fixed_t oldpitch = player->mo->pitch;
-					player->mo->pitch -= look;
-					if (look > 0)
-					{ // look up
-						// [BB] Zandronum handles pitch differently.
-						const fixed_t pitchLimit = - ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(false) : 32 ) * ANGLE_1;
-						player->mo->pitch = MAX(player->mo->pitch, pitchLimit );
-						if (player->mo->pitch > oldpitch)
-						{
-							player->mo->pitch = pitchLimit;
-						}
-					}
-					else
-					{ // look down
-						// [BB] Zandronum handles pitch differently.
-						const fixed_t pitchLimit = ( ( NETWORK_GetState( ) != NETSTATE_SERVER ) ? Renderer->GetMaxViewPitch(true) : 56 ) * ANGLE_1;
-						player->mo->pitch = MIN(player->mo->pitch, pitchLimit );
-						if (player->mo->pitch < oldpitch)
-						{
-							player->mo->pitch = pitchLimit;
-						}
-					}
+					// [BB] Zandronum handles pitch differently.
+					const DAngle minPitch = ((NETWORK_GetState() != NETSTATE_SERVER) ? player->MinPitch : -32.);
+					const DAngle maxPitch = ((NETWORK_GetState() != NETSTATE_SERVER) ? player->MaxPitch : 56.);
+					// no more overflows with floating point. Yay! :)
+					player->mo->Angles.Pitch = clamp(player->mo->Angles.Pitch - clook * (360. / 65536.), minPitch, maxPitch);
 				}
 			}
 		}
 	}
 	if (player->centering)
 	{
-		if (abs(player->mo->pitch) > 2*ANGLE_1)
+		player->mo->Angles.Pitch.Normalize180();	// make sure we are in the proper range here for the following code.
+		if (fabs(player->mo->Angles.Pitch) > 2.)
 		{
-			player->mo->pitch = FixedMul(player->mo->pitch, FRACUNIT*2/3);
+			player->mo->Angles.Pitch *= (2. / 3.);
 		}
 		else
 		{
-			player->mo->pitch = 0;
+			player->mo->Angles.Pitch = 0.;
 			player->centering = false;
 			if (player - players == consoleplayer)
 			{
@@ -3828,17 +3792,17 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 			}
 			if (player->mo->waterlevel >= 2 || (player->mo->flags2 & MF2_FLY) || (player->cheats & CF_NOCLIP2))
 			{
-				player->mo->vel.z = FixedMul(player->mo->Speed, cmd->ucmd.upmove << 9);
+				player->mo->Vel.Z = player->mo->Speed * cmd->ucmd.upmove / 128.;
 
 				// [Leo] Apply cl_spectatormove here.
 				if ( player->bSpectating )
-					player->mo->vel.z = FixedMul(player->mo->vel.z, FLOAT2FIXED(cl_spectatormove));
+					player->mo->Vel.Z = player->mo->Vel.Z * cl_spectatormove;
 
 				if (player->mo->waterlevel < 2 && !(player->mo->flags & MF_NOGRAVITY))
 				{
 					player->mo->flags2 |= MF2_FLY;
 					player->mo->flags |= MF_NOGRAVITY;
-					if ((player->mo->vel.z <= -39 * FRACUNIT) && !CLIENT_PREDICT_IsPredicting( )) // [BB] Adapted prediction.
+					if ((player->mo->Vel.Z <= -39) && !CLIENT_PREDICT_IsPredicting( )) // [BB] Adapted prediction.
 					{ // Stop falling scream
 						S_StopSound (player->mo, CHAN_VOICE);
 					}
@@ -3871,14 +3835,14 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		P_PlayerOnSpecial3DFloor (player);
 		P_PlayerInSpecialSector (player);
 
-		if (player->mo->Z() <= player->mo->Sector->floorplane.ZatPoint(player->mo) ||
+		if (player->mo->_f_Z() <= player->mo->Sector->floorplane.ZatPoint(player->mo) ||
 			player->mo->waterlevel)
 		{
 			// Player must be touching the floor
 			P_PlayerOnSpecialFlat(player, P_GetThingFloorType(player->mo));
 		}
-		if (player->mo->vel.z <= -player->mo->FallingScreamMinSpeed &&
-			player->mo->vel.z >= -player->mo->FallingScreamMaxSpeed && !player->morphTics &&
+		if (player->mo->_f_velz() <= -player->mo->FallingScreamMinSpeed &&
+			player->mo->_f_velz() >= -player->mo->FallingScreamMaxSpeed && !player->morphTics &&
 			player->mo->waterlevel == 0)
 		{
 			int id = S_FindSkinnedSound (player->mo, "*falling");
@@ -4123,16 +4087,16 @@ void P_PredictPlayer (player_t *player)
 		{
 			// Z is not compared as lifts will alter this with no apparent change
 			// Make lerping less picky by only testing whole units
-			DoLerp = ((PredictionLast.x >> 16) != (player->mo->X() >> 16) ||
-				(PredictionLast.y >> 16) != (player->mo->Y() >> 16));
+			DoLerp = ((PredictionLast.x >> 16) != (player->mo->_f_X() >> 16) ||
+				(PredictionLast.y >> 16) != (player->mo->_f_Y() >> 16));
 
 			// Aditional Debug information
 			if (developer && DoLerp)
 			{
 				DPrintf("Lerp! Ltic (%d) && Ptic (%d) | Lx (%d) && Px (%d) | Ly (%d) && Py (%d)\n",
 					PredictionLast.gametic, i,
-					(PredictionLast.x >> 16), (player->mo->X() >> 16),
-					(PredictionLast.y >> 16), (player->mo->Y() >> 16));
+					(PredictionLast.x >> 16), (player->mo->_f_X() >> 16),
+					(PredictionLast.y >> 16), (player->mo->_f_Y() >> 16));
 			}
 		}
 	}
@@ -4150,9 +4114,9 @@ void P_PredictPlayer (player_t *player)
 		}
 
 		PredictionLast.gametic = maxtic - 1;
-		PredictionLast.x = player->mo->X();
-		PredictionLast.y = player->mo->Y();
-		PredictionLast.z = player->mo->Z();
+		PredictionLast.x = player->mo->_f_X();
+		PredictionLast.y = player->mo->_f_Y();
+		PredictionLast.z = player->mo->_f_Z();
 
 		if (PredictionLerptics > 0)
 		{
@@ -4329,8 +4293,7 @@ void player_t::Serialize (FArchive &arc)
 		<< viewheight
 		<< deltaviewheight
 		<< bob
-		<< vel.x
-		<< vel.y
+		<< Vel
 		<< centering
 		<< health
 		<< inventorytics;
@@ -4424,7 +4387,7 @@ void player_t::Serialize (FArchive &arc)
 	arc << LogText
 		<< ConversationNPC
 		<< ConversationPC
-		<< ConversationNPCAngle
+		<< ConversationNPCAngle.Degrees
 		<< ConversationFaceTalker;
 
 	// [BB] Zandronum doesn't use this.

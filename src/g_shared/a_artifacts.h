@@ -163,7 +163,7 @@ class APowerSpeed : public APowerup
 protected:
 	void DoEffect ();
 	void Serialize(FArchive &arc);
-	fixed_t GetSpeedFactor();
+	double GetSpeedFactor();
 public:
 	int SpeedFlags;
 };

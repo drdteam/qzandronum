@@ -412,7 +412,7 @@ CUSTOM_CVAR (Int, dmflags, 0, CVAR_SERVERINFO | CVAR_CAMPAIGNLOCK)
 		else
 		{
 			if ( players[consoleplayer].mo )
-				players[consoleplayer].mo->pitch = 0;
+				players[consoleplayer].mo->Angles.Pitch = 0.;
 		}
 	}
 	// If nofov is set, force everybody to the arbitrator's FOV.

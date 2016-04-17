@@ -155,11 +155,11 @@ void		TEAM_SetItemTaken( ULONG ulTeamIdx, bool bTaken );
 bool		TEAM_GetWhiteFlagTaken( void );
 void		TEAM_SetWhiteFlagTaken( bool bTaken );
 
-fixedvec3	TEAM_GetItemOrigin( ULONG ulTeamIdx );
-void		TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, fixedvec3 Origin );
+DVector3	TEAM_GetItemOrigin( ULONG ulTeamIdx );
+void		TEAM_SetTeamItemOrigin( ULONG ulTeamIdx, DVector3 Origin );
 
-fixedvec3	TEAM_GetWhiteFlagOrigin( void );
-void		TEAM_SetWhiteFlagOrigin( fixedvec3 Origin );
+DVector3	TEAM_GetWhiteFlagOrigin( void );
+void		TEAM_SetWhiteFlagOrigin( DVector3 Origin );
 
 ULONG		TEAM_GetAssistPlayer( ULONG ulTeamIdx );
 void		TEAM_SetAssistPlayer( ULONG ulTeamIdx, ULONG ulPlayer );

@@ -101,7 +101,7 @@ struct TEAMINFO
 	// Who is carrying the red flag/skull?
 	player_t	*g_pCarrier;
 
-	fixedvec3	g_Origin;
+	DVector3	g_Origin;
 	bool		g_bTaken;
 
 	FString		SmallFlagHUDIcon;

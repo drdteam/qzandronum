@@ -129,7 +129,7 @@ public:
 	// [BB] We also call this when a player dies. These special items also need to be dropped then.
 	virtual void DropImportantItems( bool bLeavingGame, AActor *pSource = NULL );
 
-	virtual void TweakSpeeds (int &forwardmove, int &sidemove);
+	virtual void TweakSpeeds (double &forwardmove, double &sidemove);
 	virtual void MorphPlayerThink ();
 	virtual void ActivateMorphWeapon ();
 	AWeapon *PickNewWeapon (PClassAmmo *ammotype);
@@ -147,8 +147,8 @@ public:
 	const char *GetSoundClass () const;
 
 	// [Dusk]
-	fixed_t CalcJumpVelz();
-	fixed_t CalcJumpHeight( bool bAddStep = true );
+	double CalcJumpVelz();
+	double CalcJumpHeight( bool bAddStep = true );
 
 	enum EInvulState
 	{
@@ -170,12 +170,12 @@ public:
 	TObjPtr<AInventory> InvSel;			// selected inventory item
 
 	// [GRB] Player class properties
-	fixed_t		JumpZ;
+	double		JumpZ;
 	fixed_t		GruntSpeed;
 	fixed_t		FallingScreamMinSpeed, FallingScreamMaxSpeed;
 	fixed_t		ViewHeight;
-	fixed_t		ForwardMove1, ForwardMove2;
-	fixed_t		SideMove1, SideMove2;
+	double		ForwardMove1, ForwardMove2;
+	double		SideMove1, SideMove2;
 	FTextureID	ScoreIcon;
 	int			SpawnMask;
 	FNameNoInit	MorphWeapon;
@@ -344,7 +344,7 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 {
 	~userinfo_t();
 
-	int GetAimDist() const
+	double GetAimDist() const
 	{
 		if (dmflags2 & DF2_NOAUTOAIM)
 		{
@@ -354,11 +354,11 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 		float aim = *static_cast<FFloatCVar *>(*CheckKey(NAME_Autoaim));
 		if (aim > 35 || aim < 0)
 		{
-			return ANGLE_1*35;
+			return 35.;
 		}
 		else
 		{
-			return xs_RoundToInt(fabs(aim * ANGLE_1));
+			return aim;
 		}
 	}
 	const char *GetName() const
@@ -385,13 +385,13 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 		// [TP] switchonpickup is int in Zandronum so we need to cast to FIntCVar* instead.
 		return *static_cast<FIntCVar *>(*CheckKey(NAME_SwitchOnPickup));
 	}
-	fixed_t GetMoveBob() const
+	double GetMoveBob() const
 	{
-		return FLOAT2FIXED(*static_cast<FFloatCVar *>(*CheckKey(NAME_MoveBob)));
+		return *static_cast<FFloatCVar *>(*CheckKey(NAME_MoveBob));
 	}
-	fixed_t GetStillBob() const
+	double GetStillBob() const
 	{
-		return FLOAT2FIXED(*static_cast<FFloatCVar *>(*CheckKey(NAME_StillBob)));
+		return *static_cast<FFloatCVar *>(*CheckKey(NAME_StillBob));
 	}
 	int GetPlayerClassNum() const
 	{
@@ -517,13 +517,13 @@ public:
 	fixed_t		viewz;					// focal origin above r.z
 	fixed_t		viewheight;				// base height above floor for viewz
 	fixed_t		deltaviewheight;		// squat speed.
-	fixed_t		bob;					// bounded/scaled total velocity
+	double		bob;					// bounded/scaled total velocity
 
 	// killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
-	// mo->vel.x and mo->vel.y represent true velocity experienced by player.
+	// mo->velx and mo->vely represent true velocity experienced by player.
 	// This only represents the thrust that the player applies himself.
 	// This avoids anomalies with such things as Boom ice and conveyors.
-	fixedvec2	vel;
+	DVector2 Vel;
 
 	bool		centering;
 	BYTE		turnticks;
@@ -598,10 +598,10 @@ public:
 
 	FString		LogText;	// [RH] Log for Strife
 
-	int			MinPitch;	// Viewpitch limits (negative is up, positive is down)
-	int			MaxPitch;
+	DAngle			MinPitch;	// Viewpitch limits (negative is up, positive is down)
+	DAngle			MaxPitch;
 
-	fixed_t crouchfactor;
+	double crouchfactor;
 	fixed_t crouchoffset;
 	fixed_t crouchviewdelta;
 
@@ -609,7 +609,7 @@ public:
 
 	// [CW] I moved these here for multiplayer conversation support.
 	TObjPtr<AActor> ConversationNPC, ConversationPC;
-	angle_t ConversationNPCAngle;
+	DAngle ConversationNPCAngle;
 	bool ConversationFaceTalker;
 
 	// [BC] Start of a lot of new stuff.
@@ -748,16 +748,16 @@ public:
 	bool		bUnarmed;
 
 	// [Spleen] Store old information about the player for unlagged support
-	fixed_t		unlaggedX[UNLAGGEDTICS];
-	fixed_t		unlaggedY[UNLAGGEDTICS];
-	fixed_t		unlaggedZ[UNLAGGEDTICS];
+	double		unlaggedX[UNLAGGEDTICS];
+	double		unlaggedY[UNLAGGEDTICS];
+	double		unlaggedZ[UNLAGGEDTICS];
 
-	fixed_t		restoreX;
-	fixed_t		restoreY;
-	fixed_t		restoreZ;
+	double		restoreX;
+	double		restoreY;
+	double		restoreZ;
 
-	fixed_t		restoreFloorZ;
-	fixed_t		restoreCeilingZ;
+	double		restoreFloorZ;
+	double		restoreCeilingZ;
 
 	// [BC] End of ST additions.
 
@@ -768,9 +768,9 @@ public:
 
 	void Uncrouch()
 	{
-		if (crouchfactor != FRACUNIT)
+		if (crouchfactor != 1)
 		{
-			crouchfactor = FRACUNIT;
+			crouchfactor = 1;
 			crouchoffset = 0;
 			crouchdir = 0;
 			crouching = 0;
@@ -830,7 +830,7 @@ void	PLAYER_RemoveFriends( const ULONG ulPlayer );
 void	PLAYER_LeavesGame( const ULONG ulPlayer );
 void	PLAYER_ClearEnemySoundFields( const ULONG ulPlayer );
 
-void P_CheckPlayerSprite(AActor *mo, int &spritenum, fixed_t &scalex, fixed_t &scaley);
+void P_CheckPlayerSprite(AActor *mo, int &spritenum, DVector2 &scale);
 
 inline void AActor::SetFriendPlayer(player_t *player)
 {
@@ -853,7 +853,7 @@ inline bool AActor::IsNoClip2() const
 	return false;
 }
 
-#define CROUCHSPEED (FRACUNIT/12)
+#define CROUCHSPEED (1./12)
 
 bool P_IsPlayerTotallyFrozen(const player_t *player);
 
