@@ -28,6 +28,7 @@
 // The reason should be investigated.
 #include "network.h"
 
+#include <float.h>
 #include "templates.h"
 #include "i_system.h"
 #include "m_random.h"
@@ -1840,7 +1841,7 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 					// [BC] Servers don't need to spawn decals.
 					if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 					{
-						DImpactDecal::StaticCreate(base->GetDecal(), { x, y, z }, line->sidedef[side], ffloor);
+						DImpactDecal::StaticCreate(base->GetDecal(), DVector3(FIXED2DBL(x), FIXED2DBL(y), FIXED2DBL(z)), line->sidedef[side], ffloor);
 					}
 				}
 			}
@@ -2170,14 +2171,14 @@ bool P_SeekerMissile (AActor *actor, double thresh, double turnMax, bool precise
 		DAngle pitch = 0.;
 		if (!(actor->flags3 & (MF3_FLOORHUGGER|MF3_CEILINGHUGGER)))
 		{ // Need to seek vertically
-			fixed_t dist = MAX(1, FLOAT2FIXED(actor->Distance2D(target)));
+			double dist = MAX(1., actor->Distance2D(target));
 			// Aim at a player's eyes and at the middle of the actor for everything else.
-			fixed_t aimheight = target->_f_height()/2;
+			double aimheight = target->Height/2;
 			if (target->IsKindOf(RUNTIME_CLASS(APlayerPawn)))
 			{
 				aimheight = static_cast<APlayerPawn *>(target)->ViewHeight;
 			}
-			pitch = ANGLE2DBL(R_PointToAngle2(0, actor->_f_Z() + actor->_f_height()/2, dist, target->_f_Z() + aimheight));
+			pitch = DVector2(dist, target->Z() + aimheight - actor->Center()).Angle();
 		}
 		actor->Vel3DFromAngle(pitch, speed);
 	}
@@ -3083,7 +3084,7 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 	{
 		if (mo->player && mo->player->mo == mo && mo->Z() < mo->floorz)
 		{
-			mo->player->viewheight -= mo->_f_floorz() - mo->_f_Z();
+			mo->player->viewheight -= mo->floorz - mo->Z();
 			mo->player->deltaviewheight = mo->player->GetDeltaViewHeight();
 		}
 	}
@@ -3492,8 +3493,9 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 	}
 }
 
-void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheight)
+void P_CheckFakeFloorTriggers (AActor *mo, fixed_t _oldz, bool oldz_has_viewheight)
 {
+	double oldz = FIXED2FLOAT(_oldz);
 /*
 	if (mo->player && (mo->player->cheats & CF_PREDICTING))
 	{
@@ -3509,9 +3511,9 @@ void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheigh
 	if (sec->heightsec != NULL && sec->SecActTarget != NULL)
 	{
 		sector_t *hs = sec->heightsec;
-		fixed_t waterz = hs->floorplane.ZatPoint(mo);
-		fixed_t newz;
-		fixed_t viewheight;
+		double waterz = hs->floorplane.ZatPointF(mo);
+		double newz;
+		double viewheight;
 
 		if (mo->player != NULL)
 		{
@@ -3519,15 +3521,15 @@ void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheigh
 		}
 		else
 		{
-			viewheight = mo->_f_height() / 2;
+			viewheight = mo->Height;
 		}
 
-		if (oldz > waterz && mo->_f_Z() <= waterz)
+		if (oldz > waterz && mo->Z() <= waterz)
 		{ // Feet hit fake floor
 			sec->SecActTarget->TriggerAction (mo, SECSPAC_HitFakeFloor);
 		}
 
-		newz = mo->_f_Z() + viewheight;
+		newz = mo->Z() + viewheight;
 		if (!oldz_has_viewheight)
 		{
 			oldz += viewheight;
@@ -3544,7 +3546,7 @@ void P_CheckFakeFloorTriggers (AActor *mo, fixed_t oldz, bool oldz_has_viewheigh
 
 		if (!(hs->MoreFlags & SECF_FAKEFLOORONLY))
 		{
-			waterz = hs->ceilingplane.ZatPoint(mo);
+			waterz = hs->ceilingplane.ZatPointF(mo);
 			if (oldz <= waterz && newz > waterz)
 			{ // View went above fake ceiling
 				sec->SecActTarget->TriggerAction (mo, SECSPAC_EyesAboveC);
@@ -4755,7 +4757,7 @@ void AActor::Tick ()
 							// [BC] Don't alter viewheight if we're just predicting.
 							if ( CLIENT_PREDICT_IsPredicting( ) == false )
 							{
-								player->viewheight -= onmo->_f_Top() - _f_Z();
+								player->viewheight -= onmo->Top() - Z();
 								double deltaview = player->GetDeltaViewHeight();
 								if (deltaview > player->deltaviewheight)
 								{
@@ -4763,7 +4765,7 @@ void AActor::Tick ()
 								}
 							} 
 						}
-						_f_SetZ(onmo->_f_Top());
+						SetZ(onmo->Top());
 					}
 					// Check for MF6_BUMPSPECIAL
 					// By default, only players can activate things by bumping into them
@@ -4997,7 +4999,7 @@ void AActor::CheckSectorTransition(sector_t *oldsec)
 bool AActor::UpdateWaterLevel (fixed_t oldz, bool dosplash)
 {
 	BYTE lastwaterlevel = waterlevel;
-	fixed_t fh = FIXED_MIN;
+	double fh = -FLT_MAX;
 	bool reset=false;
 
 	waterlevel = 0;
@@ -5016,23 +5018,23 @@ bool AActor::UpdateWaterLevel (fixed_t oldz, bool dosplash)
 		const sector_t *hsec = Sector->GetHeightSec();
 		if (hsec != NULL)
 		{
-			fh = hsec->floorplane.ZatPoint (this);
+			fh = hsec->floorplane.ZatPointF (this);
 			//if (hsec->MoreFlags & SECF_UNDERWATERMASK)	// also check Boom-style non-swimmable sectors
 			{
-				if (_f_Z() < fh)
+				if (Z() < fh)
 				{
 					waterlevel = 1;
-					if (_f_Z() + _f_height()/2 < fh)
+					if (Center() < fh)
 					{
 						waterlevel = 2;
-						if ((player && _f_Z() + player->viewheight <= fh) ||
-							(_f_Z() + _f_height() <= fh))
+						if ((player && Z() + player->viewheight <= fh) ||
+							(Top() <= fh))
 						{
 							waterlevel = 3;
 						}
 					}
 				}
-				else if (!(hsec->MoreFlags & SECF_FAKEFLOORONLY) && (_f_Top() > hsec->ceilingplane.ZatPoint (this)))
+				else if (!(hsec->MoreFlags & SECF_FAKEFLOORONLY) && (Top() > hsec->ceilingplane.ZatPointF (this)))
 				{
 					waterlevel = 3;
 				}
@@ -5058,20 +5060,20 @@ bool AActor::UpdateWaterLevel (fixed_t oldz, bool dosplash)
 				if (!(rover->flags & FF_EXISTS)) continue;
 				if(!(rover->flags & FF_SWIMMABLE) || rover->flags & FF_SOLID) continue;
 
-				fixed_t ff_bottom=rover->bottom.plane->ZatPoint(this);
-				fixed_t ff_top=rover->top.plane->ZatPoint(this);
+				double ff_bottom=rover->bottom.plane->ZatPointF(this);
+				double ff_top=rover->top.plane->ZatPointF(this);
 
-				if(ff_top <= _f_Z() || ff_bottom > (_f_Z() + (_f_height() >> 1))) continue;
+				if(ff_top <= Z() || ff_bottom > (Center())) continue;
 				
 				fh=ff_top;
-				if (_f_Z() < fh)
+				if (Z() < fh)
 				{
 					waterlevel = 1;
-					if (_f_Z() + _f_height()/2 < fh)
+					if (Center() < fh)
 					{
 						waterlevel = 2;
-						if ((player && _f_Z() + player->viewheight <= fh) ||
-							(_f_Z() + _f_height() <= fh))
+						if ((player && Z() + player->viewheight <= fh) ||
+							(Top() <= fh))
 						{
 							waterlevel = 3;
 						}
@@ -5087,7 +5089,7 @@ bool AActor::UpdateWaterLevel (fixed_t oldz, bool dosplash)
 	// the water flags. 
 	if (boomwaterlevel == 0 && waterlevel != 0 && dosplash) 
 	{
-		P_HitWater(this, Sector, FIXED_MIN, FIXED_MIN, fh, true);
+		P_HitWater(this, Sector, FIXED_MIN, FIXED_MIN, FLOAT2FIXED(fh), true);
 	}
 	boomwaterlevel = waterlevel;
 	if (reset)
@@ -5684,7 +5686,7 @@ void AActor::AdjustFloorClip ()
 		// [BC] Don't adjust viewheight if we're just predicting.
 		if ( CLIENT_PREDICT_IsPredicting( ) == false )
 		{
-			player->viewheight -= FLOAT2FIXED(oldclip - Floorclip);
+			player->viewheight -= (oldclip - Floorclip);
 			player->deltaviewheight = player->GetDeltaViewHeight();
 		}
 	}

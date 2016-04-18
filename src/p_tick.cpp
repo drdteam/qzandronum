@@ -21,7 +21,7 @@
 //
 //-----------------------------------------------------------------------------
 
-
+#include <float.h>
 #include "p_local.h"
 #include "p_effect.h"
 #include "c_console.h"
@@ -67,7 +67,7 @@ bool P_CheckTickerPaused ()
 		 && !demorecording
 		 && CLIENTDEMO_IsPlaying( ) == false
 		 && CLIENTDEMO_IsRecording( ) == false
-		 && players[consoleplayer].viewz != 1
+		 && players[consoleplayer].viewz != -FLT_MAX
 		 && wipegamestate == gamestate)
 	{
 		S_PauseSound (!(level.flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS), false);

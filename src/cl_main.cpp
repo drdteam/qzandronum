@@ -2952,14 +2952,14 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				{
 					FName decalName = NETWORK_ReadName( pByteStream );
 					AActor* actor = CLIENT_FindThingByNetID( NETWORK_ReadShort( pByteStream ));
-					fixed_t z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-					angle_t angle = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+					float z = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+					DAngle angle = ANGLE2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 					fixed_t tracedist = NETWORK_ReadLong( pByteStream );
 					bool permanent = !!NETWORK_ReadByte( pByteStream );
 					const FDecalTemplate* tpl = DecalLibrary.GetDecalByName( decalName );
 
 					if ( actor && tpl )
-						ShootDecal( tpl, actor, actor->Sector, actor->_f_X(), actor->_f_Y(), z, angle, tracedist, permanent );
+						ShootDecal( tpl, actor, actor->Sector, actor->X(), actor->Y(), z, angle, tracedist, permanent );
 				}
 				break;
 

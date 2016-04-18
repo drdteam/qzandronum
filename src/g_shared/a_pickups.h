@@ -482,7 +482,7 @@ public:
 	virtual void AbsorbDamage (int damage, FName damageType, int &newdamage);
 
 	int AbsorbCount;
-	fixed_t SavePercent;
+	double SavePercent;
 	int MaxAbsorb;
 	int MaxFullAbsorb;
 	int BonusCount;
@@ -499,7 +499,7 @@ public:
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual bool Use (bool pickup);
 
-	fixed_t SavePercent;
+	double SavePercent;
 	int MaxAbsorb;
 	int MaxFullAbsorb;
 	int SaveAmount;
@@ -514,7 +514,7 @@ public:
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual bool Use (bool pickup);
 
-	fixed_t SavePercent;	// The default, for when you don't already have armor
+	double SavePercent;	// The default, for when you don't already have armor
 	int MaxSaveAmount;
 	int MaxAbsorb;
 	int MaxFullAbsorb;
@@ -536,8 +536,8 @@ public:
 	virtual void AbsorbDamage (int damage, FName damageType, int &newdamage);
 	void DepleteOrDestroy();
 
-	fixed_t Slots[5];
-	fixed_t SlotsIncrement[4];
+	double Slots[5];
+	double SlotsIncrement[4];
 
 protected:
 	bool AddArmorToSlot (AActor *actor, int slot, int amount);

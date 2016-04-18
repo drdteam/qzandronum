@@ -91,7 +91,7 @@ public:
 	FString Slot[10];
 	FName InvulMode;
 	FName HealingRadiusType;
-	fixed_t HexenArmor[5];
+	double HexenArmor[5];
 	BYTE ColorRangeStart;	// Skin color range
 	BYTE ColorRangeEnd;
 	FPlayerColorSetMap ColorSets;
@@ -173,7 +173,7 @@ public:
 	double		JumpZ;
 	fixed_t		GruntSpeed;
 	fixed_t		FallingScreamMinSpeed, FallingScreamMaxSpeed;
-	fixed_t		ViewHeight;
+	double		ViewHeight;
 	double		ForwardMove1, ForwardMove2;
 	double		SideMove1, SideMove2;
 	FTextureID	ScoreIcon;
@@ -514,8 +514,8 @@ public:
 
 	float		DesiredFOV;				// desired field of vision
 	float		FOV;					// current field of vision
-	fixed_t		viewz;					// focal origin above r.z
-	fixed_t		viewheight;				// base height above floor for viewz
+	double		viewz;					// focal origin above r.z
+	double		viewheight;				// base height above floor for viewz
 	double		deltaviewheight;		// squat speed.
 	double		bob;					// bounded/scaled total velocity
 
@@ -603,7 +603,7 @@ public:
 
 	double crouchfactor;
 	double crouchoffset;
-	fixed_t crouchviewdelta;
+	double crouchviewdelta;
 
 	FWeaponSlots weapons;
 
@@ -763,7 +763,7 @@ public:
 
 	double GetDeltaViewHeight() const
 	{
-		return FIXED2DBL((mo->ViewHeight + crouchviewdelta - viewheight) >> 3);
+		return (mo->ViewHeight + crouchviewdelta - viewheight) / 8;
 	}
 
 	void Uncrouch()

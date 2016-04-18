@@ -2684,7 +2684,8 @@ void AM_drawPlayers ()
 		mline_t *arrow;
 		int numarrowlines;
 
-		fixedvec2 pos = am_portaloverlay? players[consoleplayer].camera->GetPortalTransition(players[consoleplayer].viewheight) : (fixedvec2)players[consoleplayer].camera->_f_Pos();
+		fixed_t vh = FLOAT2FIXED(players[consoleplayer].viewheight);
+		fixedvec2 pos = am_portaloverlay? players[consoleplayer].camera->GetPortalTransition(vh) : (fixedvec2)players[consoleplayer].camera->_f_Pos();
 		pt.x = pos.x >> FRACTOMAPBITS;
 		pt.y = pos.y >> FRACTOMAPBITS;
 		if (am_rotate == 1 || (am_rotate == 2 && viewactive))
@@ -3101,7 +3102,8 @@ void AM_Drawer ()
 	if (am_portaloverlay)
 	{
 		sector_t *sec;
-		players[consoleplayer].camera->GetPortalTransition(players[consoleplayer].viewheight, &sec);
+		fixed_t vh = FLOAT2FIXED(players[consoleplayer].viewheight);
+		players[consoleplayer].camera->GetPortalTransition(vh, &sec);
 		MapPortalGroup = sec->PortalGroup;
 	}
 	else MapPortalGroup = 0;

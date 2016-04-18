@@ -2755,7 +2755,7 @@ void PLAYER_SetDefaultSpectatorValues( player_t *pPlayer )
 	pPlayer->mo->Speed = 1;
 	pPlayer->mo->ForwardMove1 = pPlayer->mo->ForwardMove2 = 1;
 	pPlayer->mo->SideMove1 = pPlayer->mo->SideMove2 = 1;
-	pPlayer->mo->ViewHeight = 41*FRACUNIT;
+	pPlayer->mo->ViewHeight = 41;
 	// [BB] Also can't hurt to reset gravity.
 	pPlayer->mo->Gravity = 1;
 
