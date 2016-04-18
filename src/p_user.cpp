@@ -772,7 +772,7 @@ void player_t::SendPitchLimits() const
 		const unsigned int playerIndex = this - players;
 		if ( playerIndex < MAXPLAYERS )
 		{
-			players[playerIndex].MinPitch = static_cast<double>(Renderer->GetMaxViewPitch(false));
+			players[playerIndex].MinPitch = -static_cast<double>(Renderer->GetMaxViewPitch(false));
 			players[playerIndex].MaxPitch = static_cast<double>(Renderer->GetMaxViewPitch(true));
 		}
 	}
