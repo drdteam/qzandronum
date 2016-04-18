@@ -1019,6 +1019,11 @@ bool EV_BuildStairs (int tag, DFloor::EStair type, line_t *line,
 	int usespecials);
 bool EV_DoFloor (DFloor::EFloor floortype, line_t *line, int tag,
 	fixed_t speed, fixed_t height, int crush, int change, bool hexencrush, bool hereticlower=false);
+inline bool EV_DoFloor(DFloor::EFloor floortype, line_t *line, int tag,
+	double speed, double height, int crush, int change, bool hexencrush, bool hereticlower = false)
+{
+	return EV_DoFloor(floortype, line, tag, FLOAT2FIXED(speed), FLOAT2FIXED(height), crush, change, hexencrush, hereticlower);
+}
 bool EV_FloorCrushStop (int tag);
 bool EV_DoDonut (int tag, line_t *line, fixed_t pillarspeed, fixed_t slimespeed);
 
@@ -1185,11 +1190,19 @@ inline void P_SpawnTeleportFog(AActor *mobj, const fixedvec3 &pos, bool beforeTe
 {
 	P_SpawnTeleportFog(mobj, pos.x, pos.y, pos.z, beforeTele, setTarget, spawnOnClient);
 }
-inline void P_SpawnTeleportFog(AActor *mobj, const DVector3 &pos, bool beforeTele = true, bool setTarget = false)
+inline void P_SpawnTeleportFog(AActor *mobj, const DVector3 &pos, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false) // [BB] Added spawnOnClient
 {
-	P_SpawnTeleportFog(mobj, FLOAT2FIXED(pos.X), FLOAT2FIXED(pos.Y), FLOAT2FIXED(pos.Z), beforeTele, setTarget);
+	P_SpawnTeleportFog(mobj, FLOAT2FIXED(pos.X), FLOAT2FIXED(pos.Y), FLOAT2FIXED(pos.Z), beforeTele, setTarget, spawnOnClient);
+}
+inline void P_SpawnTeleportFog(AActor *mobj, double x, double y, double z, bool beforeTele = true, bool setTarget = false)
+{
+	P_SpawnTeleportFog(mobj, FLOAT2FIXED(x), FLOAT2FIXED(y), FLOAT2FIXED(z), beforeTele, setTarget);
 }
 bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, DAngle angle, int flags); // bool useFog, bool sourceFog, bool keepOrientation, bool haltVelocity = true, bool keepHeight = false
+inline bool P_Teleport(AActor *thing, const DVector3 &pos, DAngle angle, int flags)
+{
+	return P_Teleport(thing, FLOAT2FIXED(pos.X), FLOAT2FIXED(pos.Y), FLOAT2FIXED(pos.Z), angle, flags);
+}
 bool EV_Teleport (int tid, int tag, line_t *line, int side, AActor *thing, int flags);
 bool EV_SilentLineTeleport (line_t *line, int side, AActor *thing, int id, INTBOOL reverse);
 bool EV_TeleportOther (int other_tid, int dest_tid, bool fog);

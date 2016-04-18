@@ -3453,7 +3453,7 @@ FUNC(LS_TranslucentLine)
 	int linenum;
 	while ((linenum = itr.Next()) >= 0)
 	{
-		lines[linenum].Alpha = Scale(clamp(arg1, 0, 255), FRACUNIT, 255);
+		lines[linenum].Alpha = Scale(clamp(arg1, 0, 255), OPAQUE, 255);
 
 		// [BC] If we're the server, tell clients to adjust this line's alpha.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

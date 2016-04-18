@@ -789,7 +789,7 @@ void DBaseStatusBar::DrINumberOuter (signed int val, int x, int y, bool center, 
 	else if (val == 0)
 	{
 		screen->DrawTexture (Images[imgINumbers], x + 1, y + 1,
-			DTA_FillColor, 0, DTA_Alpha, HR_SHADOW,
+			DTA_FillColor, 0, DTA_AlphaF, HR_SHADOW,
 			DTA_HUDRules, center ? HUD_HorizCenter : HUD_Normal, TAG_DONE);
 		screen->DrawTexture (Images[imgINumbers], x, y,
 			DTA_HUDRules, center ? HUD_HorizCenter : HUD_Normal, TAG_DONE);
@@ -803,7 +803,7 @@ void DBaseStatusBar::DrINumberOuter (signed int val, int x, int y, bool center, 
 	while (val != 0)
 	{
 		screen->DrawTexture (Images[imgINumbers + val % 10], x + 1, y + 1,
-			DTA_FillColor, 0, DTA_Alpha, HR_SHADOW,
+			DTA_FillColor, 0, DTA_AlphaF, HR_SHADOW,
 			DTA_HUDRules, center ? HUD_HorizCenter : HUD_Normal, TAG_DONE);
 		x -= w;
 		val /= 10;
@@ -811,7 +811,7 @@ void DBaseStatusBar::DrINumberOuter (signed int val, int x, int y, bool center, 
 	if (negative)
 	{
 		screen->DrawTexture (Images[imgNEGATIVE], x + 1, y + 1,
-			DTA_FillColor, 0, DTA_Alpha, HR_SHADOW,
+			DTA_FillColor, 0, DTA_AlphaF, HR_SHADOW,
 			DTA_HUDRules, center ? HUD_HorizCenter : HUD_Normal, TAG_DONE);
 	}
 
@@ -866,7 +866,7 @@ void DBaseStatusBar::DrBNumberOuter (signed int val, int x, int y, int size) con
 		{
 			screen->DrawTexture (pic, xpos - pic->GetWidth()/2 + 2, y + 2,
 				DTA_HUDRules, HUD_Normal,
-				DTA_Alpha, HR_SHADOW,
+				DTA_AlphaF, HR_SHADOW,
 				DTA_FillColor, 0,
 				TAG_DONE);
 			screen->DrawTexture (pic, xpos - pic->GetWidth()/2, y,
@@ -892,7 +892,7 @@ void DBaseStatusBar::DrBNumberOuter (signed int val, int x, int y, int size) con
 		{
 			screen->DrawTexture (pic, xpos - pic->GetWidth()/2 + 2, y + 2,
 				DTA_HUDRules, HUD_Normal,
-				DTA_Alpha, HR_SHADOW,
+				DTA_AlphaF, HR_SHADOW,
 				DTA_FillColor, 0,
 				TAG_DONE);
 		}
@@ -906,7 +906,7 @@ void DBaseStatusBar::DrBNumberOuter (signed int val, int x, int y, int size) con
 		{
 			screen->DrawTexture (pic, xpos - pic->GetWidth()/2 + 2, y + 2,
 				DTA_HUDRules, HUD_Normal,
-				DTA_Alpha, HR_SHADOW,
+				DTA_AlphaF, HR_SHADOW,
 				DTA_FillColor, 0,
 				TAG_DONE);
 		}
@@ -968,7 +968,7 @@ void DBaseStatusBar::DrBNumberOuterFont (signed int val, int x, int y, int size)
 		pic = BigFont->GetChar ('0', &v);
 		screen->DrawTexture (pic, xpos - v/2 + 2, y + 2,
 			DTA_HUDRules, HUD_Normal,
-			DTA_Alpha, HR_SHADOW,
+			DTA_AlphaF, HR_SHADOW,
 			DTA_FillColor, 0,
 			DTA_Translation, BigFont->GetColorTranslation (CR_UNTRANSLATED),
 			TAG_DONE);
@@ -993,7 +993,7 @@ void DBaseStatusBar::DrBNumberOuterFont (signed int val, int x, int y, int size)
 		pic = BigFont->GetChar ('0' + val % 10, &v);
 		screen->DrawTexture (pic, xpos - v/2 + 2, y + 2,
 			DTA_HUDRules, HUD_Normal,
-			DTA_Alpha, HR_SHADOW,
+			DTA_AlphaF, HR_SHADOW,
 			DTA_FillColor, 0,
 			DTA_Translation, BigFont->GetColorTranslation (CR_UNTRANSLATED),
 			TAG_DONE);
@@ -1007,7 +1007,7 @@ void DBaseStatusBar::DrBNumberOuterFont (signed int val, int x, int y, int size)
 		{
 			screen->DrawTexture (pic, xpos - v/2 + 2, y + 2,
 				DTA_HUDRules, HUD_Normal,
-				DTA_Alpha, HR_SHADOW,
+				DTA_AlphaF, HR_SHADOW,
 				DTA_FillColor, 0,
 				DTA_Translation, BigFont->GetColorTranslation (CR_UNTRANSLATED),
 				TAG_DONE);

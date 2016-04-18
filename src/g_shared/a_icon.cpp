@@ -32,7 +32,7 @@ void AFloatyIcon::Tick( )
 	// Make the icon float directly above the player's head.
 	SetOrigin( tracer->PosPlusZ ( tracer->Height + 4 ), false);
 
-	this->alpha = OPAQUE;
+	this->Alpha = 1.;
 	this->RenderStyle = STYLE_Normal;
 
 	if ( this->lTick )
@@ -43,7 +43,7 @@ void AFloatyIcon::Tick( )
 			// If the icon is fading out, ramp down the alpha.
 			if ( this->lTick <= TICRATE )
 			{
-				this->alpha = (LONG)( OPAQUE * (float)( (float)lTick / (float)TICRATE ));
+				this->Alpha = ( (float)( (float)lTick / (float)TICRATE ));
 				this->RenderStyle = STYLE_Translucent;
 			}
 		}
@@ -55,10 +55,10 @@ void AFloatyIcon::Tick( )
 	}
 
 	// If the tracer has some type of visibility affect, apply it to the icon.
-	if ( !(tracer->RenderStyle == LegacyRenderStyles[STYLE_Normal]) || tracer->alpha != OPAQUE )
+	if ( !(tracer->RenderStyle == LegacyRenderStyles[STYLE_Normal]) || tracer->Alpha < 1. )
 	{
 		this->RenderStyle = tracer->RenderStyle;
-		this->alpha = tracer->alpha;
+		this->Alpha = tracer->Alpha;
 	}
 }
 
@@ -74,9 +74,9 @@ void AFloatyIcon::SetTracer( AActor *pTracer )
 	SetOrigin( tracer->PosPlusZ ( tracer->Height + 4 ), false );
 
 	// If the tracer has some type of visibility affect, apply it to the icon.
-	if ( !(tracer->RenderStyle == LegacyRenderStyles[STYLE_Normal]) || tracer->alpha != OPAQUE )
+	if ( !(tracer->RenderStyle == LegacyRenderStyles[STYLE_Normal]) || tracer->Alpha < 1. )
 	{
 		this->RenderStyle = tracer->RenderStyle;
-		this->alpha = tracer->alpha;
+		this->Alpha = tracer->Alpha;
 	}
 }

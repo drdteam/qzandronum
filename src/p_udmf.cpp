@@ -475,7 +475,7 @@ public:
 		memset(th, 0, sizeof(*th));
 		th->Gravity = 1;
 		th->RenderStyle = STYLE_Count;
-		th->alpha = -1;
+		th->Alpha = -1;
 		th->health = 1;
 		th->FloatbobPhase = -1;
 		sc.MustGetToken('{');
@@ -696,7 +696,7 @@ public:
 				break;
 
 			case NAME_Alpha:
-				th->alpha = CheckFixed(key);
+				th->Alpha = CheckFloat(key);
 				break;
 
 			case NAME_FillColor:
@@ -792,7 +792,7 @@ public:
 		FString tagstring;
 
 		memset(ld, 0, sizeof(*ld));
-		ld->Alpha = FRACUNIT;
+		ld->Alpha = OPAQUE;
 		ld->portalindex = UINT_MAX;
 		ld->sidedef[0] = ld->sidedef[1] = NULL;
 		if (level.flags2 & LEVEL2_CLIPMIDTEX) ld->flags |= ML_CLIP_MIDTEX;
@@ -1094,13 +1094,13 @@ public:
 		{
 			ld->activation = (ld->activation & ~SPAC_Use) | SPAC_UseThrough;
 		}
-		if (strifetrans && ld->Alpha == FRACUNIT)
+		if (strifetrans && ld->Alpha == OPAQUE)
 		{
-			ld->Alpha = FRACUNIT * 3/4;
+			ld->Alpha = TRANSLUC75;
 		}
 		if (strifetrans2 && ld->Alpha == FRACUNIT)
 		{
-			ld->Alpha = FRACUNIT * 1/4;
+			ld->Alpha = TRANSLUC25;
 		}
 		if (ld->sidedef[0] == NULL)
 		{
@@ -1294,8 +1294,8 @@ public:
 		sec->SetYScale(sector_t::floor, FRACUNIT);
 		sec->SetXScale(sector_t::ceiling, FRACUNIT);
 		sec->SetYScale(sector_t::ceiling, FRACUNIT);
-		sec->SetAlpha(sector_t::floor, FRACUNIT);
-		sec->SetAlpha(sector_t::ceiling, FRACUNIT);
+		sec->SetAlpha(sector_t::floor, OPAQUE);
+		sec->SetAlpha(sector_t::ceiling, OPAQUE);
 		sec->thinglist = NULL;
 		sec->touching_thinglist = NULL;		// phares 3/14/98
 		sec->seqType = (level.flags & LEVEL_SNDSEQTOTALCTRL) ? 0 : -1;

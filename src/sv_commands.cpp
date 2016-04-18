@@ -1908,7 +1908,7 @@ void SERVERCOMMANDS_SetThingProperty( AActor *pActor, ULONG ulProperty, ULONG ul
 		break;
 	case APROP_Alpha:
 
-		ulPropertyValue = pActor->alpha;
+		ulPropertyValue = FLOAT2FIXED( pActor->Alpha );
 		break;
 	case APROP_RenderStyle:
 

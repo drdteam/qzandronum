@@ -2942,7 +2942,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 					if ( mobj && ( mobj->flags & MF_STEALTH ))
 					{
-						mobj->alpha = OPAQUE;
+						mobj->Alpha = 1.;
 						mobj->visdir = -1;
 					}
 				}
@@ -4270,11 +4270,11 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	{
 		// Spawn the respawn fog.
 		unsigned an = pActor->_f_angle() >> ANGLETOFINESHIFT;
+		DVector2 vector = pActor->Angles.Yaw.ToVector(20);
+		DVector2 fogpos = P_GetOffsetPosition(pActor->X(), pActor->Y(), vector.X, vector.Y);
 		// [CK] Don't spawn fog for facing west spawners online, if compatflag is on.
 		if (!(pActor->_f_angle() == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
-			Spawn( "TeleportFog", pActor->_f_X() + 20 * finecosine[an],
-				pActor->_f_Y() + 20 * finesine[an],
-				pActor->_f_Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
+			Spawn<ATeleportFog>( fogpos.X, fogpos.Y, pActor->Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
 	}
 
 	pPlayer->playerstate = PST_LIVE;
@@ -6789,7 +6789,7 @@ static void client_SetThingProperty( BYTESTREAM_s *pByteStream )
 		break;
 	case APROP_Alpha:
 
-		pActor->alpha = ulPropertyValue;
+		pActor->Alpha = FIXED2FLOAT ( ulPropertyValue );
 		break;
 	case APROP_RenderStyle:
 
@@ -7309,7 +7309,6 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	bool		bSourceFog;
 	bool		bDestFog;
 	bool		bTeleZoom;
-	angle_t		Angle;
 	AActor		*pActor;
 
 	// Read in the network ID of the thing being teleported.
@@ -7357,12 +7356,12 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	if ( bDestFog )
 	{
 		// Spawn the fog slightly in front of the thing's destination.
-		Angle = NewAngle >> ANGLETOFINESHIFT;
+		DAngle Angle = ANGLE2FLOAT ( NewAngle );
 
-		Spawn<ATeleportFog>( pActor->_f_X() + ( 20 * finecosine[Angle] ),
-			pActor->_f_Y() + ( 20 * finesine[Angle] ),
-			pActor->_f_Z() + (( pActor->flags & MF_MISSILE ) ? 0 : TELEFOGHEIGHT ),
-			ALLOW_REPLACE );
+		double fogDelta = pActor->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
+		DVector2 vector = Angle.ToVector(20);
+		DVector2 fogpos = P_GetOffsetPosition(pActor->X(), pActor->Y(), vector.X, vector.Y);
+		Spawn<ATeleportFog>( fogpos.X, fogpos.Y, pActor->Z() + fogDelta, ALLOW_REPLACE );
 	}
 
 	// Set the thing's new velocity.

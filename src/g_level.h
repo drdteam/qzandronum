@@ -340,7 +340,7 @@ struct level_info_t
 	FString		SoundInfo;
 	FString		SndSeq;
 
-	float		teamdamage;
+	double		teamdamage;
 
 	FOptData	optdata;
 	FMusicMap	MusicMap;
@@ -460,7 +460,7 @@ struct FLevelLocals
 
 	bool		FromSnapshot;			// The current map was restored from a snapshot
 
-	float		teamdamage;
+	double		teamdamage;
 
 	bool		IsJumpingAllowed() const;
 	bool		IsCrouchingAllowed() const;
@@ -568,7 +568,6 @@ enum ESkillProperty
 {
 	SKILLP_AmmoFactor,
 	SKILLP_DropAmmoFactor,
-	SKILLP_DamageFactor,
 	SKILLP_FastMonsters,
 	SKILLP_Respawn,
 	SKILLP_RespawnLimit,
@@ -587,7 +586,12 @@ enum ESkillProperty
 	SKILLP_SlowMonsters,
 	SKILLP_Infight,
 };
+enum EFSkillProperty	// floating point properties
+{
+	SKILLP_DamageFactor,
+};
 int G_SkillProperty(ESkillProperty prop);
+double G_SkillProperty(EFSkillProperty prop);
 const char * G_SkillName();
 
 typedef TMap<FName, FString> SkillMenuNames;
@@ -598,7 +602,7 @@ struct FSkillInfo
 {
 	FName Name;
 	fixed_t AmmoFactor, DoubleAmmoFactor, DropAmmoFactor;
-	fixed_t DamageFactor;
+	double DamageFactor;
 	bool FastMonsters;
 	bool SlowMonsters;
 	bool DisableCheats;

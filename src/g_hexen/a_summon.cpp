@@ -69,13 +69,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 		return 0;
 	}
 
-	mo = Spawn<AMinotaurFriend> (self->Pos(), ALLOW_REPLACE);
+	mo = Spawn<AMinotaurFriend>(self->Pos(), ALLOW_REPLACE);
 	if (mo)
 	{
 		if (P_TestMobjLocation(mo) == false || !self->tracer)
 		{ // Didn't fit - change back to artifact
-			mo->Destroy ();
-			AActor *arti = Spawn<AArtiDarkServant> (self->_f_Pos(), ALLOW_REPLACE);
+			mo->Destroy();
+			AActor *arti = Spawn<AArtiDarkServant>(self->Pos(), ALLOW_REPLACE);
 			if (arti)
 			{
 				arti->flags |= MF_DROPPED;
@@ -99,15 +99,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 		else
 		{
 			mo->tracer = self->tracer;		// Pointer to master
-			AInventory *power = Spawn<APowerMinotaur> (0, 0, 0, NO_REPLACE);
-			power->CallTryPickup (self->tracer);
+			AInventory *power = Spawn<APowerMinotaur>();
+			power->CallTryPickup(self->tracer);
 			mo->SetFriendPlayer(self->tracer->player);
 		}
 
 		// Make smoke puff
 		// [BC]
 		AActor	*pSmoke;
-		pSmoke = Spawn ("MinotaurSmoke", self->Pos(), ALLOW_REPLACE);
+		pSmoke = Spawn("MinotaurSmoke", self->Pos(), ALLOW_REPLACE);
 
 		// [BC] If we're the server, spawn the smoke.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -116,7 +116,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Summon)
 				SERVERCOMMANDS_SpawnThing( pSmoke );
 		}
 
-		S_Sound (self, CHAN_VOICE, mo->ActiveSound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
+		S_Sound(self, CHAN_VOICE, mo->ActiveSound, 1, ATTN_NORM, true);	// [BC] Inform the clients.
 	}
 	return 0;
 }

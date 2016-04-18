@@ -226,7 +226,7 @@ struct DehInfo
 	int KFAAC;
 	char PlayerSprite[5];
 	BYTE ExplosionStyle;
-	fixed_t ExplosionAlpha;
+	double ExplosionAlpha;
 	int NoAutofreeze;
 	int BFGCells;
 };

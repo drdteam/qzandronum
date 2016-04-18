@@ -283,6 +283,8 @@ void AActor::Serialize(FArchive &arc)
 		<< __pos.y
 		<< __pos.z
 		<< Angles.Yaw
+		<< Angles.Pitch
+		<< Angles.Roll
 		<< frame
 		<< Scale
 		<< RenderStyle
@@ -294,10 +296,8 @@ void AActor::Serialize(FArchive &arc)
 		<< LastLookPlayerNumber
 		<< LastLookActor
 		<< effects
-		<< alpha
+		<< Alpha
 		<< fillcolor
-		<< Angles.Pitch	// move these up when savegame compatibility is broken!
-		<< Angles.Roll	// For now they have to remain here.
 		<< Sector
 		<< floorz
 		<< ceilingz
@@ -1200,7 +1200,7 @@ AInventory *AActor::GiveInventoryType (PClassActor *type)
 
 	if (type != NULL)
 	{
-		item = static_cast<AInventory *>(Spawn (type, 0,0,0, NO_REPLACE));
+		item = static_cast<AInventory *>(Spawn (type));
 		if (!item->CallTryPickup (this))
 		{
 			item->Destroy ();
@@ -1247,7 +1247,7 @@ bool AActor::GiveAmmo (PClassAmmo *type, int amount)
 
 	if (type != NULL)
 	{
-		AInventory *item = static_cast<AInventory *>(Spawn (type, 0, 0, 0, NO_REPLACE));
+		AInventory *item = static_cast<AInventory *>(Spawn (type));
 		if (item)
 		{
 			item->Amount = amount;
@@ -1632,7 +1632,7 @@ bool AActor::Grind(bool items)
 			if (gib != NULL)
 			{
 				gib->RenderStyle = RenderStyle;
-				gib->alpha = alpha;
+				gib->Alpha = Alpha;
 				gib->Height = 0;
 				gib->radius = 0;
 
@@ -1874,18 +1874,18 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 				if (addrocketexplosion)
 				{
 					mo->RenderStyle = STYLE_Add;
-					mo->alpha = FRACUNIT;
+					mo->Alpha = 1.;
 				}
 				else
 				{
 					mo->RenderStyle = STYLE_Translucent;
-					mo->alpha = FRACUNIT*2/3;
+					mo->Alpha = 0.6666;
 				}
 			}
 			else
 			{
 				mo->RenderStyle = ERenderStyle(deh.ExplosionStyle);
-				mo->alpha = deh.ExplosionAlpha;
+				mo->Alpha = deh.ExplosionAlpha;
 			}
 		}
 
@@ -2091,7 +2091,7 @@ bool AActor::CanSeek(AActor *target) const
 	if ((flags2 & MF2_DONTSEEKINVISIBLE) && 
 		((target->flags & MF_SHADOW) || 
 		 (target->renderflags & RF_INVISIBLE) || 
-		 !target->RenderStyle.IsVisible(target->alpha)
+		 !target->RenderStyle.IsVisible(target->Alpha)
 		)
 	   ) return false;
 	return true;
@@ -2106,11 +2106,8 @@ bool AActor::CanSeek(AActor *target) const
 //
 //----------------------------------------------------------------------------
 
-bool P_SeekerMissile (AActor *actor, angle_t _thresh, angle_t _turnMax, bool precise, bool usecurspeed)
+bool P_SeekerMissile (AActor *actor, double thresh, double turnMax, bool precise, bool usecurspeed)
 {
-	DAngle thresh = ANGLE2DBL(_thresh);
-	DAngle turnMax = ANGLE2DBL(_turnMax);
-
 	int dir;
 	DAngle delta;
 	AActor *target;
@@ -2218,7 +2215,7 @@ fixed_t P_XYMovement (AActor *mo, fixed_t scrollx, fixed_t scrolly)
 	fixed_t oldz = mo->_f_Z();
 
 	double maxmove = (mo->waterlevel < 1) || (mo->flags & MF_MISSILE) || 
-					  (mo->player && mo->player->crouchoffset<-10*FRACUNIT) ? MAXMOVE : MAXMOVE/4;
+					  (mo->player && mo->player->crouchoffset<-10) ? MAXMOVE : MAXMOVE/4;
 
 	if (mo->flags2 & MF2_WINDTHRUST && mo->waterlevel < 2 && !(mo->flags & MF_NOCLIP)
 		&& ( !mo->player || !mo->player->bSpectating ) ) // [BB] Don't affect spectators.
@@ -3579,7 +3576,7 @@ static void PlayerLandedOnThing (AActor *mo, AActor *onmobj)
 
 	if (mo->player->mo == mo)
 	{
-		mo->player->deltaviewheight = mo->_f_velz() >> 3;
+		mo->player->deltaviewheight = mo->Vel.Z / 8.;
 	}
 
 /* [BB] I don't know why ZDoom needs to adjust deltaviewheight while predicting.
@@ -3736,7 +3733,7 @@ void P_NightmareRespawn (AActor *mobj)
 			SERVERCOMMANDS_SpawnThing( mo );
 
 	// spawn a teleport fog at the new spot
-	P_SpawnTeleportFog(mobj, x, y, z + TELEFOGHEIGHT, false, true);
+	P_SpawnTeleportFog(mobj, FIXED2DBL(x), FIXED2DBL(y), FIXED2DBL(z) + TELEFOGHEIGHT, false, true);
 
 		// [BC] If we're the server, tell clients to spawn the thing.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -4009,7 +4006,7 @@ bool AActor::Slam (AActor *thing)
 	return false;			// stop moving
 }
 
-bool AActor::SpecialBlastHandling (AActor *source, fixed_t strength)
+bool AActor::SpecialBlastHandling (AActor *source, double strength)
 {
 	return true;
 }
@@ -4027,7 +4024,7 @@ bool AActor::AdjustReflectionAngle (AActor *thing, DAngle &angle)
 	if (thing->flags4&MF4_SHIELDREFLECT)
 	{
 		// Shield reflection (from the Centaur)
-		if (diffangle(angle, thing->Angles.Yaw) > 45)
+		if (absangle(angle, thing->Angles.Yaw) > 45)
 			return true;	// Let missile explode
 
 		if (thing->IsKindOf (RUNTIME_CLASS(AHolySpirit)))	// shouldn't this be handled by another flag???
@@ -4459,9 +4456,9 @@ void AActor::Tick ()
 		{
 			switch ( M_Random( ) % 3 )
 			{
-			case 0:		alpha = TRANSLUC25;	break;
-			case 1:		alpha = TRANSLUC50;	break;
-			case 2:		alpha = TRANSLUC75;	break;
+			case 0:		Alpha = 0.25;	break;
+			case 1:		Alpha = 0.5;	break;
+			case 2:		Alpha = 0.75;	break;
 			}
 		}
 		// [RH] Pulse in and out of visibility
@@ -4469,19 +4466,19 @@ void AActor::Tick ()
 		{
 			if (visdir > 0)
 			{
-				alpha += 0x800;
-				if (alpha >= OPAQUE)
+				Alpha += 1/32.;
+				if (Alpha >= 1.)
 				{
-					alpha = OPAQUE;
+					Alpha = 1.;
 					visdir = -1;
 				}
 			}
 			else
 			{
-				alpha -= 0x800;
-				if (alpha <= TRANSLUC25)
+				Alpha -= 1/32.;
+				if (Alpha <= 0.25)
 				{
-					alpha = TRANSLUC25;
+					Alpha = 0.25;
 					visdir = 1;
 				}
 			}
@@ -4490,7 +4487,7 @@ void AActor::Tick ()
 		{
 		if ( zacompatflags & ZACOMPATF_DISABLESTEALTHMONSTERS )
 		{
-			alpha = OPAQUE;
+			Alpha = 1.;
 			visdir = 0;
 		}
 		else
@@ -4499,19 +4496,19 @@ void AActor::Tick ()
 			RenderStyle.Flags &= ~STYLEF_Alpha1;
 			if (visdir > 0)
 			{
-				alpha += 2*FRACUNIT/TICRATE;
-				if (alpha > OPAQUE)
+				Alpha += 2./TICRATE;
+				if (Alpha > 1.)
 				{
-					alpha = OPAQUE;
+					Alpha = 1.;
 					visdir = 0;
 				}
 			}
 			else if (visdir < 0)
 			{
-				alpha -= 3*FRACUNIT/TICRATE/2;
-				if (alpha < 0)
+				Alpha -= 1.5/TICRATE;
+				if (Alpha < 0)
 				{
-					alpha = 0;
+					Alpha = 0;
 					visdir = 0;
 				}
 			}
@@ -4682,7 +4679,7 @@ void AActor::Tick ()
 						const sector_t *sec = node->m_sector;
 						if (sec->floorplane.c >= STEEPSLOPE)
 						{
-							if (floorplane.ZatPoint (PosRelative(node->m_sector)) >= _f_Z() - MaxStepHeight)
+							if (floorplane.ZatPoint (PosRelative(node->m_sector)) >= _f_Z() - _f_MaxStepHeight())
 							{
 								dopush = false;
 								break;
@@ -4751,7 +4748,7 @@ void AActor::Tick ()
 							PlayerLandedOnThing (this, onmo);
 						}
 					}
-					if (onmo->_f_Top() - _f_Z() <= MaxStepHeight)
+					if (onmo->Top() - Z() <= MaxStepHeight)
 					{
 						if (player && player->mo == this)
 						{
@@ -4759,7 +4756,7 @@ void AActor::Tick ()
 							if ( CLIENT_PREDICT_IsPredicting( ) == false )
 							{
 								player->viewheight -= onmo->_f_Top() - _f_Z();
-								fixed_t deltaview = player->GetDeltaViewHeight();
+								double deltaview = player->GetDeltaViewHeight();
 								if (deltaview > player->deltaviewheight)
 								{
 									player->deltaviewheight = deltaview;
@@ -5481,7 +5478,7 @@ void AActor::HandleSpawnFlags ()
 	{
 		flags |= MF_SHADOW;
 		RenderStyle = STYLE_Translucent;
-		alpha = TRANSLUC25;
+		Alpha = 0.25;
 	}
 	else if (SpawnFlags & MTF_ALTSHADOW)
 	{
@@ -5796,8 +5793,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	}
 	else
 	{
-		spawn_x = mthing->x;
-		spawn_y = mthing->y;
+		spawn_x = mthing->_f_X();
+		spawn_y = mthing->_f_Y();
 
 		// Allow full angular precision
 		SpawnAngle = (double)mthing->angle;
@@ -5820,9 +5817,9 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 	if (level.flags & LEVEL_USEPLAYERSTARTZ)
 	{
 		if (spawn_z == ONFLOORZ)
-			mobj->_f_AddZ(mthing->z);
+			mobj->AddZ(mthing->pos.Z);
 		else if (spawn_z == ONCEILINGZ)
-			mobj->_f_AddZ(-mthing->z);
+			mobj->AddZ(-mthing->pos.Z);
 		P_FindFloorCeiling(mobj, FFCF_SAMESECTOR | FFCF_ONLY3DFLOORS | FFCF_3DRESTRICT);
 	}
 
@@ -6057,9 +6054,8 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 		( p->bDeadSpectator == false ) && ( p->bSpectating == false ) && !(flags & SPF_TEMPPLAYER ) &&
 		( !( zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS ) || mobj->Angles.Yaw != 180. ))
 	{
-		unsigned an = mobj->_f_angle() >> ANGLETOFINESHIFT;
 		// [BB] Save the pointer.
-		AActor *pFog = Spawn ("TeleportFog", mobj->Vec3Offset(20*finecosine[an], 20*finesine[an], TELEFOGHEIGHT), ALLOW_REPLACE);
+		AActor *pFog = Spawn ("TeleportFog", mobj->Vec3Angle(20, mobj->Angles.Yaw, TELEFOGHEIGHT), ALLOW_REPLACE);
 		// [BB] Clients spawn the fog on their own. Giving the fog the NETFL_ALLOWCLIENTSPAWN flag will prevent
 		// the server from telling the clients to spawn the fog again during a full update.
 		if ( pFog && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
@@ -6606,8 +6602,8 @@ AActor *P_SpawnMapThing (FMapThing *mthing, int position)
 	}
 
 	// Set various UDMF options
-	if (mthing->alpha != -1)
-		mobj->alpha = mthing->alpha;
+	if (mthing->Alpha >= 0)
+		mobj->Alpha = mthing->Alpha;
 	if (mthing->RenderStyle != STYLE_Count)
 		mobj->RenderStyle = (ERenderStyle)mthing->RenderStyle;
 	if (mthing->Scale.X != 0)
@@ -7761,7 +7757,7 @@ AActor *P_SpawnPlayerMissile (AActor *source, PClassActor *type, DAngle angle, b
 
 // [BC/BB] Added bSpawnSound.
 // [BB] Added bSpawnOnClient.
-AActor *P_SpawnPlayerMissile (AActor *source, fixed_t x, fixed_t y, fixed_t z,
+AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 							  PClassActor *type, DAngle angle, FTranslatedLineTarget *pLineTarget, AActor **pMissileActor,
 							  bool nofreeaim, bool noautoaim, int aimflags, bool bSpawnSound, bool bSpawnOnClient)
 {
@@ -7820,23 +7816,23 @@ AActor *P_SpawnPlayerMissile (AActor *source, fixed_t x, fixed_t y, fixed_t z,
 	if (z != ONFLOORZ && z != ONCEILINGZ)
 	{
 		// Doom spawns missiles 4 units lower than hitscan attacks for players.
-		z += source->_f_Z() + (source->_f_height()>>1) - source->_f_floorclip();
+		z += source->Center() - source->Floorclip;
 		if (source->player != NULL)	// Considering this is for player missiles, it better not be NULL.
 		{
-			z += fixed_t ((source->player->mo->AttackZOffset - 4*FRACUNIT) * source->player->crouchfactor);
+			z += ((FIXED2DBL(source->player->mo->AttackZOffset) - 4) * source->player->crouchfactor);
 		}
 		else
 		{
-			z += 4*FRACUNIT;
+			z += 4;
 		}
 		// Do not fire beneath the floor.
-		if (z < source->_f_floorz())
+		if (z < source->floorz)
 		{
-			z = source->_f_floorz();
+			z = source->floorz;
 		}
 	}
-	fixedvec2 pos = source->Vec2Offset(x, y);
-	AActor *MissileActor = Spawn (type, pos.x, pos.y, z, ALLOW_REPLACE);
+	DVector3 pos = source->Vec2OffsetZ(x, y, z);
+	AActor *MissileActor = Spawn (type, pos, ALLOW_REPLACE);
 	if (pMissileActor) *pMissileActor = MissileActor;
 
 	if ( bSpawnSound )
@@ -8315,6 +8311,17 @@ void AActor::ClearCounters()
 }
 
 
+int AActor::ApplyDamageFactor(FName damagetype, int damage) const
+{
+	damage = int(damage * DamageFactor);
+	if (damage > 0)
+	{
+		damage = DamageTypeDefinition::ApplyMobjDamageFactor(damage, damagetype, GetClass()->DamageFactors);
+	}
+	return damage;
+}
+
+
 //----------------------------------------------------------------------------
 //
 // DropItem handling
@@ -8372,7 +8379,7 @@ void PrintMiscActorInfo(AActor *query)
 			if (query->BounceFlags & 1<<flagi) Printf(" %s", flagnamesb[flagi]);*/
 		Printf("\nRender style = %i:%s, alpha %f\nRender flags: %x", 
 			querystyle, (querystyle < STYLE_Count ? renderstyles[querystyle] : "Unknown"),
-			FIXED2DBL(query->alpha), query->renderflags.GetValue());
+			query->Alpha, query->renderflags.GetValue());
 		/*for (flagi = 0; flagi < 31; flagi++)
 			if (query->renderflags & 1<<flagi) Printf(" %s", flagnamesr[flagi]);*/
 		Printf("\nSpecial+args: %s(%i, %i, %i, %i, %i)\nspecial1: %i, special2: %i.",

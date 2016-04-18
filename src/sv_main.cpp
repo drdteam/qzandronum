@@ -3391,7 +3391,7 @@ void SERVER_UpdateActorProperties( AActor *pActor, ULONG ulClient )
 		SERVERCOMMANDS_SetThingProperty( pActor, APROP_RenderStyle, ulClient, SVCF_ONLYTHISCLIENT  );
 
 	// [BB] Update the actor's alpha if it's changed.
-	if ( pActor->alpha != pActor->GetDefault( )->alpha )
+	if ( pActor->Alpha != pActor->GetDefault( )->Alpha )
 		SERVERCOMMANDS_SetThingProperty( pActor, APROP_Alpha, ulClient, SVCF_ONLYTHISCLIENT  );
 
 	// [WS] Update the player's jumpz if it's changed.

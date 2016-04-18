@@ -37,8 +37,7 @@ IMPLEMENT_CLASS (AArtiTeleport)
 
 bool AArtiTeleport::Use (bool pickup)
 {
-	fixed_t destX;
-	fixed_t destY;
+	DVector3 dest;
 	int destAngle;
 
 	// [BC] Let the server decide where we go.
@@ -56,16 +55,14 @@ bool AArtiTeleport::Use (bool pickup)
 	{
 		unsigned int selections = teams[ownerTeam].TeamStarts.Size ();
 		unsigned int i = pr_tele() % selections;
-		destX = teams[ownerTeam].TeamStarts[i].x;
-		destY = teams[ownerTeam].TeamStarts[i].y;
+		dest = teams[ownerTeam].TeamStarts[i].pos;
 		destAngle = ANG45 * (teams[ownerTeam].TeamStarts[i].angle/45);
 	}
 	else if (deathmatch)
 	{
 		unsigned int selections = deathmatchstarts.Size ();
 		unsigned int i = pr_tele() % selections;
-		destX = deathmatchstarts[i].x;
-		destY = deathmatchstarts[i].y;
+		dest = deathmatchstarts[i].pos;
 		destAngle = deathmatchstarts[i].angle;
 	}
 	else
@@ -80,14 +77,14 @@ bool AArtiTeleport::Use (bool pickup)
 
 		if ( pSpot != NULL )
 		{
-			destX = pSpot->x;
-			destY = pSpot->y;
+			dest = pSpot->pos;
 			destAngle = pSpot->angle;
 		}
 		else
 			I_Error( "ArtiTeleport: No player start found!" );
 	}
-	P_Teleport (Owner, destX, destY, ONFLOORZ, (double)destAngle, TELF_SOURCEFOG | TELF_DESTFOG);
+	dest.Z = ONFLOORZ;
+	P_Teleport (Owner, dest, (double)destAngle, TELF_SOURCEFOG | TELF_DESTFOG);
 	bool canlaugh = true;
  	if (Owner->player->morphTics && (Owner->player->MorphStyle & MORPH_UNDOBYCHAOSDEVICE))
  	{ // Teleporting away will undo any morph effects (pig)

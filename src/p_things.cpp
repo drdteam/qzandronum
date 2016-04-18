@@ -94,7 +94,7 @@ bool P_Thing_Spawn (int tid, AActor *source, int type, DAngle angle, bool fog, i
 	}
 	while (spot != NULL)
 	{
-		mobj = Spawn (kind, spot->_f_Pos(), ALLOW_REPLACE);
+		mobj = Spawn (kind, spot->Pos(), ALLOW_REPLACE);
 
 		if (mobj != NULL)
 		{
@@ -124,7 +124,7 @@ bool P_Thing_Spawn (int tid, AActor *source, int type, DAngle angle, bool fog, i
 				if (fog)
 				{
 					// [BB] Tell clients to spawn.
-					P_SpawnTeleportFog(mobj, spot->_f_X(), spot->_f_Y(), spot->_f_Z() + TELEFOGHEIGHT, false, true, true);
+					P_SpawnTeleportFog(mobj, spot->PosPlusZ(TELEFOGHEIGHT), false, true, true);
 				}
 
 				// [BC] Respawned keys in Skulltag CANNOT be dropped items.

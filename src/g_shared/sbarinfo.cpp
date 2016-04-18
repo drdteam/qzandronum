@@ -299,7 +299,7 @@ class SBarInfoMainBlock : public SBarInfoCommandFlowControl
 {
 	public:
 		SBarInfoMainBlock(SBarInfo *script) : SBarInfoCommandFlowControl(script),
-			alpha(FRACUNIT), currentAlpha(FRACUNIT), forceScaled(false),
+			alpha(OPAQUE), currentAlpha(OPAQUE), forceScaled(false),
 			fullScreenOffsets(false)
 		{
 			SetTruth(true, NULL, NULL);
@@ -314,7 +314,7 @@ class SBarInfoMainBlock : public SBarInfoCommandFlowControl
 		{
 			this->xOffset = xOffset;
 			this->yOffset = yOffset;
-			this->currentAlpha = fixed_t((((double) this->alpha / (double) FRACUNIT) * ((double) alpha / (double) FRACUNIT)) * FRACUNIT);
+			this->currentAlpha = FixedMul(this->alpha, alpha);
 			SBarInfoCommandFlowControl::Draw(this, statusBar);
 		}
 		bool	ForceScaled() const { return forceScaled; }
@@ -339,7 +339,7 @@ class SBarInfoMainBlock : public SBarInfoCommandFlowControl
 					}
 				}
 				sc.MustGetToken(TK_FloatConst);
-				alpha = fixed_t(FRACUNIT * sc.Float);
+				alpha = fixed_t(OPAQUE * sc.Float);
 			}
 			SBarInfoCommandFlowControl::Parse(sc, this->fullScreenOffsets);
 		}
@@ -875,11 +875,11 @@ void Popup::tick()
 			if(moving)
 			{
 				if(opened)
-					alpha = clamp(alpha + speed, 0, FRACUNIT);
+					alpha = clamp<int>(alpha + speed, 0, OPAQUE);
 				else
-					alpha = clamp(alpha - speed2, 0, FRACUNIT);
+					alpha = clamp<int>(alpha - speed2, 0, OPAQUE);
 			}
-			if(alpha == 0 || alpha == FRACUNIT)
+			if(alpha == 0 || alpha == OPAQUE)
 				moving = false;
 			else
 				moving = true;
@@ -917,9 +917,7 @@ int Popup::getYOffset()
 
 int Popup::getAlpha(int maxAlpha)
 {
-	double a = (double) alpha / (double) FRACUNIT;
-	double b = (double) maxAlpha / (double) FRACUNIT;
-	return fixed_t((a * b) * FRACUNIT);
+	return FixedMul(alpha, maxAlpha);
 }
 
 int Popup::getXDisplacement()
@@ -1467,7 +1465,7 @@ public:
 			}
 			if(drawshadow)
 			{
-				int salpha = fixed_t(((double) alpha / (double) FRACUNIT) * ((double) HR_SHADOW / (double) FRACUNIT) * FRACUNIT);
+				fixed_t salpha = fixed_t(alpha *HR_SHADOW);
 				double srx = rx + (shadowX*xScale);
 				double sry = ry + (shadowY*yScale);
 				screen->DrawTexture(character, srx, sry,

@@ -358,7 +358,7 @@ void P_ThinkParticles ()
 // [CK] Refactored code to generate a fountain.
 static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const int pnum )
 {
-	sector_t* sector = P_PointInSector( ts.x, ts.y );
+	sector_t* sector = P_PointInSector( ts._f_X(), ts._f_Y() );
 
 	// Do not spawn particles if the sector is null
 	if ( sector != NULL )
@@ -368,9 +368,9 @@ static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const
 		if (rejectmatrix == NULL || !(rejectmatrix[rejectnum>>3] & (1 << (rejectnum & 7))))
 		{
 			// [TP] Take useplayerstartz into account here
-			fixed_t floorZ = sector->floorplane.ZatPoint( ts.x, ts.y );
-			fixed_t z = ( level.flags & LEVEL_USEPLAYERSTARTZ ) ? ts.z : floorZ;
-			MakeFountain( ts.x, ts.y, z, 16 << FRACBITS, 0, color, color );
+			fixed_t floorZ = sector->floorplane.ZatPoint( ts._f_X(), ts._f_Y() );
+			fixed_t z = ( level.flags & LEVEL_USEPLAYERSTARTZ ) ? ts._f_Z() : floorZ;
+			MakeFountain( ts._f_X(), ts._f_Y(), z, 16 << FRACBITS, 0, color, color );
 		}
 	}
 }

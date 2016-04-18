@@ -73,7 +73,7 @@ fixed_t P_AproxDistance (fixed_t dx, fixed_t dy)
 //
 //==========================================================================
 
-fixed_t P_InterceptVector (const divline_t *v2, const divline_t *v1)
+fixed_t P_InterceptVector (const fdivline_t *v2, const fdivline_t *v1)
 {
 #if 0	// [RH] Use 64 bit ints, so long divlines don't overflow
 
@@ -397,7 +397,7 @@ bool AActor::FixMapthingPos()
 				continue;
 
 			// Get the exact distance to the line
-			divline_t dll, dlv;
+			fdivline_t dll, dlv;
 			fixed_t linelen = (fixed_t)g_sqrt((double)ldef->dx*ldef->dx + (double)ldef->dy*ldef->dy);
 
 			P_MakeDivline(ldef, &dll);
@@ -1119,6 +1119,9 @@ bool FMultiBlockThingsIterator::Next(FMultiBlockThingsIterator::CheckResult *ite
 		item->thing = thing;
 		item->position = checkpoint + Displacements.getOffset(basegroup, thing->Sector->PortalGroup);
 		item->portalflags = portalflags;
+
+		// same as above in floating point. This is here so that this stuff can be converted piece by piece.
+		item->Position = { FIXED2DBL(item->position.x), FIXED2DBL(item->position.y), FIXED2DBL(item->position.z) };
 		return true;
 	}
 	bool onlast = unsigned(index + 1) >= checklist.Size();
@@ -1207,7 +1210,7 @@ void FPathTraverse::AddLineIntercepts(int bx, int by)
 		int 				s1;
 		int 				s2;
 		fixed_t 			frac;
-		divline_t			dl;
+		fdivline_t			dl;
 
 		// avoid precision problems with two routines
 		if ( trace.dx > FRACUNIT*16
@@ -1257,7 +1260,7 @@ void FPathTraverse::AddThingIntercepts (int bx, int by, FBlockThingsIterator &it
 	while ((thing = it.Next(compatible)))
 	{
 		int numfronts = 0;
-		divline_t line;
+		fdivline_t line;
 		int i;
 
 
@@ -1368,7 +1371,7 @@ void FPathTraverse::AddThingIntercepts (int bx, int by, FBlockThingsIterator &it
 			// Old code for compatibility purposes
 			fixed_t 		x1, y1, x2, y2;
 			int 			s1, s2;
-			divline_t		dl;
+			fdivline_t		dl;
 			fixed_t 		frac;
 				
 			bool tracepositive = (trace.dx ^ trace.dy)>0;
@@ -1950,7 +1953,7 @@ int P_VanillaPointOnLineSide(fixed_t x, fixed_t y, const line_t* line)
 //
 //===========================================================================
 
-int P_VanillaPointOnDivlineSide(fixed_t x, fixed_t y, const divline_t* line)
+int P_VanillaPointOnDivlineSide(fixed_t x, fixed_t y, const fdivline_t* line)
 {
 	fixed_t	dx;
 	fixed_t	dy;

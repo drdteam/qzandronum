@@ -77,7 +77,7 @@ bool APowerupGiver::Use (bool pickup)
 {
 	if (PowerupType == NULL) return true;	// item is useless
 
-	APowerup *power = static_cast<APowerup *> (Spawn (PowerupType, 0, 0, 0, NO_REPLACE));
+	APowerup *power = static_cast<APowerup *> (Spawn (PowerupType));
 
 	if (EffectTics != 0)
 	{
@@ -453,28 +453,28 @@ void APowerInvulnerable::DoEffect ()
 			// Don't mess with the translucency settings if an
 			// invisibility powerup is active.
 			Owner->RenderStyle = STYLE_Translucent;
-			if (!(level.time & 7) && Owner->alpha > 0 && Owner->alpha < OPAQUE)
+			if (!(level.time & 7) && Owner->Alpha > 0 && Owner->Alpha < 1)
 			{
-				if (Owner->alpha == HX_SHADOW)
+				if (Owner->Alpha == HX_SHADOW)
 				{
-					Owner->alpha = HX_ALTSHADOW;
+					Owner->Alpha = HX_ALTSHADOW;
 				}
 				else
 				{
-					Owner->alpha = 0;
+					Owner->Alpha = 0;
 					Owner->flags2 |= MF2_NONSHOOTABLE;
 				}
 			}
 			if (!(level.time & 31))
 			{
-				if (Owner->alpha == 0)
+				if (Owner->Alpha == 0)
 				{
 					Owner->flags2 &= ~MF2_NONSHOOTABLE;
-					Owner->alpha = HX_ALTSHADOW;
+					Owner->Alpha = HX_ALTSHADOW;
 				}
 				else
 				{
-					Owner->alpha = HX_SHADOW;
+					Owner->Alpha = HX_SHADOW;
 				}
 			}
 		}
@@ -509,8 +509,8 @@ void APowerInvulnerable::EndEffect ()
 		if (( Owner->player == NULL ) || ( Owner->player->bSpectating == false ))
 		{
 			// [BB] Restore the default alpha value and set RenderStyle accordingly.
-			Owner->alpha = Owner->GetDefault()->alpha;
-			if ( Owner->alpha == OPAQUE )
+			Owner->Alpha = Owner->GetDefault()->Alpha;
+			if ( Owner->Alpha == 1. )
 				Owner->RenderStyle = STYLE_Normal;
 			else
 				Owner->RenderStyle = STYLE_Translucent;
@@ -526,7 +526,7 @@ void APowerInvulnerable::EndEffect ()
 			// Don't mess with the translucency settings if an
 			// invisibility powerup is active.
 			Owner->RenderStyle = STYLE_Normal;
-			Owner->alpha = OPAQUE;
+			Owner->Alpha = 1.;
 		}
 	}
 	else if (Mode == NAME_Reflective)
@@ -555,8 +555,8 @@ int APowerInvulnerable::AlterWeaponSprite (visstyle_t *vis)
 	{
 		if (Mode == NAME_Ghost && !(Owner->flags & MF_SHADOW))
 		{
-			fixed_t wp_alpha = MIN<fixed_t>(FRACUNIT/4 + Owner->alpha*3/4, FRACUNIT);
-			if (wp_alpha != FIXED_MAX) vis->alpha = wp_alpha;
+			double wp_alpha = MIN<double>(0.25 + Owner->Alpha*0.75, 1.);
+			vis->alpha = FLOAT2FIXED(wp_alpha);
 		}
 	}
 	return changed;
@@ -672,8 +672,10 @@ void APowerInvisibility::DoEffect ()
 	Super::DoEffect();
 	// Due to potential interference with other PowerInvisibility items
 	// the effect has to be refreshed each tic.
-	fixed_t ts = (Strength/100) * (special1 + 1); if (ts > FRACUNIT) ts = FRACUNIT;
-	Owner->alpha = clamp<fixed_t>((OPAQUE - ts), 0, OPAQUE);
+	double ts = FIXED2DBL((Strength/100) * (special1 + 1)); 
+	
+	if (ts > 1.) ts = 1.;
+	Owner->Alpha = clamp((1. - ts), 0., 1.);
 	switch (Mode)
 	{
 	case (NAME_Fuzzy):
@@ -701,7 +703,7 @@ void APowerInvisibility::DoEffect ()
 		break;
 	default: // Something's wrong
 		Owner->RenderStyle = STYLE_Normal;
-		Owner->alpha = OPAQUE;
+		Owner->Alpha = 1.;
 		break;
 	}
 }
@@ -726,7 +728,7 @@ void APowerInvisibility::EndEffect ()
 			Owner->RenderStyle = STYLE_Normal;
 		else
 			Owner->RenderStyle = STYLE_None;
-		Owner->alpha = OPAQUE;
+		Owner->Alpha = 1.;
 
 		// Check whether there are other invisibility items and refresh their effect.
 		// If this isn't done there will be one incorrectly drawn frame when this
@@ -1244,14 +1246,14 @@ IMPLEMENT_CLASS (APlayerSpeedTrail)
 
 void APlayerSpeedTrail::Tick ()
 {
-	const int fade = OPAQUE*6/10/8;
-	if (alpha <= fade)
+	const double fade = .6 / 8;
+	if (Alpha <= fade)
 	{
 		Destroy ();
 	}
 	else
 	{
-		alpha -= fade;
+		Alpha -= fade;
 	}
 }
 
@@ -2266,12 +2268,12 @@ void APowerTranslucency::InitEffect( )
 	{
 		// [BB] Check if the CommonInit removal needs any changes here.
 		//CommonInit();
-		Owner->alpha = FRACUNIT/5;
+		Owner->Alpha = 0.2;
 		Owner->RenderStyle = STYLE_OptFuzzy;
 	}
 	else
 	{
-		Owner->alpha = ( FRACUNIT / 10 );
+		Owner->Alpha = 0.1;
 		Owner->RenderStyle = STYLE_Translucent;
 	}
 }

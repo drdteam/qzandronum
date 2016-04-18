@@ -500,7 +500,7 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 		P_CheckPlayerSprite(thing, spritenum, sprscale);
 	}
 
-	if (thing->renderflags & RF_INVISIBLE || !thing->RenderStyle.IsVisible(thing->alpha)) 
+	if (thing->renderflags & RF_INVISIBLE || !thing->RenderStyle.IsVisible(thing->Alpha)) 
 	{
 		if (!(thing->flags & MF_STEALTH) || !gl_fixedcolormap || !gl_enhanced_nightvision)
 			return; 
@@ -727,7 +727,7 @@ void GLSprite::Process(AActor* thing,sector_t * sector)
 	translation=thing->Translation;
 
 	OverrideShader = -1;
-	trans = FIXED2FLOAT(thing->alpha);
+	trans = thing->Alpha;
 	hw_styleflags = STYLEHW_Normal;
 
 	if (RenderStyle.BlendOp >= STYLEOP_Fuzz && RenderStyle.BlendOp <= STYLEOP_FuzzOrRevSub)

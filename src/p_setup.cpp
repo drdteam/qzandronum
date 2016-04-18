@@ -1599,8 +1599,8 @@ void P_LoadSectors (MapData *map, FMissingTextureTracker &missingtex)
 		ss->nextsec = -1;	//jff 2/26/98 add fields to support locking out
 		ss->prevsec = -1;	// stair retriggering until build completes
 
-		ss->SetAlpha(sector_t::floor, FRACUNIT);
-		ss->SetAlpha(sector_t::ceiling, FRACUNIT);
+		ss->SetAlpha(sector_t::floor, OPAQUE);
+		ss->SetAlpha(sector_t::ceiling, OPAQUE);
 		ss->SetXScale(sector_t::floor, FRACUNIT);	// [RH] floor and ceiling scaling
 		ss->SetYScale(sector_t::floor, FRACUNIT);
 		ss->SetXScale(sector_t::ceiling, FRACUNIT);
@@ -1838,7 +1838,7 @@ void P_LoadThings (MapData * map)
 		mti[i].SkillFilter = MakeSkill(flags);
 		mti[i].ClassFilter = 0xffff;	// Doom map format doesn't have class flags so spawn for all player classes
 		mti[i].RenderStyle = STYLE_Count;
-		mti[i].alpha = -1;
+		mti[i].Alpha = -1;
 		mti[i].health = 1;
 		mti[i].FloatbobPhase = -1;
 
@@ -1934,7 +1934,7 @@ void P_LoadThings2 (MapData * map)
 
 		mti[i].Gravity = 1;
 		mti[i].RenderStyle = STYLE_Count;
-		mti[i].alpha = -1;
+		mti[i].Alpha = -1;
 		mti[i].health = 1;
 		mti[i].FloatbobPhase = -1;
 	}
@@ -2144,7 +2144,7 @@ void P_FinishLoadingLineDef(line_t *ld, int alpha)
 			additive = true;
 		}
 
-		alpha = Scale(alpha, FRACUNIT, 255); 
+		alpha = Scale(alpha, OPAQUE, 255); 
 		if (!ld->args[0])
 		{
 			ld->Alpha = alpha;
@@ -2279,7 +2279,7 @@ void P_LoadLineDefs (MapData * map)
 	ld = lines;
 	for (i = 0; i < numlines; i++, mld++, ld++)
 	{
-		ld->Alpha = FRACUNIT;	// [RH] Opaque by default
+		ld->Alpha = OPAQUE;	// [RH] Opaque by default
 		ld->portalindex = UINT_MAX;
 
 		// [RH] Translate old linedef special and flags to be
@@ -2386,7 +2386,7 @@ void P_LoadLineDefs2 (MapData * map)
 
 		ld->v1 = &vertexes[LittleShort(mld->v1)];
 		ld->v2 = &vertexes[LittleShort(mld->v2)];
-		ld->Alpha = FRACUNIT;	// [RH] Opaque by default
+		ld->Alpha = OPAQUE;	// [RH] Opaque by default
 
 		P_SetSideNum (&ld->sidedef[0], LittleShort(mld->sidenum[0]));
 		P_SetSideNum (&ld->sidedef[1], LittleShort(mld->sidenum[1]));

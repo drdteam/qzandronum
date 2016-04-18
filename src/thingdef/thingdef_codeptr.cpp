@@ -873,7 +873,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SeekerMissile)
 	{
 		self->tracer = P_RoughMonsterSearch (self, distance, true);
 	}
-	if (!P_SeekerMissile(self, clamp<int>(ang1, 0, 90) * ANGLE_1, clamp<int>(ang2, 0, 90) * ANGLE_1, !!(flags & SMF_PRECISE), !!(flags & SMF_CURSPEED)))
+	if (!P_SeekerMissile(self, clamp<int>(ang1, 0, 90), clamp<int>(ang2, 0, 90), !!(flags & SMF_PRECISE), !!(flags & SMF_CURSPEED)))
 	{
 		if (flags & SMF_LOOK)
 		{ // This monster is no longer seekable, so let us look for another one next time.
@@ -1419,7 +1419,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomMissile)
 			angle_t ang = (self->_f_angle() - ANGLE_90) >> ANGLETOFINESHIFT;
 			fixed_t x = spawnofs_xy * finecosine[ang];
 			fixed_t y = spawnofs_xy * finesine[ang];
-			fixed_t z = spawnheight + self->GetBobOffset() - 32*FRACUNIT + (self->player? self->player->crouchoffset : 0);
+			fixed_t z = spawnheight + self->GetBobOffset() - 32*FRACUNIT + (self->player? FLOAT2FIXED(self->player->crouchoffset) : 0);
 
 			fixedvec3 pos = self->_f_Pos();
 			switch (aimmode)
@@ -1970,9 +1970,9 @@ enum FP_Flags
 
 // [BB] This functions is needed to keep code duplication at a minimum while applying the spread power.
 void A_FireCustomMissileHelper ( AActor * self,
-								 const fixed_t x,
-								 const fixed_t y,
-								 const fixed_t z,
+								 const double x,
+								 const double y,
+								 const double z,
 								 const DAngle shootangle,
 								 PClassActor * ti,
 								 const DAngle angle,
@@ -2010,8 +2010,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 	PARAM_CLASS		(ti, AActor);
 	PARAM_DANGLE_OPT(angle)			{ angle = 0.; }
 	PARAM_BOOL_OPT	(useammo)		{ useammo = true; }
-	PARAM_INT_OPT	(spawnofs_xy)	{ spawnofs_xy = 0; }
-	PARAM_FIXED_OPT	(spawnheight)	{ spawnheight = 0; }
+	PARAM_FLOAT_OPT	(spawnofs_xy)	{ spawnofs_xy = 0; }
+	PARAM_FLOAT_OPT	(spawnheight)	{ spawnheight = 0; }
 	PARAM_INT_OPT	(flags)			{ flags = 0; }
 	PARAM_DANGLE_OPT(pitch)			{ pitch = 0.; }
 
@@ -2035,10 +2035,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 
 	if (ti) 
 	{
-		angle_t ang = (self->_f_angle() - ANGLE_90) >> ANGLETOFINESHIFT;
-		fixed_t x = spawnofs_xy * finecosine[ang];
-		fixed_t y = spawnofs_xy * finesine[ang];
-		fixed_t z = spawnheight;
+		DAngle ang = self->Angles.Yaw - 90;
+		DVector3 ofs = self->Vec3Angle(spawnofs_xy, ang, spawnheight);
 		DAngle shootangle = self->Angles.Yaw;
 
 		if (flags & FPF_AIMATANGLE) shootangle += angle;
@@ -2047,19 +2045,20 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 		DAngle saved_player_pitch = self->Angles.Pitch;
 		self->Angles.Pitch -= pitch;
 
-		A_FireCustomMissileHelper( self, x, y, z, shootangle, ti, angle , flags, t );
+		A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle, ti, angle , flags, t );
 
 		if (NULL != self->player )
 		{
 			if ( self->player->cheats2 & CF2_SPREAD )
 			{
-				A_FireCustomMissileHelper( self, x, y, z, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
-				A_FireCustomMissileHelper( self, x, y, z, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
 			}
 		}
 
-		//AActor * misl=P_SpawnPlayerMissile (self, x, y, z, ti, shootangle, &t, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
-		self->Angles.Pitch = saved_player_pitch;
+		//AActor * misl=P_SpawnPlayerMissile (self, ofs.X, ofs.Y, ofs.Z, ti, shootangle, &t, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
+
+	self->Angles.Pitch = saved_player_pitch;
 /*
 
 		// automatic handling of seeker missiles
@@ -2188,7 +2187,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 				if (armorbonustype != NULL)
 				{
 					assert(armorbonustype->IsDescendantOf(RUNTIME_CLASS(ABasicArmorBonus)));
-					ABasicArmorBonus *armorbonus = static_cast<ABasicArmorBonus *>(Spawn(armorbonustype, 0,0,0, NO_REPLACE));
+					ABasicArmorBonus *armorbonus = static_cast<ABasicArmorBonus *>(Spawn(armorbonustype));
 					armorbonus->SaveAmount *= (actualdamage * lifesteal) >> FRACBITS;
 					armorbonus->MaxSaveAmount = lifestealmax <= 0 ? armorbonus->MaxSaveAmount : lifestealmax;
 					armorbonus->flags |= MF_DROPPED;
@@ -2457,7 +2456,7 @@ static bool DoGiveInventory(AActor *receiver, bool orresult, VM_ARGS, AActor *se
 	}
 	if (mi) 
 	{
-		AInventory *item = static_cast<AInventory *>(Spawn(mi, 0, 0, 0, NO_REPLACE));
+		AInventory *item = static_cast<AInventory *>(Spawn(mi));
 		if (item == NULL)
 		{
 			return false;
@@ -2826,7 +2825,7 @@ static bool InitSpawnedItem(AActor *self, AActor *mo, int flags)
 	}
 	if (flags & SIXF_TRANSFERALPHA)
 	{
-		mo->alpha = self->alpha;
+		mo->Alpha = self->Alpha;
 	}
 	if (flags & SIXF_TRANSFERRENDERSTYLE)
 	{
@@ -3094,7 +3093,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ThrowGrenade)
 	AActor *bo;
 
 	bo = Spawn(missile, 
-			self->PosPlusZ(-self->_f_floorclip() + self->GetBobOffset() + zheight + 35*FRACUNIT + (self->player? self->player->crouchoffset : 0)),
+			self->PosPlusZ(-self->_f_floorclip() + self->GetBobOffset() + zheight + 35*FRACUNIT + (self->player? FLOAT2FIXED(self->player->crouchoffset) : 0)),
 			ALLOW_REPLACE);
 	if (bo)
 	{
@@ -3325,13 +3324,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_LogInt)
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetTranslucent)
 {
 	PARAM_ACTION_PROLOGUE;
-	PARAM_FIXED		(alpha);
+	PARAM_FLOAT		(alpha);
 	PARAM_INT_OPT	(mode)	{ mode = 0; }
 
 	mode = mode == 0 ? STYLE_Translucent : mode == 2 ? STYLE_Fuzzy : STYLE_Add;
 
 	self->RenderStyle.Flags &= ~STYLEF_Alpha1;
-	self->alpha = clamp<fixed_t>(alpha, 0, FRACUNIT);
+	self->Alpha = clamp(alpha, 0., 1.);
 	self->RenderStyle = ERenderStyle(mode);
 	return 0;
 }
@@ -3353,7 +3352,7 @@ enum FadeFlags
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeIn)
 {
 	PARAM_ACTION_PROLOGUE;
-	PARAM_FIXED_OPT(reduce)	{ reduce = FRACUNIT/10; }
+	PARAM_FLOAT_OPT(reduce)	{ reduce = 0.1; }
 	PARAM_INT_OPT(flags)	{ flags = 0; }
 
 	// [BB] This is handled server-side.
@@ -3362,20 +3361,20 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeIn)
 
 	if (reduce == 0)
 	{
-		reduce = FRACUNIT / 10;
+		reduce = 0.1;
 	}
 
 	// [BB] If the RenderStyle is changed, we have to inform the clients.
 	const bool renderStyleChanged = !!( self->RenderStyle.Flags & STYLEF_Alpha1 );
 
 	self->RenderStyle.Flags &= ~STYLEF_Alpha1;
-	self->alpha += reduce;
+	self->Alpha += reduce;
 
-	if (self->alpha >= FRACUNIT)
+	if (self->Alpha >= 1.)
 	{
 		if (flags & FTF_CLAMP)
 		{
-			self->alpha = FRACUNIT;
+			self->Alpha = 1.;
 		}
 		if (flags & FTF_REMOVE)
 		{
@@ -3404,7 +3403,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeIn)
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 {
 	PARAM_ACTION_PROLOGUE;
-	PARAM_FIXED_OPT(reduce)	{ reduce = FRACUNIT/10; }
+	PARAM_FLOAT_OPT(reduce)	{ reduce = 0.1; }
 	PARAM_INT_OPT(flags)	{ flags = FTF_REMOVE; }
 
 	// [BB] This is handled server-side.
@@ -3413,13 +3412,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 
 	if (reduce == 0)
 	{
-		reduce = FRACUNIT/10;
+		reduce = 0.1;
 	}
 	// [BB] If the RenderStyle is changed, we have to inform the clients.
 	const bool renderStyleChanged = !!( self->RenderStyle.Flags & STYLEF_Alpha1 );
 
 	self->RenderStyle.Flags &= ~STYLEF_Alpha1;
-	self->alpha -= reduce;
+	self->Alpha -= reduce;
 
 	// [BB] Inform the clients about the alpha change and possibly about RenderStyle.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -3429,11 +3428,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 		SERVERCOMMANDS_SetThingProperty( self, APROP_Alpha );
 	}
 
-	if (self->alpha <= 0)
+	if (self->Alpha <= 0)
 	{
 		if (flags & FTF_CLAMP)
 		{
-			self->alpha = 0;
+			self->Alpha = 0;
 		}
 		if (flags & FTF_REMOVE)
 		{
@@ -3454,8 +3453,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeTo)
 {
 	PARAM_ACTION_PROLOGUE;
-	PARAM_FIXED		(target);
-	PARAM_FIXED_OPT	(amount)		{ amount = fixed_t(0.1*FRACUNIT); }
+	PARAM_FLOAT		(target);
+	PARAM_FLOAT_OPT	(amount)		{ amount = 0.1; }
 	PARAM_INT_OPT	(flags)			{ flags = 0; }
 
 	// [EP] This is handled server-side.
@@ -3464,31 +3463,31 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeTo)
 
 	// [EP] Store the old values of alpha and renderstyle for bandwidth.
 	BYTE oldrenderstyleflags = self->RenderStyle.Flags;
-	fixed_t oldalpha = self->alpha;
+	double oldalpha = self->Alpha;
 
 	self->RenderStyle.Flags &= ~STYLEF_Alpha1;
 
-	if (self->alpha > target)
+	if (self->Alpha > target)
 	{
-		self->alpha -= amount;
+		self->Alpha -= amount;
 
-		if (self->alpha < target)
+		if (self->Alpha < target)
 		{
-			self->alpha = target;
+			self->Alpha = target;
 		}
 	}
-	else if (self->alpha < target)
+	else if (self->Alpha < target)
 	{
-		self->alpha += amount;
+		self->Alpha += amount;
 
-		if (self->alpha > target)
+		if (self->Alpha > target)
 		{
-			self->alpha = target;
+			self->Alpha = target;
 		}
 	}
 	if (flags & FTF_CLAMP)
 	{
-		self->alpha = clamp(self->alpha, 0, FRACUNIT);
+		self->Alpha = clamp(self->Alpha, 0., 1.);
 	}
 
 	// [EP] Inform the clients about possible alpha and renderstyle changes.
@@ -3496,11 +3495,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeTo)
 	{
 		if ( self->RenderStyle.Flags != oldrenderstyleflags )
 			SERVERCOMMANDS_SetThingProperty( self, APROP_RenderStyle );
-		if ( self->alpha != oldalpha )
+		if ( self->Alpha != oldalpha )
 			SERVERCOMMANDS_SetThingProperty( self, APROP_Alpha );
 	}
 
-	if (self->alpha == target && (flags & FTF_REMOVE))
+	if (self->Alpha == target && (flags & FTF_REMOVE))
 	{
 		P_RemoveThing(self);
 	}
@@ -4025,7 +4024,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Burst)
 			mo->Vel.X = pr_burst.Random2() / 128.;
 			mo->Vel.Y = pr_burst.Random2() / 128.;
 			mo->RenderStyle = self->RenderStyle;
-			mo->alpha = self->alpha;
+			mo->Alpha = self->Alpha;
 			mo->CopyFriendliness(self, true);
 		}
 	}
@@ -5719,47 +5718,44 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_QuakeEx)
 //
 //===========================================================================
 
-void A_Weave(AActor *self, int xyspeed, int zspeed, fixed_t xydist, fixed_t zdist)
+void A_Weave(AActor *self, int xyspeed, int zspeed, double xydist, double zdist)
 {
-	fixed_t newX, newY;
+	DVector2 newpos;
 	int weaveXY, weaveZ;
-	int angle;
-	fixed_t dist;
+	DAngle angle;
+	double dist;
 
 	weaveXY = self->WeaveIndexXY & 63;
 	weaveZ = self->WeaveIndexZ & 63;
-	angle = (self->_f_angle() + ANG90) >> ANGLETOFINESHIFT;
+	angle = self->Angles.Yaw + 90;
 
 	if (xydist != 0 && xyspeed != 0)
 	{
-		dist = MulScale13(finesine[weaveXY << BOBTOFINESHIFT], xydist);
-		newX = self->_f_X() - FixedMul (finecosine[angle], dist);
-		newY = self->_f_Y() - FixedMul (finesine[angle], dist);
+		dist = BobSin(weaveXY) * xydist;
+		newpos = self->Pos().XY() - angle.ToVector(dist);
 		weaveXY = (weaveXY + xyspeed) & 63;
-		dist = MulScale13(finesine[weaveXY << BOBTOFINESHIFT], xydist);
-		newX += FixedMul (finecosine[angle], dist);
-		newY += FixedMul (finesine[angle], dist);
+		dist = BobSin(weaveXY) * xydist;
+		newpos += angle.ToVector(dist);
 		if (!(self->flags5 & MF5_NOINTERACTION))
 		{
-			P_TryMove (self, newX, newY, true);
+			P_TryMove (self, newpos, true);
 		}
 		else
 		{
 			self->UnlinkFromWorld ();
 			self->flags |= MF_NOBLOCKMAP;
 			// We need to do portal offsetting here explicitly, because SetXY cannot do that.
-			newX -= self->_f_X();
-			newY -= self->_f_Y();
-			self->SetXY(self->Vec2Offset(newX, newY));
+			newpos -= self->Pos().XY();
+			self->SetXY(self->Vec2Offset(newpos.X, newpos.Y));
 			self->LinkToWorld ();
 		}
 		self->WeaveIndexXY = weaveXY;
 	}
 	if (zdist != 0 && zspeed != 0)
 	{
-		self->_f_AddZ(-MulScale13(finesine[weaveZ << BOBTOFINESHIFT], zdist));
+		self->AddZ(-BobSin(weaveZ) * zdist);
 		weaveZ = (weaveZ + zspeed) & 63;
-		self->_f_AddZ(MulScale13(finesine[weaveZ << BOBTOFINESHIFT], zdist));
+		self->AddZ(BobSin(weaveZ) * zdist);
 		self->WeaveIndexZ = weaveZ;
 	}
 }
@@ -5769,8 +5765,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Weave)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_INT	(xspeed);
 	PARAM_INT	(yspeed);
-	PARAM_FIXED	(xdist);
-	PARAM_FIXED	(ydist);
+	PARAM_FLOAT	(xdist);
+	PARAM_FLOAT	(ydist);
 	A_Weave(self, xspeed, yspeed, xdist, ydist);
 	return 0;
 }
@@ -6255,7 +6251,7 @@ static bool DoRadiusGive(AActor *self, AActor *thing, PClassActor *item, int amo
 
 		if ((flags & RGF_NOSIGHT) || P_CheckSight(thing, self, SF_IGNOREVISIBILITY | SF_IGNOREWATERBOUNDARY))
 		{ // OK to give; target is in direct path, or the monster doesn't care about it being in line of sight.
-			AInventory *gift = static_cast<AInventory *>(Spawn(item, 0, 0, 0, NO_REPLACE));
+			AInventory *gift = static_cast<AInventory *>(Spawn(item));
 			if (gift->IsKindOf(RUNTIME_CLASS(AHealth)))
 			{
 				gift->Amount *= amount;

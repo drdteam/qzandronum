@@ -37,16 +37,16 @@ const int KORAX_TID					= 245;
 const int KORAX_FIRST_TELEPORT_TID	= 248;
 const int KORAX_TELEPORT_TID		= 249;
 
-const int KORAX_DELTAANGLE			= 85*ANGLE_1;
+const int KORAX_DELTAANGLE			= 85;
 const int KORAX_ARM_EXTENSION_SHORT	= 40;
 const int KORAX_ARM_EXTENSION_LONG	= 55;
 
-const int KORAX_ARM1_HEIGHT			= 108*FRACUNIT;
-const int KORAX_ARM2_HEIGHT			= 82*FRACUNIT;
-const int KORAX_ARM3_HEIGHT			= 54*FRACUNIT;
-const int KORAX_ARM4_HEIGHT			= 104*FRACUNIT;
-const int KORAX_ARM5_HEIGHT			= 86*FRACUNIT;
-const int KORAX_ARM6_HEIGHT			= 53*FRACUNIT;
+const int KORAX_ARM1_HEIGHT			= 108;
+const int KORAX_ARM2_HEIGHT			= 82;
+const int KORAX_ARM3_HEIGHT			= 54;
+const int KORAX_ARM4_HEIGHT			= 104;
+const int KORAX_ARM5_HEIGHT			= 86;
+const int KORAX_ARM6_HEIGHT			= 53;
 
 const double KORAX_BOLT_HEIGHT		= 48.;
 const int KORAX_BOLT_LIFETIME		= 3;
@@ -76,8 +76,7 @@ void A_KBoltRaise (AActor *);
 
 void KoraxFire (AActor *actor, PClassActor *type, int arm);
 void KSpiritInit (AActor *spirit, AActor *korax);
-AActor *P_SpawnKoraxMissile (fixed_t x, fixed_t y, fixed_t z,
-	AActor *source, AActor *dest, PClassActor *type);
+AActor *P_SpawnKoraxMissile (const DVector3 &pos, AActor *source, AActor *dest, PClassActor *type);
 
 extern void SpawnSpiritTail (AActor *spirit);
 
@@ -109,7 +108,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxChase)
 		spot = iterator.Next ();
 		if (spot != NULL)
 		{
-			P_Teleport (self, spot->_f_X(), spot->_f_Y(), ONFLOORZ, spot->Angles.Yaw, TELF_SOURCEFOG | TELF_DESTFOG);
+			P_Teleport (self, spot->PosAtZ(ONFLOORZ), spot->Angles.Yaw, TELF_SOURCEFOG | TELF_DESTFOG);
 		}
 
 		P_StartScript (self, NULL, 249, NULL, NULL, 0, 0);
@@ -155,7 +154,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxChase)
 			self->tracer = spot;
 			if (spot)
 			{
-				P_Teleport (self, spot->_f_X(), spot->_f_Y(), ONFLOORZ, spot->Angles.Yaw, TELF_SOURCEFOG | TELF_DESTFOG);
+				P_Teleport (self, spot->PosAtZ(ONFLOORZ), spot->Angles.Yaw, TELF_SOURCEFOG | TELF_DESTFOG);
 			}
 		}
 	}
@@ -184,7 +183,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxBonePop)
 	// Spawn 6 spirits equalangularly
 	for (i = 0; i < 6; ++i)
 	{
-		mo = P_SpawnMissileAngle (self, PClass::FindActor("KoraxSpirit"), ANGLE_60*i, 5*FRACUNIT, true); // [BB] Inform clients
+		mo = P_SpawnMissileAngle (self, PClass::FindActor("KoraxSpirit"), DAngle(60.*i), 5., true); // [BB] Inform clients
 		if (mo)
 		{
 			KSpiritInit (mo, self);
@@ -212,7 +211,7 @@ void KSpiritInit (AActor *spirit, AActor *korax)
 	spirit->health = KORAX_SPIRIT_LIFETIME;
 
 	spirit->tracer = korax;						// Swarm around korax
-	spirit->special2 = FINEANGLES/2 + pr_kspiritinit(8 << BOBTOFINESHIFT);	// Float bob index
+	spirit->WeaveIndexZ = 32 + (pr_kspiritinit() & 7);	// Float bob index
 	spirit->args[0] = 10; 						// initial turn value
 	spirit->args[1] = 0; 						// initial look angle
 
@@ -275,11 +274,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxMissile)
 		{ "SerpentFX", "CentaurLeaderAttack" }
 	};
 
-	int type = pr_koraxmissile()%6;
+	int type = pr_koraxmissile() % 6;
 	int i;
 	PClassActor *info;
 
-	S_Sound (self, CHAN_VOICE, "KoraxAttack", 1, ATTN_NORM);
+	S_Sound(self, CHAN_VOICE, "KoraxAttack", 1, ATTN_NORM);
 
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
@@ -291,14 +290,14 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxMissile)
 	info = PClass::FindActor(choices[type].type);
 	if (info == NULL)
 	{
-		I_Error ("Unknown Korax missile: %s\n", choices[type].type);
+		I_Error("Unknown Korax missile: %s\n", choices[type].type);
 	}
 
 	// Fire all 6 missiles at once
-	S_Sound (self, CHAN_WEAPON, choices[type].sound, 1, ATTN_NONE);
+	S_Sound(self, CHAN_WEAPON, choices[type].sound, 1, ATTN_NONE);
 	for (i = 0; i < 6; ++i)
 	{
-		KoraxFire (self, info, i);
+		KoraxFire(self, info, i);
 	}
 	return 0;
 }
@@ -314,7 +313,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxMissile)
 DEFINE_ACTION_FUNCTION(AActor, A_KoraxCommand)
 {
 	PARAM_ACTION_PROLOGUE;
-	angle_t ang;
+	DAngle ang;
 	int numcommands;
 	// [BC]
 	AActor	*pBolt;
@@ -328,11 +327,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_KoraxCommand)
 	}
 
 	// Shoot stream of lightning to ceiling
-	ang = (self->_f_angle() - ANGLE_90) >> ANGLETOFINESHIFT;
-	fixedvec3 pos = self->Vec3Offset(
-		KORAX_COMMAND_OFFSET * finecosine[ang],
-		KORAX_COMMAND_OFFSET * finesine[ang],
-		KORAX_COMMAND_HEIGHT*FRACUNIT);
+	ang = self->Angles.Yaw - 90;
+	DVector3 pos = self->Vec3Angle(KORAX_COMMAND_OFFSET, ang, KORAX_COMMAND_HEIGHT);
 	pBolt = Spawn("KoraxBolt", pos, ALLOW_REPLACE);
 
 	// [BC] Spawn the bolt to clients.
@@ -381,7 +377,7 @@ void KoraxFire (AActor *actor, PClassActor *type, int arm)
 		KORAX_ARM_EXTENSION_LONG,
 		KORAX_ARM_EXTENSION_LONG
 	};
-	static const fixed_t armheight[6] =
+	static const int armheight[6] =
 	{
 		KORAX_ARM1_HEIGHT,
 		KORAX_ARM2_HEIGHT,
@@ -391,30 +387,16 @@ void KoraxFire (AActor *actor, PClassActor *type, int arm)
 		KORAX_ARM6_HEIGHT
 	};
 
-	angle_t ang;
-
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
 	{
 		return;
 	}
 
-	ang = (actor->_f_angle() + (arm < 3 ? -KORAX_DELTAANGLE : KORAX_DELTAANGLE)) >> ANGLETOFINESHIFT;
-	fixedvec3 pos = actor->Vec3Offset(
-		extension[arm] * finecosine[ang],
-		extension[arm] * finesine[ang],
-		-actor->_f_floorclip() + armheight[arm]);
-	P_SpawnKoraxMissile (pos.x, pos.y, pos.z, actor, actor->target, type);
+	DAngle ang = actor->Angles.Yaw + (arm < 3 ? -KORAX_DELTAANGLE : KORAX_DELTAANGLE);
+	DVector3 pos = actor->Vec3Angle(extension[arm], ang, armheight[arm] - actor->Floorclip);
+	P_SpawnKoraxMissile (pos, actor, actor->target, type);
 }
-
-//============================================================================
-//
-// A_KSpiritWeave
-// [BL] Was identical to CHolyWeave so lets just use that
-//
-//============================================================================
-
-void CHolyWeave (AActor *actor, FRandom &pr_random);
 
 //============================================================================
 //
@@ -425,11 +407,10 @@ void CHolyWeave (AActor *actor, FRandom &pr_random);
 static void A_KSpiritSeeker (AActor *actor, DAngle thresh, DAngle turnMax)
 {
 	int dir;
-	int dist;
 	DAngle delta;
 	AActor *target;
-	fixed_t newZ;
-	fixed_t deltaZ;
+	double newZ;
+	double deltaZ;
 
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
@@ -462,28 +443,24 @@ static void A_KSpiritSeeker (AActor *actor, DAngle thresh, DAngle turnMax)
 	actor->VelFromAngle();
 
 	if (!(level.time&15) 
-		|| actor->_f_Z() > target->_f_Z()+(target->GetDefault()->_f_height())
-		|| actor->_f_Top() < target->_f_Z())
+		|| actor->Z() > target->Z() + target->GetDefault()->Height
+		|| actor->Top() < target->Z())
 	{
-		newZ = target->_f_Z()+((pr_kspiritseek()*target->GetDefault()->_f_height())>>8);
-		deltaZ = newZ-actor->_f_Z();
-		if (abs(deltaZ) > 15*FRACUNIT)
+		newZ = target->Z() + pr_kspiritseek() * target->GetDefault()->Height / 256;
+		deltaZ = newZ-actor->Z();
+
+		if (fabs(deltaZ) > 15)
 		{
 			if(deltaZ > 0)
 			{
-				deltaZ = 15*FRACUNIT;
+				deltaZ = 15;
 			}
 			else
 			{
-				deltaZ = -15*FRACUNIT;
+				deltaZ = -15;
 			}
 		}
-		dist = actor->AproxDistance (target) / actor->_f_speed();
-		if (dist < 1)
-		{
-			dist = 1;
-		}
-		actor->Vel.Z = FIXED2DBL(deltaZ/dist);
+		actor->Vel.Z = deltaZ + actor->DistanceBySpeed(target, actor->Speed);
 	}
 
 	// [BC] Move the thing.
@@ -532,7 +509,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_KSpiritRoam)
 		{
 			A_KSpiritSeeker(self, (double)self->args[0], self->args[0] * 2.);
 		}
-		CHolyWeave(self, pr_kspiritweave);
+		int xyspeed = (pr_kspiritweave() % 5);
+		int zspeed = (pr_kspiritweave() % 5);
+		A_Weave(self, xyspeed, zspeed, 4., 2.);
+
 		if (pr_kspiritroam()<50)
 		{
 			S_Sound (self, CHAN_VOICE, "SpiritActive", 1, ATTN_NONE);
@@ -615,12 +595,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_KBoltRaise)
 //
 //============================================================================
 
-AActor *P_SpawnKoraxMissile (fixed_t x, fixed_t y, fixed_t z,
-	AActor *source, AActor *dest, PClassActor *type)
+AActor *P_SpawnKoraxMissile (const DVector3 &pos, AActor *source, AActor *dest, PClassActor *type)
 {
 	AActor *th;
 	DAngle an;
-	int dist;
+	double dist;
 
 	// [BC] Let the server do this.
 	if ( NETWORK_InClientMode() )
@@ -628,8 +607,7 @@ AActor *P_SpawnKoraxMissile (fixed_t x, fixed_t y, fixed_t z,
 		return ( NULL );
 	}
 
-	z -= source->_f_floorclip();
-	th = Spawn (type, x, y, z, ALLOW_REPLACE);
+	th = Spawn (type, source->PosPlusZ(-source->Floorclip), ALLOW_REPLACE);
 	th->target = source; // Originator
 	an = th->AngleTo(dest);
 	if (dest->flags & MF_SHADOW)
@@ -638,12 +616,8 @@ AActor *P_SpawnKoraxMissile (fixed_t x, fixed_t y, fixed_t z,
 	}
 	th->Angles.Yaw = an;
 	th->VelFromAngle();
-	dist = dest->AproxDistance (th) / th->_f_speed();
-	if (dist < 1)
-	{
-		dist = 1;
-	}
-	th->Vel.Z = FIXED2DBL((dest->_f_Z()-z+(30*FRACUNIT))/dist);
+	dist = dest->DistanceBySpeed(th, th->Speed);
+	th->Vel.Z = (dest->Z() - pos.Z + 30) / dist;
 
 	// [BC] Spawn this missile to clients.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

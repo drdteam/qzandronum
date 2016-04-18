@@ -537,7 +537,11 @@ bool DCanvas::ParseDrawTextureTags (FTexture *img, double x, double y, DWORD tag
 			break;
 
 		case DTA_Alpha:
-			parms->alpha = MIN<fixed_t>(FRACUNIT, va_arg (tags, fixed_t));
+			parms->alpha = MIN<fixed_t>(OPAQUE, va_arg (tags, fixed_t));
+			break;
+
+		case DTA_AlphaF:
+			parms->alpha = FLOAT2FIXED(MIN<double>(1., va_arg(tags, double)));
 			break;
 
 		case DTA_AlphaChannel:
@@ -646,7 +650,7 @@ bool DCanvas::ParseDrawTextureTags (FTexture *img, double x, double y, DWORD tag
 			break;
 
 		case DTA_ShadowAlpha:
-			parms->shadowAlpha = MIN<fixed_t>(FRACUNIT, va_arg (tags, fixed_t));
+			parms->shadowAlpha = MIN<fixed_t>(OPAQUE, va_arg (tags, fixed_t));
 			break;
 
 		case DTA_ShadowColor:
@@ -736,7 +740,7 @@ bool DCanvas::ParseDrawTextureTags (FTexture *img, double x, double y, DWORD tag
 			{
 				parms->style = STYLE_Shaded;
 			}
-			else if (parms->alpha < FRACUNIT)
+			else if (parms->alpha < OPAQUE)
 			{
 				parms->style = STYLE_TranslucentStencil;
 			}
@@ -745,7 +749,7 @@ bool DCanvas::ParseDrawTextureTags (FTexture *img, double x, double y, DWORD tag
 				parms->style = STYLE_Stencil;
 			}
 		}
-		else if (parms->alpha < FRACUNIT)
+		else if (parms->alpha < OPAQUE)
 		{
 			parms->style = STYLE_Translucent;
 		}

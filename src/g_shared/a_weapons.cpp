@@ -506,7 +506,7 @@ AAmmo *AWeapon::AddAmmo (AActor *other, PClassActor *ammotype, int amount)
 	ammo = static_cast<AAmmo *>(other->FindInventory (ammotype));
 	if (ammo == NULL)
 	{
-		ammo = static_cast<AAmmo *>(Spawn (ammotype, 0, 0, 0, NO_REPLACE));
+		ammo = static_cast<AAmmo *>(Spawn (ammotype));
 		ammo->Amount = MIN (amount, ammo->MaxAmount);
 		ammo->AttachToOwner (other);
 	}
@@ -568,7 +568,7 @@ AWeapon *AWeapon::AddWeapon (PClassWeapon *weapontype)
 	weap = static_cast<AWeapon *>(Owner->FindInventory (weapontype));
 	if (weap == NULL)
 	{
-		weap = static_cast<AWeapon *>(Spawn (weapontype, 0, 0, 0, NO_REPLACE));
+		weap = static_cast<AWeapon *>(Spawn (weapontype));
 		weap->AttachToOwner (Owner);
 	}
 	return weap;
@@ -895,7 +895,7 @@ bool AWeaponGiver::TryPickup(AActor *&toucher)
 		{
 			if (master == NULL)
 			{
-				master = weap = static_cast<AWeapon*>(Spawn(di->Name, 0, 0, 0, NO_REPLACE));
+				master = weap = static_cast<AWeapon*>(Spawn(di->Name));
 				if (weap != NULL)
 				{
 					weap->ItemFlags &= ~IF_ALWAYSPICKUP;	// use the flag of this item only.

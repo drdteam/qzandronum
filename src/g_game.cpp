@@ -2018,7 +2018,7 @@ void G_PlayerFinishLevel (int player, EFinishLevelType mode, int flags)
 		p->mo->flags &= ~MF_SHADOW;
 	}
 	p->mo->RenderStyle = p->mo->GetDefault()->RenderStyle;
-	p->mo->alpha = p->mo->GetDefault()->alpha;
+	p->mo->Alpha = p->mo->GetDefault()->Alpha;
 	p->extralight = 0;					// cancel gun flashes
 	p->fixedcolormap = NOFIXEDCOLORMAP;	// cancel ir goggles
 	p->fixedlightlevel = -1;
@@ -2250,9 +2250,9 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 
 	if (mthing->type == 0) return false;
 
-	x = mthing->x;
-	y = mthing->y;
-	z = mthing->z;
+	x = mthing->_f_X();
+	y = mthing->_f_Y();
+	z = mthing->_f_Z();
 
 	if (!(level.flags & LEVEL_USEPLAYERSTARTZ))
 	{
@@ -2297,10 +2297,10 @@ bool G_CheckSpot (int playernum, FPlayerStart *mthing)
 //
 
 // [RH] Returns the distance of the closest player to the given mapthing
-static fixed_t PlayersRangeFromSpot (FPlayerStart *spot)
+static double PlayersRangeFromSpot (FPlayerStart *spot)
 {
-	fixed_t closest = INT_MAX;
-	fixed_t distance;
+	double closest = INT_MAX;
+	double distance;
 	int i;
 
 	for (i = 0; i < MAXPLAYERS; i++)
@@ -2308,7 +2308,7 @@ static fixed_t PlayersRangeFromSpot (FPlayerStart *spot)
 		if (!playeringame[i] || !players[i].mo || players[i].health <= 0)
 			continue;
 
-		distance = players[i].mo->AproxDistance (spot->x, spot->y);
+		distance = players[i].mo->Distance2D(spot->pos.X, spot->pos.Y);
 
 		if (distance < closest)
 			closest = distance;
@@ -2335,7 +2335,7 @@ static fixed_t TeamLMSPlayersRangeFromSpot( ULONG ulPlayer, FPlayerStart *spot )
 			continue;
 
 		ulNumSpots++;
-		distance += players[i].mo->AproxDistance( spot->x, spot->y );
+		distance += players[i].mo->AproxDistance( spot->_f_X(), spot->_f_Y() );
 	}
 
 	if ( ulNumSpots )
@@ -2347,13 +2347,13 @@ static fixed_t TeamLMSPlayersRangeFromSpot( ULONG ulPlayer, FPlayerStart *spot )
 // [RH] Select the deathmatch spawn spot farthest from everyone.
 static FPlayerStart *SelectFarthestDeathmatchSpot( ULONG ulPlayer, size_t selections )
 {
-	fixed_t bestdistance = 0;
+	double bestdistance = 0;
 	FPlayerStart *bestspot = NULL;
 	unsigned int i;
 
 	for (i = 0; i < selections; i++)
 	{
-		fixed_t distance = PlayersRangeFromSpot (&deathmatchstarts[i]);
+		double distance = PlayersRangeFromSpot (&deathmatchstarts[i]);
 
 		// Did not find a spot.
 		if ( distance == INT_MAX )
@@ -4106,7 +4106,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 	{
 		const int i = pr_dmspawn() % Spots.Size();
 
-		pArtifact = Spawn( pArtifactType, Spots[i].x, Spots[i].y, ONFLOORZ, ALLOW_REPLACE );
+		pArtifact = Spawn( pArtifactType, Spots[i]._f_X(), Spots[i]._f_Y(), ONFLOORZ, ALLOW_REPLACE );
 		const DWORD spawnFlags = pArtifact->flags;
 		// [BB] Ensure that the artifact is solid, otherwise P_TestMobjLocation won't complain if a player already is at the proposed position.
 		pArtifact->flags |= MF_SOLID;
@@ -4123,7 +4123,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 
 	// [BB] If there is no free spot, just select one and spawn the artifact there.
 	const int spotNum = pr_dmspawn() % Spots.Size();
-	return Spawn( pArtifactType, Spots[spotNum].x, Spots[spotNum].y, ONFLOORZ, ALLOW_REPLACE );
+	return Spawn( pArtifactType, Spots[spotNum]._f_X(), Spots[spotNum]._f_Y(), ONFLOORZ, ALLOW_REPLACE );
 }
 
 //*****************************************************************************

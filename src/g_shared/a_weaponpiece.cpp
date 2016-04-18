@@ -93,7 +93,7 @@ bool AWeaponPiece::TryPickup (AActor *&toucher)
 	}
 	if (!hold)
 	{
-		hold=static_cast<AWeaponHolder*>(Spawn(RUNTIME_CLASS(AWeaponHolder), 0, 0, 0, NO_REPLACE));
+		hold=static_cast<AWeaponHolder*>(Spawn(RUNTIME_CLASS(AWeaponHolder)));
 		hold->BecomeItem();
 		hold->AttachToOwner(toucher);
 		hold->PieceMask=0;
@@ -133,7 +133,7 @@ bool AWeaponPiece::TryPickup (AActor *&toucher)
 	{
 		if (!toucher->FindInventory (WeaponClass))
 		{
-			FullWeapon= static_cast<AWeapon*>(Spawn(WeaponClass, 0, 0, 0, NO_REPLACE));
+			FullWeapon= static_cast<AWeapon*>(Spawn(WeaponClass));
 			
 			// [BB] The collection of weapon pieces is handled on the server, so we
 			// need to tell the client that the weapon is completed.
