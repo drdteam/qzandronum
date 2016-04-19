@@ -4431,13 +4431,13 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	players[ulPlayer].crouchdir = ( bCrouching ) ? 1 : -1;
 
 	if (( players[ulPlayer].crouchdir == 1 ) &&
-		( players[ulPlayer].crouchfactor < FRACUNIT ) &&
+		( players[ulPlayer].crouchfactor < 1 ) &&
 		(( players[ulPlayer].mo->Top() ) < players[ulPlayer].mo->ceilingz ))
 	{
 		P_CrouchMove( &players[ulPlayer], 1 );
 	}
 	else if (( players[ulPlayer].crouchdir == -1 ) &&
-		( players[ulPlayer].crouchfactor > FRACUNIT/2 ))
+		( players[ulPlayer].crouchfactor > 0.5 ))
 	{
 		P_CrouchMove( &players[ulPlayer], -1 );
 	}

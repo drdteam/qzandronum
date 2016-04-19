@@ -3042,7 +3042,7 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			if ( player->mo->floorsector->GetFlags(sector_t::floor) & PLANEF_SPRINGPAD )
 				ulJumpTicks = 0;
 
-			player->mo->Vel.Z += FIXED2FLOAT ( JumpVelz );
+			player->mo->Vel.Z += JumpVelz;
 			player->jumpTics = ulJumpTicks;
 		}
 	}
