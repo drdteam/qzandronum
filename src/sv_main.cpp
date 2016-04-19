@@ -6760,7 +6760,7 @@ CCMD( testchecksumonlevel )
 	BYTE		*pbData;
 
 	// This is the lump number of the current map we're on.
-	lBaseLumpNum = Wads.GetNumForName( level.mapname );
+	lBaseLumpNum = Wads.GetNumForName( level.MapName );
 
 	// Get the vertex lump.
 	lCurLumpNum = lBaseLumpNum + ML_VERTEXES;

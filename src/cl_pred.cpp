@@ -153,9 +153,9 @@ void CLIENT_PREDICT_PlayerPredict( void )
 
 	// Back up the player's current position to see if we predicted correctly.
 #ifdef	_DEBUG
-	SavedX	= pPlayer->mo->x;
-	SavedY	= pPlayer->mo->y;
-	SavedZ	= pPlayer->mo->z;
+	SavedX	= pPlayer->mo->_f_X();
+	SavedY	= pPlayer->mo->_f_Y();
+	SavedZ	= pPlayer->mo->_f_Z();
 #endif
 
 	// Use a version of gametic that's appropriate for both the current game and demos.
@@ -177,24 +177,24 @@ void CLIENT_PREDICT_PlayerPredict( void )
 #ifdef	_DEBUG
 	if (( cl_showonetickpredictionerrors ) && ( ulPredictionTicks == 0 ))
 	{
-		if (( pPlayer->ServerXYZ[0] != pPlayer->mo->x ) ||
-			( pPlayer->ServerXYZ[1] != pPlayer->mo->y ) ||
-			( pPlayer->ServerXYZ[2] != pPlayer->mo->z ))
+		if (( pPlayer->ServerXYZ[0] != pPlayer->mo->_f_X() ) ||
+			( pPlayer->ServerXYZ[1] != pPlayer->mo->_f_Y() ) ||
+			( pPlayer->ServerXYZ[2] != pPlayer->mo->_f_Z() ))
 		{
 			Printf( "(%d) WARNING! ServerXYZ does not match local origin after 1 tick!\n", static_cast<unsigned int> (g_ulGameTick) );
-			Printf( "     X: %d, %d\n", pPlayer->ServerXYZ[0], pPlayer->mo->x );
-			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZ[1], pPlayer->mo->y );
-			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZ[2], pPlayer->mo->z );
+			Printf( "     X: %d, %d\n", pPlayer->ServerXYZ[0], pPlayer->mo->_f_X() );
+			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZ[1], pPlayer->mo->_f_Y() );
+			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZ[2], pPlayer->mo->_f_Z() );
 		}
 
-		if (( pPlayer->ServerXYZVel[0] != pPlayer->mo->velx ) ||
-			( pPlayer->ServerXYZVel[1] != pPlayer->mo->vely ) ||
-			( pPlayer->ServerXYZVel[2] != pPlayer->mo->velz ))
+		if (( pPlayer->ServerXYZVel[0] != FLOAT2FIXED ( pPlayer->mo->Vel.X ) ) ||
+			( pPlayer->ServerXYZVel[1] != FLOAT2FIXED ( pPlayer->mo->Vel.Y ) ) ||
+			( pPlayer->ServerXYZVel[2] != FLOAT2FIXED ( pPlayer->mo->Vel.Z ) ))
 		{
 			Printf( "(%d) WARNING! ServerXYZVel does not match local origin after 1 tick!\n", static_cast<unsigned int> (g_ulGameTick) );
-			Printf( "     X: %d, %d\n", pPlayer->ServerXYZVel[0], pPlayer->mo->velx );
-			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZVel[1], pPlayer->mo->vely );
-			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZVel[2], pPlayer->mo->velz );
+			Printf( "     X: %d, %d\n", pPlayer->ServerXYZVel[0], FLOAT2FIXED ( pPlayer->mo->Vel.X ) );
+			Printf( "     Y: %d, %d\n", pPlayer->ServerXYZVel[1], FLOAT2FIXED ( pPlayer->mo->Vel.Y ) );
+			Printf( "     Z: %d, %d\n", pPlayer->ServerXYZVel[2], FLOAT2FIXED ( pPlayer->mo->Vel.Z ) );
 		}
 	}
 #endif
@@ -236,9 +236,9 @@ void CLIENT_PREDICT_PlayerPredict( void )
 #ifdef	_DEBUG
 	if ( cl_showpredictionsuccess )
 	{
-		if (( SavedX == pPlayer->mo->x ) &&
-			( SavedY == pPlayer->mo->y ) &&
-			( SavedZ == pPlayer->mo->z ))
+		if (( SavedX == pPlayer->mo->_f_X() ) &&
+			( SavedY == pPlayer->mo->_f_Y() ) &&
+			( SavedZ == pPlayer->mo->_f_Z() ))
 		{
 			Printf( "SUCCESSFULLY predicted %d ticks!\n", static_cast<unsigned int> (ulPredictionTicks) );
 		}

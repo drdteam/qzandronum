@@ -8409,7 +8409,7 @@ CCMD( dumpcurrentactors )
 	TThinkerIterator<AActor>	Iterator;
 
 	while ( (pActor = Iterator.Next( )))
-		Printf( "%s (%d, %d)\n", pActor->GetClass( )->TypeName.GetChars( ), pActor->x >> FRACBITS, pActor->y >> FRACBITS );
+		Printf( "%s (%lf, %lf)\n", pActor->GetClass( )->TypeName.GetChars( ), pActor->X(), pActor->Y() );
 }
 
 CCMD( respawnactors )
@@ -8417,16 +8417,13 @@ CCMD( respawnactors )
 	AActor						*pActor;
 	AActor						*pNewActor;
 	AActor						*pActorInfo;
-	fixed_t						X;
-	fixed_t						Y;
-	fixed_t						Z;
 	TThinkerIterator<AActor>	Iterator;
 
 	while ( (pActor = Iterator.Next( )))
 	{
-		if (( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideDoomish") ) ||
-			( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideSpecial") ) ||
-			( pActor->state == RUNTIME_CLASS ( AInventory )->ActorInfo->FindState("HideIndefinitely") ))
+		if (( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideDoomish") ) ||
+			( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideSpecial") ) ||
+			( pActor->state == RUNTIME_CLASS ( AInventory )->FindState("HideIndefinitely") ))
 		{
 //			CLIENT_RestoreSpecialPosition( pActor );
 //			CLIENT_RestoreSpecialDoomThing( pActor, true );
@@ -8436,33 +8433,34 @@ CCMD( respawnactors )
 			pActorInfo = pActor->GetDefault( );
 
 			// This item appears to be untouched; no need to respawn it.
-			if (( pActor->x == pActor->SpawnPoint[0] ) &&
-				( pActor->y == pActor->SpawnPoint[1] ) &&
+			if (( pActor->X() == pActor->SpawnPoint[0] ) &&
+				( pActor->Y() == pActor->SpawnPoint[1] ) &&
 				( pActor->state == pActor->SpawnState ) &&
 				( pActor->health == pActorInfo->health ))
 			{
 				continue;
 			}
 
+			DVector3 pos;
 			// Determine the Z position to spawn this monster in.
 			if ( pActorInfo->flags & MF_SPAWNCEILING )
-				Z = ONCEILINGZ;
+				pos.Z = ONCEILINGZ;
 			else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
-				Z = FLOATRANDZ;
+				pos.Z = FLOATRANDZ;
 			else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-				Z = pActor->SpawnPoint[2];
+				pos.Z = pActor->SpawnPoint[2];
 			else
-				Z = ONFLOORZ;
+				pos.Z = ONFLOORZ;
 
 			// Spawn the new monster.
-			X = pActor->SpawnPoint[0];
-			Y = pActor->SpawnPoint[1];
-			pNewActor = Spawn( RUNTIME_TYPE( pActor ), X, Y, Z, NO_REPLACE );
+			pos.X = pActor->SpawnPoint[0];
+			pos.Y = pActor->SpawnPoint[1];
+			pNewActor = Spawn( pActor->GetClass( ), pos, NO_REPLACE );
 
-			if ( Z == ONFLOORZ )
-				pNewActor->z += pNewActor->SpawnPoint[2];
-			else if ( Z == ONCEILINGZ )
-				pNewActor->z -= pNewActor->SpawnPoint[2];
+			if ( pos.Z == ONFLOORZ )
+				pNewActor->AddZ ( pNewActor->SpawnPoint[2] );
+			else if ( pos.Z == ONCEILINGZ )
+				pNewActor->AddZ ( -pNewActor->SpawnPoint[2] );
 
 			// Inherit attributes from the old actor.
 			pNewActor->SpawnPoint[0] = pActor->SpawnPoint[0];
@@ -8470,7 +8468,7 @@ CCMD( respawnactors )
 			pNewActor->SpawnPoint[2] = pActor->SpawnPoint[2];
 			pNewActor->SpawnAngle = pActor->SpawnAngle;
 			pNewActor->SpawnFlags = pActor->SpawnFlags;
-			pNewActor->angle = ANG45 * ( pActor->SpawnAngle / 45 );
+			pNewActor->Angles.Yaw = static_cast<double>(pActor->SpawnAngle);
 
 			// Just do this stuff for monsters.
 			if ( pActor->flags & MF_COUNTKILL )
