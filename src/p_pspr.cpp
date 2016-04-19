@@ -47,7 +47,7 @@
 // This was determined by making a triangle from the max autoaim range (1024) by
 // player radius (16) to get an angle of ~0.89 degrees. This below value is the
 // binary value of this angle.
-#define AUTOAIM_MINANGLE		0xA20500
+#define AUTOAIM_MINANGLE		FIXED2FLOAT ( 0xA20500 )
 
 // TYPES -------------------------------------------------------------------
 
