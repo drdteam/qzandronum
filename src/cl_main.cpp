@@ -3237,6 +3237,8 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 		pActor->Destroy( );
 	}
 
+	DVector3 pos ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) );
+
 	// Handle sprite/particle display options.
 	if ( stricmp( pType->TypeName.GetChars( ), "blood" ) == 0 )
 	{
@@ -3245,7 +3247,7 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 			angle_t	Angle;
 
 			Angle = ( M_Random( ) - 128 ) << 24;
-			P_DrawSplash2( 32, X, Y, Z, Angle, 2, 0 );
+			P_DrawSplash2( 32, pos, ANGLE2FLOAT ( Angle ), 2, 0 );
 		}
 
 		// Just do particles.
@@ -3260,13 +3262,13 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 			angle_t	Angle;
 
 			Angle = ( M_Random( ) - 128 ) << 24;
-			P_DrawSplash2( 32, X, Y, Z, Angle, 1, 1 );
+			P_DrawSplash2( 32, pos, ANGLE2FLOAT ( Angle ), 1, 1 );
 			return ( NULL );
 		}
 	}
 
 	// Now that all checks have been done, spawn the actor.
-	pActor = Spawn( pType, X, Y, Z, NO_REPLACE );
+	pActor = Spawn( pType, pos, NO_REPLACE );
 	if ( pActor )
 	{
 		pActor->lNetID = lNetID;
@@ -3323,7 +3325,7 @@ void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, f
 	}
 
 	// Now that all checks have been done, spawn the actor.
-	pActor = Spawn( pType, X, Y, Z, NO_REPLACE );
+	pActor = Spawn( pType, DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), NO_REPLACE );
 	if ( pActor == NULL )
 	{
 		client_PrintWarning( "CLIENT_SpawnMissile: Failed to spawn missile: %ld\n", lNetID );
@@ -4095,7 +4097,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	}
 
 	// Spawn the body.
-	pActor = static_cast<APlayerPawn *>( Spawn( pPlayer->cls, X, Y, Z, NO_REPLACE ));
+	pActor = static_cast<APlayerPawn *>( Spawn( pPlayer->cls, DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), NO_REPLACE ));
 
 	pPlayer->mo = pActor;
 	pActor->player = pPlayer;
@@ -4269,12 +4271,11 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !bMorph && !bPlayerWasMorphed )
 	{
 		// Spawn the respawn fog.
-		unsigned an = pActor->_f_angle() >> ANGLETOFINESHIFT;
 		DVector2 vector = pActor->Angles.Yaw.ToVector(20);
 		DVector2 fogpos = P_GetOffsetPosition(pActor->X(), pActor->Y(), vector.X, vector.Y);
 		// [CK] Don't spawn fog for facing west spawners online, if compatflag is on.
 		if (!(pActor->_f_angle() == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
-			Spawn<ATeleportFog>( fogpos.X, fogpos.Y, pActor->Z() + TELEFOGHEIGHT, ALLOW_REPLACE );
+			Spawn<ATeleportFog>( DVector3 ( fogpos.X, fogpos.Y, pActor->Z() + TELEFOGHEIGHT), ALLOW_REPLACE );
 	}
 
 	pPlayer->playerstate = PST_LIVE;
@@ -7361,7 +7362,7 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 		double fogDelta = pActor->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
 		DVector2 vector = Angle.ToVector(20);
 		DVector2 fogpos = P_GetOffsetPosition(pActor->X(), pActor->Y(), vector.X, vector.Y);
-		Spawn<ATeleportFog>( fogpos.X, fogpos.Y, pActor->Z() + fogDelta, ALLOW_REPLACE );
+		Spawn<ATeleportFog>( DVector3 ( fogpos.X, fogpos.Y, pActor->Z() + fogDelta ), ALLOW_REPLACE );
 	}
 
 	// Set the thing's new velocity.
@@ -7545,7 +7546,7 @@ static void client_SpawnBlood( BYTESTREAM_s *pByteStream )
 
 	// [BB] P_SpawnBlood crashes if pOriginator is a NULL pointer.
 	if ( pOriginator )
-		P_SpawnBlood (X, Y, Z, Dir, Damage, pOriginator);
+		P_SpawnBlood ( DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), ANGLE2FLOAT ( Dir ), Damage, pOriginator);
 }
 
 //*****************************************************************************
@@ -7553,10 +7554,10 @@ static void client_SpawnBlood( BYTESTREAM_s *pByteStream )
 static void client_SpawnBloodSplatter( BYTESTREAM_s *pByteStream, bool bIsBloodSplatter2 )
 {
 	// Read in the XYZ location of the blood.
-	fixedvec3 pos;
-	pos.x = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	pos.y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	pos.z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	DVector3 pos;
+	pos.X = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	pos.Y = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	pos.Z = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 
 	// Read in the NetID of the originator.
 	LONG lID = NETWORK_ReadShort( pByteStream );
@@ -7566,10 +7567,11 @@ static void client_SpawnBloodSplatter( BYTESTREAM_s *pByteStream, bool bIsBloodS
 
 	if ( pOriginator )
 	{
+		DAngle hitangle = ANGLE2FLOAT ( 0u - pOriginator->__f_AngleTo ( FLOAT2FIXED ( pos.X ), FLOAT2FIXED ( pos.Y ) ) ) ;
 		if ( bIsBloodSplatter2 )
-			P_BloodSplatter2 (pos, pOriginator);
+			P_BloodSplatter2 (pos, pOriginator, hitangle);
 		else
-			P_BloodSplatter (pos, pOriginator);
+			P_BloodSplatter (pos, pOriginator, hitangle);
 	}
 }
 
@@ -10336,7 +10338,7 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 	const bool playerHadNoWeapon = ( ( players[ulPlayer].ReadyWeapon == NULL ) &&  ( players[ulPlayer].PendingWeapon == WP_NOCHANGE ) );
 
 	// Try to give the player the item.
-	pInventory = static_cast<AInventory *>( Spawn( pType, 0, 0, 0, NO_REPLACE ));
+	pInventory = static_cast<AInventory *>( Spawn( pType ));
 	if ( pInventory != NULL )
 	{
 		if ( lAmount > 0 )
@@ -10582,7 +10584,7 @@ static void client_DoInventoryPickup( BYTESTREAM_s *pByteStream )
 		return;
 
 	// If the player doesn't have this inventory item, break out.
-	pInventory = static_cast<AInventory *>( Spawn( PClass::FindActor( szClassName ), 0, 0, 0, NO_REPLACE ));
+	pInventory = static_cast<AInventory *>( Spawn( PClass::FindActor( szClassName ) ));
 	if ( pInventory == NULL )
 		return;
 
@@ -12037,7 +12039,7 @@ static void client_EarthQuake( BYTESTREAM_s *pByteStream )
 		return;
 
 	// Create the earthquake. Since this is client-side, damage is always 0.
-	new DEarthquake( pCenter, lIntensity, lIntensity, 0, lDuration, 0, lTremorRadius, quakesound, 0, 0, 0, 0 );
+	new DEarthquake( pCenter, lIntensity, lIntensity, 0, lDuration, 0, lTremorRadius, quakesound, 0, 0, 0, 0, 0, 0 );
 }
 
 //*****************************************************************************

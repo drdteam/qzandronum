@@ -96,9 +96,9 @@ struct FTraceInfo
 
 	void SetSourcePosition()
 	{
-		Results->SrcFromTarget = { StartX, StartY, StartZ };
-		Results->HitVector = { Vx, Vy, Vz };
-		Results->SrcAngleToTarget = R_PointToAngle2(0, 0, Results->HitPos.x - StartX, Results->HitPos.y - StartY);
+		Results->SrcFromTarget = { FIXED2DBL(StartX), FIXED2DBL(StartY), FIXED2DBL(StartZ) };
+		Results->HitVector = { FIXED2DBL(Vx), FIXED2DBL(Vy), FIXED2DBL(Vz) };
+		Results->SrcAngleFromTarget = VecToAngle(Results->HitVector);
 	}
 
 
@@ -124,7 +124,7 @@ bool Trace (fixed_t x, fixed_t y, fixed_t z, sector_t *sector,
 	FTraceResults tempResult;
 
 	memset(&tempResult, 0, sizeof(tempResult));
-	tempResult.Fraction = tempResult.Distance = FIXED_MAX;
+	tempResult.Fraction = tempResult.Distance = NO_VALUE;
 
 	ptflags = actorMask ? PT_ADDLINES|PT_ADDTHINGS|PT_COMPATIBLE : PT_ADDLINES;
 
@@ -656,10 +656,10 @@ cont:
 
 		if (Results->HitType == TRACE_HitWall)
 		{
-			Results->HitPos = { hitx, hity, hitz };
+			Results->HitPos = { FIXED2DBL(hitx), FIXED2DBL(hity), FIXED2DBL(hitz) };
 			SetSourcePosition();
-			Results->Distance = dist;
-			Results->Fraction = in->frac;
+			Results->Distance = FIXED2DBL(dist);
+			Results->Fraction = FIXED2DBL(in->frac);
 			Results->Line = in->d.line;
 			Results->Side = lineside;
 		}
@@ -783,10 +783,10 @@ cont1:
 
 
 	Results->HitType = TRACE_HitActor;
-	Results->HitPos = { hitx, hity, hitz };
+	Results->HitPos = { FIXED2DBL(hitx), FIXED2DBL(hity), FIXED2DBL(hitz) };
 	SetSourcePosition();
-	Results->Distance = dist;
-	Results->Fraction = in->frac;
+	Results->Distance = FIXED2DBL(dist);
+	Results->Fraction = FIXED2DBL(in->frac);
 	Results->Actor = in->d.thing;
 
 	if (TraceCallback != NULL)
@@ -840,7 +840,7 @@ bool FTraceInfo::TraceTraverse (int ptflags)
 		}
 
 		// We have something closer in the storage for portal subtraces.
-		if (TempResults->HitType != TRACE_HitNone && in->frac > TempResults->Fraction)
+		if (TempResults->HitType != TRACE_HitNone && FIXED2DBL(in->frac) > TempResults->Fraction)
 		{
 			break;
 		}
@@ -863,7 +863,7 @@ bool FTraceInfo::TraceTraverse (int ptflags)
 		// We still need to do a water check here or this may get missed on occasion
 		if (Results->CrossedWater == NULL &&
 			CurSector->heightsec != NULL &&
-			CurSector->heightsec->floorplane.ZatPoint(Results->HitPos) >= Results->HitPos.z)
+			CurSector->heightsec->floorplane.ZatPoint(Results->HitPos) >= Results->HitPos.Z)
 		{
 			// Save the result so that the water check doesn't destroy it.
 			FTraceResults *res = Results;
@@ -900,7 +900,7 @@ bool FTraceInfo::TraceTraverse (int ptflags)
 
 	if (Results->CrossedWater == NULL &&
 		CurSector->heightsec != NULL &&
-		CurSector->heightsec->floorplane.ZatPoint(Results->HitPos) >= Results->HitPos.z)
+		CurSector->heightsec->floorplane.ZatPoint(Results->HitPos) >= Results->HitPos.Z)
 	{
 		// Save the result so that the water check doesn't destroy it.
 		FTraceResults *res = Results;
@@ -917,12 +917,12 @@ bool FTraceInfo::TraceTraverse (int ptflags)
 	if (Results->HitType == TRACE_HitNone && Results->Distance == 0)
 	{
 		Results->HitPos = {
-			StartX + FixedMul(Vx, MaxDist),
-			StartY + FixedMul(Vy, MaxDist),
-			StartZ + FixedMul(Vz, MaxDist) };
+			FIXED2DBL(StartX + FixedMul(Vx, MaxDist)),
+			FIXED2DBL(StartY + FixedMul(Vy, MaxDist)),
+			FIXED2DBL(StartZ + FixedMul(Vz, MaxDist)) };
 		SetSourcePosition();
-		Results->Distance = MaxDist;
-		Results->Fraction = FRACUNIT;
+		Results->Distance = FIXED2DBL(MaxDist);
+		Results->Fraction = 1.;
 	}
 	return Results->HitType != TRACE_HitNone;
 }
@@ -948,12 +948,12 @@ bool FTraceInfo::CheckPlane (const secplane_t &plane)
 		if (hitdist > EnterDist && hitdist < MaxDist)
 		{
 			Results->HitPos = {
-				StartX + FixedMul(Vx, hitdist),
-				StartY + FixedMul(Vy, hitdist),
-				StartZ + FixedMul(Vz, hitdist) };
+				FIXED2DBL(StartX + FixedMul(Vx, hitdist)),
+				FIXED2DBL(StartY + FixedMul(Vy, hitdist)),
+				FIXED2DBL(StartZ + FixedMul(Vz, hitdist)) };
 			SetSourcePosition();
-			Results->Distance = hitdist;
-			Results->Fraction = FixedDiv (hitdist, MaxDist);
+			Results->Distance = FIXED2DBL(hitdist);
+			Results->Fraction = FIXED2DBL(FixedDiv (hitdist, MaxDist));
 			return true;
 		}
 	}

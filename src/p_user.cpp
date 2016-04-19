@@ -2224,7 +2224,7 @@ void APlayerPawn::DropImportantItems( bool bLeavingGame, AActor *pSource )
 				SCOREBOARD_RefreshHUD( );
 
 			// Spawn a new flag.
-			pTeamItem = Spawn( PClass::FindActor( "WhiteFlag" ), FLOAT2FIXED(X()), FLOAT2FIXED(Y()), ONFLOORZ, NO_REPLACE );
+			pTeamItem = Spawn( PClass::FindActor( "WhiteFlag" ), DVector3 ( X(), Y(), ONFLOORZ ), NO_REPLACE );
 			if ( pTeamItem )
 			{
 				pTeamItem->flags |= MF_DROPPED;
@@ -2532,7 +2532,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SkullPop)
 	}
 
 	self->flags &= ~MF_SOLID;
-	mo = (APlayerPawn *)Spawn (spawntype, self->PosPlusZ(48*FRACUNIT), NO_REPLACE);
+	mo = (APlayerPawn *)Spawn (spawntype, self->PosPlusZ(48.), NO_REPLACE);
 	//mo->target = self;
 	mo->Vel.X = pr_skullpop.Random2() / 128.;
 	mo->Vel.Y = pr_skullpop.Random2() / 128.;

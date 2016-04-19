@@ -1256,7 +1256,7 @@ DEFINE_PROPERTY(maxstepheight, F, Actor)
 //==========================================================================
 DEFINE_PROPERTY(maxdropoffheight, F, Actor)
 {
-	PROP_FIXED_PARM(i, 0);
+	PROP_DOUBLE_PARM(i, 0);
 	defaults->MaxDropOffHeight = i;
 }
 
@@ -2045,7 +2045,7 @@ DEFINE_CLASS_PROPERTY(upsound, S, Weapon)
 //==========================================================================
 DEFINE_CLASS_PROPERTY(yadjust, F, Weapon)
 {
-	PROP_FIXED_PARM(i, 0);
+	PROP_FLOAT_PARM(i, 0);
 	defaults->YAdjust = i;
 }
 
@@ -2073,7 +2073,7 @@ DEFINE_CLASS_PROPERTY(bobstyle, S, Weapon)
 //==========================================================================
 DEFINE_CLASS_PROPERTY(bobspeed, F, Weapon)
 {
-	PROP_FIXED_PARM(i, 0);
+	PROP_FLOAT_PARM(i, 0);
 	defaults->BobSpeed = i;
 }
 
@@ -2082,7 +2082,7 @@ DEFINE_CLASS_PROPERTY(bobspeed, F, Weapon)
 //==========================================================================
 DEFINE_CLASS_PROPERTY(bobrangex, F, Weapon)
 {
-	PROP_FIXED_PARM(i, 0);
+	PROP_FLOAT_PARM(i, 0);
 	defaults->BobRangeX = i;
 }
 
@@ -2091,7 +2091,7 @@ DEFINE_CLASS_PROPERTY(bobrangex, F, Weapon)
 //==========================================================================
 DEFINE_CLASS_PROPERTY(bobrangey, F, Weapon)
 {
-	PROP_FIXED_PARM(i, 0);
+	PROP_FLOAT_PARM(i, 0);
 	defaults->BobRangeY = i;
 }
 

@@ -768,7 +768,7 @@ void SERVERCOMMANDS_SetPlayerHealthAndMaxHealthBonus( ULONG ulPlayer, ULONG ulPl
 
 	// [BB] Workaround to set max health bonus for the player on the client(s).
 	if ( players[ulPlayer].lMaxHealthBonus > 0 ) {
-		AInventory *pInventory = Spawn<AMaxHealth>(0,0,0, NO_REPLACE);
+		AInventory *pInventory = static_cast<AInventory*> ( Spawn ( "MaxHealth" ) );
 		if ( pInventory )
 		{
 			pInventory->Amount = players[ulPlayer].lMaxHealthBonus;
@@ -792,7 +792,7 @@ void SERVERCOMMANDS_SetPlayerArmorAndMaxArmorBonus( ULONG ulPlayer, ULONG ulPlay
 
 	if ( pArmor && ( pArmor->BonusCount > 0 ) )
 	{
-		AInventory *pInventory = static_cast<AInventory*> ( Spawn( PClass::FindActor( "MaxArmorBonus" ), 0,0,0, NO_REPLACE) );
+		AInventory *pInventory = static_cast<AInventory*> ( Spawn( "MaxArmorBonus" ) );
 		if ( pInventory ) 
 		{
 			pInventory->Amount = pArmor->BonusCount;

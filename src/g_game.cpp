@@ -3308,9 +3308,6 @@ void GAME_ResetMap( bool bRunEnterScripts )
 	AActor							*pActor;
 	AActor							*pNewActor;
 	AActor							*pActorInfo;
-	fixed_t							X;
-	fixed_t							Y;
-	fixed_t							Z;
 	TThinkerIterator<AActor>		ActorIterator;
 
 	// Unload decals.
@@ -3779,25 +3776,26 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				pActorInfo = pActor->GetDefault( );
 
 				// Spawn the new actor.
-				X = pActor->SpawnPoint[0];
-				Y = pActor->SpawnPoint[1];
+				DVector3 pos;
+				pos.X = pActor->SpawnPoint[0];
+				pos.Y = pActor->SpawnPoint[1];
 
 				// Determine the Z point based on its flags.
 				if ( pActorInfo->flags & MF_SPAWNCEILING )
-					Z = ONCEILINGZ;
+					pos.Z = ONCEILINGZ;
 				else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
-					Z = FLOATRANDZ;
+					pos.Z = FLOATRANDZ;
 				else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-					Z = pActor->SpawnPoint[2];
+					pos.Z = pActor->SpawnPoint[2];
 				else
-					Z = ONFLOORZ;
+					pos.Z = ONFLOORZ;
 
-				pNewActor = Spawn( pActor->GetClass( ), X, Y, Z, NO_REPLACE );
+				pNewActor = Spawn( pActor->GetClass( ), pos, NO_REPLACE );
 
 				// Adjust the Z position after it's spawned.
-				if ( Z == ONFLOORZ )
+				if ( pos.Z == ONFLOORZ )
 					pNewActor->AddZ ( pActor->SpawnPoint[2] );
-				else if ( Z == ONCEILINGZ )
+				else if ( pos.Z == ONCEILINGZ )
 					pNewActor->AddZ ( -pActor->SpawnPoint[2] );
 
 				// Inherit attributes from the old actor.
@@ -3907,28 +3905,29 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 
 		// Spawn the new actor.
-		X = pActor->SpawnPoint[0];
-		Y = pActor->SpawnPoint[1];
+		DVector3 pos;
+		pos.X = pActor->SpawnPoint[0];
+		pos.Y = pActor->SpawnPoint[1];
 
 		// Determine the Z point based on its flags.
 		if ( pActorInfo->flags & MF_SPAWNCEILING )
-			Z = ONCEILINGZ;
+			pos.Z = ONCEILINGZ;
 		else if ( pActorInfo->flags2 & MF2_SPAWNFLOAT )
-			Z = FLOATRANDZ;
+			pos.Z = FLOATRANDZ;
 		else if ( pActorInfo->flags2 & MF2_FLOATBOB )
-			Z = pActor->SpawnPoint[2];
+			pos.Z = pActor->SpawnPoint[2];
 		else
-			Z = ONFLOORZ;
+			pos.Z = ONFLOORZ;
 
-		pNewActor = Spawn( pActor->GetClass(), X, Y, Z, NO_REPLACE );
+		pNewActor = Spawn( pActor->GetClass(), pos, NO_REPLACE );
 
 		// [BB] This if fixes a server crash, if ambient sounds are currently playing
 		// at the end of a countdown (DUEL start countdown for example).
 		if( pNewActor != NULL ){
 			// Adjust the Z position after it's spawned.
-			if ( Z == ONFLOORZ )
+			if ( pos.Z == ONFLOORZ )
 				pNewActor->AddZ ( pActor->SpawnPoint[2] );
-			else if ( Z == ONCEILINGZ )
+			else if ( pos.Z == ONCEILINGZ )
 				pNewActor->AddZ ( -pActor->SpawnPoint[2] );
 
 			// Inherit attributes from the old actor.
@@ -4106,7 +4105,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 	{
 		const int i = pr_dmspawn() % Spots.Size();
 
-		pArtifact = Spawn( pArtifactType, Spots[i]._f_X(), Spots[i]._f_Y(), ONFLOORZ, ALLOW_REPLACE );
+		pArtifact = Spawn( pArtifactType, DVector3 ( FIXED2FLOAT ( Spots[i]._f_X() ), FIXED2FLOAT ( Spots[i]._f_Y() ), ONFLOORZ ), ALLOW_REPLACE );
 		const DWORD spawnFlags = pArtifact->flags;
 		// [BB] Ensure that the artifact is solid, otherwise P_TestMobjLocation won't complain if a player already is at the proposed position.
 		pArtifact->flags |= MF_SOLID;
@@ -4123,7 +4122,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 
 	// [BB] If there is no free spot, just select one and spawn the artifact there.
 	const int spotNum = pr_dmspawn() % Spots.Size();
-	return Spawn( pArtifactType, Spots[spotNum]._f_X(), Spots[spotNum]._f_Y(), ONFLOORZ, ALLOW_REPLACE );
+	return Spawn( pArtifactType, DVector3 ( FIXED2FLOAT ( Spots[spotNum]._f_X() ), FIXED2FLOAT ( Spots[spotNum]._f_Y() ), ONFLOORZ ), ALLOW_REPLACE );
 }
 
 //*****************************************************************************

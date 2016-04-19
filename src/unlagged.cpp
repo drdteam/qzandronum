@@ -413,7 +413,7 @@ void UNLAGGED_SpawnDebugActors ( )
 	// of a certain type at a specified position without actually having such an actor at that
 	// position (and I don't feel like adding such a thing just for this debug function) we
 	// create and move a dummy actor here.
-	AActor *pActor = Spawn( pType, 0, 0, 0, NO_REPLACE );
+	AActor *pActor = Spawn( pType );
 	if ( pActor )
 	{
 		for ( ULONG ulPlayer = 0; ulPlayer < MAXPLAYERS; ++ulPlayer )

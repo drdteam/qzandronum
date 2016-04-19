@@ -295,7 +295,7 @@ void TEAM_ExecuteReturnRoutine( ULONG ulTeamIdx, AActor *pReturner )
 		pClass = TEAM_GetItem( ulTeamIdx );
 
 	g_bSpawningTemporaryFlag = true;
-	pTeamItem = Spawn( pClass, 0, 0, 0, NO_REPLACE );
+	pTeamItem = Spawn( pClass );
 	g_bSpawningTemporaryFlag = false;
 	if ( pTeamItem->IsKindOf( PClass::FindClass( "TeamItem" )) == false )
 	{

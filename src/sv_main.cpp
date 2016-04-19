@@ -5920,7 +5920,7 @@ static bool server_SummonCheat( BYTESTREAM_s *pByteStream, LONG lType )
 		else
 		{
 			const AActor	 *pDef = GetDefaultByType( pType );
-			fixedvec3 spawnpos = pSource->_f_Vec3Angle(pDef->_f_radius() * 2 + pSource->_f_radius(), pSource->_f_angle(), 8 * FRACUNIT);
+			DVector3 spawnpos = pSource->Vec3Angle(pDef->radius * 2 + pSource->radius, pSource->Angles.Yaw, 8.);
 			pActor = Spawn(pType, spawnpos, ALLOW_REPLACE);
 
 			// [BB] If this is the summonfriend cheat, we have to make the monster friendly.

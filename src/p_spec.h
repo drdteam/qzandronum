@@ -1183,21 +1183,18 @@ enum
 	TELF_KEEPHEIGHT			= 16,
 };
 
-// [BB] Added spawnOnClient
-void P_SpawnTeleportFog(AActor *mobj, fixed_t x, fixed_t y, fixed_t z, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false); //Spawns teleport fog. Pass the actor to pluck TeleFogFromType and TeleFogToType. 'from' determines if this is the fog to spawn at the old position (true) or new (false).
-// [BB] Added spawnOnClient
-inline void P_SpawnTeleportFog(AActor *mobj, const fixedvec3 &pos, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false)
-{
-	P_SpawnTeleportFog(mobj, pos.x, pos.y, pos.z, beforeTele, setTarget, spawnOnClient);
-}
-inline void P_SpawnTeleportFog(AActor *mobj, const DVector3 &pos, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false) // [BB] Added spawnOnClient
-{
-	P_SpawnTeleportFog(mobj, FLOAT2FIXED(pos.X), FLOAT2FIXED(pos.Y), FLOAT2FIXED(pos.Z), beforeTele, setTarget, spawnOnClient);
-}
-inline void P_SpawnTeleportFog(AActor *mobj, double x, double y, double z, bool beforeTele = true, bool setTarget = false)
+//Spawns teleport fog. Pass the actor to pluck TeleFogFromType and TeleFogToType. 'from' determines if this is the fog to spawn at the old position (true) or new (false).
+void P_SpawnTeleportFog(AActor *mobj, const DVector3 &pos, bool beforeTele = true, bool setTarget = false, bool spawnOnClient = false); // [BB] Added spawnOnClient
+
+void P_SpawnTeleportFog(AActor *mobj, fixed_t x, fixed_t y, fixed_t z, bool beforeTele = true, bool setTarget = false) = delete;
+inline void P_SpawnTeleportFog(AActor *mobj, const fixedvec3 &pos, bool beforeTele = true, bool setTarget = false) = delete;
+inline void P_SpawnTeleportFog(AActor *mobj, double x, double y, double z, bool beforeTele = true, bool setTarget = false) = delete;
+/*
 {
 	P_SpawnTeleportFog(mobj, FLOAT2FIXED(x), FLOAT2FIXED(y), FLOAT2FIXED(z), beforeTele, setTarget);
 }
+*/
+
 bool P_Teleport (AActor *thing, fixed_t x, fixed_t y, fixed_t z, DAngle angle, int flags); // bool useFog, bool sourceFog, bool keepOrientation, bool haltVelocity = true, bool keepHeight = false
 inline bool P_Teleport(AActor *thing, const DVector3 &pos, DAngle angle, int flags)
 {
@@ -1227,7 +1224,7 @@ void P_DoDeferedScripts (void);
 //
 // [RH] p_quake.c
 //
-bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY, int intensityZ, int duration, int damrad, int tremrad, FSoundID quakesfx, int flags, double waveSpeedX, double waveSpeedY, double waveSpeedZ);
+bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY, int intensityZ, int duration, int damrad, int tremrad, FSoundID quakesfx, int flags, double waveSpeedX, double waveSpeedY, double waveSpeedZ, int falloff, int highpoint);
 bool P_StartQuake(AActor *activator, int tid, int intensity, int duration, int damrad, int tremrad, FSoundID quakesfx);
 
 // [BC] Prototypes dealing with network IDs for movers.
