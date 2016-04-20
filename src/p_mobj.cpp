@@ -1781,7 +1781,7 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 
 	if (line != NULL && cl_missiledecals)
 	{
-		fixedvec3 pos = mo->PosRelative(line);
+		fixedvec3 pos = mo->_f_PosRelative(line);
 		int side = P_PointOnLineSidePrecise (pos.x, pos.y, line);
 		if (line->sidedef[side] == NULL)
 			side ^= 1;
@@ -2008,12 +2008,12 @@ bool AActor::FloorBounceMissile (secplane_t &plane)
 			flags &= ~MF_INBOUNCE;
 			return false;
 		}
-		else Vel.Z *= _bouncefactor();
+		else Vel.Z *= bouncefactor;
 	}
 	else // Don't run through this for MBF-style bounces
 	{
 		// The reflected velocity keeps only about 70% of its original speed
-		Vel = (Vel - plane.Normal() * dot) * _bouncefactor();
+		Vel = (Vel - plane.Normal() * dot) * bouncefactor;
 		AngleFromVel();
 	}
 
@@ -2600,7 +2600,7 @@ explode:
 					if (tm.ceilingline &&
 						tm.ceilingline->backsector &&
 						tm.ceilingline->backsector->GetTexture(sector_t::ceiling) == skyflatnum &&
-						mo->_f_Z() >= tm.ceilingline->backsector->ceilingplane.ZatPoint(mo->PosRelative(tm.ceilingline)))
+						mo->_f_Z() >= tm.ceilingline->backsector->ceilingplane.ZatPoint(mo->_f_PosRelative(tm.ceilingline)))
 					{
 						// Hack to prevent missiles exploding against the sky.
 						// Does not handle sky floors.
@@ -2786,7 +2786,7 @@ explode:
 		// Reducing player velocity is no longer needed to reduce
 		// bobbing, so ice works much better now.
 
-		double friction = FIXED2DBL(P_GetFriction (mo, NULL));
+		double friction = P_GetFriction (mo, NULL);
 
 		mo->Vel.X *= friction;
 		mo->Vel.Y *= friction;
@@ -2797,8 +2797,8 @@ explode:
 
 		if (player && player->mo == mo)		//  Not voodoo dolls
 		{
-			player->Vel.X *= fORIG_FRICTION;
-			player->Vel.Y *= fORIG_FRICTION;
+			player->Vel.X *= ORIG_FRICTION;
+			player->Vel.Y *= ORIG_FRICTION;
 		}
 
 		// Don't let the velocity become less than the smallest representable fixed point value.
@@ -3228,11 +3228,11 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 		{
 			mo->_f_AddZ(finesine[(FINEANGLES/80*level.maptime)&FINEMASK]/8);
 		}
-		mo->Vel.Z *= fFRICTION_FLY;
+		mo->Vel.Z *= FRICTION_FLY;
 	}
 	if (mo->waterlevel && !(mo->flags & MF_NOGRAVITY))
 	{
-		fixed_t friction = FIXED_MIN;
+		double friction = -1;
 
 		// Check 3D floors -- might be the source of the waterlevel
 		for (auto rover : mo->Sector->e->XFloor.ffloors)
@@ -3240,17 +3240,17 @@ void P_ZMovement (AActor *mo, fixed_t oldfloorz)
 			if (!(rover->flags & FF_EXISTS)) continue;
 			if (!(rover->flags & FF_SWIMMABLE)) continue;
 
-			if (mo->_f_Z() >= rover->top.plane->ZatPoint(mo) ||
-				mo->_f_Z() + mo->_f_height()/2 < rover->bottom.plane->ZatPoint(mo))
+			if (mo->Z() >= rover->top.plane->ZatPointF(mo) ||
+				mo->Center() < rover->bottom.plane->ZatPointF(mo))
 				continue;
 
 			friction = rover->model->GetFriction(rover->top.isceiling);
 			break;
 		}
-		if (friction == FIXED_MIN)
+		if (friction < 0)
 			friction = mo->Sector->GetFriction();	// get real friction, even if from a terrain definition
 
-		mo->Vel.Z *= FIXED2DBL(friction);
+		mo->Vel.Z *= friction;
 	}
 
 //
@@ -3596,7 +3596,7 @@ static void PlayerLandedOnThing (AActor *mo, AActor *onmobj)
 		grunted = false;
 		// Why should this number vary by gravity?
 		// [BB] For unassigned voodoo dolls, mo->player->mo is NULL.
-		if (mo->player->mo && mo->health > 0 && mo->_f_velz() < -mo->player->mo->GruntSpeed)
+		if (mo->player->mo && mo->health > 0 && mo->Vel.Z < -mo->player->mo->GruntSpeed)
 		{
 			S_Sound (mo, CHAN_VOICE, "*grunt", 1, ATTN_NORM);
 			grunted = true;
@@ -4210,7 +4210,7 @@ fixedvec3 AActor::GetPortalTransition(fixed_t byoffset, sector_t **pSec)
 		AActor *port = sec->SkyBoxes[sector_t::ceiling];
 		if (testz > port->specialf1)
 		{
-			pos = PosRelative(port->Sector);
+			pos = _f_PosRelative(port->Sector);
 			sec = P_PointInSector(pos.x, pos.y);
 			moved = true;
 		}
@@ -4223,7 +4223,7 @@ fixedvec3 AActor::GetPortalTransition(fixed_t byoffset, sector_t **pSec)
 			AActor *port = sec->SkyBoxes[sector_t::floor];
 			if (testz <= port->specialf1)
 			{
-				pos = PosRelative(port->Sector);
+				pos = _f_PosRelative(port->Sector);
 				sec = P_PointInSector(pos.x, pos.y);
 			}
 			else break;
@@ -4245,7 +4245,7 @@ void AActor::CheckPortalTransition(bool islinked)
 		{
 			fixedvec3 oldpos = _f_Pos();
 			if (islinked && !moved) UnlinkFromWorld();
-			SetXYZ(PosRelative(port->Sector));
+			SetXYZ(_f_PosRelative(port->Sector));
 			PrevX += _f_X() - oldpos.x;
 			PrevY += _f_Y() - oldpos.y;
 			PrevZ += _f_Z() - oldpos.z;
@@ -4264,7 +4264,7 @@ void AActor::CheckPortalTransition(bool islinked)
 			{
 				fixedvec3 oldpos = _f_Pos();
 				if (islinked && !moved) UnlinkFromWorld();
-				SetXYZ(PosRelative(port->Sector));
+				SetXYZ(_f_PosRelative(port->Sector));
 				PrevX += _f_X() - oldpos.x;
 				PrevY += _f_Y() - oldpos.y;
 				PrevZ += _f_Z() - oldpos.z;
@@ -4615,7 +4615,7 @@ void AActor::Tick ()
 				{
 					continue;
 				}
-				fixedvec3 pos = PosRelative(sec);
+				fixedvec3 pos = _f_PosRelative(sec);
 				height = sec->floorplane.ZatPoint (pos);
 				if (_f_Z() > height)
 				{
@@ -4665,7 +4665,7 @@ void AActor::Tick ()
 			floorplane = P_FindFloorPlane(floorsector, _f_X(), _f_Y(), _f_floorz());
 
 			if (floorplane.c < STEEPSLOPE &&
-				floorplane.ZatPoint (PosRelative(floorsector)) <= _f_floorz())
+				floorplane.ZatPoint (_f_PosRelative(floorsector)) <= _f_floorz())
 			{
 				const msecnode_t *node;
 				bool dopush = true;
@@ -4677,7 +4677,7 @@ void AActor::Tick ()
 						const sector_t *sec = node->m_sector;
 						if (sec->floorplane.c >= STEEPSLOPE)
 						{
-							if (floorplane.ZatPointF (PosRelative(node->m_sector)) >= Z() - MaxStepHeight)
+							if (floorplane.ZatPointF (_f_PosRelative(node->m_sector)) >= Z() - MaxStepHeight)
 							{
 								dopush = false;
 								break;
@@ -5647,7 +5647,7 @@ void AActor::AdjustFloorClip ()
 	// do the floorclipping instead of the terrain type.
 	for (m = touching_sectorlist; m; m = m->m_tnext)
 	{
-		fixedvec3 pos = PosRelative(m->m_sector);
+		fixedvec3 pos = _f_PosRelative(m->m_sector);
 		sector_t *hsec = m->m_sector->GetHeightSec();
 		if (hsec == NULL && m->m_sector->floorplane.ZatPoint (pos) == _f_Z())
 		{
@@ -7276,7 +7276,7 @@ bool P_HitFloor (AActor *thing)
 	fixedvec3 pos;
 	for (m = thing->touching_sectorlist; m; m = m->m_tnext)
 	{
-		pos = thing->PosRelative(m->m_sector);
+		pos = thing->_f_PosRelative(m->m_sector);
 		if (thing->_f_Z() == m->m_sector->floorplane.ZatPoint(pos.x, pos.y))
 		{
 			break;
@@ -7321,7 +7321,7 @@ void P_CheckSplash(AActor *self, double distance)
 		// Explosion splashes never alert monsters. This is because A_Explode has
 		// a separate parameter for that so this would get in the way of proper 
 		// behavior.
-		fixedvec3 pos = self->PosRelative(floorsec);
+		fixedvec3 pos = self->_f_PosRelative(floorsec);
 		pos.z = self->_f_floorz();
 		P_HitWater (self, floorsec, pos, false, false);
 	}
@@ -7766,7 +7766,7 @@ AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 		// [XA] If MaxTargetRange is defined in the spawned projectile, use this as the
 		//      maximum range for the P_AimLineAttack call later; this allows MaxTargetRange
 		//      to function as a "maximum tracer-acquisition range" for seeker missiles.
-		double linetargetrange = defaultobject->maxtargetrange > 0 ? FIXED2DBL(defaultobject->maxtargetrange*64) : 16*64.;
+		double linetargetrange = defaultobject->maxtargetrange > 0 ? defaultobject->maxtargetrange*64 : 16*64.;
 
 		int i = 2;
 		do
@@ -7799,7 +7799,7 @@ AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 		z += source->Center() - source->Floorclip;
 		if (source->player != NULL)	// Considering this is for player missiles, it better not be NULL.
 		{
-			z += ((FIXED2DBL(source->player->mo->AttackZOffset) - 4) * source->player->crouchfactor);
+			z += ((source->player->mo->AttackZOffset - 4) * source->player->crouchfactor);
 		}
 		else
 		{
@@ -8353,8 +8353,8 @@ void PrintMiscActorInfo(AActor *query)
 		for (flagi = 0; flagi <= 31; flagi++)
 			if (query->flags7 & ActorFlags7::FromInt(1<<flagi)) Printf(" %s", FLAG_NAME(1<<flagi, flags7));
 		Printf("\nBounce flags: %x\nBounce factors: f:%f, w:%f", 
-			query->BounceFlags.GetValue(), FIXED2DBL(query->bouncefactor),
-			FIXED2DBL(query->wallbouncefactor));
+			query->BounceFlags.GetValue(), query->bouncefactor,
+			query->wallbouncefactor);
 		/*for (flagi = 0; flagi < 31; flagi++)
 			if (query->BounceFlags & 1<<flagi) Printf(" %s", flagnamesb[flagi]);*/
 		Printf("\nRender style = %i:%s, alpha %f\nRender flags: %x", 

@@ -212,8 +212,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	PARAM_CLASS_OPT	(pufftype, AActor)	{ pufftype = NULL; }
 	PARAM_INT_OPT	(flags)				{ flags = 0; }
 	PARAM_FLOAT_OPT	(range)				{ range = 0; }
-	PARAM_DANGLE_OPT(spread_xy)			{ spread_xy = 2.8125; }
-	PARAM_DANGLE_OPT(spread_z)			{ spread_z = 0.; }
+	PARAM_ANGLE_OPT	(spread_xy)			{ spread_xy = 2.8125; }
+	PARAM_ANGLE_OPT	(spread_z)			{ spread_z = 0.; }
 	PARAM_FLOAT_OPT	(lifesteal)			{ lifesteal = 0; }
 	PARAM_INT_OPT	(lifestealmax)		{ lifestealmax = 0; }
 	PARAM_CLASS_OPT	(armorbonustype, ABasicArmorBonus)	{ armorbonustype = NULL; }
@@ -973,9 +973,14 @@ static void FireRailgun(AActor *self, int offset_xy, bool fromweapon, PClassActo
 			damage = 75;
 	}
 
-	// [BB] This also handles color and spread.
+	FRailParams p;
+	p.source = self;
+	p.damage = damage;
+	p.offset_xy = offset_xy;
+	// [BB] This also handles spread.
 	// [TP] Now takes a puff too.
-	P_RailAttackWithPossibleSpread (self, damage, offset_xy, 0, 0, 0, 0, 0, puffType );
+	p.puff = puffType;
+	P_RailAttackWithPossibleSpread ( &p );
 
 	// [BC] Tell all the bots that a weapon was fired.
 	BOTS_PostWeaponFiredEvent( ULONG( player - players ), BOTEVENT_FIREDRAILGUN, BOTEVENT_ENEMY_FIREDRAILGUN, BOTEVENT_PLAYER_FIREDRAILGUN );
@@ -1083,9 +1088,9 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 	PARAM_CLASS_OPT	(spraytype, AActor)		{ spraytype = NULL; }
 	PARAM_INT_OPT	(numrays)				{ numrays = 0; }
 	PARAM_INT_OPT	(damagecnt)				{ damagecnt = 0; }
-	PARAM_DANGLE_OPT(angle)					{ angle = 0.; }
+	PARAM_ANGLE_OPT	(angle)					{ angle = 0.; }
 	PARAM_FLOAT_OPT	(distance)				{ distance = 0; }
-	PARAM_DANGLE_OPT(vrange)				{ vrange = 0.; }
+	PARAM_ANGLE_OPT	(vrange)				{ vrange = 0.; }
 	PARAM_INT_OPT	(defdamage)				{ defdamage = 0; }
 
 	int 				i;

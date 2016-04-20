@@ -636,14 +636,15 @@ void P_PlayerStartStomp(AActor *actor, bool mononly)
 //
 //==========================================================================
 
-int P_GetFriction(const AActor *mo, int *frictionfactor)
+double P_GetFriction(const AActor *mo, double *frictionfactor)
 {
-	int friction = ORIG_FRICTION;
-	int movefactor = ORIG_FRICTION_FACTOR;
-	fixed_t newfriction;
+	double friction = ORIG_FRICTION;
+	double movefactor = ORIG_FRICTION_FACTOR;
+	double newfriction;
+	double newmf;
+
 	const msecnode_t *m;
 	sector_t *sec;
-	fixed_t newmf;
 
 	if (mo->IsNoClip2())
 	{
@@ -657,7 +658,7 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 		(mo->waterlevel == 1 && mo->Z() > mo->floorz+ 6))
 	{
 		friction = mo->Sector->GetFriction(sector_t::floor, &movefactor);
-		movefactor >>= 1;
+		movefactor *= 0.5;
 
 		// Check 3D floors -- might be the source of the waterlevel
 		for (unsigned i = 0; i < mo->Sector->e->XFloor.ffloors.Size(); i++)
@@ -674,7 +675,7 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 			if (newfriction < friction || friction == ORIG_FRICTION)
 			{
 				friction = newfriction;
-				movefactor = newmf >> 1;
+				movefactor = newmf * 0.5;
 			}
 		}
 	}
@@ -686,7 +687,7 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 		for (m = mo->touching_sectorlist; m; m = m->m_tnext)
 		{
 			sec = m->m_sector;
-			fixedvec3 pos = mo->PosRelative(sec);
+			fixedvec3 pos = mo->_f_PosRelative(sec);
 
 			// 3D floors must be checked, too
 			for (unsigned i = 0; i < sec->e->XFloor.ffloors.Size(); i++)
@@ -697,13 +698,13 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 				if (rover->flags & FF_SOLID)
 				{
 					// Must be standing on a solid floor
-					if (mo->_f_Z() != rover->top.plane->ZatPoint(pos)) continue;
+					if (mo->Z() != rover->top.plane->ZatPointF(pos)) continue;
 				}
 				else if (rover->flags & FF_SWIMMABLE)
 				{
 					// Or on or inside a swimmable floor (e.g. in shallow water)
-					if (mo->_f_Z() > rover->top.plane->ZatPoint(pos) ||
-						(mo->_f_Top()) < rover->bottom.plane->ZatPoint(pos))
+					if (mo->Z() > rover->top.plane->ZatPointF(pos) ||
+						(mo->Top()) < rover->bottom.plane->ZatPointF(pos))
 						continue;
 				}
 				else
@@ -713,7 +714,7 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 				if (newfriction < friction || friction == ORIG_FRICTION)
 				{
 					friction = newfriction;
-					movefactor = newmf >> 1;
+					movefactor = newmf * 0.5;
 				}
 			}
 
@@ -724,9 +725,9 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 			}
 			newfriction = sec->GetFriction(sector_t::floor, &newmf);
 			if ((newfriction < friction || friction == ORIG_FRICTION) &&
-				(mo->_f_Z() <= sec->floorplane.ZatPoint(pos) ||
+				(mo->Z() <= sec->floorplane.ZatPointF(pos) ||
 				(sec->GetHeightSec() != NULL &&
-				mo->_f_Z() <= sec->heightsec->floorplane.ZatPoint(pos))))
+				mo->Z() <= sec->heightsec->floorplane.ZatPointF(pos))))
 			{
 				friction = newfriction;
 				movefactor = newmf;
@@ -734,9 +735,9 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 		}
 	}
 
-	if (mo->Friction != FRACUNIT)
+	if (mo->Friction != 1)
 	{
-		friction = clamp(FixedMul(friction, mo->Friction), 0, FRACUNIT);
+		friction = clamp((friction * mo->Friction), 0., 1.);
 		movefactor = FrictionToMoveFactor(friction);
 	}
 
@@ -756,9 +757,9 @@ int P_GetFriction(const AActor *mo, int *frictionfactor)
 //
 //==========================================================================
 
-int P_GetMoveFactor(const AActor *mo, int *frictionp)
+double P_GetMoveFactor(const AActor *mo, double *frictionp)
 {
-	int movefactor, friction;
+	double movefactor, friction;
 
 	// If the floor is icy or muddy, it's harder to get moving. This is where
 	// the different friction factors are applied to 'trying to move'. In
@@ -772,11 +773,11 @@ int P_GetMoveFactor(const AActor *mo, int *frictionp)
 		double velocity = mo->VelXYToSpeed();
 
 		if (velocity > MORE_FRICTION_VELOCITY * 4)
-			movefactor <<= 3;
+			movefactor *= 8;
 		else if (velocity > MORE_FRICTION_VELOCITY * 2)
-			movefactor <<= 2;
+			movefactor *= 4;
 		else if (velocity > MORE_FRICTION_VELOCITY)
-			movefactor <<= 1;
+			movefactor *= 2;
 	}
 
 	if (frictionp)
@@ -874,7 +875,7 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 			spechit_t spec;
 			spec.line = ld;
 			spec.refpos = cres.position;
-			spec.oldrefpos = tm.thing->PosRelative(ld);
+			spec.oldrefpos = tm.thing->_f_PosRelative(ld);
 			portalhit.Push(spec);
 			return true;
 		}
@@ -1042,14 +1043,14 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 	{
 		spec.line = ld;
 		spec.refpos = cres.position;
-		spec.oldrefpos = tm.thing->PosRelative(ld);
+		spec.oldrefpos = tm.thing->_f_PosRelative(ld);
 		spechit.Push(spec);
 	}
 	if (ld->isLinePortal())
 	{
 		spec.line = ld;
 		spec.refpos = cres.position;
-		spec.oldrefpos = tm.thing->PosRelative(ld);
+		spec.oldrefpos = tm.thing->_f_PosRelative(ld);
 		portalhit.Push(spec);
 	}
 
@@ -1309,7 +1310,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 
 		if (((tm.FromPMove || tm.thing->player != NULL) && thing->flags&MF_SOLID))
 		{
-			fixedvec3 oldpos = tm.thing->PosRelative(thing);
+			fixedvec3 oldpos = tm.thing->_f_PosRelative(thing);
 			// Both actors already overlap. To prevent them from remaining stuck allow the move if it
 			// takes them further apart or the move does not change the position (when called from P_ChangeSector.)
 			if (oldpos.x == thing->_f_X() && oldpos.y == thing->_f_Y())
@@ -1552,7 +1553,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 					{ // Push thing
 						if (thing->lastpush != tm.PushTime)
 						{
-							thing->Vel += tm.thing->Vel.XY() * thing->_pushfactor();
+							thing->Vel += tm.thing->Vel.XY() * thing->pushfactor;
 							thing->lastpush = tm.PushTime;
 						}
 					}
@@ -1627,7 +1628,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 	{ // Push thing
 		if (thing->lastpush != tm.PushTime)
 		{
-			thing->Vel += tm.thing->Vel.XY() * thing->_pushfactor();
+			thing->Vel += tm.thing->Vel.XY() * thing->pushfactor;
 			thing->lastpush = tm.PushTime;
 		}
 
@@ -2099,7 +2100,7 @@ static void CheckForPushSpecial(line_t *line, int side, AActor *mobj, fixedvec2 
 		if (posforwindowcheck && !(ib_compatflags & BCOMPATF_NOWINDOWCHECK) && line->backsector != NULL)
 		{ // Make sure this line actually blocks us and is not a window
 			// or similar construct we are standing inside of.
-			fixedvec3 pos = mobj->PosRelative(line);
+			fixedvec3 pos = mobj->_f_PosRelative(line);
 			fixed_t fzt = line->frontsector->ceilingplane.ZatPoint(*posforwindowcheck);
 			fixed_t fzb = line->frontsector->floorplane.ZatPoint(*posforwindowcheck);
 			fixed_t bzt = line->backsector->ceilingplane.ZatPoint(*posforwindowcheck);
@@ -3016,7 +3017,7 @@ void FSlide::HitSlideLine(line_t* ld)
 	// The wall is angled. Bounce if the angle of approach is		// phares
 	// less than 45 degrees.										// phares
 
-	fixedvec3 pos = slidemo->PosRelative(ld);
+	fixedvec3 pos = slidemo->_f_PosRelative(ld);
 	side = P_PointOnLineSide(pos.x, pos.y, ld);
 
 	lineangle = R_PointToAngle2(0, 0, ld->dx, ld->dy);
@@ -3224,7 +3225,7 @@ void FSlide::SlideTraverse(fixed_t startx, fixed_t starty, fixed_t endx, fixed_t
 
 		if (!(li->flags & ML_TWOSIDED) || !li->backsector)
 		{
-			fixedvec3 pos = slidemo->PosRelative(li);
+			fixedvec3 pos = slidemo->_f_PosRelative(li);
 			if (P_PointOnLineSide(pos.x, pos.y, li))
 			{
 				// don't hit the back side
@@ -3614,7 +3615,7 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, fixed_t &xmove, fixed_t &ymov
 		return NULL;
 	}
 
-	fixedvec3 pos = actor->PosRelative(actor->floorsector);
+	fixedvec3 pos = actor->_f_PosRelative(actor->floorsector);
 	const secplane_t *plane = &actor->floorsector->floorplane;
 	fixed_t planezhere = plane->ZatPoint(pos);
 
@@ -3694,7 +3695,7 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, fixed_t &xmove, fixed_t &ymov
 							sector_t *sec = node->m_sector;
 							if (sec->floorplane.c >= STEEPSLOPE)
 							{
-								fixedvec3 pos = actor->PosRelative(sec);
+								fixedvec3 pos = actor->_f_PosRelative(sec);
 								pos.x += xmove;
 								pos.y += ymove;
 
@@ -3891,7 +3892,7 @@ bool FSlide::BounceWall(AActor *mo)
 	deltaangle >>= ANGLETOFINESHIFT;
 
 	movelen = fixed_t(g_sqrt(double(mo->_f_velx())*mo->_f_velx() + double(mo->_f_vely())*mo->_f_vely()));
-	movelen = FixedMul(movelen, mo->wallbouncefactor);
+	movelen = fixed_t(movelen * mo->wallbouncefactor);
 
 	FBoundingBox box(mo->_f_X(), mo->_f_Y(), mo->_f_radius());
 	if (box.BoxOnLineSide(line) == -1)
@@ -3951,7 +3952,7 @@ bool P_BounceActor(AActor *mo, AActor *BlockingMobj, bool ontop)
 		if (!ontop)
 		{
 			DAngle angle = BlockingMobj->AngleTo(mo) + ((pr_bounce() % 16) - 8);
-			double speed = mo->VelXYToSpeed() * FIXED2DBL(mo->wallbouncefactor); // [GZ] was 0.75, using wallbouncefactor seems more consistent
+			double speed = mo->VelXYToSpeed() * mo->wallbouncefactor; // [GZ] was 0.75, using wallbouncefactor seems more consistent
 			mo->Angles.Yaw = ANGLE2DBL(angle);
 			mo->VelFromAngle(speed);
 			mo->PlayBounceSound(true);
@@ -3988,13 +3989,13 @@ bool P_BounceActor(AActor *mo, AActor *BlockingMobj, bool ontop)
 				}
 				else
 				{
-					mo->Vel.Z *= mo->_bouncefactor();
+					mo->Vel.Z *= mo->bouncefactor;
 				}
 			}
 			else // Don't run through this for MBF-style bounces
 			{
 				// The reflected velocity keeps only about 70% of its original speed
-				mo->Vel.Z = (mo->Vel.Z - 2. / dot) * mo->_bouncefactor();
+				mo->Vel.Z = (mo->Vel.Z - 2. / dot) * mo->bouncefactor;
 			}
 
 			mo->PlayBounceSound(true);
@@ -4639,7 +4640,7 @@ DAngle P_AimLineAttack(AActor *t1, DAngle angle, double distance, FTranslatedLin
 	// [BB] In ST, right after a map change, mo apparently can be zero.
 	if ( ( t1->player != NULL ) && ( t1->player->mo != NULL ) )
 	{
-		shootz += fixed_t(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
+		shootz += FLOAT2FIXED(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
 	}
 	else
 	{
@@ -4799,7 +4800,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 	shootz = t1->_f_Z() - t1->_f_floorclip() + (t1->_f_height() >> 1);
 	if (t1->player != NULL)
 	{
-		shootz += fixed_t(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
+		shootz += FLOAT2FIXED(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
 		if (damageType == NAME_Melee || damageType == NAME_Hitscan)
 		{
 			// this is coming from a weapon attack function which needs to transfer information to the obituary code,
@@ -5152,7 +5153,7 @@ AActor *P_LinePickActor(AActor *t1, angle_t angle, fixed_t distance, int pitch,
 	shootz = t1->_f_Z() - t1->_f_floorclip() + (t1->_f_height() >> 1);
 	if (t1->player != NULL)
 	{
-		shootz += fixed_t(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
+		shootz += FLOAT2FIXED(t1->player->mo->AttackZOffset * t1->player->crouchfactor);
 	}
 	else
 	{
@@ -5404,54 +5405,48 @@ static ETraceStatus ProcessRailHit(FTraceResults &res, void *userdata)
 //
 //
 //==========================================================================
-void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, double maxdiff, int railflags, PClassActor *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, double sparsity, double drift, PClassActor *spawnclass, int SpiralOffset)
+void P_RailAttack(FRailParams *p)
 {
-	fixed_t vx, vy, vz;
-	angle_t angle, pitch;
-	DVector3 start, end;
+	DVector3 start;
 	FTraceResults trace;
-	fixed_t shootz;
 
-	// [Spleen]
-	UNLAGGED_Reconcile( source );
-
+	PClassActor *puffclass = p->puff;
 	if (puffclass == NULL)
 	{
 		puffclass = PClass::FindActor(NAME_BulletPuff);
 	}
 
-	pitch = ((angle_t)(-source->_f_pitch()) + pitchoffset) >> ANGLETOFINESHIFT;
-	angle = (source->_f_angle() + angleoffset) >> ANGLETOFINESHIFT;
+	AActor *source = p->source;
+	DAngle pitch = -source->Angles.Pitch + p->pitchoffset;
+	DAngle angle = source->Angles.Yaw + p->angleoffset;
 
-	vx = FixedMul(finecosine[pitch], finecosine[angle]);
-	vy = FixedMul(finecosine[pitch], finesine[angle]);
-	vz = finesine[pitch];
+	DVector3 vec(DRotator(pitch, angle, angle));
+	double shootz = source->Center() - source->FloatSpeed + p->offset_z;
 
-	shootz = source->_f_Z() - source->_f_floorclip() + (source->_f_height() >> 1) + offset_z;
+	// [Spleen]
+	UNLAGGED_Reconcile(source);
 
-	if (!(railflags & RAF_CENTERZ))
+	if (!(p->flags & RAF_CENTERZ))
 	{
 		if (source->player != NULL)
 		{
-			shootz += fixed_t(source->player->mo->AttackZOffset * source->player->crouchfactor);
+			shootz += source->player->mo->AttackZOffset * source->player->crouchfactor;
 		}
 		else
 		{
-			shootz += 8 * FRACUNIT;
+			shootz += 8;
 		}
 	}
 
-	angle = ((source->_f_angle() + angleoffset) - ANG90) >> ANGLETOFINESHIFT;
-
-	fixedvec2 xy = source->Vec2Offset(offset_xy * finecosine[angle], offset_xy * finesine[angle]);
+	DVector2 xy = source->Vec2Angle(p->offset_xy, angle - 90.);
 
 	RailData rail_data;
 	rail_data.Caller = source;
 	
-	rail_data.StopAtOne = !!(railflags & RAF_NOPIERCE);
-	start.X = FIXED2DBL(xy.x);
-	start.Y = FIXED2DBL(xy.y);
-	start.Z = FIXED2DBL(shootz);
+	rail_data.StopAtOne = !!(p->flags & RAF_NOPIERCE);
+	start.X = xy.X;
+	start.Y = xy.Y;
+	start.Z = shootz;
 
 	int flags;
 
@@ -5461,9 +5456,7 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 	flags = (puffDefaults->flags6 & MF6_NOTRIGGER) ? 0 : TRACE_PCross | TRACE_Impact;
 	rail_data.StopAtInvul = (puffDefaults->flags3 & MF3_FOILINVUL) ? false : true;
 	rail_data.ThruSpecies = (puffDefaults->flags6 & MF6_MTHRUSPECIES) ? true : false;
-	Trace(xy.x, xy.y, shootz, source->Sector, vx, vy, vz,
-		distance, MF_SHOOTABLE, ML_BLOCKEVERYTHING, source, trace,
-		flags, ProcessRailHit, &rail_data);
+	Trace(start, source->Sector, vec, p->distance, MF_SHOOTABLE, ML_BLOCKEVERYTHING, source, trace,	flags, ProcessRailHit, &rail_data);
 
 	// [Spleen]
 	UNLAGGED_Restore( source );
@@ -5484,8 +5477,6 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 	{
 		for (i = 0; i < rail_data.RailHits.Size(); i++)
 		{
-		
-
 			bool spawnpuff;
 			bool bleed = false;
 
@@ -5528,14 +5519,16 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 				}
 
 				// [BC/BB] Support for instagib.
+				// [BB] This overwrites the value handed to this function, but it shouldn't be
+				// a problem since instagib unconditionally changes the damage for all rail attacks.
 				if ( instagib )
-					damage = 999;
+					p->damage = 999;
 
-				int newdam = P_DamageMobj(hitactor, thepuff ? thepuff : source, source, damage, damagetype, dmgFlagPass|DMG_USEANGLE, hitangle);
+				int newdam = P_DamageMobj(hitactor, thepuff ? thepuff : source, source, p->damage, damagetype, dmgFlagPass|DMG_USEANGLE, hitangle);
 				if (bleed)
 				{
-					P_SpawnBlood(hitpos, hitangle, newdam > 0 ? newdam : damage, hitactor);
-					P_TraceBleed(newdam > 0 ? newdam : damage, hitpos, hitactor, hitangle, ANGLE2DBL(pitch));
+					P_SpawnBlood(hitpos, hitangle, newdam > 0 ? newdam : p->damage, hitactor);
+					P_TraceBleed(newdam > 0 ? newdam : p->damage, hitpos, hitactor, hitangle, ANGLE2DBL(pitch));
 				}
 			}
 
@@ -5619,55 +5612,47 @@ void P_RailAttack(AActor *source, int damage, int offset_xy, fixed_t offset_z, i
 	}
 
 	// Draw the slug's trail.
-	end = trace.HitPos;
-	P_DrawRailTrail(source, start, end, color1, color2, maxdiff, railflags, spawnclass, source->_f_angle() + angleoffset, duration, sparsity, drift, SpiralOffset);
+	P_DrawRailTrail(source, start, trace.HitPos, p->color1, p->color2, p->maxdiff, p->flags, p->spawnclass, angle.BAMs(), p->duration, p->sparsity, p->drift, p->SpiralOffset);
 
 	// [BC] If we're the server, tell clients to create a railgun trail.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 	{
 		const ULONG ulPlayer = source->player ? static_cast<ULONG> ( source->player - players ) : MAXPLAYERS;
-		SERVERCOMMANDS_WeaponRailgun( source, start, end, color1, color2, maxdiff, railflags,
-			angleoffset, spawnclass, duration, sparsity, drift, ulPlayer,
+		SERVERCOMMANDS_WeaponRailgun( source, start, trace.HitPos, p->color1, p->color2, p->maxdiff, p->flags,
+			angle.BAMs(), p->spawnclass, p->duration, p->sparsity, p->drift, ulPlayer,
 			UNLAGGED_DrawRailClientside( source ) ? SVCF_SKIPTHISCLIENT : ServerCommandFlags( 0 ) );
 	}
 }
 
-void P_RailAttackWithPossibleSpread (AActor *source, int damage, int offset_xy, fixed_t offset_z, int color1, int color2, float maxdiff, int railflags, PClassActor *puffclass, angle_t angleoffset, angle_t pitchoffset, fixed_t distance, int duration, float sparsity, float drift, PClassActor *spawnclass, int SpiralOffset)
+void P_RailAttackWithPossibleSpread (FRailParams *params)
 {
+	AActor * source = params ? params->source : NULL;
+
 	// [BB] Sanity check.
 	if ( source == NULL )
 		return;
 
-	// [BC]
-	LONG	lOuterColor;
-	LONG	lInnerColor;
-
 	// [BC] If this is a player, use the player's custom colors.
 	// [BB] Only apply the color change if color1 and color2 are at the default value.
-	if ( source->player && (color1 == 0) && (color2 == 0) )
+	if ( source->player && (params->color1 == 0) && (params->color2 == 0) )
 	{
 		if (( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
 			( source->player->bOnTeam ))
 		{
-			lOuterColor = TEAM_GetRailgunColor( source->player->ulTeam );
-			lInnerColor = PLAYER_GetRailgunColor( source->player );
+			params->color1 = TEAM_GetRailgunColor( source->player->ulTeam );
+			params->color2 = PLAYER_GetRailgunColor( source->player );
 		}
 		else
 		{
-			lOuterColor = PLAYER_GetRailgunColor( source->player );
-			lInnerColor = V_GetColorFromString( NULL, "ff ff ff" );
+			params->color1 = PLAYER_GetRailgunColor( source->player );
+			params->color2 = V_GetColorFromString( NULL, "ff ff ff" );
 		}
-	}
-	else
-	{
-		lOuterColor = color1;
-		lInnerColor = color2;
 	}
 
 	// [BB] Recall ulConsecutiveRailgunHits from before the attack to handle medals.
 	const ULONG ulConsecutiveRailgunHitsBefore = ( source->player ) ? source->player->ulConsecutiveRailgunHits : 0;
 
-	P_RailAttack (source, damage, offset_xy, offset_z, lOuterColor, lInnerColor, maxdiff, railflags, puffclass, angleoffset, pitchoffset, distance, duration, sparsity, drift, spawnclass, SpiralOffset );
+	P_RailAttack ( params );
 
 	// [BB] Apply spread and handle the Railgun medals.
 	if (NULL != source->player )
@@ -5679,11 +5664,11 @@ void P_RailAttackWithPossibleSpread (AActor *source, int damage, int offset_xy, 
 			SavedActorAngle = source->Angles.Yaw;
 
 			source->Angles.Yaw += 15;
-			P_RailAttack (source, damage, offset_xy, offset_z, lOuterColor, lInnerColor, maxdiff, railflags, puffclass, angleoffset, pitchoffset, distance, duration, sparsity, drift, spawnclass, SpiralOffset );
+			P_RailAttack ( params );
 			source->Angles.Yaw = SavedActorAngle;
 
 			source->Angles.Yaw -= 15;
-			P_RailAttack (source, damage, offset_xy, offset_z, lOuterColor, lInnerColor, maxdiff, railflags, puffclass, angleoffset, pitchoffset, distance, duration, sparsity, drift, spawnclass, SpiralOffset );
+			P_RailAttack ( params );
 			source->Angles.Yaw = SavedActorAngle;
 		}
 
@@ -5949,8 +5934,6 @@ bool P_NoWayTraverse(AActor *usething, fixed_t startx, fixed_t starty, fixed_t e
 //
 //==========================================================================
 
-CVAR(Int, userange, 0, 0);
-
 void P_UseLines(player_t *player)
 {
 	bool foundline = false;
@@ -5958,7 +5941,7 @@ void P_UseLines(player_t *player)
 	// If the player is transitioning a portal, use the group that is at its vertical center.
 	fixedvec2 start = player->mo->GetPortalTransition(player->mo->_f_height() / 2);
 	// [NS] Now queries the Player's UseRange.
-	fixedvec2 end = start + Vec2Angle(userange > 0? fixed_t(userange<<FRACBITS) : player->mo->UseRange, player->mo->_f_angle());
+	fixedvec2 end = start + Vec2Angle(FLOAT2FIXED(player->mo->UseRange), player->mo->_f_angle());
 
 	// old code:
 	//
@@ -6119,7 +6102,7 @@ bool P_UsePuzzleItem(AActor *PuzzleItemUser, int PuzzleItemType)
 
 	// [NS] If it's a Player, get their UseRange.
 	if (PuzzleItemUser->player)
-		usedist = PuzzleItemUser->player->mo->UseRange;
+		usedist = FLOAT2FIXED(PuzzleItemUser->player->mo->UseRange);
 	else
 		usedist = USERANGE;
 
@@ -6308,7 +6291,7 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 			{
 				points = points * splashfactor;
 			}
-			points *= thing->GetClass()->RDFactor / (float)FRACUNIT;
+			points *= thing->GetClass()->RDFactor;
 
 			// points and bombdamage should be the same sign
 			if (((points * bombdamage) > 0) && P_CheckSight(thing, bombspot, SF_IGNOREVISIBILITY | SF_IGNOREWATERBOUNDARY))
@@ -6426,9 +6409,9 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 			{ // OK to damage; target is in direct path
 				dist = clamp<int>(dist - fulldamagedistance, 0, dist);
 				int damage = Scale(bombdamage, bombdistance - dist, bombdistance);
-				damage = (int)((double)damage * splashfactor);
 
-				damage = Scale(damage, thing->GetClass()->RDFactor, FRACUNIT);
+				double factor = splashfactor * thing->GetClass()->RDFactor;
+				damage = int(damage * factor);
 				if (damage > 0)
 				{
 					// [BC/BB] Damage is server side.

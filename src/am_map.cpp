@@ -2755,7 +2755,7 @@ void AM_drawPlayers ()
 
 		if (p->mo != NULL)
 		{
-			fixedvec3 pos = p->mo->PosRelative(MapPortalGroup);
+			fixedvec3 pos = p->mo->_f_PosRelative(MapPortalGroup);
 			pt.x = pos.x >> FRACTOMAPBITS;
 			pt.y = pos.y >> FRACTOMAPBITS;
 
@@ -2789,7 +2789,7 @@ void AM_drawKeys ()
 
 	while ((key = it.Next()) != NULL)
 	{
-		fixedvec3 pos = key->PosRelative(MapPortalGroup);
+		fixedvec3 pos = key->_f_PosRelative(MapPortalGroup);
 		p.x = pos.x >> FRACTOMAPBITS;
 		p.y = pos.y >> FRACTOMAPBITS;
 
@@ -2836,7 +2836,7 @@ void AM_drawThings ()
 		{
 			if (am_cheat > 0 || !(t->flags6 & MF6_NOTONAUTOMAP))
 			{
-				fixedvec3 pos = t->PosRelative(MapPortalGroup);
+				fixedvec3 pos = t->_f_PosRelative(MapPortalGroup);
 				p.x = pos.x >> FRACTOMAPBITS;
 				p.y = pos.y >> FRACTOMAPBITS;
 
