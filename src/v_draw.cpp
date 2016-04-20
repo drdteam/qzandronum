@@ -1169,7 +1169,7 @@ void DCanvas::Clear (int left, int top, int right, int bottom, int palcolor, uin
 //==========================================================================
 
 void DCanvas::FillSimplePoly(FTexture *tex, FVector2 *points, int npoints,
-	double originx, double originy, double scalex, double scaley, angle_t rotation,
+	double originx, double originy, double scalex, double scaley, DAngle rotation,
 	FDynamicColormap *colormap, int lightlevel)
 {
 #ifndef NO_SWRENDER
@@ -1180,8 +1180,7 @@ void DCanvas::FillSimplePoly(FTexture *tex, FVector2 *points, int npoints,
 	int i;
 	int y1, y2, y;
 	fixed_t x;
-	double rot = rotation * M_PI / double(1u << 31);
-	bool dorotate = rot != 0;
+	bool dorotate = rotation != 0.;
 	double cosrot, sinrot;
 
 	if (--npoints < 2 || Buffer == NULL)
@@ -1222,8 +1221,9 @@ void DCanvas::FillSimplePoly(FTexture *tex, FVector2 *points, int npoints,
 	scalex /= FIXED2DBL(tex->xScale);
 	scaley /= FIXED2DBL(tex->yScale);
 
-	cosrot = cos(rot);
-	sinrot = sin(rot);
+	// Use the CRT's functions here.
+	cosrot = cos(ToRadians(rotation));
+	sinrot = sin(ToRadians(rotation));
 
 	// Setup constant texture mapping parameters.
 	R_SetupSpanBits(tex);
