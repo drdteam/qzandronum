@@ -50,6 +50,14 @@ inline FArchive &operator<< (FArchive &arc, DCeiling::ECeiling &type)
 	return arc;
 }
 
+inline FArchive &operator<< (FArchive &arc, DCeiling::ECrushMode &type)
+{
+	BYTE val = (BYTE)type;
+	arc << val;
+	type = (DCeiling::ECrushMode)val;
+	return arc;
+}
+
 //============================================================================
 //
 // CEILINGS
@@ -84,7 +92,7 @@ void DCeiling::Serialize (FArchive &arc)
 		<< m_NewSpecial
 		<< m_Tag
 		<< m_OldDirection
-		<< m_Hexencrush
+		<< m_CrushMode
 		// [BC]
 		<< m_lCeilingID;
 }
@@ -201,7 +209,7 @@ void DCeiling::Tick ()
 		
 	case -1:
 		// DOWN
-		res = MoveCeiling (m_Speed, m_BottomHeight, m_Crush, m_Direction, m_Hexencrush);
+		res = MoveCeiling (m_Speed, m_BottomHeight, m_Crush, m_Direction, m_CrushMode == ECrushMode::crushHexen);
 		
 		// [BC] Don't need to do anything more here if we're a client.
 		if ( NETWORK_InClientMode() )
@@ -274,7 +282,7 @@ void DCeiling::Tick ()
 				{
 				case ceilCrushAndRaise:
 				case ceilLowerAndCrush:
-					if (m_Speed1 == FRACUNIT && m_Speed2 == FRACUNIT)
+					if (m_CrushMode == ECrushMode::crushSlowdown)
 					{
 						m_Speed = FRACUNIT / 8;
 
@@ -295,7 +303,7 @@ void DCeiling::Tick ()
 
 void DCeiling::UpdateToClient( ULONG ulClient )
 {
-	SERVERCOMMANDS_DoCeiling( m_Type, m_Sector, m_Direction, m_BottomHeight, m_TopHeight, m_Speed, m_Crush, m_Hexencrush, m_Silent, m_lCeilingID, ulClient, SVCF_ONLYTHISCLIENT );
+	SERVERCOMMANDS_DoCeiling( m_Type, m_Sector, m_Direction, m_BottomHeight, m_TopHeight, m_Speed, m_Crush, m_CrushMode, m_Silent, m_lCeilingID, ulClient, SVCF_ONLYTHISCLIENT );
 }
 
 //============================================================================
@@ -315,7 +323,7 @@ DCeiling::DCeiling (sector_t *sec, fixed_t speed1, fixed_t speed2, int silent)
 	: DMovingCeiling (sec)
 {
 	m_Crush = -1;
-	m_Hexencrush = false;
+	m_CrushMode = ECrushMode::crushDoom;
 	m_Speed = m_Speed1 = speed1;
 	m_Speed2 = speed2;
 	m_Silent = silent;
@@ -393,14 +401,14 @@ void DCeiling::SetCrush( LONG lCrush )
 	m_Crush = lCrush;
 }
 
-bool DCeiling::GetHexencrush( void )
+DCeiling::ECrushMode DCeiling::GetCrushMode ( void )
 {
-	return ( m_Hexencrush );
+	return ( m_CrushMode );
 }
 
-void DCeiling::SetHexencrush( bool Hexencrush )
+void DCeiling::SetCrushMode ( ECrushMode Hexencrush )
 {
-	m_Hexencrush = Hexencrush;
+	m_CrushMode = Hexencrush;
 }
 
 //============================================================================
@@ -411,7 +419,7 @@ void DCeiling::SetHexencrush( bool Hexencrush )
 
 DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line, int tag, 
 				   fixed_t speed, fixed_t speed2, fixed_t height,
-				   int crush, int silent, int change, bool hexencrush)
+				   int crush, int silent, int change, ECrushMode hexencrush)
 {
 	fixed_t		targheight = 0;	// Silence, GCC
 
@@ -564,7 +572,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 	ceiling->m_Tag = tag;
 	ceiling->m_Type = type;
 	ceiling->m_Crush = crush;
-	ceiling->m_Hexencrush = hexencrush;
+	ceiling->m_CrushMode = hexencrush;
 
 	// Do not interpolate instant movement ceilings.
 	// Note for ZDoomGL: Check to make sure that you update the sector
@@ -586,7 +594,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 
 	// [BC] If we're the server, tell clients to create a ceiling.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		SERVERCOMMANDS_DoCeiling( type, sec, ceiling->m_Direction, ceiling->m_BottomHeight, ceiling->m_TopHeight, ceiling->m_Speed, ceiling->m_Crush, ceiling->m_Hexencrush, ceiling->m_Silent, ceiling->m_lCeilingID );
+		SERVERCOMMANDS_DoCeiling( type, sec, ceiling->m_Direction, ceiling->m_BottomHeight, ceiling->m_TopHeight, ceiling->m_Speed, ceiling->m_Crush, ceiling->m_CrushMode, ceiling->m_Silent, ceiling->m_lCeilingID );
 
 	// set texture/type change properties
 	if (change & 3)		// if a texture change is indicated
@@ -662,7 +670,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 
 bool EV_DoCeiling (DCeiling::ECeiling type, line_t *line,
 				   int tag, fixed_t speed, fixed_t speed2, fixed_t height,
-				   int crush, int silent, int change, bool hexencrush)
+				   int crush, int silent, int change, DCeiling::ECrushMode hexencrush)
 {
 	int 		secnum;
 	bool 		rtn;

@@ -547,10 +547,10 @@ void CLIENTDEMO_ReadPacket( void )
 			case CLD_LCMD_WARPCHEAT:
 
 				{
-					fixed_t x = NETWORK_ReadLong( &g_ByteStream );
-					fixed_t y = NETWORK_ReadLong( &g_ByteStream );
+					double x = FLOAT2FIXED ( NETWORK_ReadLong( &g_ByteStream ) );
+					double y = FLOAT2FIXED ( NETWORK_ReadLong( &g_ByteStream ) );
 					Printf( "warp %g %g\n", FIXED2FLOAT( x ), FIXED2FLOAT( y ));
-					P_TeleportMove( players[consoleplayer].mo, x, y, ONFLOORZ, true );
+					P_TeleportMove( players[consoleplayer].mo, DVector3 ( x, y, ONFLOORZ ), true );
 				}
 				break;
 			}

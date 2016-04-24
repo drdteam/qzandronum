@@ -336,8 +336,10 @@ static void client_predict_BeginPrediction( player_t *pPlayer )
 //
 static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 {
+	/* [BB] ZDoom moved DPusher into p_pusher.cpp. Needs to be moved to a header.
 	TThinkerIterator<DPusher> pusherIt;
 	DPusher *pusher = NULL;
+	*/
 
 	LONG lTick = g_ulGameTick - ulTicks;
 
@@ -382,10 +384,12 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		P_PlayerThink( pPlayer, &g_SavedTiccmd[lTick % CLIENT_PREDICTION_TICS] );
 		pPlayer->mo->Tick( );
 
+		/* [BB] ZDoom moved DPusher into p_pusher.cpp. Needs to be moved to a header.
 		// [BB] The effect of all DPushers needs to be manually predicted.
 		pusherIt.Reinit();
 		while (( pusher = pusherIt.Next() ))
 			pusher->Tick();
+		*/
 
 		// [BB] Save the new "on ground" status (which correspond to the start of the next tic).
 		// It is based on the latest position the server sent us, so it's more accurate than

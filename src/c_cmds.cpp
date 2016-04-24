@@ -1149,7 +1149,7 @@ CCMD (warp)
 		if ( CLIENTDEMO_IsRecording() )
 			CLIENTDEMO_WriteWarpCheat( x, y );
 
-		P_TeleportMove (players[consoleplayer].mo, fixed_t(atof(argv[1])*65536.0), fixed_t(atof(argv[2])*65536.0), ONFLOORZ, true);
+		P_TeleportMove (players[consoleplayer].mo, DVector3 ( atof(argv[1]), atof(argv[2]), ONFLOORZ ), true);
 	}
 }
 
@@ -1280,7 +1280,7 @@ CCMD(info)
 		PrintMiscActorInfo(t.linetarget);
 	}
 	else Printf("No target found. Info cannot find actors that have "
-				"the NOBLOCKMAP flag or have height/_f_radius() of 0.\n");
+				"the NOBLOCKMAP flag or have height/radius of 0.\n");
 }
 
 typedef bool (*ActorTypeChecker) (AActor *);

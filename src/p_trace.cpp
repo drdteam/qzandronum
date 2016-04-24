@@ -98,7 +98,7 @@ struct FTraceInfo
 	{
 		Results->SrcFromTarget = { FIXED2DBL(StartX), FIXED2DBL(StartY), FIXED2DBL(StartZ) };
 		Results->HitVector = { FIXED2DBL(Vx), FIXED2DBL(Vy), FIXED2DBL(Vz) };
-		Results->SrcAngleFromTarget = VecToAngle(Results->HitVector);
+		Results->SrcAngleFromTarget = Results->HitVector.Angle();
 	}
 
 
@@ -245,7 +245,6 @@ void FTraceInfo::EnterSectorPortal(int position, fixed_t frac, sector_t *enterse
 //============================================================================
 //
 // traverses a line portal
-// simply calling PortalRelocate does not work here because more needs to be set up
 //
 //============================================================================
 

@@ -129,11 +129,11 @@ void ASTAR_BuildNodes( void )
 
 	for ( ulIdx = 0; ulIdx < (ULONG)numvertexes; ulIdx++ )
 	{
-		if ( vertexes[ulIdx].x > g_lMapXMax )
-			g_lMapXMax = vertexes[ulIdx].x;
+		if ( vertexes[ulIdx].fixX() > g_lMapXMax )
+			g_lMapXMax = vertexes[ulIdx].fixX();
     
-		if ( vertexes[ulIdx].y > g_lMapYMax )
-			g_lMapYMax = vertexes[ulIdx].y;
+		if ( vertexes[ulIdx].fixY() > g_lMapYMax )
+			g_lMapYMax = vertexes[ulIdx].fixY();
 	}
 
 	g_lMapXMin = bmaporgx;
@@ -444,7 +444,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			astar_PushNodeToStack( pPath->pGoalNode, pPath );
 
 			ReturnVal.bIsGoal = true;
-			ReturnVal.lTotalCost = pPath->pActor->AproxDistance ( GoalPoint.x, GoalPoint.y );
+			ReturnVal.lTotalCost = P_AproxDistance (pPath->pActor->_f_X () - GoalPoint.x, pPath->pActor->_f_Y () - GoalPoint.y);
 			ReturnVal.pNode = pPath->pGoalNode;
 			ReturnVal.ulFlags = pPath->ulFlags;
 

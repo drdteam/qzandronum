@@ -177,8 +177,8 @@ void DDoor::Tick ()
 		// killough 10/98: implement gradual lighting effects
 		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.d)
 		{
-			EV_LightTurnOnPartway (m_LightTag, FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d,
-				m_TopDist + m_Sector->floorplane.d));
+			EV_LightTurnOnPartway (m_LightTag, 
+				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d, m_TopDist + m_Sector->floorplane.d)));
 		}
 
 		// [BC] If we're the client, don't do any of the following. Wait for the server
@@ -256,8 +256,8 @@ void DDoor::Tick ()
 		// killough 10/98: implement gradual lighting effects
 		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.d)
 		{
-			EV_LightTurnOnPartway (m_LightTag, FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d,
-				m_TopDist + m_Sector->floorplane.d));
+			EV_LightTurnOnPartway (m_LightTag, 
+				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d, m_TopDist + m_Sector->floorplane.d)));
 		}
 
 		// [BC] If we're the client, don't do any of the following. Wait for the server

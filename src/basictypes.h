@@ -12,10 +12,6 @@ typedef uint32_t				uint32;
 typedef int64_t					SQWORD;
 typedef uint64_t				QWORD;
 
-typedef SDWORD					int32;
-typedef float					real32;
-typedef double					real64;
-
 // [BC] New additions.
 typedef	unsigned short			USHORT;
 typedef	short					SHORT;
@@ -75,7 +71,7 @@ union QWORD_UNION
 };
 
 //
-// Fixed point, 32bit as 16.16.
+// fixed point, 32bit as 16.16.
 //
 #define FRACBITS						16
 #define FRACUNIT						(1<<FRACBITS)

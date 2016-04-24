@@ -46,7 +46,7 @@ public:
 		return *this;
 	}
 
-	FileReaderBase &operator>> (fixed_t &v)
+	FileReaderBase &operator>> (int &v)
 	{
 		Read (&v, 4);
 		v = LittleLong(v);
@@ -174,7 +174,7 @@ public:
 		return *this;
 	}
 
-	FileReaderZ &operator>> (fixed_t &v)
+	FileReaderZ &operator>> (int &v)
 	{
 		Read (&v, 4);
 		v = LittleLong(v);
@@ -236,7 +236,7 @@ public:
 		return *this;
 	}
 
-	FileReaderBZ2 &operator>> (fixed_t &v)
+	FileReaderBZ2 &operator>> (int &v)
 	{
 		Read (&v, 4);
 		v = LittleLong(v);
@@ -300,7 +300,7 @@ public:
 		return *this;
 	}
 
-	FileReaderLZMA &operator>> (fixed_t &v)
+	FileReaderLZMA &operator>> (int &v)
 	{
 		Read (&v, 4);
 		v = LittleLong(v);

@@ -5,6 +5,7 @@
 #include "r_defs.h"
 #include "m_bbox.h"
 
+class DPolyAction;
 
 struct FPolyVertex
 {
@@ -12,8 +13,8 @@ struct FPolyVertex
 
 	FPolyVertex &operator=(vertex_t *v)
 	{
-		x = v->x;
-		y = v->y;
+		x = v->fixX();
+		y = v->fixX();
 		return *this;
 	}
 };
@@ -139,8 +140,7 @@ bool EV_StopPoly (int polyNum);
 struct polyspawns_t
 {
 	polyspawns_t *next;
-	fixed_t x;
-	fixed_t y;
+	DVector2 pos;
 	short angle;
 	short type;
 };

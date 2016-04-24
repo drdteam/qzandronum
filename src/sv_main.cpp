@@ -3288,7 +3288,8 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	TThinkerIterator<DWaggleBase>		WaggleIterator;
 	TThinkerIterator<DPillar>			PillarIterator;
 	TThinkerIterator<DCeiling>			CeilingIterator;
-	TThinkerIterator<DScroller>			ScrollerIterator;
+	// [BB] ZDoom moved DScroller into p_scroll.cpp. Needs to be moved to a header.
+	//TThinkerIterator<DScroller>			ScrollerIterator;
 
 	// Tell the client about any active doors.
 	while (( pDoor = DoorIterator.Next( )) != NULL )
@@ -3318,6 +3319,7 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	while (( pCeiling = CeilingIterator.Next( )) != NULL )
 		pCeiling->UpdateToClient( ulClient );
 
+	/* [BB] ZDoom moved DScroller into p_scroll.cpp. Needs to be moved to a header.
 	// Tell the client about any active scrollers.
 	while (( pScroller = ScrollerIterator.Next( )) != NULL )
 		pScroller->UpdateToClient( ulClient );
@@ -3327,6 +3329,7 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	TThinkerIterator<DPusher> PusherIterator;
 	while (( pPusher = PusherIterator.Next( )) != NULL )
 		pPusher->UpdateToClient( ulClient );
+	*/
 }
 
 //*****************************************************************************
@@ -4558,13 +4561,13 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case CLC_WARPCHEAT:
 
 		{
-			fixed_t x = NETWORK_ReadLong( pByteStream );
-			fixed_t y = NETWORK_ReadLong( pByteStream );
+			double x = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+			double y = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 			if ( sv_cheats || players[g_lCurrentClient].bSpectating )
 			{
 				if ( players[g_lCurrentClient].mo )
-					P_TeleportMove( players[g_lCurrentClient].mo, x, y, ONFLOORZ, true );
+					P_TeleportMove( players[g_lCurrentClient].mo, DVector3 ( x, y, ONFLOORZ ), true );
 			}
 			else
 			{

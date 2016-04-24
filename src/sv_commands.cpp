@@ -321,11 +321,11 @@ void RemoveUnnecessaryPositionUpdateFlags( AActor *pActor, ULONG &ulBits )
 		ulBits  &= ~CM_Y;
 	if ( (pActor->lastNetZUpdateTic == gametic) && (pActor->lastZ == pActor->Z()) )
 		ulBits  &= ~CM_Z;
-	if ( (pActor->lastNetVelXUpdateTic == gametic) && (pActor->lastVelx == pActor->_f_velx()) )
+	if ( (pActor->lastNetVelXUpdateTic == gametic) && (pActor->lastVelx == FLOAT2FIXED ( pActor->Vel.X )) )
 		ulBits  &= ~CM_VELX;
-	if ( (pActor->lastNetVelYUpdateTic == gametic) && (pActor->lastVely == pActor->_f_vely()) )
+	if ( (pActor->lastNetVelYUpdateTic == gametic) && (pActor->lastVely == FLOAT2FIXED ( pActor->Vel.Y )) )
 		ulBits  &= ~CM_VELY;
-	if ( (pActor->lastNetVelZUpdateTic == gametic) && (pActor->lastVelz == pActor->_f_velz()) )
+	if ( (pActor->lastNetVelZUpdateTic == gametic) && (pActor->lastVelz == FLOAT2FIXED ( pActor->Vel.Z )) )
 		ulBits  &= ~CM_VELZ;
 	if ( (pActor->lastNetMovedirUpdateTic == gametic) && (pActor->lastMovedir == pActor->movedir) )
 		ulBits  &= ~CM_MOVEDIR;
@@ -455,17 +455,17 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 	if ( ulBits & CM_VELX )
 	{
 		pActor->lastNetVelXUpdateTic = gametic;
-		pActor->lastVelx = pActor->_f_velx();
+		pActor->lastVelx = FLOAT2FIXED ( pActor->Vel.X );
 	}
 	if ( ulBits & CM_VELY )
 	{
 		pActor->lastNetVelYUpdateTic = gametic;
-		pActor->lastVely = pActor->_f_vely();
+		pActor->lastVely = FLOAT2FIXED ( pActor->Vel.Y );
 	}
 	if ( ulBits & CM_VELZ )
 	{
 		pActor->lastNetVelZUpdateTic = gametic;
-		pActor->lastVelz = pActor->_f_velz();
+		pActor->lastVelz = FLOAT2FIXED ( pActor->Vel.Z );
 	}
 	if ( ulBits & CM_MOVEDIR )
 	{
@@ -605,9 +605,9 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	fullCommand.addLong( players[ulPlayer].mo->_f_Y() );
 	fullCommand.addShort( players[ulPlayer].mo->_f_Z() >> FRACBITS );
 	fullCommand.addLong( players[ulPlayer].mo->_f_angle() );
-	fullCommand.addShort( players[ulPlayer].mo->_f_velx() >> FRACBITS );
-	fullCommand.addShort( players[ulPlayer].mo->_f_vely() >> FRACBITS );
-	fullCommand.addShort( players[ulPlayer].mo->_f_velz() >> FRACBITS );
+	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) >> FRACBITS );
+	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) >> FRACBITS );
+	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Z ) >> FRACBITS );
 	fullCommand.addByte(( players[ulPlayer].crouchdir >= 0 ) ? true : false );
 
 	NetCommand stubCommand( SVC_MOVEPLAYER );
@@ -1258,9 +1258,9 @@ void SERVERCOMMANDS_MoveLocalPlayer( ULONG ulPlayer )
 	command.addLong( players[ulPlayer].mo->_f_Z() );
 
 	// Write velocity.
-	command.addLong( players[ulPlayer].mo->_f_velx() );
-	command.addLong( players[ulPlayer].mo->_f_vely() );
-	command.addLong( players[ulPlayer].mo->_f_velz() );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Z ) );
 	command.sendCommandToOneClient( ulPlayer );
 }
 
@@ -1602,11 +1602,11 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
-		command.addShort( pActor->_f_velx() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->Vel.X ) >> FRACBITS );
 	if ( ulBits & CM_VELY )
-		command.addShort( pActor->_f_vely() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->Vel.Y ) >> FRACBITS );
 	if ( ulBits & CM_VELZ )
-		command.addShort( pActor->_f_velz() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->Vel.Z ) >> FRACBITS );
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
@@ -1669,11 +1669,11 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
-		command.addLong( pActor->_f_velx() );
+		command.addLong( FLOAT2FIXED ( pActor->Vel.X ) );
 	if ( ulBits & CM_VELY )
-		command.addLong( pActor->_f_vely());
+		command.addLong( FLOAT2FIXED ( pActor->Vel.Y ));
 	if ( ulBits & CM_VELZ )
-		command.addLong( pActor->_f_velz());
+		command.addLong( FLOAT2FIXED ( pActor->Vel.Z ));
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
@@ -2223,9 +2223,9 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 	command.addShort( pActor->_f_X() >> FRACBITS );
 	command.addShort( pActor->_f_Y() >> FRACBITS );
 	command.addShort( pActor->_f_Z() >> FRACBITS );
-	command.addShort( pActor->_f_velx() >> FRACBITS );
-	command.addShort( pActor->_f_vely() >> FRACBITS );
-	command.addShort( pActor->_f_velz() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Vel.X ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Vel.Y ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Vel.Z ) >> FRACBITS );
 	command.addShort( pActor->reactiontime );
 	command.addLong( pActor->_f_angle() );
 	command.addByte( bSourceFog );
@@ -2769,9 +2769,9 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 	command.addShort( pMissile->_f_X() >> FRACBITS );
 	command.addShort( pMissile->_f_Y() >> FRACBITS );
 	command.addShort( pMissile->_f_Z() >> FRACBITS );
-	command.addLong( pMissile->_f_velx() );
-	command.addLong( pMissile->_f_vely() );
-	command.addLong( pMissile->_f_velz() );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
 	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
 	command.addShort( pMissile->lNetID );
 
@@ -2784,7 +2784,7 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, pMissile->_f_velx(), pMissile->_f_vely() ))
+ 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ))
 		SERVERCOMMANDS_SetThingAngle( pMissile, ulPlayerExtra, flags );
 }
 
@@ -2799,9 +2799,9 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 	command.addLong( pMissile->_f_X() );
 	command.addLong( pMissile->_f_Y() );
 	command.addLong( pMissile->_f_Z() );
-	command.addLong( pMissile->_f_velx() );
-	command.addLong( pMissile->_f_vely() );
-	command.addLong( pMissile->_f_velz() );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
 	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
 	command.addShort( pMissile->lNetID );
 
@@ -2814,7 +2814,7 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, pMissile->_f_velx(), pMissile->_f_vely() ) )
+ 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ) )
 		SERVERCOMMANDS_SetThingAngleExact( pMissile, ulPlayerExtra, flags );
 }
 
@@ -3130,8 +3130,8 @@ void SERVERCOMMANDS_SetSectorFriction( ULONG ulSector, ULONG ulPlayerExtra, Serv
 
 	NetCommand command( SVC_SETSECTORFRICTION );
 	command.addShort( ulSector );
-	command.addLong( sectors[ulSector].friction );
-	command.addLong( sectors[ulSector].movefactor );
+	command.addLong( FLOAT2FIXED ( sectors[ulSector].friction ) );
+	command.addLong( FLOAT2FIXED ( sectors[ulSector].movefactor ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -4297,7 +4297,7 @@ void SERVERCOMMANDS_BuildStair( DFloor::EFloor Type, sector_t *pSector, int Dire
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DoCeiling( DCeiling::ECeiling Type, sector_t *pSector, LONG lDirection, LONG lBottomHeight, LONG lTopHeight, LONG lSpeed, LONG lCrush, bool Hexencrush, LONG lSilent, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_DoCeiling( DCeiling::ECeiling Type, sector_t *pSector, LONG lDirection, LONG lBottomHeight, LONG lTopHeight, LONG lSpeed, LONG lCrush, DCeiling::ECrushMode CrushMode, LONG lSilent, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	LONG	lSectorID;
 
@@ -4319,7 +4319,7 @@ void SERVERCOMMANDS_DoCeiling( DCeiling::ECeiling Type, sector_t *pSector, LONG 
 	command.addLong ( lTopHeight );
 	command.addLong ( lSpeed );
 	command.addByte ( clamp<LONG>(lCrush,-128,127) );
-	command.addByte ( Hexencrush );
+	command.addByte ( static_cast<int> ( CrushMode ) );
 	command.addShort ( lSilent );
 	command.addShort ( lID );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
@@ -4746,37 +4746,37 @@ void SERVERCOMMANDS_RemoveFromJoinQueue( unsigned int index, ULONG ulPlayerExtra
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DoScroller( LONG lType, LONG lXSpeed, LONG lYSpeed, LONG lAffectee, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_DoScroller( LONG lType, double xSpeed, double ySpeed, LONG lAffectee, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_DOSCROLLER );
 	command.addByte ( lType );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
+	command.addLong ( FLOAT2FIXED ( xSpeed ) );
+	command.addLong ( FLOAT2FIXED ( ySpeed ) );
 	command.addLong ( lAffectee );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetScroller( LONG lType, LONG lXSpeed, LONG lYSpeed, LONG lTag, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetScroller( EScroll type, double xSpeed, double ySpeed, LONG lTag, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SETSCROLLER );
-	command.addByte ( lType );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
+	command.addByte ( static_cast<int> ( type ) );
+	command.addLong ( FLOAT2FIXED ( xSpeed ) );
+	command.addLong ( FLOAT2FIXED ( ySpeed ) );
 	command.addShort ( lTag );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetWallScroller( LONG lId, LONG lSidechoice, LONG lXSpeed, LONG lYSpeed, LONG lWhere, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetWallScroller( LONG lId, LONG lSidechoice, double xSpeed, double ySpeed, LONG lWhere, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SETWALLSCROLLER );
 	command.addLong ( lId );
 	command.addByte ( lSidechoice );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
+	command.addLong ( FLOAT2FIXED ( xSpeed ) );
+	command.addLong ( FLOAT2FIXED ( ySpeed ) );
 	command.addLong ( lWhere );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
@@ -4907,13 +4907,13 @@ void SERVERCOMMANDS_DoPusher( ULONG ulType, line_t *pLine, int iMagnitude, int i
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_AdjustPusher( int iTag, int iMagnitude, int iAngle, ULONG ulType, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_AdjustPusher( int iTag, int iMagnitude, int iAngle, bool wind, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_ADJUSTPUSHER );
 	command.addShort ( iTag );
 	command.addLong ( iMagnitude );
 	command.addLong ( iAngle );
-	command.addByte ( ulType );
+	command.addByte ( wind );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

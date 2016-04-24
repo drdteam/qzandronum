@@ -798,7 +798,7 @@ bool BOTS_IsVisible( AActor *pActor1, AActor *pActor2 )
 	if ( P_CheckSight( pActor1, pActor2, SF_SEEPASTBLOCKEVERYTHING ) == false )
 		return ( false );
 
-	Angle = pActor1->__f_AngleTo ( pActor2 );
+	Angle = pActor1->AngleTo ( pActor2 ).BAMs();
 
 	Angle -= pActor1->_f_angle();
 
@@ -3357,7 +3357,7 @@ void CSkullBot::HandleAiming( void )
 //			( EnemyPos.y - players[m_ulPlayerEnemy].mo->y ) / FRACUNIT, 
 //			( EnemyPos.z - players[m_ulPlayerEnemy].mo->z ) / FRACUNIT );
 
-		m_pPlayer->mo->Angles.Yaw = ANGLE2DBL ( m_pPlayer->mo->__f_AngleTo ( EnemyPos.x, EnemyPos.y ) );
+		m_pPlayer->mo->Angles.Yaw = VecToAngle (m_pPlayer->mo->Pos ().XY () - DVector2 (FIXED2DBL (EnemyPos.x), FIXED2DBL (EnemyPos.y)));
 
 		m_pPlayer->mo->Angles.Yaw += ANGLE2DBL(m_AngleDesired);
 		m_AngleOffBy -= m_AngleDelta;
@@ -3367,7 +3367,7 @@ void CSkullBot::HandleAiming( void )
 			m_pPlayer->mo->Angles.Yaw += ANGLE2DBL(m_AngleOffBy);
 
 		ShootZ = m_pPlayer->mo->_f_Z() - m_pPlayer->mo->_f_floorclip() + ( m_pPlayer->mo->_f_height() >> 1 ) + ( 8 * FRACUNIT );
-		Distance = m_pPlayer->mo->AproxDistance ( EnemyPos.x, EnemyPos.y );
+		Distance = FLOAT2FIXED ( m_pPlayer->mo->Distance2D ( FIXED2DBL ( EnemyPos.x ), FIXED2DBL ( EnemyPos.y ) ) );
 //		m_pPlayer->mo->pitch = R_PointToAngle( Distance, ( EnemyPos.z + ( players[m_ulPlayerEnemy].mo->height / 2 )) - m_pPlayer->mo->z );
 		lTopPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z + players[m_ulPlayerEnemy].mo->_f_height() );
 		lBottomPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z );
@@ -3415,7 +3415,7 @@ void CSkullBot::HandleAiming( void )
 				angle_t		AngleFinal;
 
 				// Get the exact angle between us and the enemy.
-				Angle = m_pPlayer->mo->__f_AngleTo ( EnemyPos.x, EnemyPos.y );
+				Angle = VecToAngle (m_pPlayer->mo->Pos ().XY () - DVector2 (FIXED2DBL (EnemyPos.x), FIXED2DBL (EnemyPos.y))).BAMs();
 
 				// The greater the difference between the angle between ourselves and the enemy, and our
 				// current angle, the more inaccurate it is likely to be.

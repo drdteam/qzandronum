@@ -1431,7 +1431,7 @@ void ReadCompatibleUserInfo(FArchive &arc, userinfo_t &info)
 	BYTE team;
 	int aimdist, color, colorset, skin, gender;
 	bool neverswitch;
-	//fixed_t movebob, stillbob;	These were never serialized!
+	//fxed_t movebob, stillbob;	These were never serialized!
 	//int playerclass;				"
 
 	info.Reset();

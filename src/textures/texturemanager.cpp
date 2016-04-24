@@ -571,8 +571,8 @@ void FTextureManager::AddHiresTextures (int wadnum)
 							// Replace the entire texture and adjust the scaling and offset factors.
 							newtex->bWorldPanning = true;
 							newtex->SetScaledSize(oldtex->GetScaledWidth(), oldtex->GetScaledHeight());
-							newtex->LeftOffset = FixedMul(oldtex->GetScaledLeftOffset(), newtex->xScale);
-							newtex->TopOffset = FixedMul(oldtex->GetScaledTopOffset(), newtex->yScale);
+							newtex->LeftOffset = int(oldtex->GetScaledLeftOffset() * newtex->Scale.X);
+							newtex->TopOffset = int(oldtex->GetScaledTopOffset() * newtex->Scale.Y);
 							ReplaceTexture(tlist[i], newtex, true);
 						}
 					}
@@ -660,8 +660,8 @@ void FTextureManager::LoadTextureDefs(int wadnum, const char *lumpname)
 									// Replace the entire texture and adjust the scaling and offset factors.
 									newtex->bWorldPanning = true;
 									newtex->SetScaledSize(oldtex->GetScaledWidth(), oldtex->GetScaledHeight());
-									newtex->LeftOffset = FixedMul(oldtex->GetScaledLeftOffset(), newtex->xScale);
-									newtex->TopOffset = FixedMul(oldtex->GetScaledTopOffset(), newtex->yScale);
+									newtex->LeftOffset = int(oldtex->GetScaledLeftOffset() * newtex->Scale.X);
+									newtex->TopOffset = int(oldtex->GetScaledTopOffset() * newtex->Scale.Y);
 									ReplaceTexture(tlist[i], newtex, true);
 								}
 							}

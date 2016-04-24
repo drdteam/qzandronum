@@ -45,7 +45,6 @@ CVAR (Bool, developer, false, 0)
 
 // [RH] Feature control cvars
 CVAR (Bool, var_friction, true, CVAR_SERVERINFO);
-CVAR (Bool, var_pushers, true, CVAR_SERVERINFO);
 
 // [WS] Changed CVAR to CUSTOM_CVAR as we need to send clients the updated state of this.
 CUSTOM_CVAR (Bool, alwaysapplydmflags, false, CVAR_SERVERINFO)

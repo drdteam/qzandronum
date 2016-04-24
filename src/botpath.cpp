@@ -139,8 +139,8 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 	switch (slopetype)
 	{
 	case ST_HORIZONTAL:
-		p1 = tmbox[BOXTOP] > ld->v1->y;
-		p2 = tmbox[BOXBOTTOM] > ld->v1->y;
+		p1 = tmbox[BOXTOP] > ld->v1->fixY();
+		p2 = tmbox[BOXBOTTOM] > ld->v1->fixY ();
 		if (ld->dx < 0)
 		{
 			p1 ^= 1;
@@ -149,8 +149,8 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 		break;
 		
 	case ST_VERTICAL:
-		p1 = tmbox[BOXRIGHT] < ld->v1->x;
-		p2 = tmbox[BOXLEFT] < ld->v1->x;
+		p1 = tmbox[BOXRIGHT] < ld->v1->fixX ();
+		p2 = tmbox[BOXLEFT] < ld->v1->fixX ();
 		if (ld->dy < 0)
 		{
 			p1 ^= 1;
@@ -472,13 +472,13 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 	// If more distance is being covered in the X direction...
 	if ( AbsXDistance > AbsYDistance )
 	{
-		if ( AbsXDistance > MAXMOVE )
-			lNumSteps = 1 + ( AbsXDistance / MAXMOVE );
+		if ( AbsXDistance > FLOAT2FIXED ( MAXMOVE ) )
+			lNumSteps = 1 + ( AbsXDistance / FLOAT2FIXED ( MAXMOVE ) );
 	}
 	else
 	{
-		if ( AbsYDistance > MAXMOVE )
-			lNumSteps = 1 + ( AbsYDistance / MAXMOVE );
+		if ( AbsYDistance > FLOAT2FIXED ( MAXMOVE ) )
+			lNumSteps = 1 + ( AbsYDistance / FLOAT2FIXED ( MAXMOVE ) );
 	}
 
 	lCurrentStep = 1;
@@ -568,7 +568,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 			}
 		}
 
-		lHeightChange = g_PathSectorFloorZ - pActor->Z();
+		lHeightChange = g_PathSectorFloorZ - pActor->_f_Z();
 		if ( lHeightChange > 0 )
 		{
 			if ( lHeightChange <= 0 /*gameinfo.StepHeight*/ )
@@ -668,7 +668,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 
 				// [Dusk] Check if a 3D midtexture blocks the bot
 				if ( pLine->flags & ML_3DMIDTEX ) {
-					fixed_t mid3d_top, mid3d_bot;
+					double mid3d_top, mid3d_bot;
 
 					if ( P_GetMidTexturePosition( pLine, lLineSide, &mid3d_top, &mid3d_bot )) {
 						// If the 3d midtexture top is of appropriate height,
@@ -678,7 +678,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 						{
 							// If the ceiling is too low, we can't jump there
 							// and the path is obstructed.
-							if ( pFrontSector->ceilingplane.ZatPoint( 0, 0 ) - mid3d_top < pActor->_f_height() )
+							if ( FIXED2DBL ( pFrontSector->ceilingplane.ZatPoint( 0, 0 ) ) - mid3d_top < pActor->Height )
 								return ( ulFlags | BOTPATH_OBSTRUCTED );
 
 							ulFlags |= BOTPATH_JUMPABLELEDGE;
@@ -932,22 +932,22 @@ static bool botpath_CheckLine( line_t *pLine )
 		// that to calculate openings.
 		float dx = (float)pLine->dx;
 		float dy = (float)pLine->dy;
-		fixed_t r = (fixed_t)(((float)(g_PathX - pLine->v1->x) * dx +
-				 			   (float)(g_PathY - pLine->v1->y) * dy) /
+		fixed_t r = (fixed_t)(((float)(g_PathX - pLine->v1->fixX()) * dx +
+				 			   (float)(g_PathY - pLine->v1->fixY()) * dy) /
 							  (dx*dx + dy*dy) * 16777216.f);
 
 		if (r <= 0)
 		{
-			BOTPATH_LineOpening( pLine, sx = pLine->v1->x, sy = pLine->v1->y, g_PathX, g_PathY );
+			BOTPATH_LineOpening( pLine, sx = pLine->v1->fixX(), sy = pLine->v1->fixY(), g_PathX, g_PathY );
 		}
 		else if (r >= (1<<24))
 		{
-			BOTPATH_LineOpening( pLine, sx = pLine->v2->x, sy = pLine->v2->y, g_pPathActor->_f_X(), g_pPathActor->_f_Y() );
+			BOTPATH_LineOpening( pLine, sx = pLine->v2->fixX(), sy = pLine->v2->fixY(), g_pPathActor->_f_X(), g_pPathActor->_f_Y() );
 		}
 		else
 		{
-			BOTPATH_LineOpening( pLine, sx=pLine->v1->x + MulScale24 (r, pLine->dx),
-				sy=pLine->v1->y + MulScale24 (r, pLine->dy), g_PathX, g_PathY );
+			BOTPATH_LineOpening( pLine, sx=pLine->v1->fixX() + MulScale24 (r, pLine->dx),
+				sy=pLine->v1->fixY() + MulScale24 (r, pLine->dy), g_PathX, g_PathY );
 		}
 	}
 

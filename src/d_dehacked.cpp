@@ -222,7 +222,7 @@ DehInfo deh =
 	  2,	// .KFAAC
 	"PLAY",	// Name of player sprite
 	255,	// Rocket explosion style, 255=use cvar
-	FRACUNIT*2/3,		// Rocket explosion alpha
+	2./3.,		// Rocket explosion alpha
 	false,	// .NoAutofreeze
 	40,		// BFG cells per shot
 };
@@ -359,6 +359,11 @@ static bool HandleKey (const struct Key *keys, void *structure, const char *key,
 static bool ReadChars (char **stuff, int size);
 static char *igets (void);
 static int GetLine (void);
+
+inline double DEHToDouble(int acsval)
+{
+	return acsval / 65536.;
+}
 
 static void PushTouchedActor(PClassActor *cls)
 {
@@ -654,7 +659,7 @@ static int CreateMushroomFunc(VMFunctionBuilder &buildit, int value1, int value2
 	}
 	else
 	{
-		buildit.Emit(OP_PARAM, 0, REGT_FLOAT | REGT_KONST, buildit.GetConstantFloat(FIXED2DBL(value1)));
+		buildit.Emit(OP_PARAM, 0, REGT_FLOAT | REGT_KONST, buildit.GetConstantFloat(DEHToDouble(value1)));
 	}
 	// hrange
 	if (value2 == 0)
@@ -663,7 +668,7 @@ static int CreateMushroomFunc(VMFunctionBuilder &buildit, int value1, int value2
 	}
 	else
 	{
-		buildit.Emit(OP_PARAM, 0, REGT_FLOAT | REGT_KONST, buildit.GetConstantFloat(FIXED2DBL(value2)));
+		buildit.Emit(OP_PARAM, 0, REGT_FLOAT | REGT_KONST, buildit.GetConstantFloat(DEHToDouble(value2)));
 	}
 	return 5;
 }
@@ -903,14 +908,14 @@ static int PatchThing (int thingy)
 		}
 		else if (linelen == 12 && stricmp (Line1, "Translucency") == 0)
 		{
-			info->Alpha = FIXED2DBL(val);
+			info->Alpha = DEHToDouble(val);
 			info->RenderStyle = STYLE_Translucent;
 			hadTranslucency = true;
 			hadStyle = true;
 		}
 		else if (linelen == 6 && stricmp (Line1, "Height") == 0)
 		{
-			info->Height = FIXED2DBL(val);
+			info->Height = DEHToDouble(val);
 			info->projectilepassheight = 0;	// needs to be disabled
 			hadHeight = true;
 		}
@@ -926,7 +931,7 @@ static int PatchThing (int thingy)
 			}
 			else if (stricmp (Line1, "Width") == 0)
 			{
-				info->radius = FIXED2FLOAT(val);
+				info->radius = DEHToDouble(val);
 			}
 			else if (stricmp (Line1, "Alpha") == 0)
 			{
@@ -1281,11 +1286,11 @@ static int PatchThing (int thingy)
 					info->RenderStyle = STYLE_Normal;
 			}
 		}
-		// If this thing's speed is really low (i.e. meant to be a monster),
-		// bump it up, because all speeds are fixed point now.
+		// Speed could be either an int of fixed value, depending on its use
+		// If this value is very large it needs to be rescaled.
 		if (fabs(info->Speed) >= 256)
 		{
-			info->Speed /= FRACUNIT;
+			info->Speed /= 65536;
 		}
 
 		if (info->flags & MF_SPECIAL)
@@ -1347,7 +1352,7 @@ static int PatchSound (int soundNum)
 		else CHECKKEY ("Zero/One",			info->singularity)
 		else CHECKKEY ("Value",				info->priority)
 		else CHECKKEY ("Zero 1",			info->link)
-		else CHECKKEY ("Neg. One 1",		info->_f_pitch())
+		else CHECKKEY ("Neg. One 1",		info->pitch)
 		else CHECKKEY ("Neg. One 2",		info->volume)
 		else CHECKKEY ("Zero 2",			info->data)
 		else CHECKKEY ("Zero 3",			info->usefulness)

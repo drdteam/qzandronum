@@ -912,7 +912,7 @@ int CheckRealHeight(FTexture *tex)
 		}
 	}
 	// Scale maxy before returning it
-	maxy = (maxy << 17) / tex->yScale;
+	maxy = int((maxy *2) / tex->Scale.Y);
 	maxy = (maxy >> 1) + (maxy & 1);
 	return maxy;
 }

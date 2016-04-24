@@ -375,26 +375,26 @@ static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const
 	}
 }
 
-void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z, fixed_t vx, fixed_t vy, fixed_t vz, PalEntry color, bool fullbright, BYTE startalpha, BYTE lifetime, int size, int fadestep, fixed_t accelx, fixed_t accely, fixed_t accelz)
+void P_SpawnParticle(const DVector3 &pos, const DVector3 &vel, const DVector3 &accel, PalEntry color, bool fullbright, double startalpha, int lifetime, WORD size, double fadestep)
 {
 	particle_t *particle = NewParticle();
 
 	if (particle)
 	{
-		particle->x = x;
-		particle->y = y;
-		particle->z = z;
-		particle->vel.x = vx;
-		particle->vel.y = vy;
-		particle->vel.z = vz;
+		particle->x = FLOAT2FIXED(pos.X);
+		particle->y = FLOAT2FIXED(pos.Y);
+		particle->z = FLOAT2FIXED(pos.Z);
+		particle->vel.x = FLOAT2FIXED(vel.X);
+		particle->vel.y = FLOAT2FIXED(vel.Y);
+		particle->vel.z = FLOAT2FIXED(vel.Z);
 		particle->color = ParticleColor(color);
-		particle->trans = startalpha;
-		if (fadestep < 0) fadestep = FADEFROMTTL(lifetime);
-		particle->fade = fadestep;
+		particle->trans = BYTE(startalpha*255);
+		if (fadestep < 0) particle->fade = FADEFROMTTL(lifetime);
+		else particle->fade = int(fadestep * 255);
 		particle->ttl = lifetime;
-		particle->accx = accelx;
-		particle->accy = accely;
-		particle->accz = accelz;
+		particle->accx = FLOAT2FIXED(accel.X);
+		particle->accy = FLOAT2FIXED(accel.Y);
+		particle->accz = FLOAT2FIXED(accel.Z);
 		particle->bright = fullbright;
 		particle->size = (WORD)size;
 	}
@@ -756,7 +756,7 @@ static int P_RainbowParticleColor( )
 	return *( g_rainbowParticleColors[index] );
 }
 
-void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end, int color1, int color2, double maxdiff_d, int flags, PClassActor *spawnclass, angle_t angle, int duration, double sparsity, double drift, int SpiralOffset)
+void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end, int color1, int color2, double maxdiff_d, int flags, PClassActor *spawnclass, DAngle angle, int duration, double sparsity, double drift, int SpiralOffset)
 {
 	// [BC] The server has no need to draw a railgun trail.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -768,6 +768,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 	DVector3 step, dir, pos, extend;
 	bool fullbright;
 	float maxdiff = (float)maxdiff_d;
+
 
 	dir = end - start;
 	lengthsquared = dir | dir;
@@ -813,8 +814,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 				point = start + r * dir;
 				dir.Z = dirz;
 
-				S_Sound (FLOAT2FIXED(point.X), FLOAT2FIXED(point.Y), viewz,
-					CHAN_WEAPON, sound, 1, ATTN_NORM);
+				S_Sound (DVector3(point.X, point.Y, viewz),	CHAN_WEAPON, sound, 1, ATTN_NORM);
 			}
 		}
 	}
@@ -1006,7 +1006,7 @@ void P_DrawRailTrail(AActor *source, const DVector3 &start, const DVector3 &end,
 			}			
 			AActor *thing = Spawn (spawnclass, pos + diff, ALLOW_REPLACE);
 			if (thing)
-				thing->Angles.Yaw = ANGLE2DBL(angle);
+				thing->Angles.Yaw = angle;
 			pos += trail_step;
 		}
 	}

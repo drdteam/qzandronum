@@ -52,7 +52,6 @@
 #include "v_palette.h"
 #include "d_player.h"
 #include "farchive.h"
-#include "a_hexenglobal.h"
 
 // [BB]
 CVAR( Float, blood_fade_scalar, 0.5f, CVAR_ARCHIVE )

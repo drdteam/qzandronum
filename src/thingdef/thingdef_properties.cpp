@@ -2971,14 +2971,14 @@ DEFINE_CLASS_PROPERTY(unmorphflash, S, PowerMorph)
 //==========================================================================
 DEFINE_CLASS_PROPERTY_PREFIX( player, maxskinsizefactor, F_F, PlayerPawn )
 {
-	PROP_INT_PARM( widthfactor, 0 );
-	PROP_INT_PARM( heightfactor, 1 );
+	PROP_DOUBLE_PARM( widthfactor, 0 );
+	PROP_DOUBLE_PARM( heightfactor, 1 );
 
 	if ( widthfactor < 0 || heightfactor < 0 )
 		I_Error( "Maximum skin size factors may not be negative.");
 
-	static_cast<PClassPlayerPawn *>(info)->MaxSkinWidthFactor = widthfactor;
-	static_cast<PClassPlayerPawn *>(info)->MaxSkinHeightFactor = heightfactor;
+	static_cast<PClassPlayerPawn *>(info)->MaxSkinWidthFactor = FLOAT2FIXED ( widthfactor );
+	static_cast<PClassPlayerPawn *>(info)->MaxSkinHeightFactor = FLOAT2FIXED ( heightfactor );
 }
 
 

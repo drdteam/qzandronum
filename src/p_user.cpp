@@ -109,11 +109,8 @@ CUSTOM_CVAR(Float, cl_predict_lerpthreshold, 2.00f, CVAR_ARCHIVE | CVAR_GLOBALCO
 struct PredictPos
 {
 	int gametic;
-	fixed_t x;
-	fixed_t y;
-	fixed_t z;
-	fixed_t pitch;
-	fixed_t yaw;
+	DVector3 pos;
+	DRotator angles;
 } static PredictionLerpFrom, PredictionLerpResult, PredictionLast;
 static int PredictionLerptics;
 
@@ -1487,10 +1484,10 @@ int APlayerPawn::GetMaxHealth() const
 //
 //===========================================================================
 
-bool APlayerPawn::UpdateWaterLevel (fixed_t oldz, bool splash)
+bool APlayerPawn::UpdateWaterLevel (bool splash)
 {
 	int oldlevel = waterlevel;
-	bool retval = Super::UpdateWaterLevel (oldz, splash);
+	bool retval = Super::UpdateWaterLevel (splash);
 	if (player != NULL )
 	{
 		if (oldlevel < 3 && waterlevel == 3)
@@ -3058,7 +3055,7 @@ void P_FallingDamage (AActor *actor)
 {
 	int damagestyle;
 	int damage;
-	fixed_t vel;
+	double vel;
 
 	// [BB] This is handled server-side.
 	if ( NETWORK_InClientMode() )
@@ -3075,7 +3072,7 @@ void P_FallingDamage (AActor *actor)
 	if (actor->floorsector->Flags & SECF_NOFALLINGDAMAGE)
 		return;
 
-	vel = abs(actor->_f_velz());
+	vel = fabs(actor->Vel.Z);
 
 	// Since Hexen falling damage is stronger than ZDoom's, it takes
 	// precedence. ZDoom falling damage may not be as strong, but it
@@ -3084,19 +3081,19 @@ void P_FallingDamage (AActor *actor)
 	switch (damagestyle)
 	{
 	case DF_FORCE_FALLINGHX:		// Hexen falling damage
-		if (vel <= 23*FRACUNIT)
+		if (vel <= 23)
 		{ // Not fast enough to hurt
 			return;
 		}
-		if (vel >= 63*FRACUNIT)
+		if (vel >= 63)
 		{ // automatic death
 			damage = 1000000;
 		}
 		else
 		{
-			vel = FixedMul (vel, 16*FRACUNIT/23);
-			damage = ((FixedMul (vel, vel) / 10) >> FRACBITS) - 24;
-			if (actor->_f_velz() > -39*FRACUNIT && damage > actor->health
+			vel *= (16. / 23);
+			damage = int((vel * vel) / 10 - 24);
+			if (actor->Vel.Z > -39 && damage > actor->health
 				&& actor->health != 1)
 			{ // No-death threshold
 				damage = actor->health-1;
@@ -3105,17 +3102,17 @@ void P_FallingDamage (AActor *actor)
 		break;
 	
 	case DF_FORCE_FALLINGZD:		// ZDoom falling damage
-		if (vel <= 19*FRACUNIT)
+		if (vel <= 19)
 		{ // Not fast enough to hurt
 			return;
 		}
-		if (vel >= 84*FRACUNIT)
+		if (vel >= 84)
 		{ // automatic death
 			damage = 1000000;
 		}
 		else
 		{
-			damage = ((MulScale23 (vel, vel*11) >> FRACBITS) - 30) / 2;
+			damage = int((vel*vel*(11 / 128.) - 30) / 2);
 			if (damage < 1)
 			{
 				damage = 1;
@@ -3124,13 +3121,13 @@ void P_FallingDamage (AActor *actor)
 		break;
 
 	case DF_FORCE_FALLINGST:		// Strife falling damage
-		if (vel <= 20*FRACUNIT)
+		if (vel <= 20)
 		{ // Not fast enough to hurt
 			return;
 		}
 		// The minimum amount of damage you take from falling in Strife
 		// is 52. Ouch!
-		damage = vel / 25000;
+		damage = int(vel / (25000./65536.));
 		break;
 
 	default:
@@ -3434,7 +3431,7 @@ void P_CrouchMove(player_t * player, int direction)
 	player->crouchviewdelta = player->viewheight - player->mo->ViewHeight;
 
 	// Check for eyes going above/below fake floor due to crouching motion.
-	P_CheckFakeFloorTriggers(player->mo, player->mo->_f_Z() + FLOAT2FIXED(oldheight), true);
+	P_CheckFakeFloorTriggers(player->mo, player->mo->Z() + oldheight, true);
 }
 
 //----------------------------------------------------------------------------
@@ -3484,9 +3481,9 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 /*
 	if (debugfile && !(player->cheats & CF_PREDICTING))
 	{
-		fprintf (debugfile, "tic %d for pl %d: (%d, %d, %d, %u) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
-			gametic, (int)(player-players), player->mo->_f_X(), player->mo->_f_Y(), player->mo->_f_Z(),
-			player->mo->_f_angle()>>ANGLETOFINESHIFT, player->cmd.ucmd.buttons,
+		fprintf (debugfile, "tic %d for pl %d: (%f, %f, %f, %f) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
+			gametic, (int)(player-players), player->mo->X(), player->mo->Y(), player->mo->Z(),
+			player->mo->Angles.Yaw.Degrees, player->cmd.ucmd.buttons,
 			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
 			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
 	}
@@ -3835,7 +3832,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		P_PlayerOnSpecial3DFloor (player);
 		P_PlayerInSpecialSector (player);
 
-		if (player->mo->_f_Z() <= player->mo->Sector->floorplane.ZatPoint(player->mo) ||
+		if (!player->mo->isAbove(player->mo->Sector->floorplane.ZatPointF(player->mo)) ||
 			player->mo->waterlevel)
 		{
 			// Player must be touching the floor
@@ -3969,19 +3966,19 @@ void P_PredictionLerpReset()
 	PredictionLerptics = PredictionLast.gametic = PredictionLerpFrom.gametic = PredictionLerpResult.gametic = 0;
 }
 
-bool P_LerpCalculate(PredictPos from, PredictPos to, PredictPos &result, float scale)
+bool P_LerpCalculate(AActor *pmo, PredictPos from, PredictPos to, PredictPos &result, float scale)
 {
-	DVector3 vecFrom(FIXED2DBL(from.x), FIXED2DBL(from.y), FIXED2DBL(from.z));
-	DVector3 vecTo(FIXED2DBL(to.x), FIXED2DBL(to.y), FIXED2DBL(to.z));
+	//DVector2 pfrom = Displacements.getOffset(from.portalgroup, to.portalgroup);
+	DVector3 vecFrom = from.pos;
+	DVector3 vecTo = to.pos;
 	DVector3 vecResult;
 	vecResult = vecTo - vecFrom;
 	vecResult *= scale;
 	vecResult = vecResult + vecFrom;
 	DVector3 delta = vecResult - vecTo;
 
-	result.x = FLOAT2FIXED(vecResult.X);
-	result.y = FLOAT2FIXED(vecResult.Y);
-	result.z = FLOAT2FIXED(vecResult.Z);
+	result.pos = pmo->Vec3Offset(vecResult - to.pos);
+	//result.portalgroup = P_PointInSector(result.pos.x, result.pos.y)->PortalGroup;
 
 	// As a fail safe, assume extrapolation is the threshold.
 	return (delta.LengthSquared() > cl_predict_lerpthreshold && scale <= 1.00f);
@@ -4087,16 +4084,15 @@ void P_PredictPlayer (player_t *player)
 		{
 			// Z is not compared as lifts will alter this with no apparent change
 			// Make lerping less picky by only testing whole units
-			DoLerp = ((PredictionLast.x >> 16) != (player->mo->_f_X() >> 16) ||
-				(PredictionLast.y >> 16) != (player->mo->_f_Y() >> 16));
+			DoLerp = (int)PredictionLast.pos.X != (int)player->mo->X() || (int)PredictionLast.pos.Y != (int)player->mo->Y();
 
 			// Aditional Debug information
 			if (developer && DoLerp)
 			{
-				DPrintf("Lerp! Ltic (%d) && Ptic (%d) | Lx (%d) && Px (%d) | Ly (%d) && Py (%d)\n",
+				DPrintf("Lerp! Ltic (%d) && Ptic (%d) | Lx (%f) && Px (%f) | Ly (%f) && Py (%f)\n",
 					PredictionLast.gametic, i,
-					(PredictionLast.x >> 16), (player->mo->_f_X() >> 16),
-					(PredictionLast.y >> 16), (player->mo->_f_Y() >> 16));
+					(PredictionLast.pos.X), (player->mo->X()),
+					(PredictionLast.pos.Y), (player->mo->Y()));
 			}
 		}
 	}
@@ -4114,17 +4110,16 @@ void P_PredictPlayer (player_t *player)
 		}
 
 		PredictionLast.gametic = maxtic - 1;
-		PredictionLast.x = player->mo->_f_X();
-		PredictionLast.y = player->mo->_f_Y();
-		PredictionLast.z = player->mo->_f_Z();
+		PredictionLast.pos = player->mo->Pos();
+		//PredictionLast.portalgroup = player->mo->Sector->PortalGroup;
 
 		if (PredictionLerptics > 0)
 		{
 			if (PredictionLerpFrom.gametic > 0 &&
-				P_LerpCalculate(PredictionLerpFrom, PredictionLast, PredictionLerpResult, (float)PredictionLerptics * cl_predict_lerpscale))
+				P_LerpCalculate(player->mo, PredictionLerpFrom, PredictionLast, PredictionLerpResult, (float)PredictionLerptics * cl_predict_lerpscale))
 			{
 				PredictionLerptics++;
-				player->mo->SetXYZ(PredictionLerpResult.x, PredictionLerpResult.y, PredictionLerpResult.z);
+				player->mo->SetXYZ(PredictionLerpResult.pos);
 			}
 			else
 			{
@@ -4448,38 +4443,7 @@ void player_t::Serialize (FArchive &arc)
 	}
 
 	/* [BB]
-	if (SaveVersion < 4514 && IsBot)
-	{
-		Bot = new DBot;
-
-		arc	<< Bot->angle
-			<< Bot->dest
-			<< Bot->prev
-			<< Bot->enemy
-			<< Bot->missile
-			<< Bot->mate
-			<< Bot->last_mate
-			<< Bot->skill
-			<< Bot->t_active
-			<< Bot->t_respawn
-			<< Bot->t_strafe
-			<< Bot->t_react
-			<< Bot->t_fight
-			<< Bot->t_roam
-			<< Bot->t_rocket
-			<< Bot->first_shot
-			<< Bot->sleft
-			<< Bot->allround
-			<< Bot->oldx
-			<< Bot->oldy;
-	}
-
-	if (SaveVersion < 4516 && Bot != NULL)
-	{
-		Bot->player = this;
-	}
 	*/
-
 	if (arc.IsLoading ())
 	{
 		// If the player reloaded because they pressed +use after dying, we

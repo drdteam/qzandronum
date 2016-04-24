@@ -7567,7 +7567,7 @@ static void client_SpawnBloodSplatter( BYTESTREAM_s *pByteStream, bool bIsBloodS
 
 	if ( pOriginator )
 	{
-		DAngle hitangle = ANGLE2FLOAT ( 0u - pOriginator->__f_AngleTo ( FLOAT2FIXED ( pos.X ), FLOAT2FIXED ( pos.Y ) ) ) ;
+		DAngle hitangle = VecToAngle ( pos.XY() - pOriginator->Pos().XY() ) ;
 		if ( bIsBloodSplatter2 )
 			P_BloodSplatter2 (pos, pOriginator, hitangle);
 		else
@@ -8731,7 +8731,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	// Read in flags.
 	int flags = NETWORK_ReadByte( pByteStream );
 
-	angle_t angle = source->_f_angle();
+	DAngle angle = source->Angles.Yaw;
 	PClassActor* spawnclass = NULL;
 	int duration = 0;
 	float sparsity = 1.0f;
@@ -8740,7 +8740,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	if ( flags & 0x80 )
 	{
 		// [TP] The server has signaled that more information follows
-		angle = source->_f_angle() + NETWORK_ReadLong( pByteStream );
+		angle = source->Angles.Yaw + ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
 		spawnclass = NETWORK_GetClassFromIdentification( NETWORK_ReadShort( pByteStream ));
 		duration = NETWORK_ReadShort( pByteStream );
 		sparsity = NETWORK_ReadFloat( pByteStream );
@@ -9198,16 +9198,16 @@ static void client_SetSectorSpecial( BYTESTREAM_s *pByteStream )
 static void client_SetSectorFriction( BYTESTREAM_s *pByteStream )
 {
 	LONG		lSectorID;
-	LONG		lFriction;
-	LONG		lMoveFactor;
+	double		friction;
+	double		moveFactor;
 	sector_t	*pSector;
 
 	// Read in the sector to have its friction altered.
 	lSectorID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the ceiling and floor scale.
-	lFriction = NETWORK_ReadLong( pByteStream );
-	lMoveFactor = NETWORK_ReadLong( pByteStream );
+	friction = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	moveFactor = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Now find the sector.
 	pSector = CLIENT_FindSectorByID( lSectorID );
@@ -9218,11 +9218,11 @@ static void client_SetSectorFriction( BYTESTREAM_s *pByteStream )
 	}
 
 	// Set the friction.
-	pSector->friction = lFriction;
-	pSector->movefactor = lMoveFactor;
+	pSector->friction = friction;
+	pSector->movefactor = moveFactor;
 
 	// I'm not sure if we need to do this, but let's do it anyway.
-	if ( lFriction == ORIG_FRICTION )
+	if ( friction == ORIG_FRICTION )
 		pSector->special &= ~FRICTION_MASK;
 	else
 		pSector->special |= FRICTION_MASK;
@@ -9973,14 +9973,12 @@ static void client_SoundPoint( BYTESTREAM_s *pByteStream )
 	LONG		lChannel;
 	LONG		lVolume;
 	LONG		lAttenuation;
-	fixed_t		X;
-	fixed_t		Y;
-	fixed_t		Z;
+	DVector3	pos;
 
 	// Read in the XY of the sound.
-	X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	pos.X = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	pos.Y = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	pos.Z = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 
 	// Read in the channel.
 	lChannel = NETWORK_ReadByte( pByteStream );
@@ -9997,7 +9995,7 @@ static void client_SoundPoint( BYTESTREAM_s *pByteStream )
 	lAttenuation = NETWORK_ReadByte( pByteStream );
 
 	// Finally, play the sound.
-	S_Sound ( X, Y, Z, lChannel, S_FindSound(pszSoundString), (float)lVolume / 127.f, NETWORK_AttenuationIntToFloat ( lAttenuation ) );
+	S_Sound ( pos, lChannel, S_FindSound(pszSoundString), (float)lVolume / 127.f, NETWORK_AttenuationIntToFloat ( lAttenuation ) );
 }
 
 //*****************************************************************************
@@ -11045,7 +11043,7 @@ static void client_DoCeiling( BYTESTREAM_s *pByteStream )
 	fixed_t			TopHeight;
 	LONG			lSpeed;
 	LONG			lCrush;
-	bool			Hexencrush;
+	DCeiling::ECrushMode crushMode;
 	LONG			lSilent;
 	LONG			lDirection;
 	LONG			lSectorID;
@@ -11075,7 +11073,7 @@ static void client_DoCeiling( BYTESTREAM_s *pByteStream )
 	lCrush = static_cast<SBYTE>( NETWORK_ReadByte( pByteStream ) );
 
 	// Is this ceiling crush Hexen style?
-	Hexencrush = NETWORK_ReadByte( pByteStream );
+	crushMode = static_cast<DCeiling::ECrushMode> ( NETWORK_ReadByte( pByteStream ) );
 
 	// Does this ceiling make noise?
 	lSilent = NETWORK_ReadShort( pByteStream );
@@ -11099,7 +11097,7 @@ static void client_DoCeiling( BYTESTREAM_s *pByteStream )
 	pCeiling->SetBottomHeight( BottomHeight );
 	pCeiling->SetTopHeight( TopHeight );
 	pCeiling->SetCrush( lCrush );
-	pCeiling->SetHexencrush( Hexencrush );
+	pCeiling->SetCrushMode ( crushMode );
 	pCeiling->SetDirection( lDirection );
 	pCeiling->SetID( lCeilingID );
 }
@@ -12046,13 +12044,13 @@ static void client_EarthQuake( BYTESTREAM_s *pByteStream )
 //
 static void client_DoScroller( BYTESTREAM_s *pByteStream )
 {
-	DScroller::EScrollType	Type;
+	EScroll	Type;
 	fixed_t					dX;
 	fixed_t					dY;
 	LONG					lAffectee;
 
 	// Read in the type of scroller.
-	Type = (DScroller::EScrollType)NETWORK_ReadByte( pByteStream );
+	Type = (EScroll)NETWORK_ReadByte( pByteStream );
 
 	// Read in the X speed.
 	dX = NETWORK_ReadLong( pByteStream );
@@ -12063,47 +12061,24 @@ static void client_DoScroller( BYTESTREAM_s *pByteStream )
 	// Read in the sector/side being scrolled.
 	lAffectee = NETWORK_ReadLong( pByteStream );
 
-	// Check to make sure what we've read in is valid.
-	// [BB] sc_side is allowed, too, but we need to make a different check for it.
-	if (( Type != DScroller::sc_floor ) && ( Type != DScroller::sc_ceiling ) &&
-		( Type != DScroller::sc_carry ) && ( Type != DScroller::sc_carry_ceiling ) && ( Type != DScroller::sc_side ) )
-	{
-		client_PrintWarning( "client_DoScroller: Unknown type: %d!\n", static_cast<int> (Type) );
-		return;
-	}
-
-	if( Type == DScroller::sc_side )
-	{
-		if (( lAffectee < 0 ) || ( lAffectee >= numsides ))
-		{
-			client_PrintWarning( "client_DoScroller: Invalid side ID: %ld!\n", lAffectee );
-			return;
-		}
-	}
-	else if (( lAffectee < 0 ) || ( lAffectee >= numsectors ))
-	{
-		client_PrintWarning( "client_DoScroller: Invalid sector ID: %ld!\n", lAffectee );
-		return;
-	}
-
 	// Finally, create the scroller.
-	new DScroller( Type, dX, dY, -1, lAffectee, 0 );
+	P_CreateScroller( Type, FIXED2DBL ( dX ), FIXED2DBL ( dY ), -1, lAffectee, 0 );
 }
 
 //*****************************************************************************
 //
-// [BB] SetScroller is defined in p_lnspec.cpp.
-void SetScroller (int tag, DScroller::EScrollType type, fixed_t dx, fixed_t dy);
+// [BB] SetScroller is defined in p_scroll.cpp.
+void SetScroller(int tag, EScroll type, double dx, double dy);
 
 static void client_SetScroller( BYTESTREAM_s *pByteStream )
 {
-	DScroller::EScrollType	Type;
+	EScroll	Type;
 	fixed_t					dX;
 	fixed_t					dY;
 	LONG					lTag;
 
 	// Read in the type of scroller.
-	Type = (DScroller::EScrollType)NETWORK_ReadByte( pByteStream );
+	Type = (EScroll)NETWORK_ReadByte( pByteStream );
 
 	// Read in the X speed.
 	dX = NETWORK_ReadLong( pByteStream );
@@ -12114,22 +12089,14 @@ static void client_SetScroller( BYTESTREAM_s *pByteStream )
 	// Read in the sector being scrolled.
 	lTag = NETWORK_ReadShort( pByteStream );
 
-	// Check to make sure what we've read in is valid.
-	if (( Type != DScroller::sc_floor ) && ( Type != DScroller::sc_ceiling ) &&
-		( Type != DScroller::sc_carry ) && ( Type != DScroller::sc_carry_ceiling ))
-	{
-		client_PrintWarning( "client_SetScroller: Unknown type: %d!\n", static_cast<int> (Type) );
-		return;
-	}
-
 	// Finally, create or update the scroller.
-	SetScroller (lTag, Type, dX, dY );
+	SetScroller (lTag, Type, FIXED2DBL ( dX ), FIXED2DBL ( dY ) );
 }
 
 //*****************************************************************************
 //
 // [BB] SetWallScroller is defined in p_lnspec.cpp.
-void SetWallScroller(int id, int sidechoice, fixed_t dx, fixed_t dy, int Where);
+void SetWallScroller(int id, int sidechoice, double dx, double dy, EScrollPos Where);
 
 static void client_SetWallScroller( BYTESTREAM_s *pByteStream )
 {
@@ -12137,7 +12104,7 @@ static void client_SetWallScroller( BYTESTREAM_s *pByteStream )
 	LONG					lSidechoice;
 	fixed_t					dX;
 	fixed_t					dY;
-	LONG					lWhere;
+	EScrollPos				Where;
 
 	// Read in the id.
 	lId = NETWORK_ReadLong( pByteStream );
@@ -12152,10 +12119,10 @@ static void client_SetWallScroller( BYTESTREAM_s *pByteStream )
 	dY = NETWORK_ReadLong( pByteStream );
 
 	// Read in where.
-	lWhere = NETWORK_ReadLong( pByteStream );
+	Where = static_cast<EScrollPos> ( NETWORK_ReadLong( pByteStream ) );
 
 	// Finally, create or update the scroller.
-	SetWallScroller (lId, lSidechoice, dX, dY, lWhere );
+	SetWallScroller (lId, lSidechoice, FIXED2DBL ( dX ), FIXED2DBL ( dY ), Where );
 }
 
 //*****************************************************************************
@@ -12341,19 +12308,20 @@ static void client_DoPusher( BYTESTREAM_s *pByteStream )
 	const int iAffectee = NETWORK_ReadShort( pByteStream );
 
 	line_t *pLine = ( iLineNum >= 0 && iLineNum < numlines ) ? &lines[iLineNum] : NULL;
-	new DPusher ( static_cast<DPusher::EPusher> ( ulType ), pLine, iMagnitude, iAngle, CLIENT_FindThingByNetID( lSourceNetID ), iAffectee );
+	Printf ( "Error: client_DoPusher no implemented." );
+	//new DPusher ( static_cast<DPusher::EPusher> ( ulType ), pLine, iMagnitude, iAngle, CLIENT_FindThingByNetID( lSourceNetID ), iAffectee );
 }
 
 //*****************************************************************************
 //
-void AdjustPusher (int tag, int magnitude, int angle, DPusher::EPusher type);
+void AdjustPusher (int tag, int magnitude, int angle, bool wind);
 static void client_AdjustPusher( BYTESTREAM_s *pByteStream )
 {
 	const int iTag = NETWORK_ReadShort( pByteStream );
 	const int iMagnitude = NETWORK_ReadLong( pByteStream );
 	const int iAngle = NETWORK_ReadLong( pByteStream );
-	const ULONG ulType = NETWORK_ReadByte( pByteStream );
-	AdjustPusher (iTag, iMagnitude, iAngle, static_cast<DPusher::EPusher> ( ulType ));
+	const bool wind = !!NETWORK_ReadByte( pByteStream );
+	AdjustPusher (iTag, iMagnitude, iAngle, wind);
 }
 
 //*****************************************************************************

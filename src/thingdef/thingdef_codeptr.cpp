@@ -2034,7 +2034,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 	if (ti) 
 	{
 		DAngle ang = self->Angles.Yaw - 90;
-		DVector3 ofs = self->Vec3Angle(spawnofs_xy, ang, spawnheight);
+		DVector2 ofs = ang.ToVector(spawnofs_xy);
 		DAngle shootangle = self->Angles.Yaw;
 
 		if (flags & FPF_AIMATANGLE) shootangle += angle;
@@ -2043,18 +2043,18 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 		DAngle saved_player_pitch = self->Angles.Pitch;
 		self->Angles.Pitch -= pitch;
 
-		A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle, ti, angle , flags, t );
+		A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle, ti, angle , flags, t );
 
 		if (NULL != self->player )
 		{
 			if ( self->player->cheats2 & CF2_SPREAD )
 			{
-				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
-				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, ofs.Z, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
 			}
 		}
 
-		//AActor * misl=P_SpawnPlayerMissile (self, ofs.X, ofs.Y, ofs.Z, ti, shootangle, &t, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
+		//AActor * misl=P_SpawnPlayerMissile (self, ofs.X, ofs.Y, spawnheight, ti, shootangle, &t, NULL, false, (flags & FPF_NOAUTOAIM) != 0);
 
 	self->Angles.Pitch = saved_player_pitch;
 /*
@@ -3989,7 +3989,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Burst)
 	// with no relation to the size of the self shattering. I think it should
 	// base the number of shards on the size of the dead thing, so bigger
 	// things break up into more shards than smaller things.
-	// An self with _f_radius() 20 and height 64 creates ~40 chunks.
+	// An self with radius 20 and height 64 creates ~40 chunks.
 	numChunks = MAX<int> (4, int(self->radius * self->Height)/32);
 	i = (pr_burst.Random2()) % (numChunks/4);
 	for (i = MAX (24, numChunks + i); i >= 0; i--)
@@ -4417,7 +4417,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 		if (!(flags & CLOFF_FROMBASE))
 		{ // default to hitscan origin
 
-			// Synced with hitscan: self->_f_height() is strangely NON-conscientious about getting the right actor for player
+			// Synced with hitscan: self->Height is strangely NON-conscientious about getting the right actor for player
 			pos.Z += self->Height *0.5;
 			if (self->player != NULL)
 			{
@@ -7315,7 +7315,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckProximity)
 
 			if (ptrWillChange)
 			{
-				current = ref->AproxDistance(mo);
+				current = ref->Distance2D(mo);
 
 				if ((flags & CPXF_CLOSEST) && (current < closer))
 				{
@@ -7452,7 +7452,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckBlock)
 	if (flags & CBF_DROPOFF)
 	{
 		mobj->SetZ(pos.Z);
-		checker = P_CheckMove(mobj, pos.X, pos.Y);
+		checker = P_CheckMove(mobj, pos);
 		mobj->SetZ(oldpos.Z);
 	}
 	else
@@ -7534,7 +7534,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FaceMovementDirection)
 		//Code borrowed from A_Face*.
 		if (anglelimit > 0)
 		{
-			DAngle delta = deltaangle(current, angle);
+			DAngle delta = -deltaangle(current, angle);
 			if (fabs(delta) > anglelimit)
 			{
 				if (delta < 0)
