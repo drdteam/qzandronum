@@ -164,8 +164,8 @@ void UNLAGGED_Reconcile( AActor *actor )
 	//reconcile the sectors
 	for (int i = 0; i < numsectors; ++i)
 	{
-		sectors[i].floorplane.restoreD = sectors[i].floorplane.fixD();
-		sectors[i].ceilingplane.restoreD = sectors[i].ceilingplane.fixD();
+		sectors[i].floorplane.restoreD = sectors[i].floorplane.fD();
+		sectors[i].ceilingplane.restoreD = sectors[i].ceilingplane.fD();
 
 		sectors[i].floorplane.setD ( sectors[i].floorplane.unlaggedD[unlaggedIndex] );
 		sectors[i].ceilingplane.setD ( sectors[i].ceilingplane.unlaggedD[unlaggedIndex] );
@@ -220,7 +220,7 @@ void UNLAGGED_Reconcile( AActor *actor )
 				//floor moved up - a client might have mispredicted himself too low due to gravity
 				//and the client thinking the floor is lower than it actually is
 				// [BB] But only do this if the sector actually moved. Note: This adjustment seems to break on some kind of non-moving 3D floors.
-				if ( (serverFloorZ > actor->floorz) && (( actor->Sector->floorplane.restoreD != actor->Sector->floorplane.fixD() ) || ( actor->Sector->ceilingplane.restoreD != actor->Sector->ceilingplane.fixD() )) )
+				if ( (serverFloorZ > actor->floorz) && (( actor->Sector->floorplane.restoreD != actor->Sector->floorplane.fD() ) || ( actor->Sector->ceilingplane.restoreD != actor->Sector->ceilingplane.fD() )) )
 				{
 					//shooter was standing on the floor, let's pull him down to his floor if
 					//he wasn't falling
@@ -243,10 +243,10 @@ void UNLAGGED_SwapSectorUnlaggedStatus( )
 
 	for (int i = 0; i < numsectors; ++i)
 	{
-		fixed_t tmp = sectors[i].floorplane.fixD();
+		double tmp = sectors[i].floorplane.fD();
 		sectors[i].floorplane.setD ( sectors[i].floorplane.restoreD );
 		sectors[i].floorplane.restoreD = tmp;
-		tmp = sectors[i].ceilingplane.fixD();
+		tmp = sectors[i].ceilingplane.fD();
 		sectors[i].ceilingplane.setD ( sectors[i].ceilingplane.restoreD );
 		sectors[i].ceilingplane.restoreD = tmp;
 	}
@@ -341,8 +341,8 @@ void UNLAGGED_RecordSectors( )
 	//record the sectors
 	for (int i = 0; i < numsectors; ++i)
 	{
-		sectors[i].floorplane.unlaggedD[unlaggedIndex] = sectors[i].floorplane.fixD();
-		sectors[i].ceilingplane.unlaggedD[unlaggedIndex] = sectors[i].ceilingplane.fixD();
+		sectors[i].floorplane.unlaggedD[unlaggedIndex] = sectors[i].floorplane.fD();
+		sectors[i].ceilingplane.unlaggedD[unlaggedIndex] = sectors[i].ceilingplane.fD();
 	}
 }
 

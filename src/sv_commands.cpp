@@ -2919,7 +2919,7 @@ void SERVERCOMMANDS_SetSectorFloorPlane( ULONG ulSector, ULONG ulPlayerExtra, Se
 
 	NetCommand command( SVC_SETSECTORFLOORPLANE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].floorplane.fixD() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fD() ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2932,7 +2932,7 @@ void SERVERCOMMANDS_SetSectorCeilingPlane( ULONG ulSector, ULONG ulPlayerExtra, 
 
 	NetCommand command( SVC_SETSECTORCEILINGPLANE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].ceilingplane.fixD() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fD() ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2945,10 +2945,10 @@ void SERVERCOMMANDS_SetSectorFloorPlaneSlope( ULONG ulSector, ULONG ulPlayerExtr
 
 	NetCommand command( SVC_SETSECTORFLOORPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].floorplane.fixA() >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.fixB() >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.fixC() >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.fixiC() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fA() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fB() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fC() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fiC() ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2961,10 +2961,10 @@ void SERVERCOMMANDS_SetSectorCeilingPlaneSlope( ULONG ulSector, ULONG ulPlayerEx
 
 	NetCommand command( SVC_SETSECTORCEILINGPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].ceilingplane.fixA() >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.fixB() >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.fixC() >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.fixiC() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fA() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fB() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fC() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fiC() ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -4548,10 +4548,10 @@ void SERVERCOMMANDS_UpdateWaggle( LONG lID, LONG lAccumulator, ULONG ulPlayerExt
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DoRotatePoly( LONG lSpeed, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_DoRotatePoly( double speed, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_DOROTATEPOLY );
-	command.addLong ( lSpeed );
+	command.addLong ( FLOAT2FIXED ( speed ) );
 	command.addShort ( lPolyNum );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
@@ -4568,11 +4568,11 @@ void SERVERCOMMANDS_DestroyRotatePoly( LONG lPolyNum, ULONG ulPlayerExtra, Serve
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DoMovePoly( LONG lXSpeed, LONG lYSpeed, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_DoMovePoly( const DVector2 &speedV, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_DOMOVEPOLY );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
+	command.addLong ( FLOAT2FIXED ( speedV.X ) );
+	command.addLong ( FLOAT2FIXED ( speedV.Y )  );
 	command.addShort ( lPolyNum );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
@@ -4589,13 +4589,13 @@ void SERVERCOMMANDS_DestroyMovePoly( LONG lPolyNum, ULONG ulPlayerExtra, ServerC
 //*****************************************************************************
 //*****************************************************************************
 //
-void SERVERCOMMANDS_DoPolyDoor( LONG lType, LONG lXSpeed, LONG lYSpeed, LONG lSpeed, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_DoPolyDoor( LONG lType, const DVector2 &speedV, double speed, LONG lPolyNum, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_DOPOLYDOOR );
 	command.addByte ( lType );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
-	command.addLong ( lSpeed );
+	command.addLong ( FLOAT2FIXED ( speedV.X ) );
+	command.addLong ( FLOAT2FIXED ( speedV.Y ) );
+	command.addLong ( FLOAT2FIXED ( speed ) );
 	command.addShort ( lPolyNum );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
@@ -4611,25 +4611,25 @@ void SERVERCOMMANDS_DestroyPolyDoor( LONG lPolyNum, ULONG ulPlayerExtra, ServerC
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetPolyDoorSpeedPosition( LONG lPolyNum, LONG lXSpeed, LONG lYSpeed, LONG lX, LONG lY, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetPolyDoorSpeedPosition( LONG lPolyNum, const DVector2 &speedV, const DVector2 &pos, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SETPOLYDOORSPEEDPOSITION );
 	command.addShort ( lPolyNum );
-	command.addLong ( lXSpeed );
-	command.addLong ( lYSpeed );
-	command.addLong ( lX );
-	command.addLong ( lY );
+	command.addLong ( FLOAT2FIXED ( speedV.X ) );
+	command.addLong ( FLOAT2FIXED ( speedV.Y ) );
+	command.addLong ( FLOAT2FIXED ( pos.X ) );
+	command.addLong ( FLOAT2FIXED ( pos.Y ) );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetPolyDoorSpeedRotation( LONG lPolyNum, LONG lSpeed, LONG lAngle, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetPolyDoorSpeedRotation( LONG lPolyNum, double speed, DAngle angle, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command ( SVC_SETPOLYDOORSPEEDROTATION );
 	command.addShort ( lPolyNum );
-	command.addLong ( lSpeed );
-	command.addLong ( lAngle );
+	command.addLong ( FLOAT2FIXED ( speed ) );
+	command.addLong ( angle.BAMs() );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -4664,8 +4664,8 @@ void SERVERCOMMANDS_SetPolyobjPosition( LONG lPolyNum, ULONG ulPlayerExtra, Serv
 
 	NetCommand command ( SVC_SETPOLYOBJPOSITION );
 	command.addShort ( lPolyNum );
-	command.addLong ( pPoly->StartSpot.x );
-	command.addLong ( pPoly->StartSpot.y );
+	command.addLong ( FLOAT2FIXED ( pPoly->StartSpot.pos.X ) );
+	command.addLong ( FLOAT2FIXED ( pPoly->StartSpot.pos.Y ) );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -4681,7 +4681,7 @@ void SERVERCOMMANDS_SetPolyobjRotation( LONG lPolyNum, ULONG ulPlayerExtra, Serv
 
 	NetCommand command ( SVC_SETPOLYOBJROTATION );
 	command.addShort ( lPolyNum );
-	command.addLong ( pPoly->angle );
+	command.addLong ( pPoly->Angle.BAMs() );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

@@ -3434,10 +3434,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		if ( pPoly->bMoved )
 		{
 
-			const LONG lDeltaX = pPoly->SavedStartSpot[0] - pPoly->StartSpot.x;
-			const LONG lDeltaY = pPoly->SavedStartSpot[1] - pPoly->StartSpot.y;
+			const double deltaX = pPoly->SavedStartSpot.X - pPoly->StartSpot.pos.X;
+			const double deltaY = pPoly->SavedStartSpot.Y - pPoly->StartSpot.pos.Y;
 
-			pPoly->MovePolyobj( lDeltaX, lDeltaY, true );
+			pPoly->MovePolyobj( DVector2 ( deltaX, deltaY ), true );
 			pPoly->bMoved = false;
 
 			// [BB] If we're the server, tell clients about this polyobj reset.
@@ -3448,9 +3448,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		if ( pPoly->bRotated )
 		{
 			// [BB] AFAIK a polyobj always starts with angle 0;
-			const LONG lDeltaAngle = 0 - pPoly->angle;
+			const DAngle deltaAngle = 0 - pPoly->Angle;
 
-			pPoly->RotatePolyobj( lDeltaAngle );
+			pPoly->RotatePolyobj( deltaAngle );
 			pPoly->bRotated = false;
 
 			// [BB] If we're the server, tell clients about this polyobj reset.

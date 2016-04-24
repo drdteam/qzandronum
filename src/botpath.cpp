@@ -342,10 +342,10 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 	// because DActors are grouped into mapblocks
 	// based on their origin point, and can overlap
 	// into adjacent blocks by up to MAXRADIUS units.
-	xl = GetSafeBlockX( g_BoundingBox[BOXLEFT] - bmaporgx - MAXRADIUS );
-	xh = GetSafeBlockX( g_BoundingBox[BOXRIGHT] - bmaporgx + MAXRADIUS );
-	yl = GetSafeBlockY( g_BoundingBox[BOXBOTTOM] - bmaporgy - MAXRADIUS );
-	yh = GetSafeBlockY( g_BoundingBox[BOXTOP] - bmaporgy + MAXRADIUS );
+	xl = GetBlockX( FIXED2DBL ( g_BoundingBox[BOXLEFT] ) - MAXRADIUS );
+	xh = GetBlockX( FIXED2DBL ( g_BoundingBox[BOXRIGHT] ) + MAXRADIUS );
+	yl = GetBlockY( FIXED2DBL ( g_BoundingBox[BOXBOTTOM] )  - MAXRADIUS );
+	yh = GetBlockY( FIXED2DBL ( g_BoundingBox[BOXTOP] ) + MAXRADIUS );
 
 	g_pBlockingActor = NULL;
 	pThingBlocker = NULL;
@@ -423,10 +423,10 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 //	if (( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->height )
 //		return false;
 
-	xl = GetSafeBlockX( g_BoundingBox[BOXLEFT] - bmaporgx );
-	xh = GetSafeBlockX( g_BoundingBox[BOXRIGHT] - bmaporgx );
-	yl = GetSafeBlockY( g_BoundingBox[BOXBOTTOM] - bmaporgy );
-	yh = GetSafeBlockY( g_BoundingBox[BOXTOP] - bmaporgy );
+	xl = GetBlockX( FIXED2DBL ( g_BoundingBox[BOXLEFT] ) );
+	xh = GetBlockX( FIXED2DBL ( g_BoundingBox[BOXRIGHT] ) );
+	yl = GetBlockY( FIXED2DBL ( g_BoundingBox[BOXBOTTOM] ) );
+	yh = GetBlockY( FIXED2DBL ( g_BoundingBox[BOXTOP] ) );
 
 	for ( bx = xl ; bx <= xh ; bx++ )
 		for ( by = yl ; by <= yh ; by++ )
@@ -794,9 +794,9 @@ void BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fix
 		bUseFront = ( FrontFloor > BackFloor );
 	else
 	{
-		if (( pFrontSector->floorplane.fixA() | pFrontSector->floorplane.fixB() ) == 0 )
+		if (( FLOAT2FIXED ( pFrontSector->floorplane.fA() ) | FLOAT2FIXED ( pFrontSector->floorplane.fB() ) ) == 0 )
 			bUseFront = true;
-		else if (( pBackSector->floorplane.fixA() | pFrontSector->floorplane.fixB() ) == 0 )
+		else if (( FLOAT2FIXED ( pBackSector->floorplane.fA() ) | FLOAT2FIXED ( pFrontSector->floorplane.fB() ) ) == 0 )
 			bUseFront = false;
 		else
 			bUseFront = !P_PointOnLineSide( RefX, RefY, pLine );
@@ -919,10 +919,10 @@ static bool botpath_CheckLine( line_t *pLine )
 	fixed_t sx, sy;
 
 	// set openrange, opentop, openbottom
-	if ((( pLine->frontsector->floorplane.fixA() | pLine->frontsector->floorplane.fixB() ) |
-		 ( pLine->backsector->floorplane.fixA() | pLine->backsector->floorplane.fixB() ) |
-		 ( pLine->frontsector->ceilingplane.fixA() | pLine->frontsector->ceilingplane.fixB() ) |
-		 ( pLine->backsector->ceilingplane.fixA() | pLine->backsector->ceilingplane.fixB() )) == 0 )
+	if ((( FLOAT2FIXED ( pLine->frontsector->floorplane.fA() ) | FLOAT2FIXED ( pLine->frontsector->floorplane.fB() ) ) |
+		 ( FLOAT2FIXED ( pLine->backsector->floorplane.fA() ) | FLOAT2FIXED ( pLine->backsector->floorplane.fB() ) ) |
+		 ( FLOAT2FIXED ( pLine->frontsector->ceilingplane.fA() ) | FLOAT2FIXED ( pLine->frontsector->ceilingplane.fB() ) ) |
+		 ( FLOAT2FIXED ( pLine->backsector->ceilingplane.fA() ) | FLOAT2FIXED ( pLine->backsector->ceilingplane.fB() ) )) == 0 )
 	{
 		BOTPATH_LineOpening( pLine, sx = g_PathX, sy = g_PathY, g_PathX, g_PathY );
 	}

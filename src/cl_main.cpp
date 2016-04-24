@@ -8782,10 +8782,10 @@ static void client_SetSectorFloorPlane( BYTESTREAM_s *pByteStream )
 	}
 
 	// Calculate the change in floor height.
-	lDelta = lHeight - pSector->floorplane.fixD();
+	lDelta = lHeight - FLOAT2FIXED ( pSector->floorplane.fD() );
 
 	// Store the original height position.
-	lLastPos = pSector->floorplane.fixD();
+	lLastPos = FLOAT2FIXED ( pSector->floorplane.fD() );
 
 	// Change the height.
 	pSector->floorplane.ChangeHeight( FIXED2DBL ( -lDelta ) );
@@ -8825,10 +8825,10 @@ static void client_SetSectorCeilingPlane( BYTESTREAM_s *pByteStream )
 	}
 
 	// Calculate the change in ceiling height.
-	lDelta = lHeight - pSector->ceilingplane.fixD();
+	lDelta = lHeight - FLOAT2FIXED ( pSector->ceilingplane.fD() );
 
 	// Store the original height position.
-	lLastPos = pSector->ceilingplane.fixD();
+	lLastPos = FLOAT2FIXED ( pSector->ceilingplane.fD() );
 
 	// Change the height.
 	pSector->ceilingplane.ChangeHeight( lDelta );
@@ -11636,13 +11636,13 @@ static void client_UpdateWaggle( BYTESTREAM_s *pByteStream )
 //
 static void client_DoRotatePoly( BYTESTREAM_s *pByteStream )
 {
-	LONG			lSpeed;
+	double			speed;
 	LONG			lPolyNum;
 	FPolyObj		*pPoly;
 	DRotatePoly		*pRotatePoly;
 
 	// Read in the speed.
-	lSpeed = NETWORK_ReadLong( pByteStream );
+	speed = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the polyobject ID.
 	lPolyNum = NETWORK_ReadShort( pByteStream );
@@ -11657,7 +11657,7 @@ static void client_DoRotatePoly( BYTESTREAM_s *pByteStream )
 
 	// Create the polyobject.
 	pRotatePoly = new DRotatePoly( lPolyNum );
-	pRotatePoly->SetSpeed( lSpeed );
+	pRotatePoly->SetSpeed( speed );
 
 	// Attach the new polyobject to this ID.
 	pPoly->specialdata = pRotatePoly;
@@ -11697,15 +11697,14 @@ static void client_DestroyRotatePoly( BYTESTREAM_s *pByteStream )
 //
 static void client_DoMovePoly( BYTESTREAM_s *pByteStream )
 {
-	LONG			lXSpeed;
-	LONG			lYSpeed;
+	DVector2		speedv;
 	LONG			lPolyNum;
 	FPolyObj		*pPoly;
 	DMovePoly		*pMovePoly;
 
 	// Read in the speed.
-	lXSpeed = NETWORK_ReadLong( pByteStream );
-	lYSpeed = NETWORK_ReadLong( pByteStream );
+	speedv.X = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	speedv.Y = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the polyobject ID.
 	lPolyNum = NETWORK_ReadShort( pByteStream );
@@ -11720,8 +11719,7 @@ static void client_DoMovePoly( BYTESTREAM_s *pByteStream )
 
 	// Create the polyobject.
 	pMovePoly = new DMovePoly( lPolyNum );
-	pMovePoly->SetXSpeed( lXSpeed );
-	pMovePoly->SetYSpeed( lYSpeed );
+	pMovePoly->SetSpeedV( speedv );
 
 	// Attach the new polyobject to this ID.
 	pPoly->specialdata = pMovePoly;
@@ -11762,9 +11760,8 @@ static void client_DestroyMovePoly( BYTESTREAM_s *pByteStream )
 static void client_DoPolyDoor( BYTESTREAM_s *pByteStream )
 {
 	LONG			lType;
-	LONG			lXSpeed;
-	LONG			lYSpeed;
-	LONG			lSpeed;
+	DVector2		speedv;
+	double			speed;
 	LONG			lPolyNum;
 	FPolyObj		*pPoly;
 	DPolyDoor		*pPolyDoor;
@@ -11773,9 +11770,9 @@ static void client_DoPolyDoor( BYTESTREAM_s *pByteStream )
 	lType = NETWORK_ReadByte( pByteStream );
 
 	// Read in the speed.
-	lXSpeed = NETWORK_ReadLong( pByteStream );
-	lYSpeed = NETWORK_ReadLong( pByteStream );
-	lSpeed = NETWORK_ReadLong( pByteStream );
+	speedv.X = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	speedv.Y = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	speed = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the polyobject ID.
 	lPolyNum = NETWORK_ReadShort( pByteStream );
@@ -11790,9 +11787,8 @@ static void client_DoPolyDoor( BYTESTREAM_s *pByteStream )
 
 	// Create the polyobject.
 	pPolyDoor = new DPolyDoor( lPolyNum, (podoortype_t)lType );
-	pPolyDoor->SetXSpeed( lXSpeed );
-	pPolyDoor->SetYSpeed( lYSpeed );
-	pPolyDoor->SetSpeed( lSpeed );
+	pPolyDoor->SetSpeedV( speedv );
+	pPolyDoor->SetSpeed( speed );
 
 	// Attach the new polyobject to this ID.
 	pPoly->specialdata = pPolyDoor;
@@ -11830,39 +11826,36 @@ static void client_DestroyPolyDoor( BYTESTREAM_s *pByteStream )
 static void client_SetPolyDoorSpeedPosition( BYTESTREAM_s *pByteStream )
 {
 	LONG			lPolyID;
-	LONG			lXSpeed;
-	LONG			lYSpeed;
-	LONG			lX;
-	LONG			lY;
+	DVector2		speedv;
+	DVector2		pos;
 	FPolyObj		*pPoly;
-	LONG			lDeltaX;
-	LONG			lDeltaY;
+	double			deltaX;
+	double			deltaY;
 
 	// Read in the polyobject ID.
 	lPolyID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the polyobject x/yspeed.
-	lXSpeed = NETWORK_ReadLong( pByteStream );
-	lYSpeed = NETWORK_ReadLong( pByteStream );
+	speedv.X = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	speedv.Y = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the polyobject X/.
-	lX = NETWORK_ReadLong( pByteStream );
-	lY = NETWORK_ReadLong( pByteStream );
+	pos.X = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
+	pos.Y = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	pPoly = PO_GetPolyobj( lPolyID );
 	if ( pPoly == NULL )
 		return;
 
-	lDeltaX = lX - pPoly->StartSpot.x;
-	lDeltaY = lY - pPoly->StartSpot.y;
+	deltaX = pos.X - pPoly->StartSpot.pos.X;
+	deltaY = pos.Y - pPoly->StartSpot.pos.Y;
 
-	pPoly->MovePolyobj( lDeltaX, lDeltaY );
+	pPoly->MovePolyobj( DVector2 ( deltaX, deltaY ) );
 	
 	if ( pPoly->specialdata == NULL )
 		return;
 
-	static_cast<DPolyDoor *>( pPoly->specialdata )->SetXSpeed( lXSpeed );
-	static_cast<DPolyDoor *>( pPoly->specialdata )->SetYSpeed( lYSpeed );
+	static_cast<DPolyDoor *>( pPoly->specialdata )->SetSpeedV( speedv );
 }
 
 //*****************************************************************************
@@ -11870,7 +11863,7 @@ static void client_SetPolyDoorSpeedPosition( BYTESTREAM_s *pByteStream )
 static void client_SetPolyDoorSpeedRotation( BYTESTREAM_s *pByteStream )
 {
 	LONG			lPolyID;
-	LONG			lSpeed;
+	double			speed;
 	LONG			lAngle;
 	FPolyObj		*pPoly;
 	LONG			lDeltaAngle;
@@ -11879,7 +11872,7 @@ static void client_SetPolyDoorSpeedRotation( BYTESTREAM_s *pByteStream )
 	lPolyID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the polyobject speed.
-	lSpeed = NETWORK_ReadLong( pByteStream );
+	speed = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the polyobject angle.
 	lAngle = NETWORK_ReadLong( pByteStream );
@@ -11888,14 +11881,14 @@ static void client_SetPolyDoorSpeedRotation( BYTESTREAM_s *pByteStream )
 	if ( pPoly == NULL )
 		return;
 
-	lDeltaAngle = lAngle - pPoly->angle;
+	lDeltaAngle = lAngle - pPoly->Angle.BAMs();
 
-	pPoly->RotatePolyobj( lDeltaAngle );
+	pPoly->RotatePolyobj( AngleToFloat ( lDeltaAngle ) );
 
 	if ( pPoly->specialdata == NULL )
 		return;
 
-	static_cast<DPolyDoor *>( pPoly->specialdata )->SetSpeed( lSpeed );
+	static_cast<DPolyDoor *>( pPoly->specialdata )->SetSpeed( speed );
 }
 
 //*****************************************************************************
@@ -11944,8 +11937,8 @@ static void client_SetPolyobjPosition( BYTESTREAM_s *pByteStream )
 	FPolyObj		*pPoly;
 	LONG			lX;
 	LONG			lY;
-	LONG			lDeltaX;
-	LONG			lDeltaY;
+	double			deltaX;
+	double			deltaY;
 
 	// Read in the polyobject number.
 	lPolyNum = NETWORK_ReadShort( pByteStream );
@@ -11962,13 +11955,13 @@ static void client_SetPolyobjPosition( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	lDeltaX = lX - pPoly->StartSpot.x;
-	lDeltaY = lY - pPoly->StartSpot.y;
+	deltaX = FIXED2DBL ( lX ) - pPoly->StartSpot.pos.X;
+	deltaY = FIXED2DBL ( lY ) - pPoly->StartSpot.pos.Y;
 
 //	Printf( "DeltaX: %d\nDeltaY: %d\n", lDeltaX, lDeltaY );
 
 	// Finally, set the polyobject action.
-	pPoly->MovePolyobj( lDeltaX, lDeltaY );
+	pPoly->MovePolyobj( DVector2 ( deltaX, deltaY ) );
 }
 
 //*****************************************************************************
@@ -11994,10 +11987,10 @@ static void client_SetPolyobjRotation( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	lDeltaAngle = lAngle - pPoly->angle;
+	lDeltaAngle = lAngle - pPoly->Angle.BAMs();
 
 	// Finally, set the polyobject action.
-	pPoly->RotatePolyobj( lDeltaAngle );
+	pPoly->RotatePolyobj( AngleToFloat ( lDeltaAngle ) );
 }
 
 //*****************************************************************************

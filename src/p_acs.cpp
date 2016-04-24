@@ -5972,7 +5972,7 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, SDWORD *args)
 				FPolyObj *poly = PO_GetPolyobj(args[0]);
 				if (poly != NULL)
 				{
-					return poly->StartSpot.x;
+					return DoubleToACS(poly->StartSpot.pos.X);
 				}
 			}
 			return FIXED_MAX;
@@ -5982,7 +5982,7 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, SDWORD *args)
 				FPolyObj *poly = PO_GetPolyobj(args[0]);
 				if (poly != NULL)
 				{
-					return poly->StartSpot.y;
+					return DoubleToACS(poly->StartSpot.pos.Y);
 				}
 			}
 			return FIXED_MAX;

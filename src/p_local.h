@@ -38,7 +38,6 @@ class player_t;
 class AActor;
 struct FPlayerStart;
 class PClassActor;
-struct fixedvec3;
 class APlayerPawn;
 struct line_t;
 struct sector_t;
@@ -64,28 +63,6 @@ struct FTranslatedLineTarget;
 // Inspired by Maes
 extern int bmapnegx;
 extern int bmapnegy;
-
-inline int GetSafeBlockX(int blockx)
-{
-	blockx >>= MAPBLOCKSHIFT;
-	return (blockx <= bmapnegx) ? blockx & 0x1FF : blockx;
-}
-inline int GetSafeBlockX(long long blockx)
-{
-	blockx >>= MAPBLOCKSHIFT;
-	return int((blockx <= bmapnegx) ? blockx & 0x1FF : blockx);
-}
-
-inline int GetSafeBlockY(int blocky)
-{
-	blocky >>= MAPBLOCKSHIFT;
-	return (blocky <= bmapnegy) ? blocky & 0x1FF: blocky;
-}
-inline int GetSafeBlockY(long long blocky)
-{
-	blocky >>= MAPBLOCKSHIFT;
-	return int((blocky <= bmapnegy) ? blocky & 0x1FF: blocky);
-}
 
 //#define GRAVITY 		FRACUNIT
 #define MAXMOVE 		(30.)
@@ -277,17 +254,11 @@ extern TArray<spechit_t> portalhit;
 bool	P_TestMobjLocation (AActor *mobj);
 bool	P_TestMobjZ (AActor *mobj, bool quick=true, AActor **pOnmobj = NULL);
 bool P_CheckPosition(AActor *thing, const DVector2 &pos, bool actorsonly = false);
-inline bool P_CheckPosition(AActor *thing, const DVector2 &pos, FCheckPosition &tm, bool actorsonly = false);
+bool P_CheckPosition(AActor *thing, const DVector2 &pos, FCheckPosition &tm, bool actorsonly = false);
 AActor	*P_CheckOnmobj (AActor *thing);
 void	P_FakeZMovement (AActor *mo);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor, FCheckPosition &tm, bool missileCheck = false);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor = NULL);
-/*
-inline bool	P_TryMove(AActor* thing, double x, double y, int dropoff, const secplane_t * onfloor = NULL)
-{
-	return P_TryMove(thing, FLOAT2FIXED(x), FLOAT2FIXED(y), dropoff, onfloor);
-}
-*/
 
 bool	P_CheckMove(AActor *thing, const DVector2 &pos);
 bool	P_OldTryMove (AActor* thing, fixed_t x, fixed_t y, bool dropoff, bool onfloor = false);
@@ -363,7 +334,6 @@ void	P_TraceBleed(int damage, FTranslatedLineTarget *t, AActor *puff);		// hitsc
 void	P_TraceBleed (int damage, AActor *target);		// random direction version
 bool	P_HitFloor (AActor *thing);
 bool	P_HitWater (AActor *thing, sector_t *sec, const DVector3 &pos, bool checkabove = false, bool alert = true, bool force = false);
-inline bool	P_HitWater(AActor *thing, sector_t *sec, const fixedvec3 &pos, bool checkabove = false, bool alert = true, bool force = false) = delete;
 void	P_CheckSplash(AActor *self, double distance);
 
 struct FRailParams
@@ -428,8 +398,6 @@ bool	Check_Sides(AActor *, int, int);					// phares
 // [RH] 
 const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move);
 
-inline const secplane_t * P_CheckSlopeWalk(AActor *actor, fixed_t &xmove, fixed_t &ymove) = delete;
-
 // [TP]
 bool P_CheckUnblock ( AActor *pActor1, AActor *pActor2 );
 
@@ -480,14 +448,14 @@ public:
 	void Serialize (FArchive &arc);
 	void Destroy();
 	void Stop();
-	int GetSpeed() const { return m_Speed; }
+	double GetSpeed() const { return m_Speed; }
 
 	void StopInterpolation ();
 
-	void	SetSpeed( LONG lSpeed );
+	void	SetSpeed( double speed );
 
-	LONG	GetDist( void );
-	void	SetDist( LONG lDist );
+	double	GetDist( void );
+	void	SetDist( double dist );
 
 	LONG	GetPolyObj( void );
 
@@ -495,13 +463,11 @@ public:
 protected:
 	DPolyAction ();
 	int m_PolyObj;
-	int m_Speed;
-	int m_Dist;
+	double m_Speed;
+	double m_Dist;
 	TObjPtr<DInterpolation> m_Interpolation;
 
 	void SetInterpolation ();
-
-	friend void ThrustMobj (AActor *actor, seg_t *seg, FPolyObj *po);
 };
 
 class DRotatePoly : public DPolyAction
@@ -528,21 +494,17 @@ public:
 	void Tick ();
 	virtual void UpdateToClient( ULONG ulClient ); // [WS] This needs to be virtual.
 
-	LONG	GetAngle( void );
-	void	SetAngle( LONG lAngle );
+	DAngle	GetAngle( void );
+	void	SetAngle( DAngle angle );
 
-	LONG	GetXSpeed( void );
-	void	SetXSpeed( LONG lSpeed );
-
-	LONG	GetYSpeed( void );
-	void	SetYSpeed( LONG lSpeed );
+	const DVector2& GetSpeedV( void );
+	void	SetSpeedV( const DVector2 &speedV );
 protected:
 	DMovePoly ();
-	int m_Angle;
-	fixed_t m_xSpeed; // for sliding walls
-	fixed_t m_ySpeed;
+	DAngle m_Angle;
+	DVector2 m_Speedv;
 
-	friend bool EV_MovePoly (line_t *line, int polyNum, int speed, angle_t angle, fixed_t dist, bool overRide);
+	friend bool EV_MovePoly(line_t *line, int polyNum, double speed, DAngle angle, double dist, bool overRide);
 };
 
 class DMovePolyTo : public DPolyAction
@@ -554,12 +516,10 @@ public:
 	void Tick();
 protected:
 	DMovePolyTo();
-	fixed_t m_xSpeed;
-	fixed_t m_ySpeed;
-	fixed_t m_xTarget;
-	fixed_t m_yTarget;
+	DVector2 m_Speedv;
+	DVector2 m_Target;
 
-	friend bool EV_MovePolyTo(line_t *line, int polyNum, int speed, int x, int y, bool overRide);
+	friend bool EV_MovePolyTo(line_t *line, int polyNum, double speed, const DVector2 &pos, bool overRide);
 };
 
 
@@ -572,24 +532,24 @@ public:
 	void Tick ();
 	void UpdateToClient( ULONG ulClient );
 
-	LONG	GetDirection( void );
-	void	SetDirection( LONG lDirection );
+	DAngle	GetDirection( void );
+	void	SetDirection( DAngle direction );
 
-	LONG	GetTotalDist( void );
-	void	SetTotalDist( LONG lDist );
+	double	GetTotalDist( void );
+	void	SetTotalDist( double dist );
 
 	bool	GetClose( void );
 	void	SetClose( bool bClose );
 
 protected:
-	int m_Direction;
-	int m_TotalDist;
+	DAngle m_Direction;
+	double m_TotalDist;
 	int m_Tics;
 	int m_WaitTics;
 	podoortype_t m_Type;
 	bool m_Close;
 
-	friend bool EV_OpenPolyDoor (line_t *line, int polyNum, int speed, angle_t angle, int delay, int distance, podoortype_t type);
+	friend bool EV_OpenPolyDoor(line_t *line, int polyNum, double speed, DAngle angle, int delay, double distance, podoortype_t type);
 private:
 	DPolyDoor ();
 };
