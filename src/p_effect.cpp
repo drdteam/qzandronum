@@ -358,7 +358,7 @@ void P_ThinkParticles ()
 // [CK] Refactored code to generate a fountain.
 static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const int pnum )
 {
-	sector_t* sector = P_PointInSector( ts._f_X(), ts._f_Y() );
+	sector_t* sector = P_PointInSector( ts.pos.XY() );
 
 	// Do not spawn particles if the sector is null
 	if ( sector != NULL )
@@ -368,9 +368,9 @@ static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const
 		if (rejectmatrix == NULL || !(rejectmatrix[rejectnum>>3] & (1 << (rejectnum & 7))))
 		{
 			// [TP] Take useplayerstartz into account here
-			fixed_t floorZ = sector->floorplane.ZatPoint( ts._f_X(), ts._f_Y() );
-			fixed_t z = ( level.flags & LEVEL_USEPLAYERSTARTZ ) ? ts._f_Z() : floorZ;
-			MakeFountain( ts._f_X(), ts._f_Y(), z, 16 << FRACBITS, 0, color, color );
+			double floorZ = sector->floorplane.ZatPoint( ts.pos.XY() );
+			double z = ( level.flags & LEVEL_USEPLAYERSTARTZ ) ? ts.pos.Z : floorZ;
+			MakeFountain( FLOAT2FIXED ( ts.pos.X ), FLOAT2FIXED ( ts.pos.Y ), FLOAT2FIXED ( z ), 16 << FRACBITS, 0, color, color );
 		}
 	}
 }
@@ -1027,9 +1027,9 @@ void P_DisconnectEffect (AActor *actor)
 			break;
 
 		
-		fixed_t xo = ((M_Random() - 128) << 9) * (actor->_f_radius() >> FRACBITS);
-		fixed_t yo = ((M_Random() - 128) << 9) * (actor->_f_radius() >> FRACBITS);
-		fixed_t zo = (M_Random() << 8) * (actor->_f_height() >> FRACBITS);
+		fixed_t xo = ((M_Random() - 128) << 9) * int(actor->radius);
+		fixed_t yo = ((M_Random() - 128) << 9) * int(actor->radius);
+		fixed_t zo = (M_Random() << 8) * int(actor->Height);
 		fixedvec3 pos = actor->Vec3Offset(xo, yo, zo);
 		p->x = pos.x;
 		p->y = pos.y;

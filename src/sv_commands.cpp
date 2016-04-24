@@ -560,7 +560,7 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	command.addByte( players[ulPlayer].bSpectating );
 	command.addByte( players[ulPlayer].bDeadSpectator );
 	command.addShort( players[ulPlayer].mo->lNetID );
-	command.addLong( players[ulPlayer].mo->_f_angle() );
+	command.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
 	command.addLong( players[ulPlayer].mo->_f_X() );
 	command.addLong( players[ulPlayer].mo->_f_Y() );
 	command.addLong( players[ulPlayer].mo->_f_Z() );
@@ -604,7 +604,7 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	fullCommand.addLong( players[ulPlayer].mo->_f_X() );
 	fullCommand.addLong( players[ulPlayer].mo->_f_Y() );
 	fullCommand.addShort( players[ulPlayer].mo->_f_Z() >> FRACBITS );
-	fullCommand.addLong( players[ulPlayer].mo->_f_angle() );
+	fullCommand.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
 	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) >> FRACBITS );
 	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) >> FRACBITS );
 	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Z ) >> FRACBITS );
@@ -1216,7 +1216,7 @@ void SERVERCOMMANDS_UpdatePlayerExtraData( ULONG ulPlayer, ULONG ulDisplayPlayer
 	command.addByte( ulDisplayPlayer );
 //	command.addByte( players[ulDisplayPlayer].pendingweapon );
 //	command.addByte( players[ulDisplayPlayer].readyweapon );
-	command.addLong( players[ulDisplayPlayer].mo->_f_pitch() );
+	command.addLong( players[ulDisplayPlayer].mo->Angles.Pitch.BAMs() );
 	command.addByte( players[ulDisplayPlayer].mo->waterlevel );
 	command.addByte( players[ulDisplayPlayer].cmd.ucmd.buttons );
 	command.addLong( players[ulDisplayPlayer].viewz );
@@ -1598,7 +1598,7 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write angle.
 	if ( ulBits & CM_ANGLE )
-		command.addLong( pActor->_f_angle() );
+		command.addLong( pActor->Angles.Yaw.BAMs() );
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
@@ -1610,7 +1610,7 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
-		command.addLong( pActor->_f_pitch() );
+		command.addLong( pActor->Angles.Pitch.BAMs() );
 
 	// Write movedir.
 	if ( ulBits & CM_MOVEDIR )
@@ -1665,7 +1665,7 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write angle.
 	if ( ulBits & CM_ANGLE )
-		command.addLong( pActor->_f_angle() );
+		command.addLong( pActor->Angles.Yaw.BAMs() );
 
 	// Write velocity.
 	if ( ulBits & CM_VELX )
@@ -1677,7 +1677,7 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write pitch.
 	if ( ulBits & CM_PITCH )
-		command.addLong( pActor->_f_pitch() );
+		command.addLong( pActor->Angles.Pitch.BAMs() );
 
 	// Write movedir.
 	if ( ulBits & CM_MOVEDIR )
@@ -1766,7 +1766,7 @@ void SERVERCOMMANDS_SetThingAngle( AActor *pActor, ULONG ulPlayerExtra, ServerCo
 
 	NetCommand command( SVC_SETTHINGANGLE );
 	command.addShort( pActor->lNetID );
-	command.addShort( pActor->_f_angle() >> FRACBITS );
+	command.addShort( pActor->Angles.Yaw.BAMs() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1779,7 +1779,7 @@ void SERVERCOMMANDS_SetThingAngleExact( AActor *pActor, ULONG ulPlayerExtra, Ser
 
 	NetCommand command( SVC_SETTHINGANGLEEXACT );
 	command.addShort( pActor->lNetID );
-	command.addLong( pActor->_f_angle() );
+	command.addLong( pActor->Angles.Yaw.BAMs() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2227,7 +2227,7 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 	command.addShort( FLOAT2FIXED ( pActor->Vel.Y ) >> FRACBITS );
 	command.addShort( FLOAT2FIXED ( pActor->Vel.Z ) >> FRACBITS );
 	command.addShort( pActor->reactiontime );
-	command.addLong( pActor->_f_angle() );
+	command.addLong( pActor->Angles.Yaw.BAMs() );
 	command.addByte( bSourceFog );
 	command.addByte( bDestFog );
 	command.addByte( bTeleZoom );
@@ -2784,7 +2784,7 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ))
+ 	if( pMissile->Angles.Yaw.BAMs() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ))
 		SERVERCOMMANDS_SetThingAngle( pMissile, ulPlayerExtra, flags );
 }
 
@@ -2814,7 +2814,7 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 
 	// [BB] It's possible that the angle can't be derived from the velocity
 	// of the missle. In this case the correct angle has to be told to the clients.
- 	if( pMissile->_f_angle() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ) )
+ 	if( pMissile->Angles.Yaw.BAMs() != R_PointToAngle2( 0, 0, FLOAT2FIXED ( pMissile->Vel.X ), FLOAT2FIXED ( pMissile->Vel.Y ) ) )
 		SERVERCOMMANDS_SetThingAngleExact( pMissile, ulPlayerExtra, flags );
 }
 

@@ -5188,7 +5188,8 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 			// [BB] Ignore the angle and pitch sent by the client if the client isn't authenticated yet.
 			// In this case the client still sends these values based on the previous map.
 			if (SERVER_GetClient(ulClient)->State == CLS_SPAWNED) {
-				pPlayer->mo->Angles.Pitch = ANGLE2FLOAT( moveCmd.pitch );
+				pPlayer->mo->Angles.Pitch = AngleToFloat( moveCmd.pitch );
+				pPlayer->mo->Angles.Pitch = pPlayer->mo->Angles.Pitch.Normalized180();
 				// [HYP] Lock angle if speed is above sr40
 				if (pCmd->ucmd.sidemove > 10240 || pCmd->ucmd.sidemove < -10240)
 				{
@@ -5196,7 +5197,7 @@ bool ClientMoveCommand::process( const ULONG ulClient ) const
 				}
 				else //only update angle if speed is at or below sr40, disregard angle changes for speeds above
 				{
-					pPlayer->mo->Angles.Yaw = ANGLE2FLOAT ( moveCmd.angle );
+					pPlayer->mo->Angles.Yaw = AngleToFloat ( moveCmd.angle );
 				}
 			}
 

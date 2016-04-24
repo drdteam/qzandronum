@@ -2549,8 +2549,8 @@ void AM_rotate(double *xp, double *yp, DAngle a)
 	if (angle_saved != a)
 	{
 		angle_saved = a;
-		sinrot = sin(ToRadians(a));
-		cosrot = cos(ToRadians(a));
+		sinrot = sin(a.Radians());
+		cosrot = cos(a.Radians());
 	}
 
 	double x = *xp;

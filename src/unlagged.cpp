@@ -205,8 +205,8 @@ void UNLAGGED_Reconcile( AActor *actor )
 				double serverCeilingZ = actor->ceilingz;
 
 				// [BB] Try to reset floorz/ceilingz to account for the fact that the sector the actor is in was possibly reconciled.
-				actor->floorz = actor->Sector->floorplane.ZatPointF (actor);
-				actor->ceilingz = actor->Sector->ceilingplane.ZatPointF (actor);
+				actor->floorz = actor->Sector->floorplane.ZatPoint (actor);
+				actor->ceilingz = actor->Sector->ceilingplane.ZatPoint (actor);
 				P_FindFloorCeiling(actor, false);
 
 				//force the shooter out of the floor/ceiling - a client has to mispredict in this case,

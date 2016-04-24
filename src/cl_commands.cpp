@@ -291,8 +291,8 @@ void CLIENTCOMMANDS_ClientMove( void )
 	if ( ulBits & CLIENT_UPDATE_UPMOVE )
 		NETWORK_WriteShort( &CLIENT_GetLocalBuffer( )->ByteStream, pCmd->ucmd.upmove );
 
-	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->_f_angle() );
-	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->_f_pitch() );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->Angles.Yaw.BAMs() );
+	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, players[consoleplayer].mo->Angles.Pitch.BAMs() );
 	// [BB] Send the checksum of our ticcmd we calculated when we originally generated the ticcmd from the user input.
 	NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, g_sdwCheckCmd );
 

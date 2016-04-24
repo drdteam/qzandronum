@@ -1023,14 +1023,15 @@ static void botcmd_LookForPlayerEnemies( CSkullBot *pBot )
 		// Check if we have a line of sight to this player.
 		if ( P_CheckSight( pBot->GetPlayer( )->mo, players[ulIdx].mo, SF_SEEPASTBLOCKEVERYTHING ))
 		{
-			angle_t	Angle;
+			DAngle	Angle;
 
-			Angle = pBot->GetPlayer( )->mo->AngleTo( players[ulIdx].mo ).BAMs();
+			Angle = pBot->GetPlayer( )->mo->AngleTo( players[ulIdx].mo );
 
-			Angle -= pBot->GetPlayer( )->mo->_f_angle();
+			Angle -= pBot->GetPlayer( )->mo->Angles.Yaw;
+			Angle = Angle.Normalized360();
 
 			// If he's within our view range, tell the bot.
-			if (( Angle <= ANG45 ) || ( Angle >= ((ULONG)ANGLE_1 * 315 )))
+			if (( Angle <= 45. ) || ( Angle >= 315.))
 			{
 				pBot->m_ulLastSeenPlayer = ulIdx;
 				g_iReturnInt = ulIdx;
@@ -1050,7 +1051,7 @@ static void botcmd_GetClosestPlayerEnemy( CSkullBot *pBot )
 	LONG	lDistance;
 	LONG	lClosestDistance = 0;
 	LONG	lClosestPlayer;
-	angle_t	Angle;
+	DAngle	Angle;
 
 	if ( pBot->GetPlayer( )->health <= 0 )
 		g_iReturnInt = -1;
@@ -1072,12 +1073,13 @@ static void botcmd_GetClosestPlayerEnemy( CSkullBot *pBot )
 		if ( P_CheckSight( pBot->GetPlayer( )->mo, players[ulIdx].mo, SF_SEEPASTBLOCKEVERYTHING ) == false )
 			continue;
 
-		Angle = pBot->GetPlayer( )->mo->AngleTo( players[ulIdx].mo ).BAMs();
+		Angle = pBot->GetPlayer( )->mo->AngleTo( players[ulIdx].mo );
 
-		Angle -= pBot->GetPlayer( )->mo->_f_angle();
+		Angle -= pBot->GetPlayer( )->mo->Angles.Yaw;
+		Angle = Angle.Normalized360();
 
 		// If this player can't be seen, skip him.
-		if (( Angle > ANG45 ) && ( Angle < ((ULONG)ANGLE_1 * 315 )))
+		if (( Angle > 45. ) && ( Angle < 315. ))
 			continue;
 
 		// If at this point, we haven't found a valid player... then now this guy's it!
@@ -1218,7 +1220,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	if ( lAngle < 0 )
 		lAngle = ANGLE_MAX - labs( lAngle );
 
-	Angle = pBot->GetPlayer( )->mo->_f_angle();
+	Angle = pBot->GetPlayer( )->mo->Angles.Yaw.BAMs();
 	Angle += lAngle;
 
 	Angle >>= ANGLETOFINESHIFT;
@@ -1687,14 +1689,15 @@ static void botcmd_IsItemVisible( CSkullBot *pBot )
 		// Check if we have a line of sight to this object.
 		if ( P_CheckSight( pBot->GetPlayer( )->mo, pActor, SF_SEEPASTBLOCKEVERYTHING ))
 		{
-			angle_t	Angle;
+			DAngle	Angle;
 
-			Angle = pBot->GetPlayer( )->mo->AngleTo ( pActor ).BAMs();
+			Angle = pBot->GetPlayer( )->mo->AngleTo ( pActor );
 
-			Angle -= pBot->GetPlayer( )->mo->_f_angle();
+			Angle -= pBot->GetPlayer( )->mo->Angles.Yaw;
+			Angle = Angle.Normalized360();
 
 			// If the object within our view range, tell the bot.
-			if (( Angle <= ANG45 ) || ( Angle >= ((ULONG)ANGLE_1 * 315 )))
+			if (( Angle <= 45. ) || ( Angle >= 315. ))
 			{
 				g_bReturnBool = true;
 				return;
@@ -1770,7 +1773,7 @@ static void botcmd_Turn( CSkullBot *pBot )
 //
 static void botcmd_GetCurrentAngle( CSkullBot *pBot )
 {
-	g_iReturnInt = ( pBot->GetPlayer( )->mo->_f_angle() / ANGLE_1 );
+	g_iReturnInt = ( pBot->GetPlayer( )->mo->Angles.Yaw.BAMs() / ANGLE_1 );
 }
 
 //*****************************************************************************

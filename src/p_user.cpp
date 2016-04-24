@@ -3740,7 +3740,6 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 	}
 	if (player->centering)
 	{
-		player->mo->Angles.Pitch.Normalize180();	// make sure we are in the proper range here for the following code.
 		if (fabs(player->mo->Angles.Pitch) > 2.)
 		{
 			player->mo->Angles.Pitch *= (2. / 3.);
@@ -3832,7 +3831,7 @@ void P_PlayerThink (player_t *player, ticcmd_t *pCmd)
 		P_PlayerOnSpecial3DFloor (player);
 		P_PlayerInSpecialSector (player);
 
-		if (!player->mo->isAbove(player->mo->Sector->floorplane.ZatPointF(player->mo)) ||
+		if (!player->mo->isAbove(player->mo->Sector->floorplane.ZatPoint(player->mo)) ||
 			player->mo->waterlevel)
 		{
 			// Player must be touching the floor

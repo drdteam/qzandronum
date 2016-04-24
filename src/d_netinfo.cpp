@@ -1425,35 +1425,6 @@ void D_ReadUserInfoStrings (int pnum, BYTE **stream, bool update)
 	*stream += strlen (*((char **)stream)) + 1;
 }
 
-void ReadCompatibleUserInfo(FArchive &arc, userinfo_t &info)
-{
-	char netname[MAXPLAYERNAME + 1];
-	BYTE team;
-	int aimdist, color, colorset, skin, gender;
-	bool neverswitch;
-	//fxed_t movebob, stillbob;	These were never serialized!
-	//int playerclass;				"
-
-	info.Reset();
-
-	arc.Read(&netname, sizeof(netname));
-	arc << team << aimdist << color << skin << gender << neverswitch << colorset;
-
-	*static_cast<FStringCVar *>(info[NAME_Name]) = netname;
-	*static_cast<FIntCVar *>(info[NAME_Team]) = team;
-	*static_cast<FFloatCVar *>(info[NAME_Autoaim]) = ANGLE2FLOAT(aimdist);
-	*static_cast<FIntCVar *>(info[NAME_Skin]) = skin;
-	*static_cast<FIntCVar *>(info[NAME_Gender]) = gender;
-	// [BB]
-	*static_cast<FIntCVar *>(info[NAME_SwitchOnPickup]) = switchonpickup;
-	// [BB] For now Zandronum doesn't let the player use the color sets.
-	//*static_cast<FIntCVar *>(info[NAME_ColorSet]) = colorset;
-
-	UCVarValue val;
-	val.Int = color;
-	static_cast<FColorCVar *>(info[NAME_Color])->SetGenericRep(val, CVAR_Int);
-}
-
 void WriteUserInfo(FArchive &arc, userinfo_t &info)
 {
 	TMapIterator<FName, FBaseCVar *> it(info);
@@ -1493,12 +1464,6 @@ void ReadUserInfo(FArchive &arc, userinfo_t &info, FString &skin)
 	FBaseCVar **cvar;
 	char *str = NULL;
 	UCVarValue val;
-
-	if (SaveVersion < 4253)
-	{
-		ReadCompatibleUserInfo(arc, info);
-		return;
-	}
 
 	info.Reset();
 	skin = NULL;

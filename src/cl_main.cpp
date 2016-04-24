@@ -2954,7 +2954,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 					FName decalName = NETWORK_ReadName( pByteStream );
 					AActor* actor = CLIENT_FindThingByNetID( NETWORK_ReadShort( pByteStream ));
 					float z = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-					DAngle angle = ANGLE2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+					DAngle angle = ANGLE2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 					fixed_t tracedist = NETWORK_ReadLong( pByteStream );
 					bool permanent = !!NETWORK_ReadByte( pByteStream );
 					const FDecalTemplate* tpl = DecalLibrary.GetDecalByName( decalName );
@@ -3248,7 +3248,7 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 			angle_t	Angle;
 
 			Angle = ( M_Random( ) - 128 ) << 24;
-			P_DrawSplash2( 32, pos, ANGLE2FLOAT ( Angle ), 2, 0 );
+			P_DrawSplash2( 32, pos, ANGLE2DBL ( Angle ), 2, 0 );
 		}
 
 		// Just do particles.
@@ -3263,7 +3263,7 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 			angle_t	Angle;
 
 			Angle = ( M_Random( ) - 128 ) << 24;
-			P_DrawSplash2( 32, pos, ANGLE2FLOAT ( Angle ), 1, 1 );
+			P_DrawSplash2( 32, pos, ANGLE2DBL ( Angle ), 1, 1 );
 			return ( NULL );
 		}
 	}
@@ -3339,7 +3339,7 @@ void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, f
 	pActor->Vel.Z = FIXED2FLOAT ( VelZ );
 
 	// Derive the thing's angle from its velocity.
-	pActor->Angles.Yaw = ANGLE2FLOAT ( R_PointToAngle2( 0, 0, VelX, VelY ) );
+	pActor->Angles.Yaw = ANGLE2DBL ( R_PointToAngle2( 0, 0, VelX, VelY ) );
 
 	pActor->lNetID = lNetID;
 	g_NetIDList.useID ( lNetID, pActor );
@@ -4173,7 +4173,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// [RH] set color translations for player sprites
 		pActor->Translation = TRANSLATION( TRANSLATION_Players, ulPlayer );
 	}
-	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
+	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
 	pActor->Angles.Pitch = pActor->Angles.Roll = 0.;
 	pActor->health = pPlayer->health;
 	pActor->lFixedColormap = NOFIXEDCOLORMAP;
@@ -4275,7 +4275,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		DVector2 vector = pActor->Angles.Yaw.ToVector(20);
 		DVector2 fogpos = P_GetOffsetPosition(pActor->X(), pActor->Y(), vector.X, vector.Y);
 		// [CK] Don't spawn fog for facing west spawners online, if compatflag is on.
-		if (!(pActor->_f_angle() == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
+		if (!(pActor->Angles.Yaw.BAMs() == ANGLE_180 && (zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS)))
 			Spawn<ATeleportFog>( DVector3 ( fogpos.X, fogpos.Y, pActor->Z() + TELEFOGHEIGHT), ALLOW_REPLACE );
 	}
 
@@ -4421,7 +4421,7 @@ static void client_MovePlayer( BYTESTREAM_s *pByteStream )
 	CLIENT_MoveThing( players[ulPlayer].mo, X, Y, Z );
 
 	// Set the player's angle.
-	players[ulPlayer].mo->Angles.Yaw = ANGLE2FLOAT ( Angle );
+	players[ulPlayer].mo->Angles.Yaw = ANGLE2DBL ( Angle );
 
 	// Set the player's XYZ velocity.
 	players[ulPlayer].mo->Vel.X = FIXED2FLOAT ( VelX );
@@ -5513,7 +5513,7 @@ static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
 		if (lPitch > ANGLE_1*56)
 			lPitch = ANGLE_1*56;
 	}
-	players[ulPlayer].mo->Angles.Pitch = ANGLE2FLOAT ( lPitch );
+	players[ulPlayer].mo->Angles.Pitch = ANGLE2DBL ( lPitch );
 	players[ulPlayer].mo->waterlevel = ulWaterLevel;
 	// [BB] The attack buttons are now already set in *_MovePlayer, so additionally setting
 	// them here is obsolete. I don't want to change this before 97D2 final though.
@@ -6153,7 +6153,7 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 
 	// Read in the angle data.
 	if ( lBits & CM_ANGLE )
-		pActor->Angles.Yaw = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+		pActor->Angles.Yaw = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
@@ -6173,7 +6173,7 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 
 	// Read in the pitch data.
 	if ( lBits & CM_PITCH )
-		pActor->Angles.Pitch = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+		pActor->Angles.Pitch = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the movedir data.
 	if ( lBits & CM_MOVEDIR )
@@ -6274,7 +6274,7 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 
 	// Read in the angle data.
 	if ( lBits & CM_ANGLE )
-		pActor->Angles.Yaw = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+		pActor->Angles.Yaw = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the velocity data.
 	if ( lBits & CM_VELX )
@@ -6294,7 +6294,7 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 
 	// Read in the pitch data.
 	if ( lBits & CM_PITCH )
-		pActor->Angles.Pitch = ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+		pActor->Angles.Pitch = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 	// Read in the movedir data.
 	if ( lBits & CM_MOVEDIR )
@@ -6568,7 +6568,7 @@ static void client_SetThingAngle( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the angle.
-	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
+	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
 }
 
 //*****************************************************************************
@@ -6594,7 +6594,7 @@ static void client_SetThingAngleExact( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the angle.
-	pActor->Angles.Yaw = ANGLE2FLOAT ( Angle );
+	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
 }
 
 //*****************************************************************************
@@ -7358,7 +7358,7 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	if ( bDestFog )
 	{
 		// Spawn the fog slightly in front of the thing's destination.
-		DAngle Angle = ANGLE2FLOAT ( NewAngle );
+		DAngle Angle = ANGLE2DBL ( NewAngle );
 
 		double fogDelta = pActor->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
 		DVector2 vector = Angle.ToVector(20);
@@ -7386,7 +7386,7 @@ static void client_TeleportThing( BYTESTREAM_s *pByteStream )
 	pActor->reactiontime = lNewReactionTime;
 
 	// Set the thing's new angle.
-	pActor->Angles.Yaw = ANGLE2FLOAT ( NewAngle );
+	pActor->Angles.Yaw = ANGLE2DBL ( NewAngle );
 
 	// User variable to do a weird zoom thingy when you teleport.
 	if (( bTeleZoom ) && ( telezoom ) && ( pActor->player ))
@@ -7547,7 +7547,7 @@ static void client_SpawnBlood( BYTESTREAM_s *pByteStream )
 
 	// [BB] P_SpawnBlood crashes if pOriginator is a NULL pointer.
 	if ( pOriginator )
-		P_SpawnBlood ( DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), ANGLE2FLOAT ( Dir ), Damage, pOriginator);
+		P_SpawnBlood ( DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), ANGLE2DBL ( Dir ), Damage, pOriginator);
 }
 
 //*****************************************************************************
@@ -8741,7 +8741,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 	if ( flags & 0x80 )
 	{
 		// [TP] The server has signaled that more information follows
-		angle = source->Angles.Yaw + ANGLE2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+		angle = source->Angles.Yaw + ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
 		spawnclass = NETWORK_GetClassFromIdentification( NETWORK_ReadShort( pByteStream ));
 		duration = NETWORK_ReadShort( pByteStream );
 		sparsity = NETWORK_ReadFloat( pByteStream );
@@ -8788,16 +8788,16 @@ static void client_SetSectorFloorPlane( BYTESTREAM_s *pByteStream )
 	lLastPos = pSector->floorplane.fixD();
 
 	// Change the height.
-	pSector->floorplane.ChangeHeight( -lDelta );
+	pSector->floorplane.ChangeHeight( FIXED2DBL ( -lDelta ) );
 
 	// Call this to update various actor's within the sector.
-	P_ChangeSector( pSector, false, -lDelta, 0, false );
+	P_ChangeSector( pSector, false, FIXED2DBL ( -lDelta ), 0, false );
 
 	// Finally, adjust textures.
 	pSector->SetPlaneTexZ(sector_t::floor, pSector->GetPlaneTexZ(sector_t::floor) + pSector->floorplane.HeightDiff( lLastPos ) );
 
 	// [BB] We also need to move any linked sectors.
-	P_MoveLinkedSectors(pSector, false, -lDelta, false);
+	P_MoveLinkedSectors(pSector, false, FIXED2DBL ( -lDelta ), false);
 }
 
 //*****************************************************************************

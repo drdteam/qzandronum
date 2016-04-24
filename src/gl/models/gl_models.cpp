@@ -855,7 +855,7 @@ void gl_RenderFrameModels( const FSpriteModelFrame *smf,
 // [BB] Small helper function for MDL_ROLLAGAINSTANGLE.
 float gl_RollAgainstAngleHelper ( AActor *actor )
 {
-	float angleDiff = ANGLE2FLOAT ( R_PointToAngle ( actor->_f_X(), actor->_f_Y() ) ) - ANGLE2FLOAT ( actor->_f_angle() );
+	float angleDiff = AngleToFloat ( R_PointToAngle ( actor->_f_X(), actor->_f_Y() ) ) - AngleToFloat ( actor->Angles.Yaw.BAMs() );
 	if ( angleDiff > 180 )
 		angleDiff -= 360;
 	else if ( angleDiff < -180 )
@@ -938,7 +938,7 @@ void gl_RenderModel(GLSprite * spr)
 		gl_RenderState.mModelMatrix.rotate(-angle, 0, 1, 0);
 	// [BB] Change the angle so that the object is exactly facing the camera in the x/y plane.
 	else
-		gl_RenderState.mModelMatrix.rotate( -ANGLE2FLOAT ( R_PointToAngle ( spr->actor->_f_X(), spr->actor->_f_Y() ) ), 0, 1, 0);
+		gl_RenderState.mModelMatrix.rotate( -AngleToFloat ( R_PointToAngle ( spr->actor->_f_X(), spr->actor->_f_Y() ) ), 0, 1, 0);
 
 	// [BB] Change the pitch so that the object is vertically facing the camera (only makes sense combined with MDL_ALIGNANGLE).
 	if ( (smf->flags & MDL_ALIGNPITCH) )

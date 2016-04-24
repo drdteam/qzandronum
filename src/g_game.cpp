@@ -4101,7 +4101,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 	{
 		const int i = pr_dmspawn() % Spots.Size();
 
-		pArtifact = Spawn( pArtifactType, DVector3 ( FIXED2FLOAT ( Spots[i]._f_X() ), FIXED2FLOAT ( Spots[i]._f_Y() ), ONFLOORZ ), ALLOW_REPLACE );
+		pArtifact = Spawn( pArtifactType, DVector3 ( Spots[i].pos.X, Spots[i].pos.Y, ONFLOORZ ), ALLOW_REPLACE );
 		const DWORD spawnFlags = pArtifact->flags;
 		// [BB] Ensure that the artifact is solid, otherwise P_TestMobjLocation won't complain if a player already is at the proposed position.
 		pArtifact->flags |= MF_SOLID;
@@ -4118,7 +4118,7 @@ AActor* GAME_SelectRandomSpotForArtifact ( PClassActor *pArtifactType, const TAr
 
 	// [BB] If there is no free spot, just select one and spawn the artifact there.
 	const int spotNum = pr_dmspawn() % Spots.Size();
-	return Spawn( pArtifactType, DVector3 ( FIXED2FLOAT ( Spots[spotNum]._f_X() ), FIXED2FLOAT ( Spots[spotNum]._f_Y() ), ONFLOORZ ), ALLOW_REPLACE );
+	return Spawn( pArtifactType, DVector3 ( Spots[spotNum].pos.X, Spots[spotNum].pos.Y, ONFLOORZ ), ALLOW_REPLACE );
 }
 
 //*****************************************************************************

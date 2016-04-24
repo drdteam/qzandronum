@@ -720,7 +720,7 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 	FTraceResults	TraceResults;
 	fixed_t			vx, vy, vz, sz;
 
-	Meat = pSource->_f_angle();
+	Meat = pSource->Angles.Yaw.BAMs();
 	Angle = /*pSource->angle*/Meat >> ANGLETOFINESHIFT;
 	Pitch = 0;//pSource->pitch >> ANGLETOFINESHIFT;
 
@@ -734,14 +734,12 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 
 //	if ( P_PathTraverse( CurPos.x, CurPos.y, DestPos.x, DestPos.y, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false )
 //	return ( P_PathTraverse( pSource->x, pSource->y, vx, vy, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false );
-	if ( Trace( pSource->_f_X(),	// Source X
-				pSource->_f_Y(),		// Source Y
-				// [BB] gameinfo.StepHeight seems to be gone from ZDoom, but even before the removal it was always 0.
-				pSource->_f_Z() /*+ gameinfo.StepHeight*/,//sz,				// Source Z
+	if ( Trace( DVector3 ( pSource->Pos().X,	// Source X
+							pSource->Pos().Y,		// Source Y
+							// [BB] gameinfo.StepHeight seems to be gone from ZDoom, but even before the removal it was always 0.
+							pSource->Pos().Z /*+ gameinfo.StepHeight*/) ,//sz,				// Source Z
 				pSource->Sector,// Source sector
-				vx,
-				vy,
-				vz,
+				DVector3 ( FIXED2DBL ( vx ), FIXED2DBL ( vy ), FIXED2DBL ( vz ) ),
 				Distance * FRACUNIT,	// Maximum search distance
 				MF_SOLID|MF_SHOOTABLE,		// Actor mask (ignore actors without this flag)
 				0,				// Wall mask
@@ -792,18 +790,19 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 //
 bool BOTS_IsVisible( AActor *pActor1, AActor *pActor2 )
 {
-	angle_t	Angle;
+	DAngle	Angle;
 
 	// Check if we have a line of sight to this object.
 	if ( P_CheckSight( pActor1, pActor2, SF_SEEPASTBLOCKEVERYTHING ) == false )
 		return ( false );
 
-	Angle = pActor1->AngleTo ( pActor2 ).BAMs();
+	Angle = pActor1->AngleTo ( pActor2 );
 
-	Angle -= pActor1->_f_angle();
+	Angle -= pActor1->Angles.Yaw;
+	Angle = Angle.Normalized360();
 
 	// If the object within our view range, tell the bot.
-	return (( Angle <= ANG45 ) || ( Angle >= ((ULONG)ANGLE_1 * 315 )));
+	return (( Angle <= 45. ) || ( Angle >= 315. ));
 }
 
 //*****************************************************************************
@@ -3419,10 +3418,10 @@ void CSkullBot::HandleAiming( void )
 
 				// The greater the difference between the angle between ourselves and the enemy, and our
 				// current angle, the more inaccurate it is likely to be.
-				if ( Angle > m_pPlayer->mo->_f_angle() )
-					AngleDifference = Angle - m_pPlayer->mo->_f_angle();
+				if ( Angle > m_pPlayer->mo->Angles.Yaw.BAMs() )
+					AngleDifference = Angle - m_pPlayer->mo->Angles.Yaw.BAMs();
 				else
-					AngleDifference = m_pPlayer->mo->_f_angle() - Angle;
+					AngleDifference = m_pPlayer->mo->Angles.Yaw.BAMs() - Angle;
 
 				// AngleDistance is the absolute value of the difference in player's angle, and
 				// the angle pointint to his enemy. WE DO NOT KNOW IF THE DIFFERENCE IS TO THE
@@ -3539,17 +3538,17 @@ void CSkullBot::HandleAiming( void )
 
 				// Now AngleDifference is going to be the differnce between our current angle
 				// and the final angle!
-				if ( AngleFinal > m_pPlayer->mo->_f_angle() )
+				if ( AngleFinal > m_pPlayer->mo->Angles.Yaw.BAMs() )
 				{
 //					Printf( "We'll need to turn LEFT\n" );
 					m_bTurnLeft = true;
-					AngleDifference = AngleFinal - m_pPlayer->mo->_f_angle();
+					AngleDifference = AngleFinal - m_pPlayer->mo->Angles.Yaw.BAMs();
 				}
 				else
 				{
 //					Printf( "We'll need to turn RIGHT\n" );
 					m_bTurnLeft = false;
-					AngleDifference = m_pPlayer->mo->_f_angle() - AngleFinal;
+					AngleDifference = m_pPlayer->mo->Angles.Yaw.BAMs() - AngleFinal;
 				}
 
 //				Printf( "AngleDifference: %2.2f\n", (float)AngleDifference / ANGLE_1 );

@@ -575,8 +575,8 @@ double P_GetFriction(const AActor *mo, double *frictionfactor)
 			if (!(rover->flags & FF_EXISTS)) continue;
 			if (!(rover->flags & FF_SWIMMABLE)) continue;
 
-			if (mo->Z() > rover->top.plane->ZatPointF(mo) ||
-				mo->Z() < rover->bottom.plane->ZatPointF(mo))
+			if (mo->Z() > rover->top.plane->ZatPoint(mo) ||
+				mo->Z() < rover->bottom.plane->ZatPoint(mo))
 				continue;
 
 			newfriction = rover->model->GetFriction(rover->top.isceiling, &newmf);
@@ -606,7 +606,7 @@ double P_GetFriction(const AActor *mo, double *frictionfactor)
 				if (rover->flags & FF_SOLID)
 				{
 					// Must be standing on a solid floor
-					if (mo->Z() != rover->top.plane->ZatPoint(pos)) continue;
+					if (!mo->isAtZ(rover->top.plane->ZatPoint(pos))) continue;
 				}
 				else if (rover->flags & FF_SWIMMABLE)
 				{
@@ -622,7 +622,7 @@ double P_GetFriction(const AActor *mo, double *frictionfactor)
 				if (newfriction < friction || friction == ORIG_FRICTION)
 				{
 					friction = newfriction;
-					movefactor = newmf * 0.5;
+					movefactor = newmf;
 				}
 			}
 
@@ -874,7 +874,7 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 	if (!(tm.thing->flags & MF_DROPOFF) &&
 		!(tm.thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
 	{
-		if ((open.frontfloorplane.fixC() < STEEPSLOPE) != (open.backfloorplane.fixC() < STEEPSLOPE))
+		if ((open.frontfloorplane.fC() < STEEPSLOPE) != (open.backfloorplane.fC() < STEEPSLOPE))
 		{
 			// on the boundary of a steep slope
 			return false;
@@ -2270,12 +2270,12 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 	// it slopes or the player's eyes are bobbing in and out.
 
 	bool oldAboveFakeFloor, oldAboveFakeCeiling;
-	double _viewheight = thing->player ? thing->player->viewheight : thing->Height / 2;
+	double viewheight = thing->player ? thing->player->viewheight : thing->Height / 2;
 	oldAboveFakeFloor = oldAboveFakeCeiling = false;	// pacify GCC
 
 	if (oldsec->heightsec)
 	{
-		double eyez = oldz + FIXED2DBL(viewheight);
+		double eyez = oldz + viewheight;
 
 		oldAboveFakeFloor = eyez > oldsec->heightsec->floorplane.ZatPoint(thing);
 		oldAboveFakeCeiling = eyez > oldsec->heightsec->ceilingplane.ZatPoint(thing);
@@ -2487,7 +2487,7 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 	if (newsec->heightsec && oldsec->heightsec && newsec->SecActTarget)
 	{
 		const sector_t *hs = newsec->heightsec;
-		double eyez = thing->Z() + FIXED2DBL(viewheight);
+		double eyez = thing->Z() + viewheight;
 		double fakez = hs->floorplane.ZatPoint(pos);
 
 		if (!oldAboveFakeFloor && eyez > fakez)
@@ -3508,7 +3508,7 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move)
 		{
 			if (!(rover->flags & FF_SOLID) || !(rover->flags & FF_EXISTS)) continue;
 
-			double thisplanez = rover->top.plane->ZatPointF(actor);
+			double thisplanez = rover->top.plane->ZatPoint(actor);
 
 			if (thisplanez > planezhere && thisplanez <= actor->Z() + actor->MaxStepHeight)
 			{
@@ -3553,12 +3553,12 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move)
 					const msecnode_t *node;
 					bool dopush = true;
 
-					if (plane->fixC() > STEEPSLOPE * 2 / 3)
+					if (plane->fC() > STEEPSLOPE * 2 / 3)
 					{
 						for (node = actor->touching_sectorlist; node; node = node->m_tnext)
 						{
 							sector_t *sec = node->m_sector;
-							if (sec->floorplane.fixC() >= STEEPSLOPE)
+							if (sec->floorplane.fC() >= STEEPSLOPE)
 							{
 								DVector3 pos = actor->PosRelative(sec) +move;
 
@@ -4346,7 +4346,7 @@ struct aim_t
 			{
 				if (lastceilingplane)
 				{
-					double ff_top = lastceilingplane->ZatPointF(th);
+					double ff_top = lastceilingplane->ZatPoint(th);
 					DAngle pitch = -VecToAngle(dist, ff_top - shootz);
 					// upper slope intersects with this 3d-floor
 					if (pitch > toppitch)
@@ -4356,7 +4356,7 @@ struct aim_t
 				}
 				if (lastfloorplane)
 				{
-					double ff_bottom = lastfloorplane->ZatPointF(th);
+					double ff_bottom = lastfloorplane->ZatPoint(th);
 					DAngle pitch = -VecToAngle(dist, ff_bottom - shootz);
 					// lower slope intersects with this 3d-floor
 					if (pitch < bottompitch)
@@ -5135,7 +5135,7 @@ void P_TraceBleed(int damage, AActor *target, AActor *missile)
 		double aim;
 
 		aim = g_atan(missile->Vel.Z / target->Distance2D(missile));
-		pitch = -ToDegrees(aim);
+		pitch = -DAngle::ToDegrees(aim);
 	}
 	else
 	{
@@ -5870,8 +5870,8 @@ player_t *P_PlayerScan( AActor *pSource )
 	int				pitch;
 	angle_t			angle;
 
-	angle = pSource->_f_angle() >> ANGLETOFINESHIFT;
-	pitch = (angle_t)( pSource->_f_pitch() ) >> ANGLETOFINESHIFT;
+	angle = pSource->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT;
+	pitch = (angle_t)( pSource->Angles.Pitch.BAMs() ) >> ANGLETOFINESHIFT;
 
 	vx = FixedMul (finecosine[pitch], finecosine[angle]);
 	vy = FixedMul (finecosine[pitch], finesine[angle]);
@@ -5879,13 +5879,11 @@ player_t *P_PlayerScan( AActor *pSource )
 
 	shootz = pSource->_f_Z() - pSource->_f_floorclip() + (pSource->_f_height()>>1) + 8*FRACUNIT;
 
-	if ( Trace( pSource->_f_X(),	// Actor x
-		pSource->_f_Y(), // Actor y
-		shootz,	// Actor z
+	if ( Trace( DVector3 ( FIXED2DBL ( pSource->_f_X() ),	// Actor x
+							FIXED2DBL ( pSource->_f_Y() ), // Actor y
+							FIXED2DBL ( shootz ) ),	// Actor z
 		pSource->Sector,
-		vx,
-		vy,
-		vz,
+		DVector3 ( FIXED2DBL ( vx ), FIXED2DBL ( vy ), FIXED2DBL ( vz ) ),
 		( 32 * 64 * FRACUNIT ) /* MISSILERANGE */,	// Maximum distance
 		MF_SHOOTABLE,	// Actor mask
 		ML_BLOCKEVERYTHING,	// Wall mask

@@ -319,7 +319,7 @@ DCeiling::DCeiling (sector_t *sec)
 	m_lCeilingID = -1;
 }
 
-DCeiling::DCeiling (sector_t *sec, fixed_t speed1, fixed_t speed2, int silent)
+DCeiling::DCeiling (sector_t *sec, double speed1, double speed2, int silent)
 	: DMovingCeiling (sec)
 {
 	m_Crush = -1;
@@ -418,10 +418,10 @@ void DCeiling::SetCrushMode ( ECrushMode Hexencrush )
 //============================================================================
 
 DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line, int tag, 
-				   fixed_t speed, fixed_t speed2, fixed_t height,
+				   double speed, double speed2, double height,
 				   int crush, int silent, int change, ECrushMode hexencrush)
 {
-	fixed_t		targheight = 0;	// Silence, GCC
+	double		targheight = 0;	// Silence, GCC
 
 	// if ceiling already moving, don't start a second function on it
 	if (sec->PlaneMoving(sector_t::ceiling))
@@ -441,7 +441,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 	{
 	case ceilCrushAndRaise:
 	case ceilCrushRaiseAndStay:
-		ceiling->m_TopHeight = sec->ceilingplane.fixD();
+		ceiling->m_TopHeight = sec->ceilingplane.fD();
 	case ceilLowerAndCrush:
 		targheight = sec->FindHighestFloorPoint (&spot);
 		targheight += height;
@@ -469,7 +469,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 
 	case ceilMoveToValue:
 		{
-			int diff = height - sec->ceilingplane.ZatPoint (spot);
+			double diff = height - sec->ceilingplane.ZatPoint (spot);
 
 			targheight = height;
 			if (diff < 0)
@@ -577,15 +577,15 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 	// Do not interpolate instant movement ceilings.
 	// Note for ZDoomGL: Check to make sure that you update the sector
 	// after the ceiling moves, because it hasn't actually moved yet.
-	fixed_t movedist;
+	double movedist;
 
 	if (ceiling->m_Direction < 0)
 	{
-		movedist = sec->ceilingplane.fixD() - ceiling->m_BottomHeight;
+		movedist = sec->ceilingplane.fD() - ceiling->m_BottomHeight;
 	}
 	else
 	{
-		movedist = ceiling->m_TopHeight - sec->ceilingplane.fixD();
+		movedist = ceiling->m_TopHeight - sec->ceilingplane.fD();
 	}
 	if (ceiling->m_Speed >= movedist)
 	{
@@ -669,7 +669,7 @@ DCeiling *DCeiling::Create(sector_t *sec, DCeiling::ECeiling type, line_t *line,
 //============================================================================
 
 bool EV_DoCeiling (DCeiling::ECeiling type, line_t *line,
-				   int tag, fixed_t speed, fixed_t speed2, fixed_t height,
+				   int tag, double speed, double speed2, double height,
 				   int crush, int silent, int change, DCeiling::ECrushMode hexencrush)
 {
 	int 		secnum;

@@ -751,7 +751,7 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags)
 		// [BC] Keep track of where we died for the "same spot respawn" dmflags.
 		player->SpawnX = _f_X();
 		player->SpawnY = _f_Y();
-		player->SpawnAngle = _f_angle();
+		player->SpawnAngle = Angles.Yaw.BAMs();
 		player->bSpawnOkay = true;
 
 		// Death script execution, care of Skull Tag
