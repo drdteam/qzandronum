@@ -2919,7 +2919,7 @@ void SERVERCOMMANDS_SetSectorFloorPlane( ULONG ulSector, ULONG ulPlayerExtra, Se
 
 	NetCommand command( SVC_SETSECTORFLOORPLANE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].floorplane.d >> FRACBITS );
+	command.addShort( sectors[ulSector].floorplane.fixD() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2932,7 +2932,7 @@ void SERVERCOMMANDS_SetSectorCeilingPlane( ULONG ulSector, ULONG ulPlayerExtra, 
 
 	NetCommand command( SVC_SETSECTORCEILINGPLANE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].ceilingplane.d >> FRACBITS );
+	command.addShort( sectors[ulSector].ceilingplane.fixD() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2945,10 +2945,10 @@ void SERVERCOMMANDS_SetSectorFloorPlaneSlope( ULONG ulSector, ULONG ulPlayerExtr
 
 	NetCommand command( SVC_SETSECTORFLOORPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].floorplane.a >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.b >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.c >> FRACBITS );
-	command.addShort( sectors[ulSector].floorplane.ic >> FRACBITS );
+	command.addShort( sectors[ulSector].floorplane.fixA() >> FRACBITS );
+	command.addShort( sectors[ulSector].floorplane.fixB() >> FRACBITS );
+	command.addShort( sectors[ulSector].floorplane.fixC() >> FRACBITS );
+	command.addShort( sectors[ulSector].floorplane.fixiC() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2961,10 +2961,10 @@ void SERVERCOMMANDS_SetSectorCeilingPlaneSlope( ULONG ulSector, ULONG ulPlayerEx
 
 	NetCommand command( SVC_SETSECTORCEILINGPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].ceilingplane.a >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.b >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.c >> FRACBITS );
-	command.addShort( sectors[ulSector].ceilingplane.ic >> FRACBITS );
+	command.addShort( sectors[ulSector].ceilingplane.fixA() >> FRACBITS );
+	command.addShort( sectors[ulSector].ceilingplane.fixB() >> FRACBITS );
+	command.addShort( sectors[ulSector].ceilingplane.fixC() >> FRACBITS );
+	command.addShort( sectors[ulSector].ceilingplane.fixiC() >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

@@ -164,11 +164,11 @@ void UNLAGGED_Reconcile( AActor *actor )
 	//reconcile the sectors
 	for (int i = 0; i < numsectors; ++i)
 	{
-		sectors[i].floorplane.restoreD = sectors[i].floorplane.d;
-		sectors[i].ceilingplane.restoreD = sectors[i].ceilingplane.d;
+		sectors[i].floorplane.restoreD = sectors[i].floorplane.fixD();
+		sectors[i].ceilingplane.restoreD = sectors[i].ceilingplane.fixD();
 
-		sectors[i].floorplane.d = sectors[i].floorplane.unlaggedD[unlaggedIndex];
-		sectors[i].ceilingplane.d = sectors[i].ceilingplane.unlaggedD[unlaggedIndex];
+		sectors[i].floorplane.setD ( sectors[i].floorplane.unlaggedD[unlaggedIndex] );
+		sectors[i].ceilingplane.setD ( sectors[i].ceilingplane.unlaggedD[unlaggedIndex] );
 	}
 
 	//reconcile the players
@@ -220,7 +220,7 @@ void UNLAGGED_Reconcile( AActor *actor )
 				//floor moved up - a client might have mispredicted himself too low due to gravity
 				//and the client thinking the floor is lower than it actually is
 				// [BB] But only do this if the sector actually moved. Note: This adjustment seems to break on some kind of non-moving 3D floors.
-				if ( (serverFloorZ > actor->floorz) && (( actor->Sector->floorplane.restoreD != actor->Sector->floorplane.d ) || ( actor->Sector->ceilingplane.restoreD != actor->Sector->ceilingplane.d )) )
+				if ( (serverFloorZ > actor->floorz) && (( actor->Sector->floorplane.restoreD != actor->Sector->floorplane.fixD() ) || ( actor->Sector->ceilingplane.restoreD != actor->Sector->ceilingplane.fixD() )) )
 				{
 					//shooter was standing on the floor, let's pull him down to his floor if
 					//he wasn't falling
@@ -243,8 +243,12 @@ void UNLAGGED_SwapSectorUnlaggedStatus( )
 
 	for (int i = 0; i < numsectors; ++i)
 	{
-		swapvalues ( sectors[i].floorplane.d, sectors[i].floorplane.restoreD );
-		swapvalues ( sectors[i].ceilingplane.d, sectors[i].ceilingplane.restoreD );
+		fixed_t tmp = sectors[i].floorplane.fixD();
+		sectors[i].floorplane.setD ( sectors[i].floorplane.restoreD );
+		sectors[i].floorplane.restoreD = tmp;
+		tmp = sectors[i].ceilingplane.fixD();
+		sectors[i].ceilingplane.setD ( sectors[i].ceilingplane.restoreD );
+		sectors[i].ceilingplane.restoreD = tmp;
 	}
 }
 
@@ -262,8 +266,8 @@ void UNLAGGED_Restore( AActor *actor )
 	//restore the sectors
 	for (int i = 0; i < numsectors; ++i)
 	{
-		sectors[i].floorplane.d = sectors[i].floorplane.restoreD;
-		sectors[i].ceilingplane.d = sectors[i].ceilingplane.restoreD;
+		sectors[i].floorplane.setD ( sectors[i].floorplane.restoreD );
+		sectors[i].ceilingplane.setD ( sectors[i].ceilingplane.restoreD );
 	}
 
 	//restore the players
@@ -337,8 +341,8 @@ void UNLAGGED_RecordSectors( )
 	//record the sectors
 	for (int i = 0; i < numsectors; ++i)
 	{
-		sectors[i].floorplane.unlaggedD[unlaggedIndex] = sectors[i].floorplane.d;
-		sectors[i].ceilingplane.unlaggedD[unlaggedIndex] = sectors[i].ceilingplane.d;
+		sectors[i].floorplane.unlaggedD[unlaggedIndex] = sectors[i].floorplane.fixD();
+		sectors[i].ceilingplane.unlaggedD[unlaggedIndex] = sectors[i].ceilingplane.fixD();
 	}
 }
 

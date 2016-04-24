@@ -8782,10 +8782,10 @@ static void client_SetSectorFloorPlane( BYTESTREAM_s *pByteStream )
 	}
 
 	// Calculate the change in floor height.
-	lDelta = lHeight - pSector->floorplane.d;
+	lDelta = lHeight - pSector->floorplane.fixD();
 
 	// Store the original height position.
-	lLastPos = pSector->floorplane.d;
+	lLastPos = pSector->floorplane.fixD();
 
 	// Change the height.
 	pSector->floorplane.ChangeHeight( -lDelta );
@@ -8825,10 +8825,10 @@ static void client_SetSectorCeilingPlane( BYTESTREAM_s *pByteStream )
 	}
 
 	// Calculate the change in ceiling height.
-	lDelta = lHeight - pSector->ceilingplane.d;
+	lDelta = lHeight - pSector->ceilingplane.fixD();
 
 	// Store the original height position.
-	lLastPos = pSector->ceilingplane.d;
+	lLastPos = pSector->ceilingplane.fixD();
 
 	// Change the height.
 	pSector->ceilingplane.ChangeHeight( lDelta );
@@ -8845,18 +8845,18 @@ static void client_SetSectorCeilingPlane( BYTESTREAM_s *pByteStream )
 static void client_SetSectorFloorPlaneSlope( BYTESTREAM_s *pByteStream )
 {
 	LONG		lSectorID;
-	LONG		lA;
-	LONG		lB;
-	LONG		lC;
+	double		a;
+	double		b;
+	double		c;
 	sector_t	*pSector;
 
 	// Read in the sector network ID.
 	lSectorID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the various variables needed to calculate the slope.
-	lA = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	lB = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	lC = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	a = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	b = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	c = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 
 	// Find the sector associated with this network ID.
 	pSector = CLIENT_FindSectorByID( lSectorID );
@@ -8866,10 +8866,7 @@ static void client_SetSectorFloorPlaneSlope( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	pSector->floorplane.a = lA;
-	pSector->floorplane.b = lB;
-	pSector->floorplane.c = lC;
-	pSector->floorplane.ic = DivScale32( 1, pSector->floorplane.c );
+	pSector->floorplane.set ( a, b, c, pSector->floorplane.fD() );
 }
 
 //*****************************************************************************
@@ -8877,18 +8874,18 @@ static void client_SetSectorFloorPlaneSlope( BYTESTREAM_s *pByteStream )
 static void client_SetSectorCeilingPlaneSlope( BYTESTREAM_s *pByteStream )
 {
 	LONG		lSectorID;
-	LONG		lA;
-	LONG		lB;
-	LONG		lC;
+	double		a;
+	double		b;
+	double		c;
 	sector_t	*pSector;
 
 	// Read in the sector network ID.
 	lSectorID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the various variables needed to calculate the slope.
-	lA = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	lB = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	lC = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	a = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	b = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	c = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
 
 	// Find the sector associated with this network ID.
 	pSector = CLIENT_FindSectorByID( lSectorID );
@@ -8898,10 +8895,7 @@ static void client_SetSectorCeilingPlaneSlope( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	pSector->ceilingplane.a = lA;
-	pSector->ceilingplane.b = lB;
-	pSector->ceilingplane.c = lC;
-	pSector->ceilingplane.ic = DivScale32( 1, pSector->ceilingplane.c );
+	pSector->ceilingplane.set ( a, b, c, pSector->ceilingplane.fD() );
 }
 
 //*****************************************************************************

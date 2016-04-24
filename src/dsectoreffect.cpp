@@ -177,7 +177,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 	{
 	case 0:
 		// FLOOR
-		lastpos = m_Sector->floorplane.d;
+		lastpos = m_Sector->floorplane.fixD();
 		switch (direction)
 		{
 		case -1:
@@ -189,11 +189,11 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 
 				if (!MoveAttached(crush, move, 0, true)) return crushed;
 
-				m_Sector->floorplane.d = dest;
+				m_Sector->floorplane.setD(dest);
 				flag = P_ChangeSector (m_Sector, crush, move, 0, false);
 				if (flag)
 				{
-					m_Sector->floorplane.d = lastpos;
+					m_Sector->floorplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, -move, 0, true);
 					MoveAttached(crush, -move, 0, false);
 				}
@@ -208,12 +208,12 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			{
 				if (!MoveAttached(crush, -speed, 0, true)) return crushed;
 
-				m_Sector->floorplane.d = movedest;
+				m_Sector->floorplane.setD(movedest);
 
 				flag = P_ChangeSector (m_Sector, crush, -speed, 0, false);
 				if (flag)
 				{
-					m_Sector->floorplane.d = lastpos;
+					m_Sector->floorplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, speed, 0, true);
 					MoveAttached(crush, speed, 0, false);
 					return crushed;
@@ -231,11 +231,10 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			// jff 02/04/98 keep floor from moving thru ceilings
 			// [RH] not so easy with arbitrary planes
 			//destheight = (dest < m_Sector->ceilingheight) ? dest : m_Sector->ceilingheight;
-			if ((m_Sector->ceilingplane.a | m_Sector->ceilingplane.b |
-				 m_Sector->floorplane.a | m_Sector->floorplane.b) == 0 &&
-				(!(i_compatflags2 & COMPATF2_FLOORMOVE) && -dest > m_Sector->ceilingplane.d))
+			if (!m_Sector->ceilingplane.isSlope() && !m_Sector->floorplane.isSlope() &&
+				(!(i_compatflags2 & COMPATF2_FLOORMOVE) && -dest > m_Sector->ceilingplane.fixD()))
 			{
-				dest = -m_Sector->ceilingplane.d;
+				dest = -m_Sector->ceilingplane.fixD();
 			}
 
 			movedest = m_Sector->floorplane.GetChangedHeight (speed);
@@ -246,12 +245,12 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 
 				if (!MoveAttached(crush, move, 0, true)) return crushed;
 
-				m_Sector->floorplane.d = dest;
+				m_Sector->floorplane.setD(dest);
 
 				flag = P_ChangeSector (m_Sector, crush, move, 0, false);
 				if (flag)
 				{
-					m_Sector->floorplane.d = lastpos;
+					m_Sector->floorplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, -move, 0, true);
 					MoveAttached(crush, -move, 0, false);
 				}
@@ -266,7 +265,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			{
 				if (!MoveAttached(crush, speed, 0, true)) return crushed;
 
-				m_Sector->floorplane.d = movedest;
+				m_Sector->floorplane.setD(movedest);
 
 				// COULD GET CRUSHED
 				flag = P_ChangeSector (m_Sector, crush, speed, 0, false);
@@ -278,7 +277,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 						m_Sector->AdjustFloorClip ();
 						return crushed;
 					}
-					m_Sector->floorplane.d = lastpos;
+					m_Sector->floorplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, -speed, 0, true);
 					MoveAttached(crush, -speed, 0, false);
 					return crushed;
@@ -292,7 +291,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 																		
 	  case 1:
 		// CEILING
-		lastpos = m_Sector->ceilingplane.d;
+		lastpos = m_Sector->ceilingplane.fixD();
 		switch (direction)
 		{
 		case -1:
@@ -300,11 +299,10 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			// jff 02/04/98 keep ceiling from moving thru floors
 			// [RH] not so easy with arbitrary planes
 			//destheight = (dest > m_Sector->floorheight) ? dest : m_Sector->floorheight;
-			if ((m_Sector->ceilingplane.a | m_Sector->ceilingplane.b |
-				 m_Sector->floorplane.a | m_Sector->floorplane.b) == 0 &&
-				(!(i_compatflags2 & COMPATF2_FLOORMOVE) && dest < -m_Sector->floorplane.d))
+			if (!m_Sector->ceilingplane.isSlope() && !m_Sector->floorplane.isSlope() &&
+				(!(i_compatflags2 & COMPATF2_FLOORMOVE) && dest < -m_Sector->floorplane.fixD()))
 			{
-				dest = -m_Sector->floorplane.d;
+				dest = -m_Sector->floorplane.fixD();
 			}
 			movedest = m_Sector->ceilingplane.GetChangedHeight (-speed);
 			if (movedest <= dest)
@@ -313,12 +311,12 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 
 				if (!MoveAttached(crush, move, 1, true)) return crushed;
 
-				m_Sector->ceilingplane.d = dest;
+				m_Sector->ceilingplane.setD(dest);
 				flag = P_ChangeSector (m_Sector, crush, move, 1, false);
 
 				if (flag)
 				{
-					m_Sector->ceilingplane.d = lastpos;
+					m_Sector->ceilingplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, -move, 1, true);
 					MoveAttached(crush, -move, 1, false);
 				}
@@ -332,7 +330,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			{
 				if (!MoveAttached(crush, -speed, 1, true)) return crushed;
 
-				m_Sector->ceilingplane.d = movedest;
+				m_Sector->ceilingplane.setD(movedest);
 
 				// COULD GET CRUSHED
 				flag = P_ChangeSector (m_Sector, crush, -speed, 1, false);
@@ -343,7 +341,7 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 						m_Sector->ChangePlaneTexZ(sector_t::ceiling, m_Sector->ceilingplane.HeightDiff (lastpos));
 						return crushed;
 					}
-					m_Sector->ceilingplane.d = lastpos;
+					m_Sector->ceilingplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, speed, 1, true);
 					MoveAttached(crush, speed, 1, false);
 					return crushed;
@@ -361,12 +359,12 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 
 				if (!MoveAttached(crush, move, 1, true)) return crushed;
 
-				m_Sector->ceilingplane.d = dest;
+				m_Sector->ceilingplane.setD(dest);
 
 				flag = P_ChangeSector (m_Sector, crush, move, 1, false);
 				if (flag)
 				{
-					m_Sector->ceilingplane.d = lastpos;
+					m_Sector->ceilingplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, move, 1, true);
 					MoveAttached(crush, move, 1, false);
 				}
@@ -380,12 +378,12 @@ DMover::EResult DMover::MovePlane (fixed_t speed, fixed_t dest, int crush,
 			{
 				if (!MoveAttached(crush, speed, 1, true)) return crushed;
 
-				m_Sector->ceilingplane.d = movedest;
+				m_Sector->ceilingplane.setD(movedest);
 
 				flag = P_ChangeSector (m_Sector, crush, speed, 1, false);
 				if (flag)
 				{
-					m_Sector->ceilingplane.d = lastpos;
+					m_Sector->ceilingplane.setD(lastpos);
 					P_ChangeSector (m_Sector, crush, -speed, 1, true);
 					MoveAttached(crush, -speed, 1, false);
 					return crushed;

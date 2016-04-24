@@ -794,9 +794,9 @@ void BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fix
 		bUseFront = ( FrontFloor > BackFloor );
 	else
 	{
-		if (( pFrontSector->floorplane.a | pFrontSector->floorplane.b ) == 0 )
+		if (( pFrontSector->floorplane.fixA() | pFrontSector->floorplane.fixB() ) == 0 )
 			bUseFront = true;
-		else if (( pBackSector->floorplane.a | pFrontSector->floorplane.b ) == 0 )
+		else if (( pBackSector->floorplane.fixA() | pFrontSector->floorplane.fixB() ) == 0 )
 			bUseFront = false;
 		else
 			bUseFront = !P_PointOnLineSide( RefX, RefY, pLine );
@@ -919,10 +919,10 @@ static bool botpath_CheckLine( line_t *pLine )
 	fixed_t sx, sy;
 
 	// set openrange, opentop, openbottom
-	if ((( pLine->frontsector->floorplane.a | pLine->frontsector->floorplane.b ) |
-		 ( pLine->backsector->floorplane.a | pLine->backsector->floorplane.b ) |
-		 ( pLine->frontsector->ceilingplane.a | pLine->frontsector->ceilingplane.b ) |
-		 ( pLine->backsector->ceilingplane.a | pLine->backsector->ceilingplane.b )) == 0 )
+	if ((( pLine->frontsector->floorplane.fixA() | pLine->frontsector->floorplane.fixB() ) |
+		 ( pLine->backsector->floorplane.fixA() | pLine->backsector->floorplane.fixB() ) |
+		 ( pLine->frontsector->ceilingplane.fixA() | pLine->frontsector->ceilingplane.fixB() ) |
+		 ( pLine->backsector->ceilingplane.fixA() | pLine->backsector->ceilingplane.fixB() )) == 0 )
 	{
 		BOTPATH_LineOpening( pLine, sx = g_PathX, sy = g_PathY, g_PathX, g_PathY );
 	}

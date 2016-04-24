@@ -97,7 +97,7 @@ visplane_t 				*ceilingplane;
 // Empirically verified to be fairly uniform:
 
 #define visplane_hash(picnum,lightlevel,height) \
-  ((unsigned)((picnum)*3+(lightlevel)+((height).d)*7) & (MAXVISPLANES-1))
+  ((unsigned)((picnum)*3+(lightlevel)+((height).fixD())*7) & (MAXVISPLANES-1))
 
 // These are copies of the main parameters used when drawing stacked sectors.
 // When you change the main parameters, you should copy them here too *unless*
@@ -607,13 +607,11 @@ visplane_t *R_FindPlane (const secplane_t &height, FTextureID picnum, int lightl
 		angle = 0;
 		alpha = 0;
 		additive = false;
-		plane.a = plane.b = plane.d = 0;
 		// [RH] Map floor skies and ceiling skies to separate visplanes. This isn't
 		// always necessary, but it is needed if a floor and ceiling sky are in the
 		// same column but separated by a wall. If they both try to reside in the
 		// same visplane, then only the floor sky will be drawn.
-		plane.c = height.c;
-		plane.ic = height.ic;
+		plane.set(0, 0, height.fixC(), 0);
 		isskybox = skybox != NULL && !skybox->bInSkybox;
 	}
 	else if (skybox != NULL && skybox->bAlways && !skybox->bInSkybox)
@@ -1150,7 +1148,7 @@ void R_DrawSinglePlane (visplane_t *pl, fixed_t alpha, bool additive, bool maske
 		basecolormap = pl->colormap;
 		planeshade = LIGHT2SHADE(pl->lightlevel);
 
-		if (r_drawflat || ((pl->height.a == 0 && pl->height.b == 0) && !tilt))
+		if (r_drawflat || (!pl->height.isSlope() && !tilt))
 		{
 			R_DrawNormalPlane (pl, alpha, additive, masked);
 		}
@@ -1572,7 +1570,7 @@ void R_DrawNormalPlane (visplane_t *pl, fixed_t alpha, bool additive, bool maske
 	basexfrac = FixedMul (xscale, finecosine[planeang]) + x*xstepscale;
 	baseyfrac = FixedMul (yscale, -finesine[planeang]) + x*ystepscale;
 
-	planeheight = abs (FixedMul (pl->height.d, -pl->height.ic) - viewz);
+	planeheight = abs (FixedMul (pl->height.fixD(), -pl->height.fixiC()) - viewz);
 
 	GlobVis = FixedDiv (r_FloorVisibility, planeheight);
 	if (fixedlightlev >= 0)
@@ -1728,7 +1726,7 @@ void R_DrawTiltedPlane (visplane_t *pl, fixed_t alpha, bool additive, bool maske
 
 	planelightfloat = (r_TiltVisibility * lxscale * lyscale) / (fabs(pl->height.ZatPoint(FIXED2DBL(viewx), FIXED2DBL(viewy)) - FIXED2DBL(viewz))) / 65536.0;
 
-	if (pl->height.c > 0)
+	if (pl->height.fC() > 0)
 		planelightfloat = -planelightfloat;
 
 	if (fixedlightlev >= 0)

@@ -786,11 +786,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_MaceBallImpact2)
 
 			if (floordist <= ceildist)
 			{
-				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->floorplane.c) );
+				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->floorplane.fixC()) );
 			}
 			else
 			{
-				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->ceilingplane.c) );
+				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->ceilingplane.fixC()) );
 			}
 			if (vel >= 2)
 				self->SetState (self->SpawnState);
@@ -983,11 +983,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_DeathBallImpact)
 
 			if (floordist <= ceildist)
 			{
-				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->floorplane.c) );
+				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->floorplane.fixC()) );
 			}
 			else
 			{
-				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->ceilingplane.c) );
+				vel = FIXED2DBL ( MulScale32 ( FLOAT2FIXED ( self->Vel.Z ), self->Sector->ceilingplane.fixC()) );
 			}
 			if (vel >= 2)
 				self->SetState (self->SpawnState);

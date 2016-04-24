@@ -88,12 +88,12 @@ void DDoor::Tick ()
 {
 	EResult res;
 
-	if (m_Sector->floorplane.d != m_OldFloorDist)
+	if (m_Sector->floorplane.fixD() != m_OldFloorDist)
 	{
 		if (!m_Sector->floordata || !m_Sector->floordata->IsKindOf(RUNTIME_CLASS(DPlat)) ||
 			!(barrier_cast<DPlat*>(m_Sector->floordata))->IsLift())
 		{
-			m_OldFloorDist = m_Sector->floorplane.d;
+			m_OldFloorDist = m_Sector->floorplane.fixD();
 			m_BotDist = m_Sector->ceilingplane.PointToDist (m_BotSpot,
 				m_Sector->floorplane.ZatPoint (m_BotSpot));
 		}
@@ -175,10 +175,10 @@ void DDoor::Tick ()
 		res = MoveCeiling (m_Speed, m_BotDist, -1, m_Direction, false);
 
 		// killough 10/98: implement gradual lighting effects
-		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.d)
+		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.fixD())
 		{
 			EV_LightTurnOnPartway (m_LightTag, 
-				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d, m_TopDist + m_Sector->floorplane.d)));
+				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.fixD() + m_Sector->floorplane.fixD(), m_TopDist + m_Sector->floorplane.fixD())));
 		}
 
 		// [BC] If we're the client, don't do any of the following. Wait for the server
@@ -254,10 +254,10 @@ void DDoor::Tick ()
 		res = MoveCeiling (m_Speed, m_TopDist, -1, m_Direction, false);
 		
 		// killough 10/98: implement gradual lighting effects
-		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.d)
+		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.fixD())
 		{
 			EV_LightTurnOnPartway (m_LightTag, 
-				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.d + m_Sector->floorplane.d, m_TopDist + m_Sector->floorplane.d)));
+				FIXED2DBL(FixedDiv (m_Sector->ceilingplane.fixD() + m_Sector->floorplane.fixD(), m_TopDist + m_Sector->floorplane.fixD())));
 		}
 
 		// [BC] If we're the client, don't do any of the following. Wait for the server
@@ -493,12 +493,12 @@ DDoor::DDoor (sector_t *sec, EVlDoor type, fixed_t speed, int delay, int lightTa
 		height = sec->FindLowestCeilingSurrounding (&spot);
 		m_TopDist = sec->ceilingplane.PointToDist (spot, height - 4*FRACUNIT);
 		// [BC] Added option to create the door soundlessly.
-		if ((m_TopDist != sec->ceilingplane.d) && ( bNoSound == false ))
+		if ((m_TopDist != sec->ceilingplane.fixD()) && ( bNoSound == false ))
 			DoorSound (true);
 		break;
 
 	case doorCloseWaitOpen:
-		m_TopDist = sec->ceilingplane.d;
+		m_TopDist = sec->ceilingplane.fixD();
 		m_Direction = -1;
 		// [BC] Added option to create the door soundlessly.
 		if ( bNoSound == false )
@@ -516,8 +516,8 @@ DDoor::DDoor (sector_t *sec, EVlDoor type, fixed_t speed, int delay, int lightTa
 		m_Type = DDoor::doorRaise;
 		height = sec->FindHighestFloorPoint (&m_BotSpot);
 		m_BotDist = sec->ceilingplane.PointToDist (m_BotSpot, height);
-		m_OldFloorDist = sec->floorplane.d;
-		m_TopDist = sec->ceilingplane.d;
+		m_OldFloorDist = sec->floorplane.fixD();
+		m_TopDist = sec->ceilingplane.fixD();
 		break;
 
 	}
@@ -533,7 +533,7 @@ DDoor::DDoor (sector_t *sec, EVlDoor type, fixed_t speed, int delay, int lightTa
 		height = sec->FindLowestCeilingPoint(&m_BotSpot);
 		m_BotDist = sec->ceilingplane.PointToDist (m_BotSpot, height);
 	}
-	m_OldFloorDist = sec->floorplane.d;
+	m_OldFloorDist = sec->floorplane.fixD();
 
 	// [BB] We need to initialize the ID, because P_GetFirstFreeDoorID relies on this.
 	m_lDoorID = -1;
@@ -801,7 +801,7 @@ bool DAnimatedDoor::StartClosing ()
 		return false;
 	}
 
-	fixed_t topdist = m_Sector->ceilingplane.d;
+	fixed_t topdist = m_Sector->ceilingplane.fixD();
 	if (MoveCeiling (2048*FRACUNIT, m_BotDist, 0, -1, false) == crushed)
 	{
 		return false;
@@ -1027,7 +1027,7 @@ DAnimatedDoor::DAnimatedDoor (sector_t *sec, line_t *line, int speed, int delay,
 	FTexture *tex = TexMan[picnum];
 	topdist = tex ? tex->GetScaledHeight() : 64;
 
-	topdist = m_Sector->ceilingplane.d - topdist * m_Sector->ceilingplane.c;
+	topdist = m_Sector->ceilingplane.fixD() - topdist * m_Sector->ceilingplane.fixC();
 
 	m_Status = Opening;
 	m_Speed = speed;
@@ -1047,7 +1047,7 @@ DAnimatedDoor::DAnimatedDoor (sector_t *sec, line_t *line, int speed, int delay,
 		SERVERCOMMANDS_SetSomeLineFlags( ULONG( m_Line2 - lines ));
 	}
 
-	m_BotDist = m_Sector->ceilingplane.d;
+	m_BotDist = m_Sector->ceilingplane.fixD();
 	MoveCeiling (2048*FRACUNIT, topdist, 1);
 	if (m_DoorAnim->OpenSound != NAME_None)
 	{
