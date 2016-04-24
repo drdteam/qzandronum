@@ -125,6 +125,7 @@
 #include "r_utility.h"
 #include "a_morph.h"
 #include "p_pusher.h"
+#include "p_scroll.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -3289,8 +3290,7 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	TThinkerIterator<DWaggleBase>		WaggleIterator;
 	TThinkerIterator<DPillar>			PillarIterator;
 	TThinkerIterator<DCeiling>			CeilingIterator;
-	// [BB] ZDoom moved DScroller into p_scroll.cpp. Needs to be moved to a header.
-	//TThinkerIterator<DScroller>			ScrollerIterator;
+	TThinkerIterator<DScroller>			ScrollerIterator;
 
 	// Tell the client about any active doors.
 	while (( pDoor = DoorIterator.Next( )) != NULL )
@@ -3320,11 +3320,9 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	while (( pCeiling = CeilingIterator.Next( )) != NULL )
 		pCeiling->UpdateToClient( ulClient );
 
-	/* [BB] ZDoom moved DScroller into p_scroll.cpp. Needs to be moved to a header.
 	// Tell the client about any active scrollers.
 	while (( pScroller = ScrollerIterator.Next( )) != NULL )
 		pScroller->UpdateToClient( ulClient );
-	*/
 
 	// [BB] Tell the client about any active pusher.
 	DPusher *pPusher = NULL;

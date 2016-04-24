@@ -30,6 +30,7 @@
 #include "p_lnspec.h"
 #include "r_data/r_interpolate.h"
 // [BB] New #includes.
+#include "p_scroll.h"
 #include "sv_commands.h"
 
 //-----------------------------------------------------------------------------
@@ -38,6 +39,7 @@
 //
 //-----------------------------------------------------------------------------
 
+/* [BB] Moved to p_scroll.h
 class DScroller : public DThinker
 {
 	DECLARE_CLASS (DScroller, DThinker)
@@ -77,7 +79,7 @@ private:
 	{
 	}
 };
-
+*/
 
 IMPLEMENT_POINTY_CLASS (DScroller)
  DECLARE_POINTER (m_Interpolations[0])
