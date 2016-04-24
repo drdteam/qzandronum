@@ -129,19 +129,19 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 
 	int slopetype;
 		
-	if (ld->dx == 0)
+	if (ld->fixDx() == 0)
 		slopetype = ST_VERTICAL;
-	else if (ld->dy == 0)
+	else if (ld->fixDy() == 0)
 		slopetype = ST_HORIZONTAL;
 	else
-		slopetype = ((ld->dy ^ ld->dx) >= 0) ? ST_POSITIVE : ST_NEGATIVE;
+		slopetype = ((ld->fixDy() ^ ld->fixDx()) >= 0) ? ST_POSITIVE : ST_NEGATIVE;
 
 	switch (slopetype)
 	{
 	case ST_HORIZONTAL:
 		p1 = tmbox[BOXTOP] > ld->v1->fixY();
 		p2 = tmbox[BOXBOTTOM] > ld->v1->fixY ();
-		if (ld->dx < 0)
+		if (ld->fixDx() < 0)
 		{
 			p1 ^= 1;
 			p2 ^= 1;
@@ -151,7 +151,7 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 	case ST_VERTICAL:
 		p1 = tmbox[BOXRIGHT] < ld->v1->fixX ();
 		p2 = tmbox[BOXLEFT] < ld->v1->fixX ();
-		if (ld->dy < 0)
+		if (ld->fixDy() < 0)
 		{
 			p1 ^= 1;
 			p2 ^= 1;
@@ -930,8 +930,8 @@ static bool botpath_CheckLine( line_t *pLine )
 	{
 		// Find the point on the line closest to the actor's center, and use
 		// that to calculate openings.
-		float dx = (float)pLine->dx;
-		float dy = (float)pLine->dy;
+		float dx = (float)pLine->fixDx();
+		float dy = (float)pLine->fixDy();
 		fixed_t r = (fixed_t)(((float)(g_PathX - pLine->v1->fixX()) * dx +
 				 			   (float)(g_PathY - pLine->v1->fixY()) * dy) /
 							  (dx*dx + dy*dy) * 16777216.f);
@@ -946,8 +946,8 @@ static bool botpath_CheckLine( line_t *pLine )
 		}
 		else
 		{
-			BOTPATH_LineOpening( pLine, sx=pLine->v1->fixX() + MulScale24 (r, pLine->dx),
-				sy=pLine->v1->fixY() + MulScale24 (r, pLine->dy), g_PathX, g_PathY );
+			BOTPATH_LineOpening( pLine, sx=pLine->v1->fixX() + MulScale24 (r, pLine->fixDx()),
+				sy=pLine->v1->fixY() + MulScale24 (r, pLine->fixDy()), g_PathX, g_PathY );
 		}
 	}
 

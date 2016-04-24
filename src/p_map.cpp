@@ -2999,7 +2999,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 				 slidemo->z <= slidemo->floorz &&
 				 P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
 				 */
-	if (ld->dy == 0)
+	if (ld->fixDy() == 0)
 	{ // ST_HORIZONTAL
 		if (icyfloor && (abs(FLOAT2FIXED ( tmmove.Y )) > abs(FLOAT2FIXED ( tmmove.X ))))
 		{
@@ -3012,7 +3012,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 		return;
 	}
 
-	if (ld->dx == 0)
+	if (ld->fixDx() == 0)
 	{ // ST_VERTICAL
 		if (icyfloor && (abs(FLOAT2FIXED ( tmmove.X )) > abs(FLOAT2FIXED ( tmmove.Y ))))
 		{
@@ -3030,7 +3030,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 
 	side = P_PointOnLineSide (slidemo->_f_X(), slidemo->_f_Y(), ld);
 
-	lineangle = R_PointToAngle2 (0,0, ld->dx, ld->dy);
+	lineangle = R_PointToAngle2 (0,0, ld->fixDx(), ld->fixDy());
 	if (side == 1)
 		lineangle += ANG180;
 	moveangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( tmmove.X ), FLOAT2FIXED ( tmmove.Y ));
