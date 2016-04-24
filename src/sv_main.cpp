@@ -124,6 +124,7 @@
 #include "p_lnspec.h"
 #include "r_utility.h"
 #include "a_morph.h"
+#include "p_pusher.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -3323,13 +3324,13 @@ void SERVER_UpdateMovers( ULONG ulClient )
 	// Tell the client about any active scrollers.
 	while (( pScroller = ScrollerIterator.Next( )) != NULL )
 		pScroller->UpdateToClient( ulClient );
+	*/
 
 	// [BB] Tell the client about any active pusher.
 	DPusher *pPusher = NULL;
 	TThinkerIterator<DPusher> PusherIterator;
 	while (( pPusher = PusherIterator.Next( )) != NULL )
 		pPusher->UpdateToClient( ulClient );
-	*/
 }
 
 //*****************************************************************************

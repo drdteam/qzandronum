@@ -33,6 +33,7 @@
 #include "p_local.h"
 #include "d_player.h"
 // [BB] New #includes.
+#include "p_pusher.h"
 #include "cl_main.h"
 #include "sv_commands.h"
 
@@ -40,6 +41,7 @@ CVAR(Bool, var_pushers, true, CVAR_SERVERINFO);
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
+/* [BB] Moved to p_pusher.h
 class DPusher : public DThinker
 {
 	DECLARE_CLASS (DPusher, DThinker)
@@ -86,7 +88,7 @@ protected:
 
 	friend bool PIT_PushThing (AActor *thing);
 };
-
+*/
 
 IMPLEMENT_POINTY_CLASS (DPusher)
  DECLARE_POINTER (m_Source)

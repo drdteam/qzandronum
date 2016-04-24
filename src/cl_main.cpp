@@ -116,6 +116,7 @@
 #include "r_main.h"
 #include "network_enums.h"
 #include "decallib.h"
+#include "p_pusher.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -12308,8 +12309,7 @@ static void client_DoPusher( BYTESTREAM_s *pByteStream )
 	const int iAffectee = NETWORK_ReadShort( pByteStream );
 
 	line_t *pLine = ( iLineNum >= 0 && iLineNum < numlines ) ? &lines[iLineNum] : NULL;
-	Printf ( "Error: client_DoPusher no implemented." );
-	//new DPusher ( static_cast<DPusher::EPusher> ( ulType ), pLine, iMagnitude, iAngle, CLIENT_FindThingByNetID( lSourceNetID ), iAffectee );
+	new DPusher ( static_cast<DPusher::EPusher> ( ulType ), pLine, iMagnitude, iAngle, CLIENT_FindThingByNetID( lSourceNetID ), iAffectee );
 }
 
 //*****************************************************************************
