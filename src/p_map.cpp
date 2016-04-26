@@ -146,7 +146,7 @@ static DVector2 FindRefPoint(line_t *ld, const DVector2 &pos)
 			!ld->frontsector->PortalBlocksMovement(sector_t::floor))
 	{
 
-		DVector2 v1 = ld->V1();
+		DVector2 v1 = ld->v1->fPos();
 		DVector2 d = ld->Delta();
 		double r = clamp(((pos.X - v1.X) * d.X + (pos.Y - v1.Y) * d.Y) / (d.X*d.X + d.Y*d.Y), 0., 1.);
 		return v1 + d*r;
@@ -733,10 +733,10 @@ static int untouched(line_t *ld, FCheckPosition &tm)
 {
   fixed_t x, y, tmbbox[4];
   return 
-    (tmbbox[BOXRIGHT] = (x=tm.thing->_f_X())+tm.thing->_f_radius()) <= ld->bbox[BOXLEFT] ||
-    (tmbbox[BOXLEFT] = x-tm.thing->_f_radius()) >= ld->bbox[BOXRIGHT] ||
-    (tmbbox[BOXTOP] = (y=tm.thing->_f_Y())+tm.thing->_f_radius()) <= ld->bbox[BOXBOTTOM] ||
-    (tmbbox[BOXBOTTOM] = y-tm.thing->_f_radius()) >= ld->bbox[BOXTOP] ||
+    (tmbbox[BOXRIGHT] = (x=tm.thing->_f_X())+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXLEFT] ) ||
+    (tmbbox[BOXLEFT] = x-FLOAT2FIXED ( tm.thing->radius )) >= FLOAT2FIXED ( ld->bbox[BOXRIGHT] ) ||
+    (tmbbox[BOXTOP] = (y=tm.thing->_f_Y())+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXBOTTOM] ) ||
+    (tmbbox[BOXBOTTOM] = y-FLOAT2FIXED ( tm.thing->radius )) >= FLOAT2FIXED ( ld->bbox[BOXTOP] ) ||
     P_BoxOnLineSide(tmbbox, ld) != -1;
 }
 
@@ -2580,10 +2580,10 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 		// killough 7/26/98: reformatted slightly
 		// killough 8/1/98: Possibly allow escape if otherwise stuck
 
-		if (tm.ceilingz - tm.floorz < thing->_f_height() ||     // doesn't fit
+		if (tm.ceilingz - tm.floorz < thing->Height ||     // doesn't fit
 			// mobj must lower to fit
 			(tm.floatok = true, !(thing->flags & MF_TELEPORT) &&
-			tm.ceilingz - thing->Z() < thing->_f_height()) ||
+			tm.ceilingz - thing->Z() < thing->Height) ||
 			// too big a step up
 			(!(thing->flags & MF_TELEPORT) && 
 			tm.floorz - thing->Z() > 24*FRACUNIT))
@@ -2999,7 +2999,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 				 slidemo->z <= slidemo->floorz &&
 				 P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
 				 */
-	if (ld->fixDy() == 0)
+	if (FLOAT2FIXED ( ld->Delta().Y ) == 0)
 	{ // ST_HORIZONTAL
 		if (icyfloor && (abs(FLOAT2FIXED ( tmmove.Y )) > abs(FLOAT2FIXED ( tmmove.X ))))
 		{
@@ -3012,7 +3012,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 		return;
 	}
 
-	if (ld->fixDx() == 0)
+	if (FLOAT2FIXED ( ld->Delta().Y ) == 0)
 	{ // ST_VERTICAL
 		if (icyfloor && (abs(FLOAT2FIXED ( tmmove.X )) > abs(FLOAT2FIXED ( tmmove.Y ))))
 		{
@@ -3030,7 +3030,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 
 	side = P_PointOnLineSide (slidemo->_f_X(), slidemo->_f_Y(), ld);
 
-	lineangle = R_PointToAngle2 (0,0, ld->fixDx(), ld->fixDy());
+	lineangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( ld->Delta().X ), FLOAT2FIXED ( ld->Delta().Y ));
 	if (side == 1)
 		lineangle += ANG180;
 	moveangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( tmmove.X ), FLOAT2FIXED ( tmmove.Y ));
@@ -3149,11 +3149,11 @@ void FSlide::SlideTraverse(const DVector2 &start, const DVector2 &end)
 		// the line does block movement,
 		// see if it is closer than best so far
 	isblocking:
-		if (in->Frac < bestSlidefrac)
+		if (in->frac < bestSlidefrac)
 		{
 			secondSlidefrac = bestSlidefrac;
 			secondslideline = bestslideline;
-			bestSlidefrac = in->Frac;
+			bestSlidefrac = in->frac;
 			bestslideline = li;
 		}
 
@@ -3189,16 +3189,16 @@ void FSlide::OldSlideTraverse (fixed_t startx, fixed_t starty, fixed_t endx, fix
 
 		//  P_LineOpening (li);
 
-		P_LineOpening (open, slidemo, li, FLOAT2FIXED ( it.Trace().x ) + FixedMul (FLOAT2FIXED ( it.Trace().dx ), in->frac),
-			FLOAT2FIXED ( it.Trace().y ) + FixedMul (FLOAT2FIXED ( it.Trace().dy ), in->frac));	// set openrange, opentop, openbottom
+		P_LineOpening (open, slidemo, li, DVector2 ( it.Trace().x + it.Trace().dx * in->frac,
+			it.Trace().y + it.Trace().dy * in->frac));	// set openrange, opentop, openbottom
 
-		if (open.range < slidemo->_f_height())
+		if (open.range < slidemo->Height)
 			goto isblocking;  // doesn't fit
 
-		if (open.top - slidemo->Z() < slidemo->_f_height())
+		if (open.top - slidemo->Z() < slidemo->Height)
 			goto isblocking;  // mobj is too high
 
-		if (open.bottom - slidemo->Z() > 24*FRACUNIT )
+		if (open.bottom - slidemo->Z() > 24 )
 			goto isblocking;  // too big a step up
 
 		// this line doesn't block movement
@@ -3210,11 +3210,11 @@ void FSlide::OldSlideTraverse (fixed_t startx, fixed_t starty, fixed_t endx, fix
 
 isblocking:
 
-		if (in->frac < FLOAT2FIXED ( bestSlidefrac ))
+		if (in->frac < bestSlidefrac )
 		{
 			secondSlidefrac = bestSlidefrac;
 			secondslideline = bestslideline;
-			bestSlidefrac = FIXED2DBL ( in->frac );
+			bestSlidefrac = in->frac;
 			bestslideline = li;
 		}
 
@@ -3373,15 +3373,16 @@ void FSlide::OldSlideMove (AActor *mo)
 
 		// trace along the three leading corners
 
+		const fixed_t radius = FLOAT2FIXED ( mo->radius );
 		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leadx = mo->_f_X() + mo->_f_radius(), trailx = mo->_f_X() - mo->_f_radius();
+			leadx = mo->_f_X() + radius, trailx = mo->_f_X() - radius;
 		else
-			leadx = mo->_f_X() - mo->_f_radius(), trailx = mo->_f_X() + mo->_f_radius();
+			leadx = mo->_f_X() - radius, trailx = mo->_f_X() + radius;
 
 		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leady = mo->_f_Y() + mo->_f_radius(), traily = mo->_f_Y() - mo->_f_radius();
+			leady = mo->_f_Y() + radius, traily = mo->_f_Y() - radius;
 		else
-			leady = mo->_f_Y() - mo->_f_radius(), traily = mo->_f_Y() + mo->_f_radius();
+			leady = mo->_f_Y() - radius, traily = mo->_f_Y() + radius;
 
 		bestSlidefrac = FIXED2DBL ( FRACUNIT+1 );
 
@@ -3652,11 +3653,11 @@ bool FSlide::BounceTraverse(const DVector2 &start, const DVector2 &end)
 
 		// the line does block movement, see if it is closer than best so far
 	bounceblocking:
-		if (in->Frac < bestSlidefrac)
+		if (in->frac < bestSlidefrac)
 		{
 			secondSlidefrac = bestSlidefrac;
 			secondslideline = bestslideline;
-			bestSlidefrac = in->Frac;
+			bestSlidefrac = in->frac;
 			bestslideline = li;
 		}
 		return false;   // stop
@@ -4024,9 +4025,9 @@ struct aim_t
 			F3DFloor* rover;
 			DAngle highpitch, lowpitch;
 
-			double trX = trace.x + trace.dx * in->Frac;
-			double trY = trace.y + trace.dy * in->Frac;
-			double dist = attackrange * in->Frac;
+			double trX = trace.x + trace.dx * in->frac;
+			double trY = trace.y + trace.dy * in->frac;
+			double dist = attackrange * in->frac;
 
 			// 3D floor check. This is not 100% accurate but normally sufficient when
 			// combined with a final sight check
@@ -4237,7 +4238,7 @@ struct aim_t
 			double 				dist;
 			DAngle				thingpitch;
 
-			if (linetarget.linetarget != NULL && in->Frac > linetarget.frac) return;	// we already found something better in another portal section.
+			if (linetarget.linetarget != NULL && in->frac > linetarget.frac) return;	// we already found something better in another portal section.
 
 			if (in->isaline)
 			{
@@ -4249,7 +4250,7 @@ struct aim_t
 
 				if (li->isLinePortal() && frontflag == 0)
 				{
-					EnterLinePortal(li, in->Frac);
+					EnterLinePortal(li, in->frac);
 					return;
 				}
 
@@ -4267,7 +4268,7 @@ struct aim_t
 				if (open.range <= 0 || open.bottom >= open.top)
 					return;
 					
-				dist = attackrange * in->Frac;
+				dist = attackrange * in->frac;
 
 				if (open.bottom != LINEOPEN_MIN)
 				{
@@ -4297,11 +4298,11 @@ struct aim_t
 				// check portal in backsector when aiming up/downward is possible, the line doesn't have portals on both sides and there's actually a portal in the backsector
 				if ((planestocheck & aim_up) && toppitch < 0 && open.top != LINEOPEN_MAX && !entersec->PortalBlocksMovement(sector_t::ceiling))
 				{
-					EnterSectorPortal(sector_t::ceiling, in->Frac, entersec, toppitch, MIN<DAngle>(0., bottompitch));
+					EnterSectorPortal(sector_t::ceiling, in->frac, entersec, toppitch, MIN<DAngle>(0., bottompitch));
 				}
 				if ((planestocheck & aim_down) && bottompitch > 0 && open.bottom != LINEOPEN_MIN && !entersec->PortalBlocksMovement(sector_t::floor))
 				{
-					EnterSectorPortal(sector_t::floor, in->Frac, entersec, MAX<DAngle>(0., toppitch), bottompitch);
+					EnterSectorPortal(sector_t::floor, in->frac, entersec, MAX<DAngle>(0., toppitch), bottompitch);
 				}
 				continue;					// shot continues
 			}
@@ -4333,7 +4334,7 @@ struct aim_t
 					}
 				}
 			}
-			dist = attackrange * in->Frac;
+			dist = attackrange * in->frac;
 
 			// Don't autoaim certain special actors
 			if (!cl_doautoaim && th->flags6 & MF6_NOTAUTOAIMED)
@@ -4416,7 +4417,7 @@ struct aim_t
 				if (cosine != 0)
 				{
 					double tracelen = DVector2(it.Trace().dx, it.Trace().dy).Length();
-					double d3 = tracelen * in->Frac / cosine;
+					double d3 = tracelen * in->frac / cosine;
 					if (d3 > attackrange)
 					{
 						return;
@@ -4443,7 +4444,7 @@ struct aim_t
 						// friends don't aim at friends (except players), at least not first
 						if (aimdebug)
 							Printf("Hit friend %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X(), th->Y(), th->Z());
-						SetResult(thing_friend, in->Frac, th, thingpitch);
+						SetResult(thing_friend, in->frac, th, thingpitch);
 					}
 				}
 				else if (!(th->flags3 & MF3_ISMONSTER) && th->player == NULL)
@@ -4453,14 +4454,14 @@ struct aim_t
 						// don't autoaim at barrels and other shootable stuff unless no monsters have been found
 						if (aimdebug)
 							Printf("Hit other %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X(), th->Y(), th->Z());
-						SetResult(thing_other, in->Frac, th, thingpitch);
+						SetResult(thing_other, in->frac, th, thingpitch);
 					}
 				}
 				else
 				{
 					if (aimdebug)
 						Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X(), th->Y(), th->Z());
-					SetResult(linetarget, in->Frac, th, thingpitch);
+					SetResult(linetarget, in->frac, th, thingpitch);
 					return;
 				}
 			}
@@ -4468,7 +4469,7 @@ struct aim_t
 			{
 				if (aimdebug)
 					Printf("Hit target %s at %f,%f,%f\n", th->GetClass()->TypeName.GetChars(), th->X(), th->Y(), th->Z());
-				SetResult(linetarget, in->Frac, th, thingpitch);
+				SetResult(linetarget, in->frac, th, thingpitch);
 				return;
 			}
 		}
@@ -5865,7 +5866,7 @@ void P_UseItems( player_t *pPlayer )
 
 player_t *P_PlayerScan( AActor *pSource )
 {
-	fixed_t vx, vy, vz, shootz;
+	fixed_t vx, vy, vz;
 	FTraceResults	trace;
 	int				pitch;
 	angle_t			angle;
@@ -5877,11 +5878,11 @@ player_t *P_PlayerScan( AActor *pSource )
 	vy = FixedMul (finecosine[pitch], finesine[angle]);
 	vz = -finesine[pitch];
 
-	shootz = pSource->_f_Z() - pSource->_f_floorclip() + (pSource->_f_height()>>1) + 8*FRACUNIT;
+	const double shootz = pSource->Z() - pSource->Floorclip + (pSource->Height/2) + 8;
 
-	if ( Trace( DVector3 ( FIXED2DBL ( pSource->_f_X() ),	// Actor x
-							FIXED2DBL ( pSource->_f_Y() ), // Actor y
-							FIXED2DBL ( shootz ) ),	// Actor z
+	if ( Trace( DVector3 ( pSource->X(),	// Actor x
+							pSource->Y(), // Actor y
+							shootz ),	// Actor z
 		pSource->Sector,
 		DVector3 ( FIXED2DBL ( vx ), FIXED2DBL ( vy ), FIXED2DBL ( vz ) ),
 		( 32 * 64 * FRACUNIT ) /* MISSILERANGE */,	// Maximum distance

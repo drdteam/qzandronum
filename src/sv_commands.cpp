@@ -80,6 +80,7 @@
 #include "r_data/colormaps.h"
 #include "network_enums.h"
 #include "decallib.h"
+#include "r_utility.h"
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
 
@@ -440,17 +441,17 @@ void ActorNetPositionUpdated( AActor *pActor, ULONG &ulBits )
 	if ( ulBits & CM_X )
 	{
 		pActor->lastNetXUpdateTic = gametic;
-		pActor->lastX = pActor->_f_X();
+		pActor->lastX = FLOAT2FIXED ( pActor->X() );
 	}
 	if ( ulBits & CM_Y )
 	{
 		pActor->lastNetYUpdateTic = gametic;
-		pActor->lastY = pActor->_f_Y();
+		pActor->lastY = FLOAT2FIXED ( pActor->Y() );
 	}
 	if ( ulBits & CM_Z )
 	{
 		pActor->lastNetZUpdateTic = gametic;
-		pActor->lastZ = pActor->_f_Z();
+		pActor->lastZ = FLOAT2FIXED ( pActor->Z() );
 	}
 	if ( ulBits & CM_VELX )
 	{
@@ -561,9 +562,9 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	command.addByte( players[ulPlayer].bDeadSpectator );
 	command.addShort( players[ulPlayer].mo->lNetID );
 	command.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
-	command.addLong( players[ulPlayer].mo->_f_X() );
-	command.addLong( players[ulPlayer].mo->_f_Y() );
-	command.addLong( players[ulPlayer].mo->_f_Z() );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) );
 	command.addByte( players[ulPlayer].CurrentPlayerClass );
 	// command.addByte( players[ulPlayer].userinfo.GetPlayerClassNum() );
 
@@ -601,9 +602,9 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	fullCommand.addByte( PLAYER_VISIBLE | ulPlayerAttackFlags );
 	// [BB] The x/y position has to be sent at full precision, otherwise the player may be rounded to a neighboring sector
 	// on the clients, potentially completely changing its Z position.
-	fullCommand.addLong( players[ulPlayer].mo->_f_X() );
-	fullCommand.addLong( players[ulPlayer].mo->_f_Y() );
-	fullCommand.addShort( players[ulPlayer].mo->_f_Z() >> FRACBITS );
+	fullCommand.addLong( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
+	fullCommand.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
+	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) >> FRACBITS );
 	fullCommand.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
 	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) >> FRACBITS );
 	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) >> FRACBITS );
@@ -1253,9 +1254,9 @@ void SERVERCOMMANDS_MoveLocalPlayer( ULONG ulPlayer )
 	command.addLong( gametic );
 
 	// Write position.
-	command.addLong( players[ulPlayer].mo->_f_X() );
-	command.addLong( players[ulPlayer].mo->_f_Y() );
-	command.addLong( players[ulPlayer].mo->_f_Z() );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) );
 
 	// Write velocity.
 	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) );
@@ -1480,9 +1481,9 @@ void SERVERCOMMANDS_SpawnThing( AActor *pActor, ULONG ulPlayerExtra, ServerComma
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHING );
-	command.addShort( pActor->_f_X() >> FRACBITS );
-	command.addShort( pActor->_f_Y() >> FRACBITS );
-	command.addShort( pActor->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.addShort( pActor->lNetID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
@@ -1503,9 +1504,9 @@ void SERVERCOMMANDS_SpawnThingNoNetID( AActor *pActor, ULONG ulPlayerExtra, Serv
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGNONETID );
-	command.addShort( pActor->_f_X() >> FRACBITS );
-	command.addShort( pActor->_f_Y() >> FRACBITS );
-	command.addShort( pActor->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
@@ -1529,9 +1530,9 @@ void SERVERCOMMANDS_SpawnThingExact( AActor *pActor, ULONG ulPlayerExtra, Server
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGEXACT );
-	command.addLong( pActor->_f_X() );
-	command.addLong( pActor->_f_Y() );
-	command.addLong( pActor->_f_Z() );
+	command.addLong( FLOAT2FIXED ( pActor->X() ) );
+	command.addLong( FLOAT2FIXED ( pActor->Y() ) );
+	command.addLong( FLOAT2FIXED ( pActor->Z() ) );
 	command.addShort( usActorNetworkIndex );
 	command.addShort( pActor->lNetID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
@@ -1549,9 +1550,9 @@ void SERVERCOMMANDS_SpawnThingExactNoNetID( AActor *pActor, ULONG ulPlayerExtra,
 	usActorNetworkIndex = pActor->GetClass( )->getActorNetworkIndex();
 
 	NetCommand command ( SVC_SPAWNTHINGEXACTNONETID );
-	command.addLong( pActor->_f_X() );
-	command.addLong( pActor->_f_Y() );
-	command.addLong( pActor->_f_Z() );
+	command.addLong( FLOAT2FIXED ( pActor->X() ) );
+	command.addLong( FLOAT2FIXED ( pActor->Y() ) );
+	command.addLong( FLOAT2FIXED ( pActor->Z() ) );
 	command.addShort( usActorNetworkIndex );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
@@ -1582,11 +1583,11 @@ void SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra
 
 	// Write position.
 	if ( ulBits & CM_X )
-		command.addShort( pActor->_f_X() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
 	if ( ulBits & CM_Y )
-		command.addShort( pActor->_f_Y() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
 	if ( ulBits & CM_Z )
-		command.addShort( pActor->_f_Z() >> FRACBITS );
+		command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
 
 	// Write last position.
 	if ( ulBits & CM_LAST_X )
@@ -1649,11 +1650,11 @@ void SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayer
 
 	// Write position.
 	if ( ulBits & CM_X )
-		command.addLong( pActor->_f_X() );
+		command.addLong( FLOAT2FIXED ( pActor->X() ) );
 	if ( ulBits & CM_Y )
-		command.addLong( pActor->_f_Y() );
+		command.addLong( FLOAT2FIXED ( pActor->Y() ) );
 	if ( ulBits & CM_Z )
-		command.addLong( pActor->_f_Z() );
+		command.addLong( FLOAT2FIXED ( pActor->Z() ) );
 
 	// Write last position.
 	if ( ulBits & CM_LAST_X )
@@ -2220,9 +2221,9 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 
 	NetCommand command( SVC_TELEPORTTHING );
 	command.addShort( pActor->lNetID );
-	command.addShort( pActor->_f_X() >> FRACBITS );
-	command.addShort( pActor->_f_Y() >> FRACBITS );
-	command.addShort( pActor->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
 	command.addShort( FLOAT2FIXED ( pActor->Vel.X ) >> FRACBITS );
 	command.addShort( FLOAT2FIXED ( pActor->Vel.Y ) >> FRACBITS );
 	command.addShort( FLOAT2FIXED ( pActor->Vel.Z ) >> FRACBITS );
@@ -2338,9 +2339,9 @@ void SERVERCOMMANDS_SpawnPuff( AActor *pActor, ULONG ulState, bool bSendTranslat
 	USHORT usActorNetworkIndex = pActor->GetClass()->getActorNetworkIndex();
 
 	NetCommand command( SVC_SPAWNPUFF );
-	command.addShort( pActor->_f_X() >> FRACBITS );
-	command.addShort( pActor->_f_Y() >> FRACBITS );
-	command.addShort( pActor->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
 	command.addShort( usActorNetworkIndex );
 	command.addByte( ulState );
 	command.addByte( !!bSendTranslation );
@@ -2766,9 +2767,9 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 		return;
 
 	NetCommand command( SVC_SPAWNMISSILE );
-	command.addShort( pMissile->_f_X() >> FRACBITS );
-	command.addShort( pMissile->_f_Y() >> FRACBITS );
-	command.addShort( pMissile->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->Z() ) >> FRACBITS );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
@@ -2796,9 +2797,9 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 		return;
 
 	NetCommand command( SVC_SPAWNMISSILEEXACT );
-	command.addLong( pMissile->_f_X() );
-	command.addLong( pMissile->_f_Y() );
-	command.addLong( pMissile->_f_Z() );
+	command.addLong( FLOAT2FIXED ( pMissile->X() ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Y() ) );
+	command.addLong( FLOAT2FIXED ( pMissile->Z() ) );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
 	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
@@ -2833,9 +2834,9 @@ void SERVERCOMMANDS_MissileExplode( AActor *pMissile, line_t *pLine, ULONG ulPla
 	else
 		command.addShort( -1 );
 
-	command.addShort( pMissile->_f_X() >> FRACBITS );
-	command.addShort( pMissile->_f_Y() >> FRACBITS );
-	command.addShort( pMissile->_f_Z() >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->X() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->Y() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( pMissile->Z() ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3532,7 +3533,7 @@ void SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSo
 	// [BB] If the actor doesn't have a NetID, we have to instruct the clients differently how to play the sound.
 	if ( pActor->lNetID == -1 )
 	{
-		SERVERCOMMANDS_SoundPoint( pActor->_f_Pos(), lChannel, pszSound, fVolume, fAttenuation, ulPlayerExtra, flags );
+		SERVERCOMMANDS_SoundPoint( pActor->Pos(), lChannel, pszSound, fVolume, fAttenuation, ulPlayerExtra, flags );
 		return;
 	}
 

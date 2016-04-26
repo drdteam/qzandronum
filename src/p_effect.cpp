@@ -61,7 +61,7 @@
 #include "v_palette.h"
 
 // [CK] Prototypes
-static void MakeFountain (fixed_t x, fixed_t y, fixed_t z, fixed_t radius, fixed_t height, int color1, int color2);
+static void MakeFountain (double X, double Y, double Z, double Radius, double Height, int color1, int color2);
 
 CVAR (Int, cl_rockettrails, 1, CVAR_ARCHIVE);
 CVAR (Int, cl_grenadetrails, 1, CVAR_ARCHIVE);
@@ -321,9 +321,9 @@ void P_ThinkParticles ()
 			continue;
 		}
 
-		fixedvec2 newxy = P_GetOffsetPosition(particle->x, particle->y, particle->vel.x, particle->vel.y);
-		particle->x = newxy.x;
-		particle->y = newxy.y;
+		DVector2 newxy = P_GetOffsetPosition(FIXED2DBL(particle->x), FIXED2DBL(particle->y), FIXED2DBL(particle->vel.x), FIXED2DBL(particle->vel.y));
+		particle->x = FLOAT2FIXED(newxy.X);
+		particle->y = FLOAT2FIXED(newxy.Y);
 		//particle->x += particle->vel.x;
 		//particle->y += particle->vel.y;
 		particle->z += particle->vel.z;
@@ -370,7 +370,7 @@ static void GenerateShowSpawnFountain ( FPlayerStart &ts, const int color, const
 			// [TP] Take useplayerstartz into account here
 			double floorZ = sector->floorplane.ZatPoint( ts.pos.XY() );
 			double z = ( level.flags & LEVEL_USEPLAYERSTARTZ ) ? ts.pos.Z : floorZ;
-			MakeFountain( FLOAT2FIXED ( ts.pos.X ), FLOAT2FIXED ( ts.pos.Y ), FLOAT2FIXED ( z ), 16 << FRACBITS, 0, color, color );
+			MakeFountain( ts.pos.X, ts.pos.Y, z, FIXED2DBL ( 16 << FRACBITS ), 0, color, color );
 		}
 	}
 }
@@ -495,7 +495,7 @@ particle_t *JitterParticle (int ttl, double drift)
 }
 
 // [CK] Refactored fountain that allows custom spawners to be used
-static void MakeFountain (fixed_t x, fixed_t y, fixed_t z, fixed_t radius, fixed_t height, int color1, int color2)
+static void MakeFountain (double X, double Y, double Z, double Radius, double Height, int color1, int color2)
 {
 	particle_t *particle;
 
@@ -506,19 +506,20 @@ static void MakeFountain (fixed_t x, fixed_t y, fixed_t z, fixed_t radius, fixed
 
 	if (particle)
 	{
-		angle_t an = M_Random()<<(24-ANGLETOFINESHIFT);
-		fixed_t out = FixedMul (radius, M_Random()<<8);
+		DAngle an = M_Random() * (360. / 256);
+		double out = Radius * M_Random() / 256.;
 
 		/* [BB] ZDoom's generalization of this function, doesn't fit with refactoring.
-		fixedvec3 pos = actor->Vec3Offset(FixedMul(out, finecosine[an]), FixedMul(out, finesine[an]), actor->_f_height() + FRACUNIT);
-		particle->x = pos.x;
-		particle->y = pos.y;
-		particle->z = pos.z;
+		DVector3 pos = actor->Vec3Angle(out, an, actor->Height + 1);
+		particle->x = FLOAT2FIXED(pos.X);
+		particle->y = FLOAT2FIXED(pos.Y);
+		particle->z = FLOAT2FIXED(pos.Z);
+		if (out < actor->radius/8)
 		*/
-		particle->x = x + FixedMul (out, finecosine[an]);
-		particle->y = y + FixedMul (out, finesine[an]);
-		particle->z = z + height + FRACUNIT;
-		if (out < radius/8)
+		particle->x = FLOAT2FIXED ( X + out * an.Cos() );
+		particle->y = FLOAT2FIXED ( Y + out * an.Sin() );
+		particle->z = FLOAT2FIXED ( Z + Height + 1 );
+		if (out < Radius/8)
 			particle->vel.z += FRACUNIT*10/3;
 		else
 			particle->vel.z += FRACUNIT*3;
@@ -539,7 +540,7 @@ static void MakeFountain (AActor *actor, int color1, int color2)
 		return;
 
 	// [CK] We now use a general function
-	MakeFountain(actor->_f_X(), actor->_f_Y(), actor->_f_Z(), actor->_f_radius(), actor->_f_height(), color1, color2);
+	MakeFountain(actor->X(), actor->Y(), actor->Z(), actor->radius, actor->Height, color1, color2);
 }
 
 void P_RunEffect (AActor *actor, int effects)
@@ -561,14 +562,14 @@ void P_RunEffect (AActor *actor, int effects)
 
 		particle = JitterParticle (3 + (M_Random() & 31));
 		if (particle) {
-			fixed_t pathdist = M_Random()<<8;
-			fixedvec3 pos = actor->Vec3Offset(
-				FLOAT2FIXED(backx) - fixed_t(actor->Vel.X * pathdist),
-				FLOAT2FIXED(backy) - fixed_t(actor->Vel.Y * pathdist),
-				FLOAT2FIXED(backz) - fixed_t(actor->Vel.Z * pathdist));
-			particle->x = pos.x;
-			particle->y = pos.y;
-			particle->z = pos.z;
+			double pathdist = M_Random() / 256.;
+			DVector3 pos = actor->Vec3Offset(
+				backx - actor->Vel.X * pathdist,
+				backy - actor->Vel.Y * pathdist,
+				backz - actor->Vel.Z * pathdist);
+			particle->x = FLOAT2FIXED(pos.X);
+			particle->y = FLOAT2FIXED(pos.Y);
+			particle->z = FLOAT2FIXED(pos.Z);
 			speed = (M_Random () - 128) * (FRACUNIT/200);
 			particle->vel.x += fixed_t(speed * an.Cos());
 			particle->vel.y += fixed_t(speed * an.Sin());
@@ -580,14 +581,15 @@ void P_RunEffect (AActor *actor, int effects)
 		for (i = 6; i; i--) {
 			particle_t *particle = JitterParticle (3 + (M_Random() & 31));
 			if (particle) {
-				fixed_t pathdist = M_Random()<<8;
-				fixedvec3 pos = actor->Vec3Offset(
-					FLOAT2FIXED(backx) - fixed_t(actor->Vel.X * pathdist),
-					FLOAT2FIXED(backy) - fixed_t(actor->Vel.Y * pathdist),
-					FLOAT2FIXED(backz) - fixed_t(actor->Vel.Z * pathdist) + (M_Random() << 10));
-				particle->x = pos.x;
-				particle->y = pos.y;
-				particle->z = pos.z;
+				double pathdist = M_Random() / 256.;
+				DVector3 pos = actor->Vec3Offset(
+					backx - actor->Vel.X * pathdist,
+					backy - actor->Vel.Y * pathdist,
+					backz - actor->Vel.Z * pathdist + (M_Random() / 64.));
+				particle->x = FLOAT2FIXED(pos.X);
+				particle->y = FLOAT2FIXED(pos.Y);
+				particle->z = FLOAT2FIXED(pos.Z);
+
 				speed = (M_Random () - 128) * (FRACUNIT/200);
 				particle->vel.x += fixed_t(speed * an.Cos());
 				particle->vel.y += fixed_t(speed * an.Sin());
@@ -638,18 +640,18 @@ void P_RunEffect (AActor *actor, int effects)
 			particle = JitterParticle (16);
 			if (particle != NULL)
 			{
-				angle_t ang = M_Random () << (32-ANGLETOFINESHIFT-8);
-				fixedvec3 pos = actor->Vec3Offset(FixedMul (actor->_f_radius(), finecosine[ang]), FixedMul (actor->_f_radius(), finesine[ang]), 0);
-				particle->x = pos.x;
-				particle->y = pos.y;
-				particle->z = pos.z;
+				DAngle ang = M_Random() * (360 / 256.);
+				DVector3 pos = actor->Vec3Angle(actor->radius, ang, 0);
+				particle->x = FLOAT2FIXED(pos.X);
+				particle->y = FLOAT2FIXED(pos.Y);
+				particle->z = FLOAT2FIXED(pos.Z);
 				particle->color = *protectColors[M_Random() & 1];
 				particle->vel.z = FRACUNIT;
 				particle->accz = M_Random () << 7;
 				particle->size = 1;
 				if (M_Random () < 128)
 				{ // make particle fall from top of actor
-					particle->z += actor->_f_height();
+					particle->z += FLOAT2FIXED(actor->Height);
 					particle->vel.z = -particle->vel.z;
 					particle->accz = -particle->accz;
 				}
@@ -1026,14 +1028,14 @@ void P_DisconnectEffect (AActor *actor)
 		if (!p)
 			break;
 
-		
-		fixed_t xo = ((M_Random() - 128) << 9) * int(actor->radius);
-		fixed_t yo = ((M_Random() - 128) << 9) * int(actor->radius);
-		fixed_t zo = (M_Random() << 8) * int(actor->Height);
-		fixedvec3 pos = actor->Vec3Offset(xo, yo, zo);
-		p->x = pos.x;
-		p->y = pos.y;
-		p->z = pos.z;
+		double xo = (M_Random() - 128)*actor->radius / 128;
+		double yo = (M_Random() - 128)*actor->radius / 128;
+		double zo = M_Random()*actor->Height / 256;
+
+		DVector3 pos = actor->Vec3Offset(xo, yo, zo);
+		p->x = FLOAT2FIXED(pos.X);
+		p->y = FLOAT2FIXED(pos.Y);
+		p->z = FLOAT2FIXED(pos.Z);
 		p->accz -= FRACUNIT/4096;
 		p->color = M_Random() < 128 ? maroon1 : maroon2;
 		p->size = 4;

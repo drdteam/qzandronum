@@ -177,7 +177,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BrainSpit)
 
 			// [BC] If we're the server, tell clients create the sound.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SoundPoint( self->_f_Pos(), CHAN_WEAPON, self->AttackSound, 1, ATTN_NONE );
+				SERVERCOMMANDS_SoundPoint( self->Pos(), CHAN_WEAPON, self->AttackSound, 1, ATTN_NONE );
 		}
 		else
 		{
@@ -186,7 +186,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BrainSpit)
 
 			// [BC] If we're the server, tell clients create the sound.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SoundPoint( self->_f_Pos(), CHAN_WEAPON, "brain/spit", 1, ATTN_NONE );
+				SERVERCOMMANDS_SoundPoint( self->Pos(), CHAN_WEAPON, "brain/spit", 1, ATTN_NONE );
 		}
 	}
 	return 0;
@@ -228,7 +228,7 @@ static void SpawnFly(AActor *self, PClassActor *spawntype, FSoundID sound)
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( fog ))
 	{
 		SERVERCOMMANDS_SpawnThing( fog );
-		SERVERCOMMANDS_SoundPoint( fog->_f_Pos(), CHAN_BODY, S_GetName( sound ), 1, ATTN_NORM );
+		SERVERCOMMANDS_SoundPoint( fog->Pos(), CHAN_BODY, S_GetName( sound ), 1, ATTN_NORM );
 	}
 
 	FName SpawnName;

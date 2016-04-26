@@ -730,7 +730,7 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 //	vy = FixedMul( pSource->y, Distance );
 	vz = finesine[Pitch];
 
-	sz = pSource->_f_Top() - pSource->_f_floorclip();// + (fixed_t)(chase_height * FRACUNIT);
+	sz = FLOAT2FIXED ( pSource->Top() - pSource->Floorclip );// + (fixed_t)(chase_height * FRACUNIT);
 
 //	if ( P_PathTraverse( CurPos.x, CurPos.y, DestPos.x, DestPos.y, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false )
 //	return ( P_PathTraverse( pSource->x, pSource->y, vx, vy, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false );
@@ -3365,10 +3365,10 @@ void CSkullBot::HandleAiming( void )
 		else
 			m_pPlayer->mo->Angles.Yaw += ANGLE2DBL(m_AngleOffBy);
 
-		ShootZ = m_pPlayer->mo->_f_Z() - m_pPlayer->mo->_f_floorclip() + ( m_pPlayer->mo->_f_height() >> 1 ) + ( 8 * FRACUNIT );
+		ShootZ = FLOAT2FIXED ( m_pPlayer->mo->Z() - m_pPlayer->mo->Floorclip + ( m_pPlayer->mo->Height / 2 ) + 8 );
 		Distance = FLOAT2FIXED ( m_pPlayer->mo->Distance2D ( FIXED2DBL ( EnemyPos.x ), FIXED2DBL ( EnemyPos.y ) ) );
 //		m_pPlayer->mo->pitch = R_PointToAngle( Distance, ( EnemyPos.z + ( players[m_ulPlayerEnemy].mo->height / 2 )) - m_pPlayer->mo->z );
-		lTopPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z + players[m_ulPlayerEnemy].mo->_f_height() );
+		lTopPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z + FLOAT2FIXED ( players[m_ulPlayerEnemy].mo->Height ) );
 		lBottomPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z );
 
 		m_pPlayer->mo->Angles.Pitch = ANGLE2DBL ( ( lTopPitch / 2 ) + ( lBottomPitch / 2 ) );

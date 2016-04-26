@@ -1228,7 +1228,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	DestX = pBot->GetPlayer( )->mo->_f_X() * finecosine[Angle];
 	DestY = pBot->GetPlayer( )->mo->_f_Y() * finesine[Angle];
 
-	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), DestX, DestY );
+	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), DestX, DestY );
 }
 
 //*****************************************************************************
@@ -1265,7 +1265,9 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 		ASTAR_ClearPath( pBot->GetPlayer( ) - players );
 		pBot->m_ulPathType = BOTPATHTYPE_ITEM;
 
-		pBot->m_PathGoalPos = pBot->m_pGoalActor->_f_Pos();
+		pBot->m_PathGoalPos.x = FLOAT2FIXED ( pBot->m_pGoalActor->Pos().X );
+		pBot->m_PathGoalPos.y = FLOAT2FIXED ( pBot->m_pGoalActor->Pos().Y );
+		pBot->m_PathGoalPos.z = FLOAT2FIXED ( pBot->m_pGoalActor->Pos().Z );
 	}
 
 	ReturnVal = ASTAR_Path( pBot->GetPlayer( ) - players, pBot->m_PathGoalPos, botdebug_maxsearchnodes, 0 );//1 );//MAX_NODES_TO_SEARCH );
@@ -1307,7 +1309,7 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
 	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )
@@ -1406,8 +1408,8 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
-	Distance = pBot->GetPlayer( )->mo->_f_radius();
-	if (( abs( pBot->GetPlayer( )->mo->X() - GoalPos.x ) >= Distance ) || ( abs( pBot->GetPlayer( )->mo->Y() - GoalPos.y ) >= Distance ))
+	Distance = FLOAT2FIXED ( pBot->GetPlayer( )->mo->radius );
+	if (( abs( FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) - GoalPos.x ) >= Distance ) || ( abs( FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) - GoalPos.y ) >= Distance ))
 		g_iReturnInt = PATH_COMPLETE;
 	else
 	{
@@ -1420,7 +1422,7 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 	GoalPos.x = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
 	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )
@@ -1540,8 +1542,8 @@ static void botcmd_Roam( CSkullBot *pBot )
 	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
-	Distance = pBot->GetPlayer( )->mo->_f_radius();
-	if (( abs( pBot->GetPlayer( )->mo->X() - GoalPos.x ) < Distance ) && ( abs( pBot->GetPlayer( )->mo->Y() - GoalPos.y ) < Distance ))
+	Distance = FLOAT2FIXED ( pBot->GetPlayer( )->mo->radius );
+	if (( abs( FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) - GoalPos.x ) < Distance ) && ( abs( FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) - GoalPos.y ) < Distance ))
 		pBot->m_ulPathType = BOTPATHTYPE_NONE;
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
@@ -1549,7 +1551,7 @@ static void botcmd_Roam( CSkullBot *pBot )
 	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
 	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
-	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->_f_Pos(), GoalPos.x, GoalPos.y );
+	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
 		pBot->GetPlayer( )->cmd.ucmd.buttons |= BT_JUMP;
 	if ( ulFlags & BOTPATH_DOOR )

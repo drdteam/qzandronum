@@ -3891,7 +3891,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				|| ( pActor->Y() != pActor->SpawnPoint[1] )
 				|| ( pActor->Z() != pActor->SpawnPoint[2] ) )
 			{
-				pActor->SetOrigin ( pActor->SpawnPoint[0], pActor->SpawnPoint[1], pActor->SpawnPoint[2] );
+				pActor->SetOrigin ( pActor->SpawnPoint, false );
 
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 					SERVERCOMMANDS_MoveThingExact( pActor, CM_X|CM_Y|CM_Z );

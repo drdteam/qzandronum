@@ -53,6 +53,7 @@
 
 #include "actor.h"
 #include "doomtype.h"
+#include "p_effect.h"
 
 //*****************************************************************************
 //	DEFINES

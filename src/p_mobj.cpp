@@ -1794,9 +1794,9 @@ void P_ExplodeMissile (AActor *mo, line_t *line, AActor *target)
 				den = line->Delta().LengthSquared();
 				if (den != 0)
 				{
-					frac = clamp<double>((mo->Pos() - line->V1()) | line->Delta(), 0, den) / den;
+					frac = clamp<double>((mo->Pos().XY() - line->v1->fPos()) | line->Delta(), 0, den) / den;
 
-					linepos = DVector3(line->V1() + line->Delta() * frac, pos.Z);
+					linepos = DVector3(line->v1->fPos() + line->Delta() * frac, pos.Z);
 
 					F3DFloor * ffloor=NULL;
 					if (line->sidedef[side^1] != NULL)
@@ -2784,7 +2784,7 @@ fixed_t P_OldXYMovement( AActor *mo )
 	fixed_t ptryx, ptryy;
 	fixed_t xmove, ymove;
 	fixed_t	maxmove;
-	fixed_t oldfloorz = mo->_f_floorz();
+	fixed_t oldfloorz = FLOAT2FIXED ( mo->floorz );
 
 	maxmove = FLOAT2FIXED ( MAXMOVE );
 
@@ -5162,9 +5162,9 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	// [CK] Desync issues occur due to not having marked spawning actors with
 	// the proper lastX/Y/Z, this will hopefully fix the floating glitch where
 	// desync's between the server and client are fixed.
-	actor->lastX = actor->_f_X();
-	actor->lastY = actor->_f_Y();
-	actor->lastZ = actor->_f_Z();
+	actor->lastX = FLOAT2FIXED ( actor->X() );
+	actor->lastY = FLOAT2FIXED ( actor->Y() );
+	actor->lastZ = FLOAT2FIXED ( actor->Z() );
 
 	actor->picnum.SetInvalid();
 	actor->health = actor->SpawnHealth();
@@ -7188,7 +7188,7 @@ foundone:
 
 		// [BC] Tell clients to play the sound.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SoundPoint( thing->_f_Pos(), CHAN_ITEM, smallsplash ? S_GetName( splash->SmallSplashSound ) : S_GetName( splash->NormalSplashSound ), 1, ATTN_IDLE );
+			SERVERCOMMANDS_SoundPoint( thing->Pos(), CHAN_ITEM, smallsplash ? S_GetName( splash->SmallSplashSound ) : S_GetName( splash->NormalSplashSound ), 1, ATTN_IDLE );
 	}
 
 	// Don't let deep water eat missiles

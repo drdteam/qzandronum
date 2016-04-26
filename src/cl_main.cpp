@@ -3358,7 +3358,7 @@ void CLIENT_MoveThing( AActor *pActor, fixed_t X, fixed_t Y, fixed_t Z )
 	if (( pActor == NULL ) || ( gamestate != GS_LEVEL ))
 		return;
 
-	pActor->SetOrigin( X, Y, Z );
+	pActor->SetOrigin( FIXED2DBL ( X ), FIXED2DBL ( Y ), FIXED2DBL ( Z ), false );
 
 	// [BB] SetOrigin doesn't set the actor's floorz value properly, so we need to correct this.
 	if ( ( pActor->flags & MF_NOBLOCKMAP ) == false )
@@ -3383,6 +3383,13 @@ void CLIENT_AdjustPredictionToServerSideConsolePlayerMove( fixed_t X, fixed_t Y,
 	players[consoleplayer].ServerXYZ[1] = Y;
 	players[consoleplayer].ServerXYZ[2] = Z;
 	CLIENT_PREDICT_PlayerTeleported( );
+}
+
+//*****************************************************************************
+//
+void CLIENT_AdjustPredictionToServerSideConsolePlayerMove( const DVector3 &pos )
+{
+	CLIENT_AdjustPredictionToServerSideConsolePlayerMove ( FLOAT2FIXED ( pos.X ), FLOAT2FIXED ( pos.Y ), FLOAT2FIXED ( pos.Z ) );
 }
 
 //*****************************************************************************
@@ -4320,7 +4327,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	// If this is the consoleplayer, set the realorigin and ServerXYZVel.
 	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
 	{
-		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->_f_X(), pPlayer->mo->_f_Y(), pPlayer->mo->_f_Z() );
+		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->Pos() );
 
 		pPlayer->ServerXYZVel[0] = 0;
 		pPlayer->ServerXYZVel[1] = 0;
@@ -6107,9 +6114,9 @@ static void client_MoveThing( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->_f_X();
-	Y = pActor->_f_Y();
-	Z = pActor->_f_Z();
+	X = FLOAT2FIXED ( pActor->X() );
+	Y = FLOAT2FIXED ( pActor->Y() );
+	Z = FLOAT2FIXED ( pActor->Z() );
 
 	// Read in the position data.
 	if ( lBits & CM_X )
@@ -6228,9 +6235,9 @@ static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	X = pActor->_f_X();
-	Y = pActor->_f_Y();
-	Z = pActor->_f_Z();
+	X = FLOAT2FIXED ( pActor->X() );
+	Y = FLOAT2FIXED ( pActor->Y() );
+	Z = FLOAT2FIXED ( pActor->Z() );
 
 	// Read in the position data.
 	if ( lBits & CM_X )

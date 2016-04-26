@@ -128,20 +128,23 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 	int p2;
 
 	int slopetype;
+
+	fixed_t dx = FLOAT2FIXED ( ld->Delta().X );
+	fixed_t dy = FLOAT2FIXED ( ld->Delta().Y );
 		
-	if (ld->fixDx() == 0)
+	if (dx == 0)
 		slopetype = ST_VERTICAL;
-	else if (ld->fixDy() == 0)
+	else if (dy == 0)
 		slopetype = ST_HORIZONTAL;
 	else
-		slopetype = ((ld->fixDy() ^ ld->fixDx()) >= 0) ? ST_POSITIVE : ST_NEGATIVE;
+		slopetype = ((dy ^ dx) >= 0) ? ST_POSITIVE : ST_NEGATIVE;
 
 	switch (slopetype)
 	{
 	case ST_HORIZONTAL:
 		p1 = tmbox[BOXTOP] > ld->v1->fixY();
 		p2 = tmbox[BOXBOTTOM] > ld->v1->fixY ();
-		if (ld->fixDx() < 0)
+		if (dx < 0)
 		{
 			p1 ^= 1;
 			p2 ^= 1;
@@ -151,7 +154,7 @@ int P_BoxOnLineSide (const fixed_t *tmbox, const line_t *ld)
 	case ST_VERTICAL:
 		p1 = tmbox[BOXRIGHT] < ld->v1->fixX ();
 		p2 = tmbox[BOXLEFT] < ld->v1->fixX ();
-		if (ld->fixDy() < 0)
+		if (dy < 0)
 		{
 			p1 ^= 1;
 			p2 ^= 1;
@@ -320,10 +323,10 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 	g_PathX = DestX;
 	g_PathY = DestY;
 
-	g_BoundingBox[BOXTOP] = DestY + pActor->_f_radius();
-	g_BoundingBox[BOXBOTTOM] = DestY - pActor->_f_radius();
-	g_BoundingBox[BOXRIGHT] = DestX + pActor->_f_radius();
-	g_BoundingBox[BOXLEFT] = DestX - pActor->_f_radius();
+	g_BoundingBox[BOXTOP] = DestY + FLOAT2FIXED ( pActor->radius );
+	g_BoundingBox[BOXBOTTOM] = DestY - FLOAT2FIXED ( pActor->radius );
+	g_BoundingBox[BOXRIGHT] = DestX + FLOAT2FIXED ( pActor->radius );
+	g_BoundingBox[BOXLEFT] = DestX - FLOAT2FIXED ( pActor->radius );
 
 	pNewSector = R_PointInSubsector( DestX, DestY );
 	
@@ -546,7 +549,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 		// If we can't fit into this sector because the ceiling is too low, or the sector's 
 		// ceiling is below our top, potentially flag the path as being obstructed.
 //		bObstructingIfNotDoor = false;
-		if ((( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->_f_height() ) || (( g_PathSectorCeilingZ - pActor->_f_Z() ) < pActor->_f_height() ))
+		if ((FIXED2DBL( g_PathSectorCeilingZ - g_PathSectorFloorZ ) < pActor->Height ) || (( FLOAT2FIXED ( g_PathSectorCeilingZ ) - pActor->Z() ) < pActor->Height ))
 		{
 			LONG	lIdx;
 
@@ -568,7 +571,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 			}
 		}
 
-		lHeightChange = g_PathSectorFloorZ - pActor->_f_Z();
+		lHeightChange = g_PathSectorFloorZ - FLOAT2FIXED ( pActor->Z() );
 		if ( lHeightChange > 0 )
 		{
 			if ( lHeightChange <= 0 /*gameinfo.StepHeight*/ )
@@ -840,8 +843,8 @@ static bool botpath_CheckThing( AActor *pThing )
 	if (( pThing->flags & MF_SOLID ) == false )
 		return ( true );
 
-	blockdist = pThing->_f_radius() + g_pPathActor->_f_radius();
-	if (( abs( pThing->X() - g_PathX ) >= blockdist ) || ( abs( pThing->Y() - g_PathY ) >= blockdist ))
+	blockdist = FLOAT2FIXED ( pThing->radius + g_pPathActor->radius );
+	if (( abs( FLOAT2FIXED ( pThing->X() ) - g_PathX ) >= blockdist ) || ( abs( FLOAT2FIXED ( pThing->Y() ) - g_PathY ) >= blockdist ))
 	{
 		// Didn't come into contact with the thing.
 		return ( true );
@@ -930,8 +933,8 @@ static bool botpath_CheckLine( line_t *pLine )
 	{
 		// Find the point on the line closest to the actor's center, and use
 		// that to calculate openings.
-		float dx = (float)pLine->fixDx();
-		float dy = (float)pLine->fixDy();
+		float dx = (float)FLOAT2FIXED ( pLine->Delta().X );
+		float dy = (float)FLOAT2FIXED ( pLine->Delta().Y );
 		fixed_t r = (fixed_t)(((float)(g_PathX - pLine->v1->fixX()) * dx +
 				 			   (float)(g_PathY - pLine->v1->fixY()) * dy) /
 							  (dx*dx + dy*dy) * 16777216.f);
@@ -946,8 +949,8 @@ static bool botpath_CheckLine( line_t *pLine )
 		}
 		else
 		{
-			BOTPATH_LineOpening( pLine, sx=pLine->v1->fixX() + MulScale24 (r, pLine->fixDx()),
-				sy=pLine->v1->fixY() + MulScale24 (r, pLine->fixDy()), g_PathX, g_PathY );
+			BOTPATH_LineOpening( pLine, sx=pLine->v1->fixX() + MulScale24 (r, FLOAT2FIXED ( pLine->Delta().X )),
+				sy=pLine->v1->fixY() + MulScale24 (r, FLOAT2FIXED ( pLine->Delta().Y )), g_PathX, g_PathY );
 		}
 	}
 

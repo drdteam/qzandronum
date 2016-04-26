@@ -534,6 +534,14 @@ public:
 	fixedvec3	GetEnemyPosition( void );
 	void		SetEnemyPosition( const fixedvec3 &pos );
 
+	void		SetEnemyPosition( const DVector3 &pos ) {
+		fixedvec3 fpos;
+		fpos.x = FLOAT2FIXED ( pos.X );
+		fpos.y = FLOAT2FIXED ( pos.Y );
+		fpos.z = FLOAT2FIXED ( pos.Z );
+		SetEnemyPosition ( fpos );
+	}
+
 	// Get the last known enemy position.
 	fixedvec3	GetLastEnemyPosition( void );
 

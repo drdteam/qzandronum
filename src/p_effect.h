@@ -31,6 +31,10 @@
 **
 */
 
+// [BB] Added include guard.
+#ifndef __P_EFFECT_H__
+#define __P_EFFECT_H__
+ 
 #include "vectors.h"
 #include "tables.h"
 #include "c_cvars.h"	// [BC] #include this so that we can't extern cl_respawninvuleffect.
@@ -54,6 +58,12 @@
 struct subsector_t;
 
 // [RH] Particle details
+struct fixedvec3
+{
+	fixed_t x, y, z;
+};
+
+
 struct particle_t
 {
 	fixed_t	x,y,z;
@@ -98,3 +108,6 @@ void P_DisconnectEffect (AActor *actor);
 
 // [BC] Extern this here so we don't have to do it everywhere else.
 EXTERN_CVAR (Int, cl_respawninvuleffect)
+
+// [BB] Added include guard.
+#endif

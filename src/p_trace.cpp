@@ -363,7 +363,7 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 	int lineside;
 	sector_t *entersector;
 
-	double dist = MaxDist * in->Frac;
+	double dist = MaxDist * in->frac;
 	DVector3 hit = Start + Vec * dist;
 
 	double ff, fc, bf = 0, bc = 0;
@@ -472,7 +472,7 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 	{
 		if (entersector == NULL || (hit.Z >= bf && hit.Z <= bc))
 		{
-			int res = EnterLinePortal(in->d.line, in->Frac);
+			int res = EnterLinePortal(in->d.line, in->frac);
 			if (res != -1)
 			{
 				aimdir = INT_MAX;	// flag for ending the traverse
@@ -614,7 +614,7 @@ cont:
 			Results->HitPos = hit;
 			SetSourcePosition();
 			Results->Distance = dist;
-			Results->Fraction = in->Frac;
+			Results->Fraction = in->frac;
 			Results->Line = in->d.line;
 			Results->Side = lineside;
 		}
@@ -652,7 +652,7 @@ cont:
 
 bool FTraceInfo::ThingCheck(intercept_t *in)
 {
-	double dist = MaxDist * in->Frac;
+	double dist = MaxDist * in->frac;
 	DVector3 hit = Start + Vec * dist;
 
 	if (hit.Z > in->d.thing->Top())
@@ -664,7 +664,7 @@ bool FTraceInfo::ThingCheck(intercept_t *in)
 		dist = (in->d.thing->Top() - Start.Z) / Vec.Z;
 
 		if (dist > MaxDist) return true;
-		in->Frac = dist / MaxDist;
+		in->frac = dist / MaxDist;
 
 		hit = Start + Vec * dist;
 
@@ -679,7 +679,7 @@ bool FTraceInfo::ThingCheck(intercept_t *in)
 		// Does it hit the bottom of the actor?
 		dist = (in->d.thing->Z() - Start.Z) / Vec.Z;
 		if (dist > MaxDist) return true;
-		in->Frac = dist / MaxDist;
+		in->frac = dist / MaxDist;
 
 		hit = Start + Vec * dist;
 
@@ -735,7 +735,7 @@ cont1:
 	Results->HitPos = hit;
 	SetSourcePosition();
 	Results->Distance = dist;
-	Results->Fraction = in->Frac;
+	Results->Fraction = in->frac;
 	Results->Actor = in->d.thing;
 
 	if (TraceCallback != NULL)
@@ -789,7 +789,7 @@ bool FTraceInfo::TraceTraverse (int ptflags)
 		}
 
 		// We have something closer in the storage for portal subtraces.
-		if (TempResults->HitType != TRACE_HitNone && in->Frac > TempResults->Fraction)
+		if (TempResults->HitType != TRACE_HitNone && in->frac > TempResults->Fraction)
 		{
 			break;
 		}

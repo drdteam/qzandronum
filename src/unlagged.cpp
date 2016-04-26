@@ -191,9 +191,9 @@ void UNLAGGED_Reconcile( AActor *actor )
 			if (players+i != actor->player)
 			{
 				players[i].mo->SetOrigin(
-					FLOAT2FIXED ( players[i].unlaggedX[unlaggedIndex] ),
-					FLOAT2FIXED ( players[i].unlaggedY[unlaggedIndex] ),
-					FLOAT2FIXED ( players[i].unlaggedZ[unlaggedIndex] )
+					players[i].unlaggedX[unlaggedIndex],
+					players[i].unlaggedY[unlaggedIndex],
+					players[i].unlaggedZ[unlaggedIndex], false
 				);
 			}
 			else
@@ -275,7 +275,7 @@ void UNLAGGED_Restore( AActor *actor )
 	{
 		if (playeringame[i] && players[i].mo && !players[i].bSpectating)
 		{
-			players[i].mo->SetOrigin( FLOAT2FIXED ( players[i].restoreX ), FLOAT2FIXED ( players[i].restoreY ), FLOAT2FIXED ( players[i].restoreZ ) );
+			players[i].mo->SetOrigin( players[i].restoreX, players[i].restoreY, players[i].restoreZ, false );
 			players[i].mo->floorz = players[i].restoreFloorZ;
 			players[i].mo->ceilingz = players[i].restoreCeilingZ;
 		}

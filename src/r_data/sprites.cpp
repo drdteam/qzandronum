@@ -1221,9 +1221,9 @@ void R_InitSprites ()
 			continue;
 
 		AActor* def = GetDefaultByType( PlayerClasses[classSkinIdx].Type );
-		fixed_t maxAllowedHeight = FixedMul( maxheightfactor, def->_f_height() );
+		fixed_t maxAllowedHeight = FixedMul( maxheightfactor, FLOAT2FIXED ( def->Height ) );
 		// [BB] 2*radius is approximately the actor width.
-		fixed_t maxAllowedWidth = FixedMul( maxwidthfactor, 2 * def->_f_radius() );
+		fixed_t maxAllowedWidth = FixedMul( maxwidthfactor, 2 * FLOAT2FIXED ( def->radius ) );
 		FPlayerSkin& skin = skins[skinIdx];
 
 		// [BB] If a skin sprite violates the limits, just downsize it.

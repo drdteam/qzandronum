@@ -192,7 +192,7 @@ void P_Ticker (void)
 			DestY = players[consoleplayer].camera->_f_Y() + ( botdebug_walktest * finesine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
 
 			szString[0] = 0;
-			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->_f_Pos(), DestX, DestY );
+			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->Pos(), DestX, DestY );
 			if ( ulFlags > 0 )
 			{
 				bool	bNeedMark;
@@ -375,7 +375,7 @@ void P_Ticker (void)
 			{
 				// Also, if they have an enemy, and can see it, update their known enemy position.
 				if (( players[ulIdx].pSkullBot->m_ulPlayerEnemy != MAXPLAYERS ) && ( P_CheckSight( players[ulIdx].mo, players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo, SF_SEEPASTBLOCKEVERYTHING )))
-					players[ulIdx].pSkullBot->SetEnemyPosition( players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->_f_Pos() );
+					players[ulIdx].pSkullBot->SetEnemyPosition( players[players[ulIdx].pSkullBot->m_ulPlayerEnemy].mo->Pos() );
 
 				// Now that all the players have moved to their final location for this tick,
 				// we can properly aim at them.

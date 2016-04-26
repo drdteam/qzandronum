@@ -65,6 +65,7 @@
 #include "p_blockmap.h"
 #include "r_state.h"
 #include "r_utility.h"
+#include "p_maputl.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -136,8 +137,8 @@ void ASTAR_BuildNodes( void )
 			g_lMapYMax = vertexes[ulIdx].fixY();
 	}
 
-	g_lMapXMin = bmaporgx;
-	g_lMapYMin = bmaporgy;
+	g_lMapXMin = FLOAT2FIXED ( bmaporgx );
+	g_lMapYMin = FLOAT2FIXED ( bmaporgy );
 
 //	g_lNumHorizontalNodes = ((( g_lMapXMax - g_lMapXMin ) / FRACUNIT ) / ASTAR_NODE_SIZE );
 //	g_lNumVerticalNodes = ((( g_lMapYMax - g_lMapYMin ) / FRACUNIT ) / ASTAR_NODE_SIZE );
@@ -331,7 +332,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			pPath->pActor,
 			TraceResults ))
 */
-		ulResults = BOTPATH_TryWalk( pPath->pActor, pPath->pActor->_f_Pos(), DestPos.x, DestPos.y );
+		ulResults = BOTPATH_TryWalk( pPath->pActor, pPath->pActor->Pos(), DestPos.x, DestPos.y );
 		if ( ulResults & BOTPATH_OBSTRUCTED )
 		{
 			// If this is a roaming path, just pick another roam location. Otherwise, try to
@@ -404,7 +405,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			subsector_t	*pSubSector;
 
 			pSubSector = R_PointInSubsector( GoalPoint.x, GoalPoint.y );
-			if (( GoalPoint.z - pSubSector->sector->floorplane.ZatPoint( GoalPoint.x, GoalPoint.y )) > (( 36 * FRACUNIT ) + pPath->pActor->_f_height() ))
+			if (( GoalPoint.z - pSubSector->sector->floorplane.ZatPoint( GoalPoint.x, GoalPoint.y )) > (( 36 * FRACUNIT ) + FLOAT2FIXED ( pPath->pActor->Height ) ))
 			{
 				ReturnVal.bIsGoal = false;
 				ReturnVal.lTotalCost = 0;
@@ -438,7 +439,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 
 		// The VERY first thing we can do is test to see if there's a straight path betwen the
 		// bot and his goal.
-		if (( BOTPATH_TryWalk( pPath->pActor, pPath->pActor->_f_Pos(), GoalPoint.x, GoalPoint.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR)) == false )
+		if (( BOTPATH_TryWalk( pPath->pActor, pPath->pActor->Pos(), GoalPoint.x, GoalPoint.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR)) == false )
 		{
 			pPath->ulFlags |= PF_COMPLETE|PF_SUCCESS;
 			astar_PushNodeToStack( pPath->pGoalNode, pPath );
@@ -921,7 +922,7 @@ static bool astar_PullNodeFromOpenList( ASTARPATH_t *pPath )
 				NodePos = ASTAR_GetPositionFromIndex( pNode->lXNodeIdx, pNode->lYNodeIdx );
 				pNecessaryNodeList[lListPos++] = pNode;
 
-				if ( BOTPATH_TryWalk( pPath->pActor, NodePos.x, NodePos.y, pPath->pActor->_f_Z(), GoalPos.x, GoalPos.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR) )
+				if ( BOTPATH_TryWalk( pPath->pActor, NodePos.x, NodePos.y, FLOAT2FIXED ( pPath->pActor->Z() ), GoalPos.x, GoalPos.y ) & (BOTPATH_OBSTRUCTED|BOTPATH_DAMAGINGSECTOR) )
 				{
 					lStackPos++;
 					pNode = pPath->pNodeStack[pPath->lStackPos - lStackPos];

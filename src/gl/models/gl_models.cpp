@@ -944,7 +944,7 @@ void gl_RenderModel(GLSprite * spr)
 	if ( (smf->flags & MDL_ALIGNPITCH) )
 	{
 		const fixed_t distance = R_PointToDist2( spr->actor->_f_X() - viewx, spr->actor->_f_Y() - viewy );
-		const float pitch = RAD2DEG ( atan2( FIXED2FLOAT ( spr->actor->_f_Z() - viewz ), FIXED2FLOAT ( distance ) ) );
+		const float pitch = RAD2DEG ( atan2( spr->actor->Z() - FIXED2FLOAT ( viewz ), FIXED2FLOAT ( distance ) ) );
 		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 	}
 	else
