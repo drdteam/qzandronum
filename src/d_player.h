@@ -720,8 +720,8 @@ public:
 	bool		bSpawnOkay;
 
 	// Position/angle we died at. This is for the same spawn spot dmflag.
-	fixed_t		SpawnX;
-	fixed_t		SpawnY;
+	double		SpawnX;
+	double		SpawnY;
 	angle_t		SpawnAngle;
 
 	// Save the old pending weapon. If the current one differs, update some clients.

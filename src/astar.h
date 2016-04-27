@@ -53,7 +53,6 @@
 
 #include "actor.h"
 #include "doomtype.h"
-#include "p_effect.h"
 
 //*****************************************************************************
 //	DEFINES
@@ -97,6 +96,11 @@
 
 //*****************************************************************************
 //	STRUCTURES
+
+struct fixedvec3
+{
+	fixed_t x, y, z;
+};
 
 typedef struct ASTARNODE_s
 {

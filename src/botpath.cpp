@@ -332,8 +332,8 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 	
 	// The base floor / ceiling is from the subsector that contains the point.
 	// Any contacted lines the step closer together will adjust them.
-	g_PathSectorFloorZ = pNewSector->sector->floorplane.ZatPoint( DestX, DestY );
-	g_PathSectorCeilingZ = pNewSector->sector->ceilingplane.ZatPoint( DestX, DestY );
+	g_PathSectorFloorZ = pNewSector->sector->floorplane.ZatPointFixed( DestX, DestY );
+	g_PathSectorCeilingZ = pNewSector->sector->ceilingplane.ZatPointFixed( DestX, DestY );
 	g_pPathSector = pNewSector->sector;
 
 	validcount++;
@@ -681,7 +681,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 						{
 							// If the ceiling is too low, we can't jump there
 							// and the path is obstructed.
-							if ( FIXED2DBL ( pFrontSector->ceilingplane.ZatPoint( 0, 0 ) ) - mid3d_top < pActor->Height )
+							if ( FIXED2DBL ( pFrontSector->ceilingplane.ZatPointFixed( 0, 0 ) ) - mid3d_top < pActor->Height )
 								return ( ulFlags | BOTPATH_OBSTRUCTED );
 
 							ulFlags |= BOTPATH_JUMPABLELEDGE;
@@ -772,10 +772,10 @@ void BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fix
 	pFrontSector = pLine->frontsector;
 	pBackSector = pLine->backsector;
 
-	FrontCeiling	= pFrontSector->ceilingplane.ZatPoint( X, Y );
-	FrontFloor		= pFrontSector->floorplane.ZatPoint( X, Y );
-	BackCeiling		= pBackSector->ceilingplane.ZatPoint( X, Y );
-	BackFloor		= pBackSector->floorplane.ZatPoint( X, Y );
+	FrontCeiling	= pFrontSector->ceilingplane.ZatPointFixed( X, Y );
+	FrontFloor		= pFrontSector->floorplane.ZatPointFixed( X, Y );
+	BackCeiling		= pBackSector->ceilingplane.ZatPointFixed( X, Y );
+	BackFloor		= pBackSector->floorplane.ZatPointFixed( X, Y );
 
 	if ( FrontCeiling < BackCeiling )
 	{
@@ -945,7 +945,7 @@ static bool botpath_CheckLine( line_t *pLine )
 		}
 		else if (r >= (1<<24))
 		{
-			BOTPATH_LineOpening( pLine, sx = pLine->v2->fixX(), sy = pLine->v2->fixY(), g_pPathActor->_f_X(), g_pPathActor->_f_Y() );
+			BOTPATH_LineOpening( pLine, sx = pLine->v2->fixX(), sy = pLine->v2->fixY(), FLOAT2FIXED ( g_pPathActor->X() ), FLOAT2FIXED ( g_pPathActor->Y() ) );
 		}
 		else
 		{

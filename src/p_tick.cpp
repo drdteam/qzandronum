@@ -172,8 +172,8 @@ void P_Ticker (void)
 	{
 		fixedvec3	Position;
 
-		Position.x = players[consoleplayer].camera->_f_X();
-		Position.y = players[consoleplayer].camera->_f_Y();
+		Position.x = FLOAT2FIXED ( players[consoleplayer].camera->X() );
+		Position.y = FLOAT2FIXED ( players[consoleplayer].camera->Y() );
 		ASTAR_ShowCosts( Position );
 	}
 
@@ -188,8 +188,8 @@ void P_Ticker (void)
 			ULONG				ulFlags;
 			DHUDMessageFadeOut	*pMsg;
 
-			DestX = players[consoleplayer].camera->_f_X() + ( botdebug_walktest * finecosine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
-			DestY = players[consoleplayer].camera->_f_Y() + ( botdebug_walktest * finesine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
+			DestX = FLOAT2FIXED ( players[consoleplayer].camera->X() ) + ( botdebug_walktest * finecosine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
+			DestY = FLOAT2FIXED ( players[consoleplayer].camera->Y() ) + ( botdebug_walktest * finesine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
 
 			szString[0] = 0;
 			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->Pos(), DestX, DestY );

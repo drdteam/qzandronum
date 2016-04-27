@@ -2829,13 +2829,13 @@ fixed_t P_OldXYMovement( AActor *mo )
 */
 		if (xmove > maxmove || ymove > maxmove)
 		{
-			ptryx = mo->_f_X() + (xmove >>= 1);
-			ptryy = mo->_f_Y() + (ymove >>= 1);
+			ptryx = FLOAT2FIXED ( mo->X() ) + (xmove >>= 1);
+			ptryy = FLOAT2FIXED ( mo->Y() ) + (ymove >>= 1);
 		}
 		else
 		{
-			ptryx = mo->_f_X() + xmove;
-			ptryy = mo->_f_Y() + ymove;
+			ptryx = FLOAT2FIXED ( mo->X() ) + xmove;
+			ptryy = FLOAT2FIXED ( mo->Y() ) + ymove;
 			xmove = ymove = 0;
 		}
 

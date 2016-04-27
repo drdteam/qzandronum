@@ -3616,8 +3616,8 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorScale( ulIdx );
 		}
 
-		if (( sectors[ulIdx].SavedFloorAngle != static_cast<signed> (sectors[ulIdx].GetAngle(sector_t::floor,false)) ) ||
-			( sectors[ulIdx].SavedCeilingAngle != static_cast<signed> (sectors[ulIdx].GetAngle(sector_t::ceiling,false)) ))
+		if (( sectors[ulIdx].SavedFloorAngle != sectors[ulIdx].GetAngleF(sector_t::floor,false) ) ||
+			( sectors[ulIdx].SavedCeilingAngle != sectors[ulIdx].GetAngleF(sector_t::ceiling,false) ))
 		{
 			sectors[ulIdx].SetAngle(sector_t::floor, sectors[ulIdx].SavedFloorAngle);
 			sectors[ulIdx].SetAngle(sector_t::ceiling, sectors[ulIdx].SavedCeilingAngle);

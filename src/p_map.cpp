@@ -733,9 +733,9 @@ static int untouched(line_t *ld, FCheckPosition &tm)
 {
   fixed_t x, y, tmbbox[4];
   return 
-    (tmbbox[BOXRIGHT] = (x=tm.thing->_f_X())+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXLEFT] ) ||
+    (tmbbox[BOXRIGHT] = (x=FLOAT2FIXED ( tm.thing->X()))+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXLEFT] ) ||
     (tmbbox[BOXLEFT] = x-FLOAT2FIXED ( tm.thing->radius )) >= FLOAT2FIXED ( ld->bbox[BOXRIGHT] ) ||
-    (tmbbox[BOXTOP] = (y=tm.thing->_f_Y())+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXBOTTOM] ) ||
+    (tmbbox[BOXTOP] = (y=FLOAT2FIXED ( tm.thing->Y()))+FLOAT2FIXED ( tm.thing->radius )) <= FLOAT2FIXED ( ld->bbox[BOXBOTTOM] ) ||
     (tmbbox[BOXBOTTOM] = y-FLOAT2FIXED ( tm.thing->radius )) >= FLOAT2FIXED ( ld->bbox[BOXTOP] ) ||
     P_BoxOnLineSide(tmbbox, ld) != -1;
 }
@@ -2368,7 +2368,7 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 			// so that the renderer can properly calculate an interpolated position along the movement path.
 			if (thing == players[consoleplayer].camera)
 			{
-				divline_t dl1 = { besthit.Oldrefpos.X,besthit.Oldrefpos.Y, besthit.Refpos.X - besthit.Oldrefpos.Y, besthit.Refpos.Y - besthit.Oldrefpos.Y };
+				divline_t dl1 = { besthit.Oldrefpos.X,besthit.Oldrefpos.Y, besthit.Refpos.X - besthit.Oldrefpos.X, besthit.Refpos.Y - besthit.Oldrefpos.Y };
 				DVector3a hit = { {dl1.x + dl1.dx * bestfrac, dl1.y + dl1.dy * bestfrac, 0.},0. };
 
 				R_AddInterpolationPoint(hit);
@@ -2564,7 +2564,7 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 				bool /*onfloor*/, // [RH] Let P_TryMove keep the thing on the floor
 				FCheckPosition &tm)
 {
-	fixed_t		oldx, oldy;
+	double		oldx, oldy;
 	int 		side;
 	int 		oldside;
 
@@ -2650,12 +2650,12 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 
 	thing->UnlinkFromWorld( );
 
-	oldx = thing->_f_X();
-	oldy = thing->_f_Y();
+	oldx = thing->X();
+	oldy = thing->Y();
 	thing->floorz = tm.floorz;
 	thing->ceilingz = tm.ceilingz;
 	thing->dropoffz = tm.dropoffz;      // killough 11/98: keep track of dropoffs
-	thing->SetXY ( x, y );
+	thing->SetXY ( DVector2 ( FIXED2DBL ( x ), FIXED2DBL ( y ) ) );
 
 	thing->LinkToWorld( );
 
@@ -2667,7 +2667,7 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 		{
 			line_t *ld = spec.line;
 			// see if the line was crossed
-			side = P_PointOnLineSide (thing->_f_X(), thing->_f_Y(), ld);
+			side = P_PointOnLineSide (thing->X(), thing->Y(), ld);
 			oldside = P_PointOnLineSide (oldx, oldy, ld);
 			if (side != oldside && ld->special)
 			{
@@ -3028,7 +3028,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 	// The wall is angled. Bounce if the angle of approach is         // phares
 	// less than 45 degrees.                                          // phares
 
-	side = P_PointOnLineSide (slidemo->_f_X(), slidemo->_f_Y(), ld);
+	side = P_PointOnLineSide (slidemo->X(), slidemo->Y(), ld);
 
 	lineangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( ld->Delta().X ), FLOAT2FIXED ( ld->Delta().Y ));
 	if (side == 1)
@@ -3179,7 +3179,7 @@ void FSlide::OldSlideTraverse (fixed_t startx, fixed_t starty, fixed_t endx, fix
 
 		if ( ! (li->flags & ML_TWOSIDED) )
 		{
-			if (P_PointOnLineSide (slidemo->_f_X(), slidemo->_f_Y(), li))
+			if (P_PointOnLineSide (slidemo->X(), slidemo->Y(), li))
 				continue; // don't hit the back side
 			goto isblocking;
 		}
@@ -3375,14 +3375,14 @@ void FSlide::OldSlideMove (AActor *mo)
 
 		const fixed_t radius = FLOAT2FIXED ( mo->radius );
 		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leadx = mo->_f_X() + radius, trailx = mo->_f_X() - radius;
+			leadx = FLOAT2FIXED ( mo->X() ) + radius, trailx = FLOAT2FIXED ( mo->X() ) - radius;
 		else
-			leadx = mo->_f_X() - radius, trailx = mo->_f_X() + radius;
+			leadx = FLOAT2FIXED ( mo->X() ) - radius, trailx = FLOAT2FIXED ( mo->X() ) + radius;
 
 		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leady = mo->_f_Y() + radius, traily = mo->_f_Y() - radius;
+			leady = FLOAT2FIXED ( mo->Y() ) + radius, traily = FLOAT2FIXED ( mo->Y() ) - radius;
 		else
-			leady = mo->_f_Y() - radius, traily = mo->_f_Y() + radius;
+			leady = FLOAT2FIXED ( mo->Y() ) - radius, traily = FLOAT2FIXED ( mo->Y() ) + radius;
 
 		bestSlidefrac = FIXED2DBL ( FRACUNIT+1 );
 
@@ -3409,8 +3409,8 @@ stairstep:
 			* cph 2000/09//23: buggy code was only in Boom v2.01
 			*/
 
-			if (!P_OldTryMove(mo, mo->_f_X(), mo->_f_Y() + FLOAT2FIXED ( mo->Vel.Y ), true))
-				if (!P_OldTryMove(mo, mo->_f_X() + FLOAT2FIXED ( mo->Vel.X ), mo->_f_Y(), true))
+			if (!P_OldTryMove(mo, FLOAT2FIXED ( mo->X() ), FLOAT2FIXED ( mo->Y() ) + FLOAT2FIXED ( mo->Vel.Y ), true))
+				if (!P_OldTryMove(mo, FLOAT2FIXED ( mo->X() ) + FLOAT2FIXED ( mo->Vel.X ), FLOAT2FIXED ( mo->Y() ), true))
 					if (0)//compatibility_level == boom_201_compatibility)
 						mo->Vel.X = mo->Vel.Y = 0;
 
@@ -3426,7 +3426,7 @@ stairstep:
 
 			// killough 3/15/98: Allow objects to drop off ledges
 
-			if (!P_OldTryMove(mo, mo->_f_X()+newx, mo->_f_Y()+newy, true))
+			if (!P_OldTryMove(mo, FLOAT2FIXED ( mo->X() )+newx, FLOAT2FIXED ( mo->Y() )+newy, true))
 				goto stairstep;
 		}
 
@@ -3459,7 +3459,7 @@ stairstep:
 				mo->player->Vel.Y = tmmove.Y;
 		}
 	}  // killough 3/15/98: Allow objects to drop off ledges:
-	while (!P_OldTryMove(mo, mo->_f_X()+FLOAT2FIXED ( tmmove.X ), mo->_f_Y()+FLOAT2FIXED ( tmmove.Y ), true));
+	while (!P_OldTryMove(mo, FLOAT2FIXED ( mo->X() )+FLOAT2FIXED ( tmmove.X ), FLOAT2FIXED ( mo->Y() )+FLOAT2FIXED ( tmmove.Y ), true));
 }
 
 //*****************************************************************************

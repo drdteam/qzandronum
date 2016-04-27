@@ -2422,7 +2422,7 @@ double APlayerPawn::CalcJumpHeight( bool bAddStepZ )
 	// max step height. I guess the bare max Z value can also be of interest
 	// so the step Z an optional, yes-defaulting parameter.
 	if ( bAddStepZ )
-		z += FIXED2FLOAT ( MaxStepHeight );
+		z += MaxStepHeight;
 
 	return z;
 }

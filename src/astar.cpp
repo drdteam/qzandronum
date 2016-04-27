@@ -253,8 +253,8 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 	pPath = &g_aPaths[ulPathIdx];
 	pPath->pActor = players[ulPathIdx % MAXPLAYERS].mo;
 
-	StartPoint.x = pPath->pActor->_f_X();
-	StartPoint.y = pPath->pActor->_f_Y();
+	StartPoint.x = FLOAT2FIXED ( pPath->pActor->X() );
+	StartPoint.y = FLOAT2FIXED ( pPath->pActor->Y() );
 
 	pPath->pGoalNode = astar_GetNodeFromPoint( GoalPoint );
 	if ( pPath->pGoalNode == NULL )
@@ -405,7 +405,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			subsector_t	*pSubSector;
 
 			pSubSector = R_PointInSubsector( GoalPoint.x, GoalPoint.y );
-			if (( GoalPoint.z - pSubSector->sector->floorplane.ZatPoint( GoalPoint.x, GoalPoint.y )) > (( 36 * FRACUNIT ) + FLOAT2FIXED ( pPath->pActor->Height ) ))
+			if (( GoalPoint.z - pSubSector->sector->floorplane.ZatPointFixed( GoalPoint.x, GoalPoint.y )) > (( 36 * FRACUNIT ) + FLOAT2FIXED ( pPath->pActor->Height ) ))
 			{
 				ReturnVal.bIsGoal = false;
 				ReturnVal.lTotalCost = 0;
@@ -445,7 +445,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			astar_PushNodeToStack( pPath->pGoalNode, pPath );
 
 			ReturnVal.bIsGoal = true;
-			ReturnVal.lTotalCost = P_AproxDistance (pPath->pActor->_f_X () - GoalPoint.x, pPath->pActor->_f_Y () - GoalPoint.y);
+			ReturnVal.lTotalCost = P_AproxDistance (FLOAT2FIXED ( pPath->pActor->X () ) - GoalPoint.x, FLOAT2FIXED ( pPath->pActor->Y () ) - GoalPoint.y);
 			ReturnVal.pNode = pPath->pGoalNode;
 			ReturnVal.ulFlags = pPath->ulFlags;
 
@@ -985,8 +985,8 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 
 		if ( pPath->pCurrentNode == pPath->pStartNode )
 		{
-			CurPos.x = pPath->pActor->_f_X();
-			CurPos.y = pPath->pActor->_f_Y();
+			CurPos.x = FLOAT2FIXED ( pPath->pActor->X() );
+			CurPos.y = FLOAT2FIXED ( pPath->pActor->Y() );
 		}
 		else
 			CurPos = pPath->pCurrentNode->Position;
@@ -1030,7 +1030,7 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 			return;
 		}
 */
-		ulResults = BOTPATH_TryWalk( pPath->pActor, CurPos.x, CurPos.y, pSector->floorplane.ZatPoint( CurPos.x, CurPos.y ), DestPos.x, DestPos.y );
+		ulResults = BOTPATH_TryWalk( pPath->pActor, CurPos.x, CurPos.y, pSector->floorplane.ZatPointFixed( CurPos.x, CurPos.y ), DestPos.x, DestPos.y );
 		if (( ulResults & BOTPATH_OBSTRUCTED ) || (( pPath->pActor->player->pSkullBot->m_ulPathType == BOTPATHTYPE_ROAM ) && ( ulResults & BOTPATH_DAMAGINGSECTOR )))
 			return;
 

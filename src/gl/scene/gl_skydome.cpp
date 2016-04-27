@@ -41,6 +41,7 @@
 #include "sc_man.h"
 #include "w_wad.h"
 #include "r_state.h"
+#include "r_utility.h"
 //#include "gl/gl_intern.h"
 
 #include "gl/system/gl_interface.h"
@@ -276,7 +277,7 @@ void RenderDome(FMaterial * tex, float x_offset, float y_offset, bool mirror, in
 		gl_RenderState.mModelMatrix.loadIdentity();
 		gl_RenderState.mModelMatrix.rotate(-180.0f+x_offset, 0.f, 1.f, 0.f);
 
-		float xscale = 1024.f / float(texw);
+		float xscale = texw < 1024.f ? floor(1024.f / float(texw)) : 1.f;
 		float yscale = 1.f;
 		if (texh < 128)
 		{
@@ -492,7 +493,7 @@ void GLSkyPortal::DrawContents()
 	bool oldClamp = gl_RenderState.SetDepthClamp(true);
 
 	gl_MatrixStack.Push(gl_RenderState.mViewMatrix);
-	GLRenderer->SetupView(0, 0, 0, viewangle, !!(MirrorFlag&1), !!(PlaneMirrorFlag&1));
+	GLRenderer->SetupView(0, 0, 0, ViewAngle, !!(MirrorFlag&1), !!(PlaneMirrorFlag&1));
 
 	if (origin->texture[0] && origin->texture[0]->tex->gl_info.bSkybox)
 	{

@@ -2400,7 +2400,7 @@ FUNC(LS_Sector_SetTranslucent)
 		FSectorTagIterator itr(arg0);
 		while ((secnum = itr.Next()) >= 0)
 		{
-			sectors[secnum].SetAlpha(arg1, Scale(arg2, OPAQUE, 255));
+			sectors[secnum].SetAlpha(arg1, clamp(arg2, 0, 255) / 255.);
 			sectors[secnum].ChangeFlags(arg1, ~PLANEF_ADDITIVE, arg3? PLANEF_ADDITIVE:0);
 		}
 		return true;
@@ -2717,9 +2717,9 @@ FUNC(LS_Sector_SetFloorScale2)
 	while ((secnum = itr.Next()) >= 0)
 	{
 		if (arg1)
-			sectors[secnum].SetXScale(sector_t::floor, arg1);
+			sectors[secnum].SetXScale(sector_t::floor, xscale);
 		if (arg2)
-			sectors[secnum].SetYScale(sector_t::floor, arg2);
+			sectors[secnum].SetYScale(sector_t::floor, yscale);
 
 		// [BC] Tell clients about the scale update.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -2743,9 +2743,9 @@ FUNC(LS_Sector_SetCeilingScale2)
 	while ((secnum = itr.Next()) >= 0)
 	{
 		if (arg1)
-			sectors[secnum].SetXScale(sector_t::ceiling, arg1);
+			sectors[secnum].SetXScale(sector_t::ceiling, xscale);
 		if (arg2)
-			sectors[secnum].SetYScale(sector_t::ceiling, arg2);
+			sectors[secnum].SetYScale(sector_t::ceiling, yscale);
 
 		// [BC] Tell clients about the scale update.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

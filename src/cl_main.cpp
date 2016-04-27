@@ -9114,8 +9114,8 @@ static void client_SetSectorRotation( BYTESTREAM_s *pByteStream, bool bIdentifyS
 
 		while ((secnum = itr.Next()) >= 0)
 		{
-			sectors[secnum].SetAngle(sector_t::floor, lFloorRotation * ANGLE_1);
-			sectors[secnum].SetAngle(sector_t::ceiling, lCeilingRotation * ANGLE_1);
+			sectors[secnum].SetAngle(sector_t::floor, AngleToFloat ( lFloorRotation * ANGLE_1 ));
+			sectors[secnum].SetAngle(sector_t::ceiling, AngleToFloat ( lCeilingRotation * ANGLE_1 ));
 		}
 	}
 	else
@@ -9129,8 +9129,8 @@ static void client_SetSectorRotation( BYTESTREAM_s *pByteStream, bool bIdentifyS
 		}
 
 		// Finally, set the rotation.
-		pSector->SetAngle(sector_t::ceiling, ( lCeilingRotation * ANGLE_1 ) );
-		pSector->SetAngle(sector_t::floor, ( lFloorRotation * ANGLE_1 ) );
+		pSector->SetAngle(sector_t::ceiling, ( AngleToFloat ( lCeilingRotation * ANGLE_1 ) ));
+		pSector->SetAngle(sector_t::floor, ( AngleToFloat ( lFloorRotation * ANGLE_1 ) ));
 	}
 }
 

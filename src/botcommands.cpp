@@ -1225,8 +1225,8 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 
 	Angle >>= ANGLETOFINESHIFT;
 
-	DestX = pBot->GetPlayer( )->mo->_f_X() * finecosine[Angle];
-	DestY = pBot->GetPlayer( )->mo->_f_Y() * finesine[Angle];
+	DestX = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) * finecosine[Angle];
+	DestY = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) * finesine[Angle];
 
 	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), DestX, DestY );
 }
@@ -1306,8 +1306,8 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
@@ -1419,8 +1419,8 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
@@ -1500,7 +1500,7 @@ static void botcmd_Roam( CSkullBot *pBot )
 		pBot->m_pGoalActor = NULL;
 
 		// Select a random map location to roam to.
-		ASTAR_SelectRandomMapLocation( &pBot->m_PathGoalPos, pBot->GetPlayer( )->mo->_f_X(), pBot->GetPlayer( )->mo->_f_Y() );
+		ASTAR_SelectRandomMapLocation( &pBot->m_PathGoalPos, FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ), FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) );
 	}
 
 	ReturnVal = ASTAR_Path( pBot->GetPlayer( ) - players, pBot->m_PathGoalPos, botdebug_maxsearchnodes, botdebug_maxroamgiveupnodes );
@@ -1548,8 +1548,8 @@ static void botcmd_Roam( CSkullBot *pBot )
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
 	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = pBot->GetPlayer( )->mo->_f_X() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = pBot->GetPlayer( )->mo->_f_Y() + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
@@ -1609,8 +1609,8 @@ static void botcmd_GetPathingCostToItem( CSkullBot *pBot )
 		return;
 	}
 
-	GoalPos.x = pActor->_f_X();
-	GoalPos.y = pActor->_f_Y();
+	GoalPos.x = FLOAT2FIXED ( pActor->X() );
+	GoalPos.y = FLOAT2FIXED ( pActor->Y() );
 
 	ASTAR_ClearPath(( pBot->GetPlayer( ) - players ) + MAXPLAYERS );
 

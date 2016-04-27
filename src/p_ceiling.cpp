@@ -284,7 +284,7 @@ void DCeiling::Tick ()
 				case ceilLowerAndCrush:
 					if (m_CrushMode == ECrushMode::crushSlowdown)
 					{
-						m_Speed = FRACUNIT / 8;
+						m_Speed = 1. / 8;
 
 						// [BC] If we're the server, tell clients to change the ceiling's speed.
 						if ( NETWORK_GetState( ) == NETSTATE_SERVER )

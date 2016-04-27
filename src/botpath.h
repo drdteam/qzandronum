@@ -53,7 +53,7 @@
 
 #include "actor.h"
 #include "r_defs.h"
-#include "p_effect.h"
+#include "astar.h"
 
 //*****************************************************************************
 //	DEFINES
