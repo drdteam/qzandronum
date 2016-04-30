@@ -8764,7 +8764,7 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 
 	// [BB] For now the client doesn't know about portal hits, so just use an empty array.
 	TArray<SPortalHit> portalhits;
-	P_DrawRailTrail( source, start, portalhits, end, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
+	P_DrawRailTrail( source/*, start*/, portalhits/*, end*/, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
 }
 
 //*****************************************************************************

@@ -87,27 +87,9 @@ struct FTraceResults
 	DVector3 CrossedWaterPos;	// remember the position so that we can use it for spawning the splash
 	F3DFloor *Crossed3DWater;	// For 3D floor-based deep water
 	DVector3 Crossed3DWaterPos;
-
 	// [BB] If Actor was reconciled while hit, we store the reconciliation offset here.
 	TVector3<double> unlaggedHitOffset;
 
-	void CopyIfCloser(FTraceResults *other)
-	{
-		if (other->Distance < Distance || HitType == TRACE_HitNone)
-		{
-			memcpy(this, other, myoffsetof(FTraceResults, CrossedWater));
-		}
-		if (CrossedWater == NULL && other->CrossedWater != NULL)
-		{
-			CrossedWater = other->CrossedWater;
-			CrossedWaterPos = other->CrossedWaterPos;
-		}
-		if (Crossed3DWater == NULL && other->Crossed3DWater != NULL)
-		{
-			Crossed3DWater = other->Crossed3DWater;
-			Crossed3DWaterPos = other->Crossed3DWaterPos;
-		}
-	}
 };
 	
 
