@@ -144,6 +144,40 @@ struct FRemapTable;
 class player_t;
 typedef uint32 angle_t;
 
+struct DrawParms
+{
+	double x, y;
+	double texwidth;
+	double texheight;
+	double destwidth;
+	double destheight;
+	double virtWidth;
+	double virtHeight;
+	double windowleft;
+	double windowright;
+	int dclip;
+	int uclip;
+	int lclip;
+	int rclip;
+	double top;
+	double left;
+	float Alpha;
+	uint32 fillcolor;
+	FRemapTable *remap;
+	const BYTE *translation;
+	uint32 colorOverlay;
+	INTBOOL alphaChannel;
+	INTBOOL flipX;
+	fixed_t shadowAlpha;
+	int shadowColor;
+	INTBOOL keepratio;
+	INTBOOL masked;
+	INTBOOL bilinear;
+	FRenderStyle style;
+	struct FSpecialColormap *specialcolormap;
+	struct FColormapStyle *colormapstyle;
+};
+
 //
 // VIDEO
 //
@@ -229,40 +263,6 @@ public:
 	void DrawTextV (FFont *font, int normalcolor, int x, int y, const char *string, va_list tags);
 	void STACK_ARGS DrawChar (FFont *font, int normalcolor, int x, int y, BYTE character, ...);
 
-	struct DrawParms
-	{
-		double x, y;
-		double texwidth;
-		double texheight;
-		double destwidth;
-		double destheight;
-		double virtWidth;
-		double virtHeight;
-		double windowleft;
-		double windowright;
-		int dclip;
-		int uclip;
-		int lclip;
-		int rclip;
-		double top;
-		double left;
-		float Alpha;
-		uint32 fillcolor;
-		FRemapTable *remap;
-		const BYTE *translation;
-		uint32 colorOverlay;
-		INTBOOL alphaChannel;
-		INTBOOL flipX;
-		fixed_t shadowAlpha;
-		int shadowColor;
-		INTBOOL keepratio;
-		INTBOOL masked;
-		INTBOOL bilinear;
-		FRenderStyle style;
-		struct FSpecialColormap *specialcolormap;
-		struct FColormapStyle *colormapstyle;
-	};
-
 protected:
 	BYTE *Buffer;
 	int Width;
@@ -271,8 +271,9 @@ protected:
 	int LockCount;
 
 	bool ClipBox (int &left, int &top, int &width, int &height, const BYTE *&src, const int srcpitch) const;
-	virtual void STACK_ARGS DrawTextureV (FTexture *img, double x, double y, uint32 tag, va_list tags);
-	bool ParseDrawTextureTags (FTexture *img, double x, double y, uint32 tag, va_list tags, DrawParms *parms, bool hw) const;
+	void DrawTextureV(FTexture *img, double x, double y, uint32 tag, va_list tags) = delete;
+	virtual void DrawTextureParms(FTexture *img, double x, double y, DrawParms &parms);
+	bool ParseDrawTextureTags (FTexture *img, double x, double y, uint32 tag, va_list tags, DrawParms *parms, bool fortext) const;
 
 	DCanvas() {}
 

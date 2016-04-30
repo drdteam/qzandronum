@@ -68,6 +68,8 @@ struct FTraceInfo
 	double startfrac;
 	int aimdir;
 	double limitz;
+	double lastfloorportalheight;
+	double lastceilingportalheight;
 
 	// These are required for 3D-floor checking
 	// to create a fake sector with a floor 
@@ -143,6 +145,7 @@ bool Trace(const DVector3 &start, sector_t *sector, const DVector3 &direction, d
 	inf.sectorsel=0;
 	inf.aimdir = -1;
 	inf.startfrac = 0;
+	inf.lastfloorportalheight = inf.lastceilingportalheight = start.Z;
 	memset(&res, 0, sizeof(res));
 
 	if (inf.TraceTraverse (ptflags))
@@ -200,6 +203,7 @@ void FTraceInfo::EnterSectorPortal(int position, double frac, sector_t *entersec
 	newtrace.aimdir = position;
 	newtrace.limitz = portal->specialf1;
 	newtrace.sectorsel = 0;
+	newtrace.lastfloorportalheight = newtrace.lastceilingportalheight = limitz;
 
 	if (newtrace.TraceTraverse(ActorMask ? PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBLE : PT_ADDLINES))
 	{
@@ -231,7 +235,7 @@ int FTraceInfo::EnterLinePortal(line_t *li, double frac)
 
 	frac += 1 / MaxDist;
 	double enterdist = MaxDist / frac;
-	DVector2 enter = newtrace.Start.XY() + enterdist * Vec.XY();
+	DVector2 enter = newtrace.Start + enterdist * Vec;
 
 	newtrace.ActorMask = ActorMask;
 	newtrace.WallMask = WallMask;
@@ -248,7 +252,9 @@ int FTraceInfo::EnterLinePortal(line_t *li, double frac)
 	newtrace.startfrac = frac;
 	newtrace.aimdir = aimdir;
 	newtrace.limitz = limitz;
+
 	P_TranslatePortalZ(li, newtrace.limitz);
+	newtrace.lastfloorportalheight = newtrace.lastceilingportalheight = newtrace.limitz;
 	newtrace.sectorsel = 0;
 	Results->unlinked = true;
 	return newtrace.TraceTraverse(ActorMask ? PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBLE : PT_ADDLINES);
@@ -446,11 +452,24 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 			Results->HitType = TRACE_HitFloor;
 			Results->HitTexture = CurSector->GetTexture(sector_t::floor);
 		}
-		else if (entersector == NULL || entersector->PortalBlocksMovement(sector_t::floor))
+		else
 		{
-			// hit beyond a portal plane. This needs to be taken care of by the trace spawned on the other side.
-			Results->HitType = TRACE_HitNone;
-			return false;
+			if ((TraceFlags & TRACE_ReportPortals) && lastfloorportalheight > fc)
+			{
+				lastfloorportalheight = fc;
+				if (TraceCallback != NULL)
+				{
+					// Todo: calculate the intersection point.
+					Results->HitType = TRACE_CrossingPortal;
+					TraceCallback(*Results, TraceCallbackData);
+				}
+			}
+			if (entersector == NULL || entersector->PortalBlocksMovement(sector_t::floor))
+			{
+				// hit beyond a portal plane. This needs to be taken care of by the trace spawned on the other side.
+				Results->HitType = TRACE_HitNone;
+				return false;
+			}
 		}
 	}
 	else if (hit.Z >= fc)
@@ -461,11 +480,24 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 			Results->HitType = TRACE_HitCeiling;
 			Results->HitTexture = CurSector->GetTexture(sector_t::ceiling);
 		}
-		else if (entersector == NULL || entersector->PortalBlocksMovement(sector_t::ceiling))
+		else
 		{
-			// hit beyond a portal plane. This needs to be taken care of by the trace spawned on the other side.
-			Results->HitType = TRACE_HitNone;
-			return false;
+			if ((TraceFlags & TRACE_ReportPortals) && lastceilingportalheight < fc)
+			{
+				lastceilingportalheight = fc;
+				if (TraceCallback != NULL)
+				{
+					// Todo: calculate the intersection point.
+					Results->HitType = TRACE_CrossingPortal;
+					TraceCallback(*Results, TraceCallbackData);
+				}
+			}
+			if (entersector == NULL || entersector->PortalBlocksMovement(sector_t::ceiling))
+			{
+				// hit beyond a portal plane. This needs to be taken care of by the trace spawned on the other side.
+				Results->HitType = TRACE_HitNone;
+				return false;
+			}
 		}
 	}
 	else if (in->d.line->isLinePortal())
