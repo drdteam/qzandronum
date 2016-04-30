@@ -1,6 +1,6 @@
 /*
-** gl_stereo_leftright.cpp
-** Offsets for left and right eye views
+** gl_quadstereo.cpp
+** Quad-buffered OpenGL stereoscopic 3D mode for GZDoom
 **
 **---------------------------------------------------------------------------
 ** Copyright 2015 Christopher Bruns
@@ -33,70 +33,35 @@
 **
 */
 
-#include "gl_stereo_leftright.h"
-#include "vectors.h" // RAD2DEG
-#include "doomtype.h" // M_PI
-#include "gl/system/gl_cvars.h"
-#include "gl/renderer/gl_renderer.h"
-#include <cmath>
-
-EXTERN_CVAR(Float, vr_screendist)
-EXTERN_CVAR(Float, vr_hunits_per_meter)
+#include "gl_quadstereo.h"
 
 namespace s3d {
 
-
-/* virtual */
-VSMatrix ShiftedEyePose::GetProjection(FLOATTYPE fov, FLOATTYPE aspectRatio, FLOATTYPE fovRatio) const
+QuadStereo::QuadStereo(double ipdMeters)
+	: leftEye(ipdMeters), rightEye(ipdMeters)
 {
-	double zNear = 5.0;
-	double zFar = 65536.0;
+	// Check whether quad-buffered stereo is supported in the current context
+	// We are assuming the OpenGL context is already current at this point,
+	// i.e. this constructor is called "just in time".
+	GLboolean supportsStereo, supportsBuffered;
+	glGetBooleanv(GL_STEREO, &supportsStereo);
+	glGetBooleanv(GL_DOUBLEBUFFER, &supportsBuffered);
+	bool bQuadStereoSupported = supportsStereo && supportsBuffered;
+	leftEye.bQuadStereoSupported = bQuadStereoSupported;
+	rightEye.bQuadStereoSupported = bQuadStereoSupported;
 
-	// For stereo 3D, use asymmetric frustum shift in projection matrix
-	// Q: shouldn't shift vary with roll angle, at least for desktop display?
-	// A: No. (lab) roll is not measured on desktop display (yet)
-	double frustumShift = zNear * shift / vr_screendist; // meters cancel, leaving doom units
-	// double frustumShift = 0; // Turning off shift for debugging
-	double fH = zNear * tan(DEG2RAD(fov) / 2) / fovRatio;
-	double fW = fH * aspectRatio;
-	double left = -fW - frustumShift;
-	double right = fW - frustumShift;
-	double bottom = -fH;
-	double top = fH;
-
-	VSMatrix result(1);
-	result.frustum(left, right, bottom, top, zNear, zFar);
-	return result;
+	eye_ptrs.Push(&leftEye);
+	// If stereo is not supported, just draw scene once (left eye view only)
+	if (bQuadStereoSupported) {
+		eye_ptrs.Push(&rightEye);
+	}
 }
-
-
-/* virtual */
-void ShiftedEyePose::GetViewShift(FLOATTYPE yaw, FLOATTYPE outViewShift[3]) const
-{
-	FLOATTYPE dx = -cos(DEG2RAD(yaw)) * vr_hunits_per_meter * shift;
-	FLOATTYPE dy = sin(DEG2RAD(yaw)) * vr_hunits_per_meter * shift;
-	outViewShift[0] = dx;
-	outViewShift[1] = dy;
-	outViewShift[2] = 0;
-}
-
 
 /* static */
-const LeftEyeView& LeftEyeView::getInstance(FLOATTYPE ipd)
+const QuadStereo& QuadStereo::getInstance(float ipd)
 {
-	static LeftEyeView instance(ipd);
-	instance.setIpd(ipd);
+	static QuadStereo instance(ipd);
 	return instance;
 }
-
-
-/* static */
-const RightEyeView& RightEyeView::getInstance(FLOATTYPE ipd)
-{
-	static RightEyeView instance(ipd);
-	instance.setIpd(ipd);
-	return instance;
-}
-
 
 } /* namespace s3d */

@@ -1181,6 +1181,7 @@ set( FASTMATH_SOURCES
 	r_data/colormaps.cpp
 	r_data/r_translate.cpp
 	${GL_SOURCES}
+	gl/stereo3d/gl_quadstereo.cpp
 )
 add_executable( zdoom WIN32 MACOSX_BUNDLE
 	${HEADER_FILES}
