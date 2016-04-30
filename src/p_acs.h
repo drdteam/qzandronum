@@ -331,6 +331,8 @@ enum
 	APROP_StencilColor	= 41,
 	APROP_Friction		= 42,
 	APROP_DamageMultiplier=43,
+	APROP_MaxStepHeight	= 44,
+	APROP_MaxDropOffHeight= 45,
 };	
 
 // [Dusk] Enumeration for GetTeamProperty

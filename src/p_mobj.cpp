@@ -7614,8 +7614,7 @@ AActor *P_SpawnPlayerMissile (AActor *source, double x, double y, double z,
 							  PClassActor *type, DAngle angle, FTranslatedLineTarget *pLineTarget, AActor **pMissileActor,
 							  bool nofreeaim, bool noautoaim, int aimflags, bool bSpawnSound, bool bSpawnOnClient)
 {
-	//static const double angdiff[3] = { -5.625, 5.625, 0 };
-	static const int angdiff[3] = { -(1<<26), 1<<26, 0 };
+	static const double angdiff[3] = { -5.625, 5.625, 0 };
 	DAngle an = angle;
 	DAngle pitch;
 	FTranslatedLineTarget scratch;
