@@ -166,7 +166,7 @@ void DElevator::SetCeilingDestDist( LONG lDestDist )
 
 void DFloor::Tick ()
 {
-	EResult res;
+	EMoveResult res;
 
 	// [RH] Handle resetting stairs
 	if (m_Type == buildStair || m_Type == waitStair)
@@ -198,7 +198,7 @@ void DFloor::Tick ()
 	if (m_Type == waitStair)
 		return;
 
-	res = MoveFloor (m_Speed, m_FloorDestDist, m_Crush, m_Direction, m_Hexencrush);
+	res = m_Sector->MoveFloor (m_Speed, m_FloorDestDist, m_Crush, m_Direction, m_Hexencrush);
 
 	// [BC] If we're in client mode, just move the floor and get out. The server will
 	// tell us when it stops.
@@ -207,7 +207,7 @@ void DFloor::Tick ()
 		return;
 	}
 
-	if (res == pastdest)
+	if (res == EMoveResult::pastdest)
 	{
 		// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 		// have the correct floor/ceiling height for this sector.
@@ -1239,7 +1239,7 @@ void DElevator::Destroy()
 
 void DElevator::Tick ()
 {
-	EResult res;
+	EMoveResult res;
 
 	double oldfloor, oldceiling;
 
@@ -1248,25 +1248,25 @@ void DElevator::Tick ()
 
 	if (m_Direction < 0)	// moving down
 	{
-		res = MoveFloor (m_Speed, m_FloorDestDist, m_Direction);
-		if (res == ok || res == pastdest)
+		res = m_Sector->MoveFloor (m_Speed, m_FloorDestDist, m_Direction);
+		if (res == EMoveResult::ok || res == EMoveResult::pastdest)
 		{
-			res = MoveCeiling (m_Speed, m_CeilingDestDist, m_Direction);
-			if (res == crushed)
+			res = m_Sector->MoveCeiling (m_Speed, m_CeilingDestDist, m_Direction);
+			if (res == EMoveResult::crushed)
 			{
-				MoveFloor (m_Speed, oldfloor, -m_Direction);
+				m_Sector->MoveFloor (m_Speed, oldfloor, -m_Direction);
 			}
 		}
 	}
 	else // up
 	{
-		res = MoveCeiling (m_Speed, m_CeilingDestDist, m_Direction);
-		if (res == ok || res == pastdest)
+		res = m_Sector->MoveCeiling (m_Speed, m_CeilingDestDist, m_Direction);
+		if (res == EMoveResult::ok || res == EMoveResult::pastdest)
 		{
-			res = MoveFloor (m_Speed, m_FloorDestDist, m_Direction);
-			if (res == crushed)
+			res = m_Sector->MoveFloor (m_Speed, m_FloorDestDist, m_Direction);
+			if (res == EMoveResult::crushed)
 			{
-				MoveCeiling (m_Speed, oldceiling, -m_Direction);
+				m_Sector->MoveCeiling (m_Speed, oldceiling, -m_Direction);
 			}
 		}
 	}
@@ -1277,7 +1277,7 @@ void DElevator::Tick ()
 		return;
 	}
 
-	if (res == pastdest)	// if destination height acheived
+	if (res == EMoveResult::pastdest)	// if destination height acheived
 	{
 		// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 		// have the correct floor/ceiling height for this sector.

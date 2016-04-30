@@ -100,18 +100,18 @@ void DPlat::PlayPlatSound (const char *sound)
 //
 void DPlat::Tick ()
 {
-	EResult res;
+	EMoveResult res;
 		
 	switch (m_Status)
 	{
 	case up:
-		res = MoveFloor (m_Speed, m_High, m_Crush, 1, false);
+		res = m_Sector->MoveFloor (m_Speed, m_High, m_Crush, 1, false);
 		
 		// [BC] That's all we need to do in client mode.
 		if ( NETWORK_InClientMode() )
 			break;
 
-		if (res == crushed && (m_Crush == -1))
+		if (res == EMoveResult::crushed && (m_Crush == -1))
 		{
 			m_Count = m_Wait;
 			m_Status = down;
@@ -124,7 +124,7 @@ void DPlat::Tick ()
 				SERVERCOMMANDS_PlayPlatSound( m_lPlatID, 1 );
 			}
 		}
-		else if (res == pastdest)
+		else if (res == EMoveResult::pastdest)
 		{
 			// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 			// have the correct floor/ceiling height for this sector.
@@ -184,13 +184,13 @@ void DPlat::Tick ()
 		}
 		break;
 	case down:
-		res = MoveFloor (m_Speed, m_Low, -1, -1, false);
+		res = m_Sector->MoveFloor (m_Speed, m_Low, -1, -1, false);
 
 		// [BC] That's all we need to do in client mode.
 		if ( NETWORK_InClientMode() )
 			break;
 
-		if (res == pastdest)
+		if (res == EMoveResult::pastdest)
 		{
 			// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 			// have the correct floor/ceiling height for this sector.
@@ -246,7 +246,7 @@ void DPlat::Tick ()
 					SERVERCOMMANDS_ChangePlatStatus( m_lPlatID, m_Status );
 			}
 		}
-		else if (res == crushed && m_Crush < 0 && m_Type != platToggle)
+		else if (res == EMoveResult::crushed && m_Crush < 0 && m_Type != platToggle)
 		{
 			m_Status = up;
 			m_Count = m_Wait;

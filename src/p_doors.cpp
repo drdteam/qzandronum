@@ -86,7 +86,7 @@ void DDoor::Serialize (FArchive &arc)
 
 void DDoor::Tick ()
 {
-	EResult res;
+	EMoveResult res;
 
 	// Adjust bottom height - but only if there isn't an active lift attached to the floor.
 	if (m_Sector->floorplane.fD() != m_OldFloorDist)
@@ -172,7 +172,7 @@ void DDoor::Tick ()
 		
 	case -1:
 		// DOWN
-		res = MoveCeiling (m_Speed, m_BotDist, -1, m_Direction, false);
+		res = m_Sector->MoveCeiling (m_Speed, m_BotDist, -1, m_Direction, false);
 
 		// killough 10/98: implement gradual lighting effects
 		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.fD())
@@ -186,7 +186,7 @@ void DDoor::Tick ()
 		if ( NETWORK_InClientMode() )
 			break;
 
-		if (res == pastdest)
+		if (res == EMoveResult::pastdest)
 		{
 			// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 			// have the correct floor/ceiling height for this sector.
@@ -229,7 +229,7 @@ void DDoor::Tick ()
 				break;
 			}
 		}
-		else if (res == crushed)
+		else if (res == EMoveResult::crushed)
 		{
 			switch (m_Type)
 			{
@@ -251,7 +251,7 @@ void DDoor::Tick ()
 		
 	case 1:
 		// UP
-		res = MoveCeiling (m_Speed, m_TopDist, -1, m_Direction, false);
+		res = m_Sector->MoveCeiling (m_Speed, m_TopDist, -1, m_Direction, false);
 		
 		// killough 10/98: implement gradual lighting effects
 		if (m_LightTag != 0 && m_TopDist != -m_Sector->floorplane.fD())
@@ -265,7 +265,7 @@ void DDoor::Tick ()
 		if ( NETWORK_InClientMode() )
 			break;
 
-		if (res == pastdest)
+		if (res == EMoveResult::pastdest)
 		{
 			// [BC] If the sector has reached its destination, this is probably a good time to verify all the clients
 			// have the correct floor/ceiling height for this sector.
@@ -308,7 +308,7 @@ void DDoor::Tick ()
 				break;
 			}
 		}
-		else if (res == crushed)
+		else if (res == EMoveResult::crushed)
 		{
 			switch (m_Type)
 			{
@@ -802,12 +802,12 @@ bool DAnimatedDoor::StartClosing ()
 	}
 
 	double topdist = m_Sector->ceilingplane.fD();
-	if (MoveCeiling (2048., m_BotDist, 0, -1, false) == crushed)
+	if (m_Sector->MoveCeiling (2048., m_BotDist, 0, -1, false) == EMoveResult::crushed)
 	{
 		return false;
 	}
 
-	MoveCeiling (2048., topdist, 1);
+	m_Sector->MoveCeiling (2048., topdist, 1);
 
 	m_Line1->flags |= ML_BLOCKING;
 	m_Line2->flags |= ML_BLOCKING;
@@ -926,7 +926,7 @@ void DAnimatedDoor::Tick ()
 			if (--m_Frame < 0)
 			{
 				// IF DOOR IS DONE CLOSING...
-				MoveCeiling (2048., m_BotDist, -1);
+				m_Sector->MoveCeiling (2048., m_BotDist, -1);
 
 				// [BC] If we're the server, tell clients to move the ceiling.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1048,7 +1048,7 @@ DAnimatedDoor::DAnimatedDoor (sector_t *sec, line_t *line, int speed, int delay,
 	}
 
 	m_BotDist = m_Sector->ceilingplane.fD();
-	MoveCeiling (2048., topdist, 1);
+	m_Sector->MoveCeiling (2048., topdist, 1);
 	if (m_DoorAnim->OpenSound != NAME_None)
 	{
 		SN_StartSequence (m_Sector, CHAN_INTERIOR, m_DoorAnim->OpenSound, 1);
