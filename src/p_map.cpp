@@ -5562,7 +5562,7 @@ CUSTOM_CVAR(Float, chase_dist, 90.f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 		self = 0;
 }
 
-void P_AimCamera(AActor *t1, DVector3 &campos, sector_t *&CameraSector, bool &unlinked)
+void P_AimCamera(AActor *t1, DVector3 &campos, DAngle &camangle, sector_t *&CameraSector, bool &unlinked)
 {
 	double distance = clamp<double>(chase_dist, 0, 30000);
 	DAngle angle = t1->Angles.Yaw - 180;
@@ -5588,6 +5588,7 @@ void P_AimCamera(AActor *t1, DVector3 &campos, sector_t *&CameraSector, bool &un
 	}
 	CameraSector = trace.Sector;
 	unlinked = trace.unlinked;
+	camangle = trace.SrcAngleFromTarget - 180.;
 }
 
 

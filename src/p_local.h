@@ -374,7 +374,7 @@ bool	P_CheckMissileSpawn(AActor *missile, double maxdist, bool bExplode = true);
 void	P_PlaySpawnSound(AActor *missile, AActor *spawner);
 
 // [RH] Position the chasecam
-void	P_AimCamera (AActor *t1, DVector3 &, sector_t *&sec, bool &unlinked);
+void	P_AimCamera (AActor *t1, DVector3 &, DAngle &, sector_t *&sec, bool &unlinked);
 
 // [RH] Means of death
 enum
