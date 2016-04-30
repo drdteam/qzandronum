@@ -509,6 +509,7 @@ void AActor::LinkToWorld(bool spawningmapthing, sector_t *sector)
 			}
 		}
 	}
+	UpdateRenderSectorList();
 }
 
 void AActor::SetOrigin(double x, double y, double z, bool moving)
