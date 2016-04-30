@@ -4741,6 +4741,9 @@ void AActor::Tick ()
 	if (!CheckNoDelay())
 		return; // freed itself
 	// cycle through states, calling action functions at transitions
+
+	UpdateRenderSectorList();
+
 	if (tics != -1)
 	{
 		// [RH] Use tics <= 0 instead of == 0 so that spawnstates
@@ -5111,6 +5114,7 @@ AActor *AActor::StaticSpawn (PClassActor *type, const DVector3 &pos, replace_t a
 	actor->lastY = FLOAT2FIXED ( actor->Y() );
 	actor->lastZ = FLOAT2FIXED ( actor->Z() );
 
+	actor->OldRenderPos = { FLT_MAX, FLT_MAX, FLT_MAX };
 	actor->picnum.SetInvalid();
 	actor->health = actor->SpawnHealth();
 
@@ -5483,6 +5487,8 @@ bool AActor::IsActive( void ) const
 
 void AActor::Destroy ()
 {
+	ClearRenderSectorList();
+
 	// [BC/BB] Free it's network ID.
 	g_NetIDList.freeID ( lNetID );
 

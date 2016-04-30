@@ -4110,8 +4110,6 @@ void P_PredictPlayer (player_t *player)
 }
 */
 
-extern msecnode_t *P_AddSecnode (sector_t *s, AActor *thing, msecnode_t *nextnode);
-
 /*
 void P_UnPredictPlayer ()
 {
@@ -4173,7 +4171,7 @@ void P_UnPredictPlayer ()
 			sector_list = NULL;
 			for (i = PredictionTouchingSectorsBackup.Size(); i-- > 0;)
 			{
-				sector_list = P_AddSecnode(PredictionTouchingSectorsBackup[i], act, sector_list);
+				sector_list = P_AddSecnode(PredictionTouchingSectorsBackup[i], act, sector_list, PredictionTouchingSectorsBackup[i]->touching_thinglist);
 			}
 			act->touching_sectorlist = sector_list;	// Attach to thing
 			sector_list = NULL;		// clear for next time
@@ -4185,7 +4183,7 @@ void P_UnPredictPlayer ()
 				{
 					if (node == sector_list)
 						sector_list = node->m_tnext;
-					node = P_DelSecnode(node);
+					node = P_DelSecnode(node, &sector_t::touching_thinglist);
 				}
 				else
 				{

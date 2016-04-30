@@ -261,10 +261,6 @@ else()
 	endif( NO_GL )
 endif()
 
-if( X64 )
-	set( NO_ASM ON )
-endif( X64 )
-
 # Check if we have OpenGL
 # [BB] Only if necessary
 if( NOT NO_GL )

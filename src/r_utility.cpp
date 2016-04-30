@@ -956,6 +956,7 @@ void R_SetupFrame (AActor *actor)
 		{
 			iview->otic = nowtic;
 			iview->Old = iview->New;
+			r_NoInterpolate = true;
 		}
 	}
 	else
