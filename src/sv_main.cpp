@@ -126,6 +126,7 @@
 #include "a_morph.h"
 #include "p_pusher.h"
 #include "p_scroll.h"
+#include "p_lights.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING

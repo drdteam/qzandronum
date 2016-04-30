@@ -117,6 +117,7 @@
 #include "network_enums.h"
 #include "decallib.h"
 #include "p_pusher.h"
+#include "p_lights.h"
 
 //*****************************************************************************
 //	MISC CRAP THAT SHOULDN'T BE HERE BUT HAS TO BE BECAUSE OF SLOPPY CODING
@@ -8761,7 +8762,9 @@ static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	P_DrawRailTrail( source, start, end, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
+	// [BB] For now the client doesn't know about portal hits, so just use an empty array.
+	TArray<SPortalHit> portalhits;
+	P_DrawRailTrail( source, start, portalhits, end, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
 }
 
 //*****************************************************************************

@@ -29,6 +29,7 @@
 #include "p_local.h"
 #include "p_spec.h"
 // [BB] New #includes.
+#include "p_lights.h"
 #include "network.h"
 #include "sv_commands.h"
 #include "g_level.h"
@@ -47,6 +48,7 @@ static FRandom pr_strobeflash ("StrobeFlash");
 static FRandom pr_fireflicker ("FireFlicker");
 
 
+/* [BB] Moved to p_lights.h
 class DFireFlicker : public DLighting
 {
 	DECLARE_CLASS(DFireFlicker, DLighting)
@@ -194,6 +196,7 @@ private:
 	DPhased(sector_t *sector, int baselevel);
 	int PhaseHelper(sector_t *sector, int index, int light, sector_t *prev);
 };
+*/
 
 #define GLOWSPEED				8
 #define STROBEBRIGHT			5
