@@ -2812,7 +2812,7 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			case SVC2_SETPLAYERVIEWHEIGHT:
 				{
 					const ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-					const int viewHeight = NETWORK_ReadLong( pByteStream );
+					const double viewHeight = FIXED2DBL ( NETWORK_ReadLong( pByteStream ) );
 
 					if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false ) 
 						break;
@@ -5527,8 +5527,8 @@ static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
 	players[ulPlayer].cmd.ucmd.buttons = ulButtons;
 //	players[ulPlayer].velx = lMomX;
 //	players[ulPlayer].vely = lMomY;
-	players[ulPlayer].viewz = lViewZ;
-	players[ulPlayer].bob = FIXED2FLOAT ( lBob );
+	players[ulPlayer].viewz = FIXED2DBL ( lViewZ );
+	players[ulPlayer].bob = FIXED2DBL ( lBob );
 }
 
 //*****************************************************************************
@@ -6893,9 +6893,9 @@ static void client_SetThingSpawnPoint( BYTESTREAM_s *pByteStream )
 	}
 
 	// [BB] Set the actor's SpawnPoint.
-	pActor->SpawnPoint[0] = lSpawnPointX;
-	pActor->SpawnPoint[1] = lSpawnPointY;
-	pActor->SpawnPoint[2] = lSpawnPointZ;
+	pActor->SpawnPoint[0] = FIXED2DBL ( lSpawnPointX );
+	pActor->SpawnPoint[1] = FIXED2DBL ( lSpawnPointY );
+	pActor->SpawnPoint[2] = FIXED2DBL ( lSpawnPointZ );
 }
 
 //*****************************************************************************

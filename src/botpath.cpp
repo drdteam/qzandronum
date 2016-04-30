@@ -797,9 +797,9 @@ void BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fix
 		bUseFront = ( FrontFloor > BackFloor );
 	else
 	{
-		if (( FLOAT2FIXED ( pFrontSector->floorplane.fA() ) | FLOAT2FIXED ( pFrontSector->floorplane.fB() ) ) == 0 )
+		if ( !pFrontSector->floorplane.isSlope() )
 			bUseFront = true;
-		else if (( FLOAT2FIXED ( pBackSector->floorplane.fA() ) | FLOAT2FIXED ( pFrontSector->floorplane.fB() ) ) == 0 )
+		else if ( !pBackSector->floorplane.isSlope() )
 			bUseFront = false;
 		else
 			bUseFront = !P_PointOnLineSide( RefX, RefY, pLine );
@@ -922,10 +922,10 @@ static bool botpath_CheckLine( line_t *pLine )
 	fixed_t sx, sy;
 
 	// set openrange, opentop, openbottom
-	if ((( FLOAT2FIXED ( pLine->frontsector->floorplane.fA() ) | FLOAT2FIXED ( pLine->frontsector->floorplane.fB() ) ) |
-		 ( FLOAT2FIXED ( pLine->backsector->floorplane.fA() ) | FLOAT2FIXED ( pLine->backsector->floorplane.fB() ) ) |
-		 ( FLOAT2FIXED ( pLine->frontsector->ceilingplane.fA() ) | FLOAT2FIXED ( pLine->frontsector->ceilingplane.fB() ) ) |
-		 ( FLOAT2FIXED ( pLine->backsector->ceilingplane.fA() ) | FLOAT2FIXED ( pLine->backsector->ceilingplane.fB() ) )) == 0 )
+	if ( !pLine->frontsector->floorplane.isSlope()
+		&& !pLine->backsector->floorplane.isSlope()
+		&& !pLine->frontsector->ceilingplane.isSlope()
+		&& !pLine->backsector->ceilingplane.isSlope() )
 	{
 		BOTPATH_LineOpening( pLine, sx = g_PathX, sy = g_PathY, g_PathX, g_PathY );
 	}

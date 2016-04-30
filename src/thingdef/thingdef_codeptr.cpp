@@ -3696,7 +3696,6 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnParticle)
 			acc.X = accelx * c + accely * s;
 			acc.Y = accelx * s - accely * c;
 		}
-		pos = self->Vec3Offset(xoff, yoff, zoff);
 		P_SpawnParticle(self->Vec3Offset(pos), vel, acc, color, !!(flags & SPF_FULLBRIGHT), startalpha, lifetime, size, fadestep);
 	}
 	return 0;
@@ -4410,7 +4409,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 	{
 		offsetforward *= self->radius;
 		offsetwidth *= self->radius;
-	}
+}
 		
 	pos = self->PosPlusZ(offsetheight - self->Floorclip);
 
@@ -4467,7 +4466,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CheckLOF)
 			}
 			else
 			{
-				pitch -= VecToAngle(xydist, target->Center());
+				pitch -= VecToAngle(xydist, target->Center() - pos.Z);
 			}
 		}
 		else if (flags & CLOFF_ALLOWNULL)

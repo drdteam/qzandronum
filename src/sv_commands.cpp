@@ -1169,7 +1169,7 @@ void SERVERCOMMANDS_SetPlayerViewHeight( ULONG ulPlayer, ULONG ulPlayerExtra, Se
 
 	NetCommand command( SVC2_SETPLAYERVIEWHEIGHT );
 	command.addByte( ulPlayer );
-	command.addLong( players[ulPlayer].mo->ViewHeight );
+	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->ViewHeight ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1220,7 +1220,7 @@ void SERVERCOMMANDS_UpdatePlayerExtraData( ULONG ulPlayer, ULONG ulDisplayPlayer
 	command.addLong( players[ulDisplayPlayer].mo->Angles.Pitch.BAMs() );
 	command.addByte( players[ulDisplayPlayer].mo->waterlevel );
 	command.addByte( players[ulDisplayPlayer].cmd.ucmd.buttons );
-	command.addLong( players[ulDisplayPlayer].viewz );
+	command.addLong( FLOAT2FIXED ( players[ulDisplayPlayer].viewz ) );
 	command.addLong( FLOAT2FIXED ( players[ulDisplayPlayer].bob ) );
 	command.sendCommandToOneClient( ulPlayer );
 }
@@ -1955,9 +1955,9 @@ void SERVERCOMMANDS_SetThingSpawnPoint( AActor *pActor, ULONG ulPlayerExtra, Ser
 
 	NetCommand command( SVC_SETTHINGSPAWNPOINT );
 	command.addShort( pActor->lNetID );
-	command.addLong( pActor->SpawnPoint[0] );
-	command.addLong( pActor->SpawnPoint[1] );
-	command.addLong( pActor->SpawnPoint[2] );
+	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[0] ) );
+	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[1] ) );
+	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[2] ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2946,10 +2946,9 @@ void SERVERCOMMANDS_SetSectorFloorPlaneSlope( ULONG ulSector, ULONG ulPlayerExtr
 
 	NetCommand command( SVC_SETSECTORFLOORPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fA() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fB() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fC() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.fiC() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.Normal().X ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.Normal().Y ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].floorplane.Normal().Z ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2962,10 +2961,9 @@ void SERVERCOMMANDS_SetSectorCeilingPlaneSlope( ULONG ulSector, ULONG ulPlayerEx
 
 	NetCommand command( SVC_SETSECTORCEILINGPLANESLOPE );
 	command.addShort( ulSector );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fA() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fB() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fC() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.fiC() ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.Normal().X ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.Normal().Y ) >> FRACBITS );
+	command.addShort( FLOAT2FIXED ( sectors[ulSector].ceilingplane.Normal().Z ) >> FRACBITS );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

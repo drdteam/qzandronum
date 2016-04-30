@@ -2270,8 +2270,10 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 	// it slopes or the player's eyes are bobbing in and out.
 
 	bool oldAboveFakeFloor, oldAboveFakeCeiling;
-	double viewheight = thing->player ? thing->player->viewheight : thing->Height / 2;
-	oldAboveFakeFloor = oldAboveFakeCeiling = false;	// pacify GCC
+	double viewheight;
+	// pacify GCC
+	viewheight = thing->player ? thing->player->viewheight : thing->Height / 2;
+	oldAboveFakeFloor = oldAboveFakeCeiling = false;
 
 	if (oldsec->heightsec)
 	{
@@ -3539,7 +3541,7 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move)
 		double t;
 
 		dest = actor->Pos() + move;
-		t = plane->fA() * dest.X + plane->fB() * dest.Y + plane->fC() * actor->Z() + plane->fD();
+		t = (plane->Normal() | DVector3(dest, actor->Z())) + plane->fD();
 		if (t < 0)
 		{ // Desired location is behind (below) the plane
 			// (i.e. Walking up the plane)
@@ -3573,16 +3575,16 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move)
 					}
 					if (dopush)
 					{
-						actor->Vel.X = move.X = plane->fA() * 2;
-						actor->Vel.Y = move.Y = plane->fB() * 2;
+						move = plane->Normal() * 2;
+						actor->Vel.X = move.X;
+						actor->Vel.Y = move.Y;
 					}
 					return (actor->floorsector == actor->Sector) ? plane : NULL;
 				}
 			}
 			// Slide the desired location along the plane's normal
 			// so that it lies on the plane's surface
-			dest.X -= plane->fA() * t;
-			dest.Y -= plane->fB() * t;
+			dest -= plane->Normal() * t;
 			move = dest - actor->Pos().XY();
 			return (actor->floorsector == actor->Sector) ? plane : NULL;
 		}
@@ -3592,8 +3594,7 @@ const secplane_t * P_CheckSlopeWalk(AActor *actor, DVector2 &move)
 			{ 
 				// Actor's current spot is on/in the plane, so walk down it
 				// Same principle as walking up, except reversed
-				dest.X += plane->fA() * t;
-				dest.Y += plane->fB() * t;
+				dest += plane->Normal() * t;
 				move = dest - actor->Pos().XY();
 				return (actor->floorsector == actor->Sector) ? plane : NULL;
 			}

@@ -807,28 +807,10 @@ void APlayerPawn::Serialize (FArchive &arc)
 		<< DamageFade
 		<< PlayerFlags
 		<< FlechetteType;
-	if (SaveVersion < 3829)
-	{
-		GruntSpeed = 12;
-		FallingScreamMinSpeed = 35;
-		FallingScreamMaxSpeed = 40;
-	}
-	else
-	{
-		arc << GruntSpeed << FallingScreamMinSpeed << FallingScreamMaxSpeed;
-	}
-	if (SaveVersion >= 4502)
-	{
-		arc << UseRange;
-	}
-	if (SaveVersion >= 4503)
-	{
-		arc << AirCapacity;
-	}
-	if (SaveVersion >= 4526)
-	{
-		arc << ViewHeight;
-	}
+	arc << GruntSpeed << FallingScreamMinSpeed << FallingScreamMaxSpeed;
+	arc << UseRange;
+	arc << AirCapacity;
+	arc << ViewHeight;
 }
 
 //===========================================================================
@@ -4291,11 +4273,6 @@ void player_t::Serialize (FArchive &arc)
 		<< centering
 		<< health
 		<< inventorytics;
-	if (SaveVersion < 4513)
-	{
-		bool backpack;
-		arc << backpack;
-	}
 	arc << fragcount
 		<< ReadyWeapon << PendingWeapon
 		<< cheats
@@ -4322,21 +4299,10 @@ void player_t::Serialize (FArchive &arc)
 		<< air_finished
 		<< turnticks
 		<< oldbuttons;
-	if (SaveVersion >= 4929)
-	{
-		arc << hazardtype
-			<< hazardinterval;
-	}
+	arc << hazardtype
+		<< hazardinterval;
 	/* [BB]
-	bool IsBot = false;
-	if (SaveVersion >= 4514)
-	{
-		arc << Bot;
-	}
-	else
-	{
-		arc << IsBot;
-	}
+	arc << Bot;
 	*/
 	arc << BlendR
 		<< BlendG
@@ -4352,32 +4318,7 @@ void player_t::Serialize (FArchive &arc)
 		<< cheats2
 		// [BB] Skulltag additions - end
 		;
-	if (SaveVersion < 3427)
-	{
-		WORD oldaccuracy, oldstamina;
-		arc << oldaccuracy << oldstamina;
-		if (mo != NULL)
-		{
-			mo->accuracy = oldaccuracy;
-			mo->stamina = oldstamina;
-		}
-	}
-	if (SaveVersion < 4041)
-	{
-		// Move weapon state flags from cheats and into WeaponState.
-		WeaponState = ((cheats >> 14) & 1) | ((cheats & (0x37 << 24)) >> (24 - 1));
-		cheats &= ~((1 << 14) | (0x37 << 24));
-	}
-	if (SaveVersion < 4527)
-	{
-		BYTE oldWeaponState;
-		arc << oldWeaponState;
-		WeaponState = oldWeaponState;
-	}
-	else
-	{
-		arc << WeaponState;
-	}
+	arc << WeaponState;
 	arc << LogText
 		<< ConversationNPC
 		<< ConversationPC
@@ -4398,48 +4339,13 @@ void player_t::Serialize (FArchive &arc)
 		<< crouchviewdelta
 		<< original_cmd
 		<< original_oldbuttons;
-
 	// [BL] is the player unarmed?
 	arc << bUnarmed;
 
-	if (SaveVersion >= 3475)
-	{
-		arc << poisontype << poisonpaintype;
-	}
-	else if (poisoner != NULL)
-	{
-		poisontype = poisoner->DamageType;
-		poisonpaintype = poisoner->PainType != NAME_None ? poisoner->PainType : poisoner->DamageType;
-	}
-
-	if (SaveVersion >= 3599)
-	{
-		arc << timefreezer;
-	}
-	else
-	{
-		cheats &= ~(1 << 15);	// make sure old CF_TIMEFREEZE bit is cleared
-	}
-	if (SaveVersion < 3640)
-	{
-		cheats &= ~(1 << 17);	// make sure old CF_REGENERATION bit is cleared
-	}
-	if (SaveVersion >= 3780)
-	{
-		arc << settings_controller;
-	}
-	else
-	{
-		settings_controller = (this - players == Net_Arbitrator);
-	}
-	if (SaveVersion >= 4505)
-	{
-		arc << onground;
-	}
-	else
-	{
-		onground = (mo->Z() <= mo->floorz) || (mo->flags2 & MF2_ONMOBJ) || (mo->BounceFlags & BOUNCE_MBF) || (cheats & CF_NOCLIP2);
-	}
+	arc << poisontype << poisonpaintype;
+	arc << timefreezer;
+	arc << settings_controller;
+	arc << onground;
 
 	/* [BB]
 	*/
@@ -4454,10 +4360,7 @@ void player_t::Serialize (FArchive &arc)
 	{
 		userinfo.SkinChanged(skinname, CurrentPlayerClass);
 	}
-	if (SaveVersion >= 4522)
-	{
-		arc << MUSINFOactor << MUSINFOtics;
-	}
+	arc << MUSINFOactor << MUSINFOtics;
 }
 
 // [Leo] Added spectator check.
