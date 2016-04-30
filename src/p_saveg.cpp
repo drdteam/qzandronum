@@ -359,7 +359,7 @@ void P_SerializeWorld (FArchive &arc)
 	{
 		arc << sec->floorplane
 			<< sec->ceilingplane;
-			arc << sec->lightlevel;
+		arc << sec->lightlevel;
 		arc << sec->special;
 		arc << sec->soundtraversed
 			<< sec->seqType
@@ -376,12 +376,12 @@ void P_SerializeWorld (FArchive &arc)
 			<< sec->heightsec
 			<< sec->bottommap << sec->midmap << sec->topmap
 			<< sec->gravity;
-			P_SerializeTerrain(arc, sec->terrainnum[0]);
-			P_SerializeTerrain(arc, sec->terrainnum[1]);
-			arc << sec->damageamount;
-			arc << sec->damageinterval
-				<< sec->leakydamage
-				<< sec->damagetype;
+		P_SerializeTerrain(arc, sec->terrainnum[0]);
+		P_SerializeTerrain(arc, sec->terrainnum[1]);
+		arc << sec->damageamount;
+		arc << sec->damageinterval
+			<< sec->leakydamage
+			<< sec->damagetype;
 		arc << sec->SoundTarget
 			<< sec->SecActTarget
 			<< sec->sky
@@ -492,10 +492,7 @@ void P_SerializeWorld (FArchive &arc)
 			<< li->SavedAlpha;
 
 			arc << li->portalindex;
-		if (SaveVersion >= 4531)
-		{
-			arc << li->skybox;
-		}
+			arc << li->skybox;	// GZDoom addition.
 
 		for (j = 0; j < 2; j++)
 		{
@@ -537,7 +534,7 @@ void P_SerializeWorld (FArchive &arc)
 		arc << zn->Environment;
 	}
 
-		arc << linePortals;
+	arc << linePortals;
 	P_CollectLinkedPortals();
 }
 
@@ -631,15 +628,7 @@ void P_SerializePolyobjs (FArchive &arc)
 		arc << seg << po_NumPolyobjs;
 		for(i = 0, po = polyobjs; i < po_NumPolyobjs; i++, po++)
 		{
-			arc << po->tag << po->Angle << po->StartSpot.pos << po->interpolation;
-			if (SaveVersion >= 4537)
-			{
-				arc << po->bBlocked;
-			}
-			else
-			{
-				po->bBlocked = false;
-			}
+			arc << po->tag << po->Angle << po->StartSpot.pos << po->interpolation << po->bBlocked;
   		}
 	}
 	else
@@ -665,6 +654,15 @@ void P_SerializePolyobjs (FArchive &arc)
 				I_Error ("UnarchivePolyobjs: Invalid polyobj tag");
 			}
 			arc << angle << delta << po->interpolation;
+			if (SaveVersion >= 4537)
+			{
+				arc << po->bBlocked;
+			}
+			else
+			{
+				po->bBlocked = false;
+			}
+
 			po->RotatePolyobj (angle, true);
 			delta -= po->StartSpot.pos;
 			po->MovePolyobj (delta, true);
