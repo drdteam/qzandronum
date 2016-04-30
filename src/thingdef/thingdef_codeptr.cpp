@@ -3797,7 +3797,7 @@ static bool DoCheckSightOrRange(AActor *self, AActor *camera, double range, bool
 		dz = 0;
 	}
 	double distance = DVector3(pos, twodi? 0. : dz).LengthSquared();
-	if (distance <= range*range)
+	if (distance <= range)
 	{
 		// Within range
 		return true;
