@@ -202,7 +202,7 @@ extern bool IsFloat (const char *str);
 
 // PRIVATE FUNCTION PROTOTYPES ---------------------------------------------
 
-static int STACK_ARGS SortPlayerClasses (const void *a, const void *b);
+static int SortPlayerClasses (const void *a, const void *b);
 static int S_DupPlayerSound (const char *pclass, int gender, int refid, int aliasref);
 static void S_SavePlayerSound (const char *pclass, int gender, int refid, int lumpnum, bool alias);
 static void S_RestorePlayerSounds();
@@ -1646,7 +1646,7 @@ const char *S_GetName( LONG lSoundID )
 	return ( S_sfx[lSoundID].name.GetChars( ));
 }
 
-static int STACK_ARGS SortPlayerClasses (const void *a, const void *b)
+static int SortPlayerClasses (const void *a, const void *b)
 {
 	return stricmp (((const FPlayerClassLookup *)a)->Name,
 					((const FPlayerClassLookup *)b)->Name);

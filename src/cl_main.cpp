@@ -449,7 +449,7 @@ static	void	client_CreateTranslation( BYTESTREAM_s *pByteStream, bool bIsTypeTwo
 static	void	client_DoPusher( BYTESTREAM_s *pByteStream );
 static	void	client_AdjustPusher( BYTESTREAM_s *pByteStream );
 
-static void STACK_ARGS client_PrintWarning( const char* format, ... ) GCCPRINTF( 1, 2 );
+static	void	client_PrintWarning( const char* format, ... ) GCCPRINTF( 1, 2 );
 
 class STClient {
 public:
@@ -12353,7 +12353,7 @@ void APathFollower::InitFromStream ( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void STACK_ARGS client_PrintWarning( const char* format, ... )
+static void client_PrintWarning( const char* format, ... )
 {
 	if ( cl_showwarnings )
 	{

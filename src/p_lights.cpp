@@ -46,6 +46,161 @@ static FRandom pr_lightflash ("LightFlash");
 static FRandom pr_strobeflash ("StrobeFlash");
 static FRandom pr_fireflicker ("FireFlicker");
 
+
+class DFireFlicker : public DLighting
+{
+	DECLARE_CLASS(DFireFlicker, DLighting)
+public:
+	DFireFlicker(sector_t *sector);
+	DFireFlicker(sector_t *sector, int upper, int lower);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void	UpdateToClient( ULONG ulClient );
+protected:
+	int 		m_Count;
+	int 		m_MaxLight;
+	int 		m_MinLight;
+private:
+	DFireFlicker();
+};
+
+class DFlicker : public DLighting
+{
+	DECLARE_CLASS(DFlicker, DLighting)
+public:
+	DFlicker(sector_t *sector, int upper, int lower);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void	UpdateToClient( ULONG ulClient );
+protected:
+	int 		m_Count;
+	int 		m_MaxLight;
+	int 		m_MinLight;
+private:
+	DFlicker();
+};
+
+class DLightFlash : public DLighting
+{
+	DECLARE_CLASS(DLightFlash, DLighting)
+public:
+	DLightFlash(sector_t *sector);
+	DLightFlash(sector_t *sector, int min, int max);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void	UpdateToClient( ULONG ulClient );
+
+	// [BC] Access function(s).
+	void		SetCount( LONG lCount );
+protected:
+	int 		m_Count;
+	int 		m_MaxLight;
+	int 		m_MinLight;
+	int 		m_MaxTime;
+	int 		m_MinTime;
+private:
+	DLightFlash();
+};
+
+class DStrobe : public DLighting
+{
+	DECLARE_CLASS(DStrobe, DLighting)
+public:
+	DStrobe(sector_t *sector, int utics, int ltics, bool inSync);
+	DStrobe(sector_t *sector, int upper, int lower, int utics, int ltics);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void	UpdateToClient( ULONG ulClient );
+
+	// [BC] Access function(s).
+	void		SetCount( LONG lCount );
+protected:
+	int 		m_Count;
+	int 		m_MinLight;
+	int 		m_MaxLight;
+	int 		m_DarkTime;
+	int 		m_BrightTime;
+private:
+	DStrobe();
+};
+
+class DGlow : public DLighting
+{
+	DECLARE_CLASS(DGlow, DLighting)
+public:
+	DGlow(sector_t *sector);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void		UpdateToClient( ULONG ulClient );
+protected:
+	int 		m_MinLight;
+	int 		m_MaxLight;
+	int 		m_Direction;
+private:
+	DGlow();
+};
+
+// [RH] Glow from Light_Glow and Light_Fade specials
+class DGlow2 : public DLighting
+{
+	DECLARE_CLASS(DGlow2, DLighting)
+public:
+	DGlow2(sector_t *sector, int start, int end, int tics, bool oneshot);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void		UpdateToClient( ULONG ulClient );
+
+	// [BC] Access function(s).
+	void		SetTics( LONG lTics );
+protected:
+	int			m_Start;
+	int			m_End;
+	int			m_MaxTics;
+	int			m_Tics;
+	bool		m_OneShot;
+private:
+	DGlow2();
+};
+
+// [RH] Phased light thinker
+class DPhased : public DLighting
+{
+	DECLARE_CLASS(DPhased, DLighting)
+public:
+	DPhased(sector_t *sector);
+	DPhased(sector_t *sector, int baselevel, int phase);
+	void		Serialize(FArchive &arc);
+	void		Tick();
+
+	// [BC] Create this object for this new client entering the game.
+	void		UpdateToClient( ULONG ulClient );
+protected:
+	BYTE		m_BaseLevel;
+	BYTE		m_Phase;
+private:
+	DPhased();
+	DPhased(sector_t *sector, int baselevel);
+	int PhaseHelper(sector_t *sector, int index, int light, sector_t *prev);
+};
+
+#define GLOWSPEED				8
+#define STROBEBRIGHT			5
+#define FASTDARK				15
+#define SLOWDARK				TICRATE
+
+
 //-----------------------------------------------------------------------------
 //
 //
@@ -1007,3 +1162,68 @@ void EV_StopLightEffect (int tag)
 		}
 	}
 }
+
+
+void P_SpawnLights(sector_t *sector)
+{
+	// [BC] In client mode, light specials may have been shut off by the server.
+	// Therefore, we can't spawn them on our end.
+	if ( NETWORK_InClientMode() )
+		return;
+
+	switch (sector->special)
+	{
+	case Light_Phased:
+		new DPhased(sector, 48, 63 - (sector->lightlevel & 63));
+		break;
+
+		// [RH] Hexen-like phased lighting
+	case LightSequenceStart:
+		new DPhased(sector);
+		break;
+
+	case dLight_Flicker:
+		new DLightFlash(sector);
+		break;
+
+	case dLight_StrobeFast:
+		new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+
+	case dLight_StrobeSlow:
+		new DStrobe(sector, STROBEBRIGHT, SLOWDARK, false);
+		break;
+
+	case dLight_Strobe_Hurt:
+		new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+
+	case dLight_Glow:
+		new DGlow(sector);
+		break;
+
+	case dLight_StrobeSlowSync:
+		new DStrobe(sector, STROBEBRIGHT, SLOWDARK, true);
+		break;
+
+	case dLight_StrobeFastSync:
+		new DStrobe(sector, STROBEBRIGHT, FASTDARK, true);
+		break;
+
+	case dLight_FireFlicker:
+		new DFireFlicker(sector);
+		break;
+
+	case dScroll_EastLavaDamage:
+		new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+
+	case sLight_Strobe_Hurt:
+		new DStrobe(sector, STROBEBRIGHT, FASTDARK, false);
+		break;
+
+	default:
+		break;
+	}
+}
+

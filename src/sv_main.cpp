@@ -3050,7 +3050,7 @@ void SERVER_SendHeartBeat( void )
 
 //*****************************************************************************
 //
-void STACK_ARGS SERVER_Printf( ULONG ulPrintLevel, const char *pszString, ... )
+void SERVER_Printf( ULONG ulPrintLevel, const char *pszString, ... )
 {
 	va_list	 argptr;
 	va_start( argptr, pszString );
@@ -3060,7 +3060,7 @@ void STACK_ARGS SERVER_Printf( ULONG ulPrintLevel, const char *pszString, ... )
 
 //*****************************************************************************
 //
-void STACK_ARGS SERVER_Printf( const char *pszString, ... )
+void SERVER_Printf( const char *pszString, ... )
 {
 	va_list	 argptr;
 	va_start( argptr, pszString );
@@ -3070,7 +3070,7 @@ void STACK_ARGS SERVER_Printf( const char *pszString, ... )
 
 //*****************************************************************************
 //
-void STACK_ARGS SERVER_PrintfPlayer( ULONG ulPrintLevel, ULONG ulPlayer, const char *pszString, ... )
+void SERVER_PrintfPlayer( ULONG ulPrintLevel, ULONG ulPlayer, const char *pszString, ... )
 {
 	va_list	 argptr;
 	va_start( argptr, pszString );
@@ -3080,7 +3080,7 @@ void STACK_ARGS SERVER_PrintfPlayer( ULONG ulPrintLevel, ULONG ulPlayer, const c
 
 //*****************************************************************************
 //
-void STACK_ARGS SERVER_PrintfPlayer( ULONG ulPlayer, const char *pszString, ... )
+void SERVER_PrintfPlayer( ULONG ulPlayer, const char *pszString, ... )
 {
 	va_list	 argptr;
 	va_start( argptr, pszString );

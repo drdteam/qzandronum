@@ -235,7 +235,7 @@ int FTraceInfo::EnterLinePortal(line_t *li, double frac)
 
 	frac += 1 / MaxDist;
 	double enterdist = MaxDist / frac;
-	DVector2 enter = newtrace.Start + enterdist * Vec;
+	DVector3 enter = newtrace.Start + enterdist * Vec;
 
 	newtrace.ActorMask = ActorMask;
 	newtrace.WallMask = WallMask;
@@ -257,6 +257,18 @@ int FTraceInfo::EnterLinePortal(line_t *li, double frac)
 	newtrace.lastfloorportalheight = newtrace.lastceilingportalheight = newtrace.limitz;
 	newtrace.sectorsel = 0;
 	Results->unlinked = true;
+
+	if ((TraceFlags & TRACE_ReportPortals) && TraceCallback != NULL)
+	{
+		Results->HitType = TRACE_CrossingPortal;
+		Results->HitPos = enter;
+		P_TranslatePortalXY(li, enter.X, enter.Y);
+		P_TranslatePortalZ(li, enter.Z);
+		Results->SrcFromTarget = enter;
+		Results->HitVector = newtrace.Vec;
+		TraceCallback(*Results, TraceCallbackData);
+	}
+
 	return newtrace.TraceTraverse(ActorMask ? PT_ADDLINES | PT_ADDTHINGS | PT_COMPATIBLE : PT_ADDLINES);
 }
 
@@ -459,8 +471,11 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 				lastfloorportalheight = fc;
 				if (TraceCallback != NULL)
 				{
-					// Todo: calculate the intersection point.
 					Results->HitType = TRACE_CrossingPortal;
+					double hitz = CurSector->SkyBoxes[sector_t::floor]->specialf1;
+					Results->HitPos = Start + Vec * (hitz - Start.Z) / Vec.Z;
+					Results->SrcFromTarget = Results->HitPos + CurSector->SkyBoxes[sector_t::floor]->Scale;
+					Results->HitVector = Vec;
 					TraceCallback(*Results, TraceCallbackData);
 				}
 			}
@@ -487,8 +502,11 @@ bool FTraceInfo::LineCheck(intercept_t *in)
 				lastceilingportalheight = fc;
 				if (TraceCallback != NULL)
 				{
-					// Todo: calculate the intersection point.
 					Results->HitType = TRACE_CrossingPortal;
+					double hitz = CurSector->SkyBoxes[sector_t::ceiling]->specialf1;
+					Results->HitPos = Start + Vec * (hitz - Start.Z) / Vec.Z;
+					Results->SrcFromTarget = Results->HitPos + CurSector->SkyBoxes[sector_t::ceiling]->Scale;
+					Results->HitVector = Vec;
 					TraceCallback(*Results, TraceCallbackData);
 				}
 			}

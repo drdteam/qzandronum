@@ -76,11 +76,11 @@ void M_BuildServerList( void );
 LONG M_CalcLastSortedIndex( void );
 bool M_ShouldShowServer( LONG lServer );
 
-static	void			browsermenu_SortServers( ULONG ulSortType );
-static	int	STACK_ARGS	browsermenu_PingCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	browsermenu_ServerNameCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	browsermenu_MapNameCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	browsermenu_PlayersCompareFunc( const void *arg1, const void *arg2 );
+static	void	browsermenu_SortServers( ULONG ulSortType );
+static	int		browsermenu_PingCompareFunc( const void *arg1, const void *arg2 );
+static	int		browsermenu_ServerNameCompareFunc( const void *arg1, const void *arg2 );
+static	int		browsermenu_MapNameCompareFunc( const void *arg1, const void *arg2 );
+static	int		browsermenu_PlayersCompareFunc( const void *arg1, const void *arg2 );
 
 #define	NUM_SERVER_SLOTS	8
 
@@ -509,7 +509,7 @@ static void browsermenu_SortServers( ULONG ulSortType )
 
 //*****************************************************************************
 //
-static int STACK_ARGS browsermenu_PingCompareFunc( const void *arg1, const void *arg2 )
+static int browsermenu_PingCompareFunc( const void *arg1, const void *arg2 )
 {
 	if (( M_ShouldShowServer( *(int *)arg1 ) == false ) && ( M_ShouldShowServer( *(int *)arg2 ) == false ))
 		return ( 0 );
@@ -525,7 +525,7 @@ static int STACK_ARGS browsermenu_PingCompareFunc( const void *arg1, const void 
 
 //*****************************************************************************
 //
-static int STACK_ARGS browsermenu_ServerNameCompareFunc( const void *arg1, const void *arg2 )
+static int browsermenu_ServerNameCompareFunc( const void *arg1, const void *arg2 )
 {
 	if (( M_ShouldShowServer( *(int *)arg1 ) == false ) && ( M_ShouldShowServer( *(int *)arg2 ) == false ))
 		return ( 0 );
@@ -541,7 +541,7 @@ static int STACK_ARGS browsermenu_ServerNameCompareFunc( const void *arg1, const
 
 //*****************************************************************************
 //
-static int STACK_ARGS browsermenu_MapNameCompareFunc( const void *arg1, const void *arg2 )
+static int browsermenu_MapNameCompareFunc( const void *arg1, const void *arg2 )
 {
 	if (( M_ShouldShowServer( *(int *)arg1 ) == false ) && ( M_ShouldShowServer( *(int *)arg2 ) == false ))
 		return ( 0 );
@@ -557,7 +557,7 @@ static int STACK_ARGS browsermenu_MapNameCompareFunc( const void *arg1, const vo
 
 //*****************************************************************************
 //
-static int STACK_ARGS browsermenu_PlayersCompareFunc( const void *arg1, const void *arg2 )
+static int browsermenu_PlayersCompareFunc( const void *arg1, const void *arg2 )
 {
 	if (( M_ShouldShowServer( *(int *)arg1 ) == false ) && ( M_ShouldShowServer( *(int *)arg2 ) == false ))
 		return ( 0 );

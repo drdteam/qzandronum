@@ -6522,7 +6522,7 @@ AActor *P_SpawnMapThing (FMapThing *mthing, int position)
 //
 
 // [BC] Added bTellClientToSpawn.
-AActor *P_SpawnPuff (AActor *source, PClassActor *pufftype, const DVector3 &pos, DAngle hitdir, DAngle particledir, int updown, int flags, AActor *vict, bool bTellClientToSpawn)
+AActor *P_SpawnPuff (AActor *source, PClassActor *pufftype, const DVector3 &pos1, DAngle hitdir, DAngle particledir, int updown, int flags, AActor *vict, bool bTellClientToSpawn)
 {
 	// [CK] If we're a client in this function and we're supposed to be a server
 	// telling clients to spawn it, then we will get information later from the
@@ -6547,17 +6547,15 @@ AActor *P_SpawnPuff (AActor *source, PClassActor *pufftype, const DVector3 &pos,
 	}
 
 	AActor *puff;
-	double z = 0;
+	DVector3 pos = pos1;
 	// [BB] The whole "puff spawning on clients" is pretty awful right now,
 	// but currently I don't see how to fix it without increasing net traffic
 	// and just made some fixes to make it less buggy.
 	// [BC]
 	ULONG	ulState = STATE_SPAWN;
-	
-	if (!(flags & PF_NORANDOMZ))
-		z = pr_spawnpuff.Random2() / 64.;
 
-	puff = Spawn(pufftype, pos + DVector3(0, 0, z), ALLOW_REPLACE);
+	if (!(flags & PF_NORANDOMZ)) pos.Z += pr_spawnpuff.Random2() / 64.;
+	puff = Spawn(pufftype, pos, ALLOW_REPLACE);
 	if (puff == NULL) return NULL;
 
 	if ((puff->flags4 & MF4_RANDOMIZE) && puff->tics > 0)
@@ -6877,13 +6875,14 @@ void P_BloodSplatter2 (const DVector3 &pos, AActor *originator, DAngle hitangle)
 	if (bloodcls != NULL && !(GetDefaultByType(bloodcls)->flags4 & MF4_ALLOWPARTICLES))
 		bloodtype = 0;
 
+	DVector2 add;
+	add.X = (pr_splat() - 128) / 32.;
+	add.Y = (pr_splat() - 128) / 32.;
+
 	if (bloodcls != NULL)
 	{
 		AActor *mo;
 
-		DVector2 add;
-		add.X = (pr_splat()-128) / 32.;
-		add.Y = (pr_splat()-128) / 32.;
 
 		mo = Spawn (bloodcls, pos + add, NO_REPLACE); // GetBloodType already performed the replacement
 		mo->target = originator;
@@ -6898,7 +6897,7 @@ void P_BloodSplatter2 (const DVector3 &pos, AActor *originator, DAngle hitangle)
 	}
 	if (bloodtype >= 1)
 	{
-		P_DrawSplash2(40, pos, hitangle - 180., 2, bloodcolor);
+		P_DrawSplash2(40, pos + add, hitangle - 180., 2, bloodcolor);
 	}
 
 	// [BB] Tell the clients to spawn the splatter.

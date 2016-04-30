@@ -1,5 +1,7 @@
 cmake_minimum_required( VERSION 2.8.7 )
 
+include(../precompiled_headers.cmake)
+
 if( COMMAND cmake_policy )
 	cmake_policy( SET CMP0003 NEW )
 endif()
@@ -1085,8 +1087,7 @@ set( NOT_COMPILED_SOURCE_FILES
 	asm_x86_64/tmap3.s
 )
 
-# Enable fast math for some sources
-set( FASTMATH_SOURCES
+set( FASTMATH_PCH_SOURCES
 	r_swrenderer.cpp
 	r_3dfloors.cpp
 	r_bsp.cpp
@@ -1124,12 +1125,35 @@ set( FASTMATH_SOURCES
 	oplsynth/fmopl.cpp
 	oplsynth/mlopl.cpp
 	oplsynth/mlopl_io.cpp
-	oplsynth/music_opldumper_mididevice.cpp
-	oplsynth/music_opl_mididevice.cpp
-	oplsynth/opl_mus_player.cpp
 	oplsynth/dosbox/opl.cpp
 	oplsynth/OPL3.cpp
 	oplsynth/nukedopl3.cpp
+	timidity/common.cpp
+	timidity/instrum.cpp
+	timidity/instrum_dls.cpp
+	timidity/instrum_font.cpp
+	timidity/instrum_sf2.cpp
+	timidity/mix.cpp
+	timidity/playmidi.cpp
+	timidity/resample.cpp
+	timidity/timidity.cpp
+	wildmidi/file_io.cpp
+	wildmidi/gus_pat.cpp
+	wildmidi/reverb.cpp
+	wildmidi/wm_error.cpp
+	r_data/colormaps.cpp
+	r_data/r_translate.cpp
+)
+# This is disabled for now because I cannot find a way to give the .pch file a different name.
+# Visual C++ 2015 seems hell-bent of only allowing one .pch file with the same name as the executable.
+#enable_precompiled_headers( g_pch2.h FASTMATH_PCH_SOURCES )
+
+# Enable fast math for some sources
+set( FASTMATH_SOURCES
+	${FASTMATH_PCH_SOURCES}
+	oplsynth/music_opldumper_mididevice.cpp
+	oplsynth/music_opl_mididevice.cpp
+	oplsynth/opl_mus_player.cpp
 	sound/fmodsound.cpp
 	sound/i_music.cpp
 	sound/i_sound.cpp
@@ -1154,34 +1178,12 @@ set( FASTMATH_SOURCES
 	sound/oalsound.cpp
 	sound/sndfile_decoder.cpp
 	sound/music_pseudo_mididevice.cpp
-	timidity/common.cpp
-	timidity/instrum.cpp
-	timidity/instrum_dls.cpp
-	timidity/instrum_font.cpp
-	timidity/instrum_sf2.cpp
-	timidity/mix.cpp
-	timidity/playmidi.cpp
-	timidity/resample.cpp
-	timidity/timidity.cpp
-	wildmidi/file_io.cpp
-	wildmidi/gus_pat.cpp
-	wildmidi/reverb.cpp
 	wildmidi/wildmidi_lib.cpp
-	wildmidi/wm_error.cpp
-	r_data/colormaps.cpp
-	r_data/r_translate.cpp
 	${GL_SOURCES}
 	gl/stereo3d/gl_quadstereo.cpp
 )
-add_executable( zdoom WIN32 MACOSX_BUNDLE
-	${HEADER_FILES}
-	${NOT_COMPILED_SOURCE_FILES}
-	__autostart.cpp
-	${ASM_SOURCES}
-	${SYSTEM_SOURCES}
-	${X86_SOURCES}
-	${FASTMATH_SOURCES}
-	x86.cpp
+
+set (PCH_SOURCES
 	actorptrselect.cpp
 	am_map.cpp
 	announcer.cpp #ST
@@ -1269,7 +1271,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	m_oldrandom.cpp #ST
 	m_png.cpp
 	m_random.cpp
-	m_specialpaths.cpp
 	maprotation.cpp #ST
 	memarena.cpp
 	md5.cpp
@@ -1345,7 +1346,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	statistics.cpp
 	stats.cpp
 	stringtable.cpp
-	strnatcmp.c
 	survival.cpp #ST
 	sv_ban.cpp #ST
 	sv_commands.cpp #ST
@@ -1370,7 +1370,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	wi_stuff.cpp
 	za_database.cpp #ZA
 	zstrformat.cpp
-	zstring.cpp
 	cooperative.cpp #ST [BB] This needs to be linked after deathmatch.cpp and team.cpp (see above).
 	# [BL] Huffman is ZAN
 	huffman/bitreader.cpp
@@ -1428,22 +1427,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	g_shared/shared_hud.cpp
 	g_shared/shared_sbar.cpp
 	g_shared/st_hud.cpp #ST
-	math/asin.c
-	math/atan.c
-	math/const.c
-	math/cosh.c
-	math/exp.c
-	math/isnan.c
-	math/log.c
-	math/log10.c
-	math/mtherr.c
-	math/polevl.c
-	math/sin.c
-	math/sinh.c
-	math/sqrt.c
-	math/tan.c
-	math/tanh.c
-	math/fastsin.cpp
 	resourcefiles/ancientzip.cpp
 	resourcefiles/file_7z.cpp
 	resourcefiles/file_grp.cpp
@@ -1454,7 +1437,6 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	resourcefiles/file_pak.cpp
 	resourcefiles/file_directory.cpp
 	resourcefiles/resourcefile.cpp
-	sfmt/SFMT.cpp
 	textures/animations.cpp
 	textures/anim_switches.cpp
 	textures/automaptexture.cpp
@@ -1502,6 +1484,7 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	r_data/voxels.cpp
 	r_data/renderstyle.cpp
 	r_data/r_interpolate.cpp
+	sfmt/SFMT.cpp
 	zscript/ast.cpp
 	zscript/vmbuilder.cpp
 	zscript/vmdisasm.cpp
@@ -1510,6 +1493,38 @@ add_executable( zdoom WIN32 MACOSX_BUNDLE
 	zscript/zcc_compile.cpp
 	zscript/zcc_expr.cpp
 	zscript/zcc_parser.cpp
+)
+enable_precompiled_headers( g_pch.h PCH_SOURCES )
+
+add_executable( zdoom WIN32 MACOSX_BUNDLE
+	${HEADER_FILES}
+	${NOT_COMPILED_SOURCE_FILES}
+	__autostart.cpp
+	${ASM_SOURCES}
+	${SYSTEM_SOURCES}
+	${X86_SOURCES}
+	${FASTMATH_SOURCES}
+	${PCH_SOURCES}
+	x86.cpp
+	m_specialpaths.cpp
+	strnatcmp.c
+	zstring.cpp
+	math/asin.c
+	math/atan.c
+	math/const.c
+	math/cosh.c
+	math/exp.c
+	math/isnan.c
+	math/log.c
+	math/log10.c
+	math/mtherr.c
+	math/polevl.c
+	math/sin.c
+	math/sinh.c
+	math/sqrt.c
+	math/tan.c
+	math/tanh.c
+	math/fastsin.cpp
 	zzautozend.cpp
 )
 

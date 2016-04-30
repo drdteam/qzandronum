@@ -823,7 +823,7 @@ static void CalcSectorSoundOrg(const DVector3 &listenpos, const sector_t *sec, i
 	{
 		// Are we inside the sector? If yes, the closest point is the one we're on.
 		// [BB] We need to check if players[consoleplayer].camera is valid.
-		if ( (P_PointInSector(pos.X, pos.Y) == sec) && (players[consoleplayer].camera != NULL) )
+		if ( (P_PointInSector(listenpos.X, listenpos.Y) == sec) && (players[consoleplayer].camera != NULL) )
 		{
 			pos.X = (float)listenpos.X;
 			pos.Z = (float)listenpos.Y;

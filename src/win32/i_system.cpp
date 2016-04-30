@@ -856,7 +856,7 @@ void I_Quit()
 //
 //==========================================================================
 
-void STACK_ARGS I_FatalError(const char *error, ...)
+void I_FatalError(const char *error, ...)
 {
 	static BOOL alreadyThrown = false;
 	gameisdead = true;
@@ -900,7 +900,7 @@ void STACK_ARGS I_FatalError(const char *error, ...)
 //
 //==========================================================================
 
-void STACK_ARGS I_Error(const char *error, ...)
+void I_Error(const char *error, ...)
 {
 	va_list argptr;
 	char errortext[MAX_ERRORTEXT];
@@ -1126,6 +1126,11 @@ static void DoPrintStr(const char *cp, HWND edit, HANDLE StdOut)
 }
 
 static TArray<FString> bufferedConsoleStuff;
+
+void I_DebugPrint(const char *cp)
+{
+	OutputDebugStringA(cp);
+}
 
 void I_PrintStr(const char *cp)
 {

@@ -167,24 +167,24 @@ static	const char	*g_pszColumnHeaders[NUM_COLUMN_TYPES] =
 //*****************************************************************************
 //	PROTOTYPES
 
-static	void			scoreboard_SortPlayers( ULONG ulSortType );
-static	int	STACK_ARGS	scoreboard_FragCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	scoreboard_PointsCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	scoreboard_KillsCompareFunc( const void *arg1, const void *arg2 );
-static	int	STACK_ARGS	scoreboard_WinsCompareFunc( const void *arg1, const void *arg2 );
-static	void			scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPlayer );
-static	void			scoreboard_DrawHeader( void );
-static	void			scoreboard_DrawLimits( void );
-static	void			scoreboard_DrawTeamScores( ULONG ulPlayer );
-static	void			scoreboard_DrawMyRank( ULONG ulPlayer );
-static	void			scoreboard_ClearColumns( void );
-static	void			scoreboard_Prepare5ColumnDisplay( void );
-static	void			scoreboard_Prepare4ColumnDisplay( void );
-static	void			scoreboard_Prepare3ColumnDisplay( void );
-static	void			scoreboard_DoRankingListPass( ULONG ulPlayer, LONG lSpectators, LONG lDead, LONG lNotPlaying, LONG lNoTeam, LONG lWrongTeam, ULONG ulDesiredTeam );
-static	void			scoreboard_DrawRankings( ULONG ulPlayer );
-static	void			scoreboard_DrawWaiting( void );
-static	void			scoreboard_DrawBottomString( void );
+static	void	scoreboard_SortPlayers( ULONG ulSortType );
+static	int		scoreboard_FragCompareFunc( const void *arg1, const void *arg2 );
+static	int		scoreboard_PointsCompareFunc( const void *arg1, const void *arg2 );
+static	int		scoreboard_KillsCompareFunc( const void *arg1, const void *arg2 );
+static	int		scoreboard_WinsCompareFunc( const void *arg1, const void *arg2 );
+static	void	scoreboard_RenderIndividualPlayer( ULONG ulDisplayPlayer, ULONG ulPlayer );
+static	void	scoreboard_DrawHeader( void );
+static	void	scoreboard_DrawLimits( void );
+static	void	scoreboard_DrawTeamScores( ULONG ulPlayer );
+static	void	scoreboard_DrawMyRank( ULONG ulPlayer );
+static	void	scoreboard_ClearColumns( void );
+static	void	scoreboard_Prepare5ColumnDisplay( void );
+static	void	scoreboard_Prepare4ColumnDisplay( void );
+static	void	scoreboard_Prepare3ColumnDisplay( void );
+static	void	scoreboard_DoRankingListPass( ULONG ulPlayer, LONG lSpectators, LONG lDead, LONG lNotPlaying, LONG lNoTeam, LONG lWrongTeam, ULONG ulDesiredTeam );
+static	void	scoreboard_DrawRankings( ULONG ulPlayer );
+static	void	scoreboard_DrawWaiting( void );
+static	void	scoreboard_DrawBottomString( void );
 
 //*****************************************************************************
 //	CONSOLE VARIABLES
@@ -2161,28 +2161,28 @@ static void scoreboard_SortPlayers( ULONG ulSortType )
 
 //*****************************************************************************
 //
-static int STACK_ARGS scoreboard_FragCompareFunc( const void *arg1, const void *arg2 )
+static int scoreboard_FragCompareFunc( const void *arg1, const void *arg2 )
 {
 	return ( players[*(int *)arg2].fragcount - players[*(int *)arg1].fragcount );
 }
 
 //*****************************************************************************
 //
-static int STACK_ARGS scoreboard_PointsCompareFunc( const void *arg1, const void *arg2 )
+static int scoreboard_PointsCompareFunc( const void *arg1, const void *arg2 )
 {
 	return ( players[*(int *)arg2].lPointCount - players[*(int *)arg1].lPointCount );
 }
 
 //*****************************************************************************
 //
-static int STACK_ARGS scoreboard_KillsCompareFunc( const void *arg1, const void *arg2 )
+static int scoreboard_KillsCompareFunc( const void *arg1, const void *arg2 )
 {
 	return ( players[*(int *)arg2].killcount - players[*(int *)arg1].killcount );
 }
 
 //*****************************************************************************
 //
-static int STACK_ARGS scoreboard_WinsCompareFunc( const void *arg1, const void *arg2 )
+static int scoreboard_WinsCompareFunc( const void *arg1, const void *arg2 )
 {
 	return ( players[*(int *)arg2].ulWins - players[*(int *)arg1].ulWins );
 }

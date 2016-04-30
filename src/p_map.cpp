@@ -2712,14 +2712,26 @@ bool P_OldTryMove (AActor *thing, fixed_t x, fixed_t y,
 //
 //==========================================================================
 
-bool P_CheckMove(AActor *thing, const DVector2 &pos, bool dropoff)
+bool P_CheckMove(AActor *thing, const DVector2 &pos, int flags)
 {
 	FCheckPosition tm;
 	double		newz = thing->Z();
 
 	if (!P_CheckPosition(thing, pos, tm))
 	{
-		return false;
+		// Ignore PCM_DROPOFF. Not necessary here: a little later it is.
+		if (!flags || (!(flags & PCM_NOACTORS) && !(flags & PCM_NOLINES)))
+		{
+			return false;
+		}
+		if (!(flags & PCM_NOACTORS) && thing->BlockingMobj)
+		{
+			return false;
+		}
+		if (!(flags & PCM_NOLINES) && thing->BlockingLine)
+		{
+			return false;
+		}
 	}
 
 	if (thing->flags3 & MF3_FLOORHUGGER)
@@ -2771,7 +2783,7 @@ bool P_CheckMove(AActor *thing, const DVector2 &pos, bool dropoff)
 					return false;
 				}
 			}
-			else if (dropoff)
+			else if (flags & PCM_DROPOFF)
 			{
 				const DVector3 oldpos = thing->Pos();
 				thing->SetOrigin(pos.X, pos.Y, newz, true);
@@ -5199,12 +5211,6 @@ struct SRailHit
 	DVector3 HitPos;
 	DAngle HitAngle;
 };
-struct SPortalHit
-{
-	DVector3 HitPos;
-	DVector3 ContPos;
-	DVector3 OutDir;
-};
 struct RailData
 {
 	AActor *Caller;
@@ -5316,14 +5322,22 @@ void P_RailAttack(FRailParams *p)
 	AActor *puffDefaults = GetDefaultByType(puffclass->GetReplacement()); //Contains all the flags such as FOILINVUL, etc.
 
 	// disabled because not complete yet.
-	flags = (puffDefaults->flags6 & MF6_NOTRIGGER) ? 0/*TRACE_ReportPortals*/ : TRACE_PCross | TRACE_Impact /*| TRACE_ReportPortals*/;
+	flags = (puffDefaults->flags6 & MF6_NOTRIGGER) ? TRACE_ReportPortals : TRACE_PCross | TRACE_Impact | TRACE_ReportPortals;
 	rail_data.StopAtInvul = (puffDefaults->flags3 & MF3_FOILINVUL) ? false : true;
 	rail_data.ThruSpecies = (puffDefaults->flags6 & MF6_MTHRUSPECIES) ? true : false;
+
+	// to make things easier, push the start position and directional vector onto the PortalHits array as its first element
+	SPortalHit phit = { start, start, vec };
+	rail_data.PortalHits.Push(phit);
 	Trace(start, source->Sector, vec, p->distance, MF_SHOOTABLE, ML_BLOCKEVERYTHING, source, trace,	flags, ProcessRailHit, &rail_data);
+
+	// and push the hit position, too, so that the array contains the entire trace with all transition points.
+	phit = { trace.HitPos, trace.HitPos, trace.HitVector };
+	rail_data.PortalHits.Push(phit);
 
 	// [Spleen]
 	UNLAGGED_Restore( source );
-	
+
 	// Hurt anything the trace hit
 	unsigned int i;
 	FName damagetype = (puffDefaults == NULL || puffDefaults->DamageType == NAME_None) ? FName(NAME_Railgun) : puffDefaults->DamageType;
@@ -5475,7 +5489,7 @@ void P_RailAttack(FRailParams *p)
 	}
 
 	// Draw the slug's trail.
-	P_DrawRailTrail(source, start, trace.HitPos, p->color1, p->color2, p->maxdiff, p->flags, p->spawnclass, angle, p->duration, p->sparsity, p->drift, p->SpiralOffset);
+	P_DrawRailTrail(source, start, rail_data.PortalHits, trace.HitPos, p->color1, p->color2, p->maxdiff, p->flags, p->spawnclass, angle, p->duration, p->sparsity, p->drift, p->SpiralOffset);
 
 	// [BC] If we're the server, tell clients to create a railgun trail.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -5961,7 +5975,7 @@ bool P_UsePuzzleItem(AActor *PuzzleItemUser, int PuzzleItemType)
 	start = PuzzleItemUser->GetPortalTransition(PuzzleItemUser->Height / 2);
 	end = PuzzleItemUser->Angles.Yaw.ToVector(usedist);
 
-	FPathTraverse it(start.X, start.Y, end.X, end.Y, PT_ADDLINES | PT_ADDTHINGS);
+	FPathTraverse it(start.X, start.Y, end.X, end.Y, PT_DELTA | PT_ADDLINES | PT_ADDTHINGS);
 	intercept_t *in;
 
 	while ((in = it.Next()))

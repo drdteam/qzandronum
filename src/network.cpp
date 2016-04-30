@@ -1078,7 +1078,7 @@ void NETWORK_MakeMapCollectionChecksum( )
 
 //*****************************************************************************
 // [TP]
-static int STACK_ARGS namesort( const void* p1, const void* p2 )
+static int namesort( const void* p1, const void* p2 )
 {
 	FName n1 = *reinterpret_cast<const FName*>( p1 );
 	FName n2 = *reinterpret_cast<const FName*>( p2 );
@@ -1179,7 +1179,7 @@ void NETWORK_WriteName( BYTESTREAM_s* bytestream, FName name )
 
 //*****************************************************************************
 // [TP]
-void STACK_ARGS NETWORK_Printf( const char* format, ... )
+void NETWORK_Printf( const char* format, ... )
 {
 	va_list argptr;
 	va_start( argptr, format );
