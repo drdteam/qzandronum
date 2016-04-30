@@ -256,7 +256,7 @@ void	P_FakeZMovement (AActor *mo);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor, FCheckPosition &tm, bool missileCheck = false);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor = NULL);
 
-bool	P_CheckMove(AActor *thing, const DVector2 &pos);
+bool	P_CheckMove(AActor *thing, const DVector2 &pos, bool dropoff = false);
 bool	P_OldTryMove (AActor* thing, fixed_t x, fixed_t y, bool dropoff, bool onfloor = false);
 void	P_ApplyTorque(AActor *mo);
 

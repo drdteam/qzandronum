@@ -164,7 +164,6 @@ struct DrawParms
 	float Alpha;
 	uint32 fillcolor;
 	FRemapTable *remap;
-	const BYTE *translation;
 	uint32 colorOverlay;
 	INTBOOL alphaChannel;
 	INTBOOL flipX;

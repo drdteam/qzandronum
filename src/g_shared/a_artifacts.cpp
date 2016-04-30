@@ -1776,7 +1776,7 @@ void APowerProtection::ModifyDamage(int damage, FName damageType, int &newdamage
 		DmgFactors *df = GetClass()->DamageFactors;
 		if (df != NULL && df->CountUsed() != 0)
 		{
-			newdam = MIN(0, df->Apply(damageType, damage));
+			newdam = MAX(0, df->Apply(damageType, damage));
 		}
 		else
 		{
