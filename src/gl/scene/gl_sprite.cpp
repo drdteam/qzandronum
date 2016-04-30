@@ -239,9 +239,8 @@ void GLSprite::Draw(int pass)
 		if (lightlist)
 		{
 			// set up the light slice
-#pragma message ("Undo this!")
-			secplane_t bottommost; bottommost.set(0, 0, FRACUNIT, 32767 << FRACBITS);
-			secplane_t topmost; topmost.set(0, 0, FRACUNIT, -(32767 << FRACBITS));
+			static secplane_t bottommost = { {0, 0, 1.}, FLT_MAX };
+			static secplane_t topmost = { { 0, 0, 1. }, -FLT_MAX };
 
 			secplane_t *topplane = i == 0 ? &topmost : &(*lightlist)[i].plane;
 			secplane_t *lowplane = i == (*lightlist).Size() - 1 ? &bottommost : &(*lightlist)[i + 1].plane;
@@ -880,10 +879,14 @@ void GLSprite::ProcessParticle (particle_t *particle, sector_t *sector)//, int s
 
 			if (lightbottom < particle->Pos.Z)
 			{
-				lightlevel = *lightlist[i].p_lightlevel;
+				lightlevel = gl_ClampLight(*lightlist[i].p_lightlevel);
 				Colormap.LightColor = (lightlist[i].extra_colormap)->Color;
 				break;
 			}
+		}
+		if (glset.nocoloredspritelighting)
+		{
+			Colormap.Decolorize();	// ZDoom never applies colored light to particles.
 		}
 	}
 	else
@@ -898,6 +901,7 @@ void GLSprite::ProcessParticle (particle_t *particle, sector_t *sector)//, int s
 	OverrideShader = 0;
 
 	ThingColor = particle->color;
+	ThingColor.g = 255;
 	ThingColor.a = 255;
 
 	modelframe=NULL;
@@ -953,6 +957,7 @@ void GLSprite::ProcessParticle (particle_t *particle, sector_t *sector)//, int s
 
 	actor=NULL;
 	this->particle=particle;
+	fullbright = !!particle->bright;
 	
 	// [BB] Translucent particles have to be rendered without the alpha test.
 	if (gl_particles_style != 2 && trans>=1.0f-FLT_EPSILON) hw_styleflags = STYLEHW_Solid;

@@ -311,7 +311,7 @@ struct secplane_t
 	// the plane is defined as a*x + b*y + c*z + d = 0
 	// ic is 1/c, for faster Z calculations
 
-private:
+//private:
 	DVector3 normal;
 	double  D, negiC;	// negative iC because that also saves a negation in all methods using this.
 public:
@@ -1432,7 +1432,7 @@ struct line_t
 {
 	vertex_t	*v1, *v2;	// vertices, from v1 to v2
 private:
-	fixed_t 	dx, dy;		// precalculated v2 - v1 for side checking
+	DVector2	delta;		// precalculated v2 - v1 for side checking
 public:
 	DWORD		flags;
 	DWORD		activation;	// activation type
@@ -1449,19 +1449,12 @@ public:
 
 	DVector2 Delta() const
 	{
-		return{ FIXED2DBL(dx), FIXED2DBL(dy) };
-	}
-
-	void setDelta(fixed_t x, fixed_t y)
-	{
-		dx = x;
-		dy = y;
+		return delta;
 	}
 
 	void setDelta(double x, double y)
 	{
-		dx = FLOAT2FIXED(x);
-		dy = FLOAT2FIXED(y);
+		delta = { x, y };
 	}
 
 	void setAlpha(double a)
