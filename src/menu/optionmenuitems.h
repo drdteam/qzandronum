@@ -311,10 +311,10 @@ public:
 			}
 			else
 			{
-				UCVarValue cv = mCVar->GetGenericRep(CVAR_String);
+				const char *cv = mCVar->GetHumanString();
 				for(unsigned i = 0; i < (*opt)->mValues.Size(); i++)
 				{
-					if ((*opt)->mValues[i].TextValue.CompareNoCase(cv.String) == 0)
+					if ((*opt)->mValues[i].TextValue.CompareNoCase(cv) == 0)
 					{
 						Selection = i;
 						break;
@@ -1045,7 +1045,7 @@ public:
 		if ( mCVar == NULL )
 			return "";
 
-		return mCVar->GetGenericRep( CVAR_String ).String;
+		return mCVar->GetHumanString();
 	}
 
 	virtual FString Represent()

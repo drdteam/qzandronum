@@ -76,7 +76,7 @@ double sector_t::FindLowestFloorSurrounding (vertex_t **v) const
 	double ofloor;
 	vertex_t *spot;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::floor);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::floor);
 
 	spot = lines[0]->v1;
 	floor = floorplane.ZatPoint(spot);
@@ -120,7 +120,7 @@ double sector_t::FindHighestFloorSurrounding (vertex_t **v) const
 	double ofloor;
 	vertex_t *spot;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::floor);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::floor);
 
 	spot = lines[0]->v1;
 	floor = -FLT_MAX;
@@ -171,7 +171,7 @@ double sector_t::FindNextHighestFloor (vertex_t **v) const
 	line_t *check;
 	int i;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::floor);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::floor);
 
 	spot = lines[0]->v1;
 	height = floorplane.ZatPoint(spot);
@@ -226,7 +226,7 @@ double sector_t::FindNextLowestFloor (vertex_t **v) const
 	line_t *check;
 	int i;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::floor);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::floor);
 
 	spot = lines[0]->v1;
 	height = floorplane.ZatPoint (spot);
@@ -281,7 +281,7 @@ double sector_t::FindNextLowestCeiling (vertex_t **v) const
 	int i;
 
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::ceiling);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::ceiling);
 
 	spot = lines[0]->v1;
 	height = ceilingplane.ZatPoint(spot);
@@ -335,7 +335,7 @@ double sector_t::FindNextHighestCeiling (vertex_t **v) const
 	line_t *check;
 	int i;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::ceiling);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::ceiling);
 
 	spot = lines[0]->v1;
 	height = ceilingplane.ZatPoint(spot);
@@ -381,7 +381,7 @@ double sector_t::FindLowestCeilingSurrounding (vertex_t **v) const
 	line_t *check;
 	int i;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::ceiling);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::ceiling);
 
 	spot = lines[0]->v1;
 	height = FLT_MAX;
@@ -423,7 +423,7 @@ double sector_t::FindHighestCeilingSurrounding (vertex_t **v) const
 	line_t *check;
 	int i;
 
-	if (linecount == 0) return GetPlaneTexZF(sector_t::ceiling);
+	if (linecount == 0) return GetPlaneTexZ(sector_t::ceiling);
 
 	spot = lines[0]->v1;
 	height = -FLT_MAX;
@@ -904,7 +904,7 @@ void sector_t::CheckPortalPlane(int plane)
 	if (GetPortalType(plane) == PORTS_LINKEDPORTAL)
 	{
 		double portalh = GetPortalPlaneZ(plane);
-		double planeh = GetPlaneTexZF(plane);
+		double planeh = GetPlaneTexZ(plane);
 		int obstructed = PLANEF_OBSTRUCTED * (plane == sector_t::floor ? planeh > portalh : planeh < portalh);
 		planes[plane].Flags = (planes[plane].Flags  & ~PLANEF_OBSTRUCTED) | obstructed;
 	}

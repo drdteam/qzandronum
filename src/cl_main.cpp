@@ -9661,7 +9661,7 @@ static void client_SetLineAlpha( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the alpha.
-	pLine->Alpha = alpha;
+	pLine->alpha = FIXED2DBL ( alpha );
 }
 
 //*****************************************************************************

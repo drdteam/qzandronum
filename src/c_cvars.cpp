@@ -156,6 +156,11 @@ FBaseCVar::~FBaseCVar ()
 	}
 }
 
+const char *FBaseCVar::GetHumanString(int precision) const
+{
+	return GetGenericRep(CVAR_String).String;
+}
+
 void FBaseCVar::ForceSet (UCVarValue value, ECVarType type, bool nouserinfosend)
 {
 	DoSet (value, type);
@@ -320,7 +325,9 @@ const char *FBaseCVar::ToString (UCVarValue value, ECVarType type)
 		break;
 
 	case CVAR_Float:
-		mysnprintf (cstrbuf, countof(cstrbuf), "%g", value.Float);
+		IGNORE_FORMAT_PRE
+		mysnprintf (cstrbuf, countof(cstrbuf), "%H", value.Float);
+		IGNORE_FORMAT_POST
 		break;
 
 	case CVAR_GUID:
@@ -438,7 +445,9 @@ UCVarValue FBaseCVar::FromFloat (float value, ECVarType type)
 		break;
 
 	case CVAR_String:
-		mysnprintf (cstrbuf, countof(cstrbuf), "%g", value);
+		IGNORE_FORMAT_PRE
+		mysnprintf (cstrbuf, countof(cstrbuf), "%H", value);
+		IGNORE_FORMAT_POST
 		ret.String = cstrbuf;
 		break;
 
@@ -796,6 +805,16 @@ FFloatCVar::FFloatCVar (const char *name, float def, DWORD flags, void (*callbac
 ECVarType FFloatCVar::GetRealType () const
 {
 	return CVAR_Float;
+}
+
+const char *FFloatCVar::GetHumanString(int precision) const
+{
+	if (precision < 0)
+	{
+		precision = 6;
+	}
+	mysnprintf(cstrbuf, countof(cstrbuf), "%.*g", precision, Value);
+	return cstrbuf;
 }
 
 UCVarValue FFloatCVar::GetGenericRep (ECVarType type) const
@@ -1725,7 +1744,7 @@ void FBaseCVar::ListVars (const char *filter, bool plain)
 				if (!(flags & CVAR_UNSETTABLE))
 				{
 					++count;
-					Printf ("%s : %s\n", var->GetName(), var->GetGenericRep(CVAR_String).String);
+					Printf ("%s : %s\n", var->GetName(), var->GetHumanString());
 				}
 			}
 			else
@@ -1742,7 +1761,7 @@ void FBaseCVar::ListVars (const char *filter, bool plain)
 					flags & CVAR_MOD ? 'M' : ' ',
 					flags & CVAR_IGNORE ? 'X' : ' ',
 					var->GetName(),
-					var->GetGenericRep(CVAR_String).String);
+					var->GetHumanString());
 			}
 		}
 		var = var->m_Next;

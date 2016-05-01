@@ -3310,7 +3310,7 @@ void SERVERCOMMANDS_SetLineAlpha( ULONG ulLine, ULONG ulPlayerExtra, ServerComma
 
 	NetCommand command ( SVC_SETLINEALPHA );
 	command.addShort ( ulLine );
-	command.addLong ( lines[ulLine].Alpha );
+	command.addLong ( FLOAT2FIXED ( lines[ulLine].alpha ) );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

@@ -3495,9 +3495,9 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 
 		// Restore the line's alpha if it changed.
-		if ( lines[ulIdx].Alpha != lines[ulIdx].SavedAlpha )
+		if ( lines[ulIdx].alpha != lines[ulIdx].SavedAlpha )
 		{
-			lines[ulIdx].Alpha = lines[ulIdx].SavedAlpha;
+			lines[ulIdx].alpha = lines[ulIdx].SavedAlpha;
 
 			// If we're the server, tell clients about this alpha change.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )

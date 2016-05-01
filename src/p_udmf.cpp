@@ -787,7 +787,7 @@ public:
 		FString tagstring;
 
 		memset(ld, 0, sizeof(*ld));
-		ld->Alpha = OPAQUE;
+		ld->alpha = 1.;
 		ld->portalindex = UINT_MAX;
 		ld->sidedef[0] = ld->sidedef[1] = NULL;
 		if (level.flags2 & LEVEL2_CLIPMIDTEX) ld->flags |= ML_CLIP_MIDTEX;
@@ -1089,13 +1089,13 @@ public:
 		{
 			ld->activation = (ld->activation & ~SPAC_Use) | SPAC_UseThrough;
 		}
-		if (strifetrans && ld->Alpha == OPAQUE)
+		if (strifetrans && ld->alpha == 1.)
 		{
-			ld->Alpha = TRANSLUC75;
+			ld->alpha = 0.75;
 		}
-		if (strifetrans2 && ld->Alpha == OPAQUE)
+		if (strifetrans2 && ld->alpha == OPAQUE)
 		{
-			ld->Alpha = TRANSLUC25;
+			ld->alpha = 0.25;
 		}
 		if (ld->sidedef[0] == NULL)
 		{
@@ -1598,7 +1598,7 @@ public:
 		// Reset the planes to their defaults if not all of the plane equation's parameters were found.
 		if (fplaneflags != 15)
 		{
-			sec->floorplane.SetAtHeight(sec->GetPlaneTexZF(sector_t::floor), sector_t::floor);
+			sec->floorplane.SetAtHeight(sec->GetPlaneTexZ(sector_t::floor), sector_t::floor);
 		}
 		else
 		{
@@ -1608,7 +1608,7 @@ public:
 		}
 		if (cplaneflags != 15)
 		{
-			sec->ceilingplane.SetAtHeight(sec->GetPlaneTexZF(sector_t::ceiling), sector_t::ceiling);
+			sec->ceilingplane.SetAtHeight(sec->GetPlaneTexZ(sector_t::ceiling), sector_t::ceiling);
 		}
 		else
 		{
@@ -1894,7 +1894,7 @@ public:
 
 				// [BB] Save some values that are necessary for a map reset.
 				GAME_BackupLineProperties(&li);
-				li.SavedAlpha = li.Alpha;
+				li.SavedAlpha = li.alpha;
 
 				ParsedLines.Push(li);
 			}

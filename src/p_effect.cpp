@@ -752,7 +752,7 @@ struct TrailSegment
 
 
 
-void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1, int color2, double maxdiff, int flags, PClassActor *spawnclass, DAngle angle, int duration, double sparsity, double drift, int SpiralOffset)
+void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1, int color2, double maxdiff, int flags, PClassActor *spawnclass, DAngle angle, int duration, double sparsity, double drift, int SpiralOffset, DAngle pitch)
 {
 	// [BC] The server has no need to draw a railgun trail.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -1034,7 +1034,11 @@ void P_DrawRailTrail(AActor *source, TArray<SPortalHit> &portalhits, int color1,
 			}			
 			AActor *thing = Spawn (spawnclass, pos + diff, ALLOW_REPLACE);
 			if (thing)
+			{
+				if (source)	thing->target = source;
+				thing->Angles.Pitch = pitch;
 				thing->Angles.Yaw = angle;
+			}
 			pos += trail[segment].dir * stepsize;
 			lencount -= stepsize;
 			if (lencount <= 0)

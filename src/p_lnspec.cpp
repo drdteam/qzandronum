@@ -1068,10 +1068,25 @@ FUNC(LS_Teleport_NoFog)
 // Teleport_NoFog (tid, useang, sectortag, keepheight)
 {
 	int flags = 0;
-	if (!arg1)
+	switch (arg1)
 	{
+	case 0:
 		flags |= TELF_KEEPORIENTATION;
+		break;
+
+	default:
+	case 1:
+		break;
+
+	case 2:
+		flags |= TELF_KEEPORIENTATION | TELF_ROTATEBOOM;	// adjust to exit thing like Boom (i.e. with incorrect reversed angle)
+		break;
+
+	case 3:
+		flags |= TELF_KEEPORIENTATION | TELF_ROTATEBOOMINVERSE;	// adjust to exit thing correctly
+		break;
 	}
+
 	if (arg3)
 	{
 		flags |= TELF_KEEPHEIGHT;
@@ -3314,7 +3329,7 @@ FUNC(LS_TranslucentLine)
 	int linenum;
 	while ((linenum = itr.Next()) >= 0)
 	{
-		lines[linenum].Alpha = Scale(clamp(arg1, 0, 255), OPAQUE, 255);
+		lines[linenum].alpha = clamp(arg1, 0, 255) / 255.;
 
 		// [BC] If we're the server, tell clients to adjust this line's alpha.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )

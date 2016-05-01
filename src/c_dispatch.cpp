@@ -680,8 +680,6 @@ void C_DoCommand (const char *cmd, int keynum)
 			}
 			else
 			{ // Get the variable's value
-				UCVarValue val = var->GetGenericRep (CVAR_String);
-
 				// [BC] If this variable is passworded, just show a bunch of stars instead of
 				// the actual string value.
 				if ( var->GetFlags( ) & CVAR_PASSWORD )
@@ -689,14 +687,14 @@ void C_DoCommand (const char *cmd, int keynum)
 					ULONG	ulIdx;
 					char	szString[64];
 
-					sprintf( szString, "%s", val.String );
-					for ( ulIdx = 0; ulIdx < strlen( val.String ); ulIdx++ )
+					sprintf( szString, "%s", var->GetHumanString() );
+					for ( ulIdx = 0; ulIdx < strlen( var->GetHumanString() ); ulIdx++ )
 						szString[ulIdx] = '*';
 
 					Printf( "\"%s\" is \"%s\"\n", var->GetName( ), szString );
 				}
 				else
-					Printf ("\"%s\" is \"%s\"\n", var->GetName(), val.String);
+					Printf ("\"%s\" is \"%s\"\n", var->GetName(), var->GetHumanString() );
 			}
 		}
 		else
