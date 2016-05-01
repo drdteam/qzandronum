@@ -503,7 +503,6 @@ void P_SerializeWorld (FArchive &arc)
 				<< si->LeftSide
 				<< si->RightSide
 				<< si->Index;
-			DBaseDecal::SerializeChain (arc, &si->AttachedDecals);
 			// [BC]
 			arc << si->SavedFlags
 				<< si->SavedTopTexture
@@ -537,6 +536,7 @@ void P_SerializeWorldActors(FArchive &arc)
 {
 	int i;
 	sector_t *sec;
+	line_t *line;
 
 	for (i = 0, sec = sectors; i < numsectors; i++, sec++)
 	{
@@ -549,6 +549,16 @@ void P_SerializeWorldActors(FArchive &arc)
 	for (auto &s : sectorPortals)
 	{
 		arc << s.mSkybox;
+	}
+	for (i = 0, line = lines; i < numlines; i++, line++)
+	{
+		for (int s = 0; s < 2; s++)
+		{
+			if (line->sidedef[s] != NULL)
+			{
+				DBaseDecal::SerializeChain(arc, &line->sidedef[s]->AttachedDecals);
+			}
+		}
 	}
 }
 
@@ -593,6 +603,7 @@ FArchive &operator<< (FArchive &arc, sector_t::splane &p)
 
 void P_SerializeThinkers (FArchive &arc, bool hubLoad)
 {
+	arc.EnableThinkers();
 	DImpactDecal::SerializeTime (arc);
 	DThinker::SerializeAll (arc, hubLoad);
 }
