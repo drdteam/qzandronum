@@ -454,6 +454,9 @@ void AActor::Serialize(FArchive &arc)
 
 	if (arc.IsLoading ())
 	{
+		touching_sectorlist = NULL;
+		LinkToWorld(false, Sector);
+
 		AddToHash ();
 		SetShade (fillcolor);
 		if (player)
@@ -470,15 +473,9 @@ void AActor::Serialize(FArchive &arc)
 				Speed = GetDefault()->Speed;
 			}
 		}
+		ClearInterpolation();
+		UpdateWaterLevel(false);
 	}
-}
-
-void AActor::PostSerialize()
-{
-	touching_sectorlist = NULL;
-	LinkToWorld(false, Sector);
-	ClearInterpolation();
-	UpdateWaterLevel(false);
 }
 
 AActor::AActor () throw()
@@ -3182,7 +3179,7 @@ void P_ZMovement (AActor *mo, double oldfloorz)
 		{ // [RH] Let the sector do something to the actor
 			mo->Sector->SecActTarget->TriggerAction (mo, SECSPAC_HitFloor);
 		}
-		P_CheckFor3DFloorHit(mo);
+		P_CheckFor3DFloorHit(mo, mo->floorz);
 		// [RH] Need to recheck this because the sector action might have
 		// teleported the actor so it is no longer below the floor.
 		if (mo->Z() <= mo->floorz)
@@ -3329,7 +3326,7 @@ void P_ZMovement (AActor *mo, double oldfloorz)
 		{ // [RH] Let the sector do something to the actor
 			mo->Sector->SecActTarget->TriggerAction (mo, SECSPAC_HitCeiling);
 		}
-		P_CheckFor3DCeilingHit(mo);
+		P_CheckFor3DCeilingHit(mo, mo->ceilingz);
 		// [RH] Need to recheck this because the sector action might have
 		// teleported the actor so it is no longer above the ceiling.
 		if (mo->Top() > mo->ceilingz)
@@ -4866,11 +4863,11 @@ void AActor::CheckSectorTransition(sector_t *oldsec)
 		}
 		if (Z() == floorz)
 		{
-			P_CheckFor3DFloorHit(this);
+			P_CheckFor3DFloorHit(this, Z());
 		}
 		if (Top() == ceilingz)
 		{
-			P_CheckFor3DCeilingHit(this);
+			P_CheckFor3DCeilingHit(this, Top());
 		}
 
 		// [BL] Trigger Domination check if player enters a new sector in Domination

@@ -2928,12 +2928,12 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 				{
 					int mobjNetID = NETWORK_ReadShort( pByteStream );
 					if ( mobjNetID == -1  )
-						level.DefaultSkybox = NULL;
+						sectorPortals[0].mSkybox = nullptr;
 					else
 					{
 						AActor *mo = CLIENT_FindThingByNetID( mobjNetID );
 						if ( mo && mo->GetClass()->IsDescendantOf( RUNTIME_CLASS( ASkyViewpoint ) ) )
-							level.DefaultSkybox = static_cast<ASkyViewpoint *>( mo );
+							sectorPortals[0].mSkybox = static_cast<ASkyViewpoint *>( mo );
 					}
 				}
 				break;

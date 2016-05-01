@@ -4977,7 +4977,7 @@ void SERVERCOMMANDS_SetCVar( const FBaseCVar &CVar, ULONG ulPlayerExtra, ServerC
 void SERVERCOMMANDS_SetDefaultSkybox( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	NetCommand command( SVC2_SETDEFAULTSKYBOX );
-	command.addShort( ( level.DefaultSkybox != NULL ) ? level.DefaultSkybox->lNetID : -1 );
+	command.addShort( ( sectorPortals[0].mSkybox != nullptr ) ? sectorPortals[0].mSkybox->lNetID : -1 );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 //*****************************************************************************

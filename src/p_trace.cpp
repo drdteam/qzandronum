@@ -220,7 +220,7 @@ void FTraceInfo::EnterSectorPortal(FPathTraverse &pt, int position, double frac,
 	inshootthrough = true;
 	startfrac = frac;
 	EnterDist = enterdist;
-	pt.PortalRelocate(entersec->SkyBoxes[position], ptflags, frac);
+	pt.PortalRelocate(entersec->GetPortal(position)->mDisplacement, ptflags, frac);
 
 	if ((TraceFlags & TRACE_ReportPortals) && TraceCallback != NULL)
 	{
@@ -325,7 +325,7 @@ void FTraceInfo::Setup3DFloors()
 					{
 						CurSector->floorplane = *rover->top.plane;
 						CurSector->SetTexture(sector_t::floor, *rover->top.texture, false);
-						CurSector->SkyBoxes[sector_t::floor] = nullptr;
+						CurSector->ClearPortal(sector_t::floor);
 						bf = ff_top;
 					}
 				}
@@ -337,7 +337,7 @@ void FTraceInfo::Setup3DFloors()
 						CurSector->ceilingplane = *rover->bottom.plane;
 						CurSector->SetTexture(sector_t::ceiling, *rover->bottom.texture, false);
 						bc = ff_bottom;
-						CurSector->SkyBoxes[sector_t::ceiling] = nullptr;
+						CurSector->ClearPortal(sector_t::ceiling);
 					}
 				}
 				else
@@ -347,7 +347,7 @@ void FTraceInfo::Setup3DFloors()
 					{
 						CurSector->floorplane = *rover->bottom.plane;
 						CurSector->SetTexture(sector_t::floor, *rover->bottom.texture, false);
-						CurSector->SkyBoxes[sector_t::floor] = nullptr;
+						CurSector->ClearPortal(sector_t::floor);
 						bf = ff_bottom;
 					}
 
@@ -355,7 +355,7 @@ void FTraceInfo::Setup3DFloors()
 					{
 						CurSector->ceilingplane = *rover->top.plane;
 						CurSector->SetTexture(sector_t::ceiling, *rover->top.texture, false);
-						CurSector->SkyBoxes[sector_t::ceiling] = nullptr;
+						CurSector->ClearPortal(sector_t::ceiling);
 						bc = ff_top;
 					}
 					inshootthrough = false;
@@ -503,7 +503,7 @@ bool FTraceInfo::LineCheck(intercept_t *in, double dist, DVector3 hit)
 						{
 							entersector->floorplane = *rover->top.plane;
 							entersector->SetTexture(sector_t::floor, *rover->top.texture, false);
-							entersector->SkyBoxes[sector_t::floor] = NULL;
+							entersector->ClearPortal(sector_t::floor);
 							bf = ff_top;
 						}
 					}
@@ -514,7 +514,7 @@ bool FTraceInfo::LineCheck(intercept_t *in, double dist, DVector3 hit)
 						{
 							entersector->ceilingplane = *rover->bottom.plane;
 							entersector->SetTexture(sector_t::ceiling, *rover->bottom.texture, false);
-							entersector->SkyBoxes[sector_t::ceiling] = NULL;
+							entersector->ClearPortal(sector_t::ceiling);
 							bc = ff_bottom;
 						}
 					}

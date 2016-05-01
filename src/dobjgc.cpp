@@ -327,7 +327,10 @@ static void MarkRoot()
 	DThinker::MarkRoots();
 	FCanvasTextureInfo::Mark();
 	Mark(DACSThinker::ActiveThinker);
-	Mark(level.DefaultSkybox);
+	for (auto &s : sectorPortals)
+	{
+		Mark(s.mSkybox);
+	}
 	// Mark dead bodies.
 	for (i = 0; i < BODYQUESIZE; ++i)
 	{
@@ -682,8 +685,6 @@ size_t DSectorMarker::PropagateMark()
 		{
 			sector_t *sec = &sectors[SecNum + i];
 			GC::Mark(sec->SoundTarget);
-			GC::Mark(sec->SkyBoxes[sector_t::ceiling]);
-			GC::Mark(sec->SkyBoxes[sector_t::floor]);
 			GC::Mark(sec->SecActTarget);
 			GC::Mark(sec->floordata);
 			GC::Mark(sec->ceilingdata);

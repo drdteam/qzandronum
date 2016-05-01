@@ -62,19 +62,6 @@ enum
 extern size_t MaxDrawSegs;
 struct FDisplacement;
 
-
-enum
-{
-	SKYBOX_ANCHOR = -1,
-	SKYBOX_SKYVIEWPOINT = 0,				// a regular skybox
-	SKYBOX_STACKEDSECTORTHING,	// stacked sectors with the thing method
-	SKYBOX_PORTAL,				// stacked sectors with Sector_SetPortal
-	SKYBOX_LINKEDPORTAL,		// linked portal (interactive)
-	SKYBOX_PLANE,				// EE-style plane portal (not implemented in SW renderer)
-	SKYBOX_HORIZON,				// EE-style horizon portal (not implemented in SW renderer)
-};
-
-
 //
 // INTERNAL MAP TYPES
 //	used by play and refresh
@@ -539,8 +526,6 @@ enum
 	SECF_UNDERWATERMASK	= 32+64,
 	SECF_DRAWN			= 128,	// sector has been drawn at least once
 	SECF_HIDDEN			= 256,	// Do not draw on textured automap
-	SECF_NOFLOORSKYBOX	= 512,	// force use of regular sky 
-	SECF_NOCEILINGSKYBOX	= 1024,	// force use of regular sky (do not separate from NOFLOORSKYBOX!!!)
 	SECF_RETURNZONE		= 2048,	// [BC] Flags should be immediately returned if they're dropped within this sector (lava sectors, unreachable sectors, etc.).
 };
 
@@ -714,7 +699,7 @@ public:
 
 	DInterpolation *SetInterpolation(int position, bool attach);
 
-	ASkyViewpoint *GetSkyBox(int which);
+	FSectorPortal *ValidatePortal(int which);
 	void CheckPortalPlane(int plane);
 
 	enum
@@ -977,8 +962,7 @@ public:
 
 	bool PortalBlocksView(int plane)
 	{
-		if (SkyBoxes[plane] == NULL) return true;
-		if (GetPortalType(plane) != SKYBOX_LINKEDPORTAL) return false;
+		if (GetPortalType(plane) != PORTS_LINKEDPORTAL) return false;
 		return !!(planes[plane].Flags & (PLANEF_NORENDER | PLANEF_DISABLED | PLANEF_OBSTRUCTED));
 	}
 
@@ -999,28 +983,38 @@ public:
 
 	bool PortalIsLinked(int plane)
 	{
-		return (SkyBoxes[plane] != NULL && GetPortalType(plane) == SKYBOX_LINKEDPORTAL);
+		return (GetPortalType(plane) == PORTS_LINKEDPORTAL);
 	}
 
-	// These intentionally do not validate the SkyBoxes pointers.
+	void ClearPortal(int plane)
+	{
+		Portals[plane] = 0;
+		portals[plane] = nullptr;
+	}
+
+	FSectorPortal *GetPortal(int plane)
+	{
+		return &sectorPortals[Portals[plane]];
+	}
+
 	double GetPortalPlaneZ(int plane)
 	{
-		return SkyBoxes[plane]->specialf1;
+		return sectorPortals[Portals[plane]].mPlaneZ;
 	}
 
 	DVector2 GetPortalDisplacement(int plane)
 	{
-		return SkyBoxes[plane]->Scale;
+		return sectorPortals[Portals[plane]].mDisplacement;
 	}
 
 	int GetPortalType(int plane)
 	{
-		return SkyBoxes[plane] == nullptr? -1 : SkyBoxes[plane]->special1;
+		return sectorPortals[Portals[plane]].mType;
 	}
 
 	int GetOppositePortalGroup(int plane)
 	{
-		return SkyBoxes[plane]->Sector->PortalGroup;
+		return sectorPortals[Portals[plane]].mDestination->PortalGroup;
 	}
 
 	void SetVerticesDirty()	
@@ -1142,9 +1136,8 @@ public:
 	// occurs, SecActTarget's TriggerAction method is called.
 	TObjPtr<ASectorAction> SecActTarget;
 
-	// [RH] The sky box to render for this sector. NULL means use a
-	// regular sky.
-	TObjPtr<AActor> SkyBoxes[2];
+	// [RH] The portal or skybox to render for this sector.
+	unsigned Portals[2];
 	int PortalGroup;
 
 	int							sectornum;			// for comparing sector copies
@@ -1174,7 +1167,6 @@ public:
 	float GetReflect(int pos) { return gl_plane_reflection_i? reflect[pos] : 0; }
 	bool VBOHeightcheck(int pos) const { return vboheight[pos] == GetPlaneTexZ(pos); }
 	FPortal *GetGLPortal(int plane) { return portals[plane]; }
-	void ClearPortal(int plane) { portals[plane] = nullptr;	SkyBoxes[plane] = nullptr; }
 
 	enum
 	{
@@ -1484,7 +1476,7 @@ public:
 	int 		validcount;	// if == validcount, already checked
 	int			locknumber;	// [Dusk] lock number for special
 	unsigned	portalindex;
-	TObjPtr<ASkyViewpoint> skybox;
+	unsigned	portaltransferred;
 
 	DVector2 Delta() const
 	{
@@ -1499,6 +1491,11 @@ public:
 	void setAlpha(double a)
 	{
 		Alpha = FLOAT2FIXED(a);
+	}
+
+	FSectorPortal *GetTransferredPortal()
+	{
+		return portaltransferred >= sectorPortals.Size() ? (FSectorPortal*)NULL : &sectorPortals[portaltransferred];
 	}
 
 	FLinePortal *getPortal() const

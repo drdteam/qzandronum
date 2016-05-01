@@ -38,14 +38,13 @@
 #include "p_lnspec.h"
 #include "farchive.h"
 #include "r_sky.h"
+#include "portal.h"
 // [BB] New #includes.
 #include "network.h"
 
 // arg0 = Visibility*4 for this skybox
 
-IMPLEMENT_POINTY_CLASS (ASkyViewpoint)
-	DECLARE_POINTER(Mate)
-END_POINTERS
+IMPLEMENT_CLASS (ASkyViewpoint)
 
 // If this actor has no TID, make it the default sky box
 void ASkyViewpoint::BeginPlay ()
@@ -54,37 +53,31 @@ void ASkyViewpoint::BeginPlay ()
 
 	// [BB] At this point, the client doesn't know the TID. The server
 	// will inform the client about the default skybox during a full update instead.
-	if (tid == 0 && level.DefaultSkybox == NULL && (NETWORK_InClientMode() == false))
+	if (tid == 0 && sectorPortals[0].mSkybox == nullptr && (NETWORK_InClientMode() == false))
 	{
-		level.DefaultSkybox = this;
+		sectorPortals[0].mSkybox = this;
+		sectorPortals[0].mDestination = Sector;
 	}
-	special1 = SKYBOX_SKYVIEWPOINT;
-}
-
-void ASkyViewpoint::Serialize (FArchive &arc)
-{
-	Super::Serialize (arc);
-	arc << bInSkybox << bAlways << Mate;
 }
 
 void ASkyViewpoint::Destroy ()
 {
 	// remove all sector references to ourselves.
-	for (int i = 0; i <numsectors; i++)
+	for (int i = 0; i < numsectors; i++)
 	{
-		if (sectors[i].SkyBoxes[sector_t::floor] == this)
-		{
-			sectors[i].SkyBoxes[sector_t::floor] = NULL;
-		}
-		if (sectors[i].SkyBoxes[sector_t::ceiling] == this)
-		{
-			sectors[i].SkyBoxes[sector_t::ceiling] = NULL;
-		}
+		if (sectors[i].GetPortal(sector_t::floor)->mSkybox == this)
+			sectors[i].ClearPortal(sector_t::floor);
+		if (sectors[i].GetPortal(sector_t::ceiling)->mSkybox == this)
+			sectors[i].ClearPortal(sector_t::ceiling);
 	}
-	if (level.DefaultSkybox == this)
+	for (auto &s : sectorPortals)
 	{
-		level.DefaultSkybox = NULL;
+		if (s.mSkybox == this) s.mSkybox = 0;
+		// This is necessary to entirely disable EE-style skyboxes
+		// if their viewpoint gets deleted.
+		s.mFlags |= PORTSF_SKYFLATONLY;	
 	}
+
 	Super::Destroy();
 }
 
@@ -94,9 +87,7 @@ void ASkyCamCompat::BeginPlay()
 {
 	// Do not call the SkyViewpoint's super method because it would trash our setup
 	AActor::BeginPlay();
-	special1 = SKYBOX_SKYVIEWPOINT;
 }
-
 
 //---------------------------------------------------------------------------
 
@@ -134,20 +125,18 @@ void ASkyPicker::PostBeginPlay ()
 
 	if (box == NULL && args[0] != 0)
 	{
-		Printf ("Can't find SkyViewpoint %d for sector %td\n",
-			args[0], Sector - sectors);
+		Printf ("Can't find SkyViewpoint %d for sector %td\n", args[0], Sector - sectors);
 	}
 	else
 	{
+		int boxindex = P_GetSkyboxPortal(box);
 		if (0 == (args[1] & 2))
 		{
-			Sector->SkyBoxes[sector_t::ceiling] = box;
-			if (box == NULL) Sector->MoreFlags |= SECF_NOCEILINGSKYBOX;	// sector should ignore the level's default skybox
+			Sector->Portals[sector_t::ceiling] = boxindex;
 		}
 		if (0 == (args[1] & 1))
 		{
-			Sector->SkyBoxes[sector_t::floor] = box;
-			if (box == NULL) Sector->MoreFlags |= SECF_NOFLOORSKYBOX;	// sector should ignore the level's default skybox
+			Sector->Portals[sector_t::floor] = boxindex;
 		}
 	}
 	// [BB] The server may not destroy the SkyPicker, otherwise he can't
@@ -167,9 +156,6 @@ void AStackPoint::BeginPlay ()
 {
 	// Skip SkyViewpoint's initialization
 	AActor::BeginPlay ();
-
-	bAlways = true;
-	special1 = SKYBOX_STACKEDSECTORTHING;
 }
 
 //---------------------------------------------------------------------------
