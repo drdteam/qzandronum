@@ -91,6 +91,7 @@
 #include "unlagged.h"
 #include "d_netinf.h"
 #include "domination.h"
+#include "announcer.h"
 #include <set>
 
 // MACROS ------------------------------------------------------------------
@@ -855,6 +856,91 @@ void AActor::AddInventory (AInventory *item)
 	// run sometime in the future, so by the time it runs, the inventory
 	// might not be in the same state as it was when DEM_INVUSE was sent.
 	Inventory->InventoryID = InventoryID++;
+}
+
+//============================================================================
+//
+// AActor :: GiveInventory
+//
+//============================================================================
+
+bool AActor::GiveInventory(PClassInventory *type, int amount, bool givecheat)
+{
+	bool result = true;
+
+	AWeapon *savedPendingWeap = player != NULL ? player->PendingWeapon : NULL;
+	bool hadweap = player != NULL ? player->ReadyWeapon != NULL : true;
+
+	AInventory *item;
+	if (!givecheat)
+	{
+		item = static_cast<AInventory *>(Spawn (type));
+	}
+	else
+	{
+		item = static_cast<AInventory *>(Spawn (type, Pos(), NO_REPLACE));
+		if (item == NULL) return false;
+	}
+
+	// This shouldn't count for the item statistics!
+	item->ClearCounters();
+	if (type->IsDescendantOf (RUNTIME_CLASS(ABasicArmorPickup)))
+	{
+		static_cast<ABasicArmorPickup*>(item)->SaveAmount *= amount;
+	}
+	else if (type->IsDescendantOf (RUNTIME_CLASS(ABasicArmorBonus)))
+	{
+		static_cast<ABasicArmorBonus*>(item)->SaveAmount *= amount;
+		// [BB]
+		static_cast<ABasicArmorBonus*>(item)->BonusCount *= amount;
+	}
+	else
+	{
+		if (!givecheat)
+			item->Amount = amount;
+		else
+			item->Amount = MIN (amount, item->MaxAmount);
+	}
+	if (!item->CallTryPickup (this))
+	{
+		item->Destroy ();
+		result = false;
+	}
+	else // [BC,BB] Play the announcer sound.
+	{
+		if ( players[consoleplayer].camera == players[consoleplayer].mo && cl_announcepickups )
+			ANNOUNCER_PlayEntry( cl_announcer, item->PickupAnnouncerEntry( ));
+	}
+	// If the item was a weapon, don't bring it up automatically
+	// unless the player was not already using a weapon.
+	// Don't bring it up automatically if this is called by the give cheat.
+	if (!givecheat && player != NULL && savedPendingWeap != NULL && hadweap)
+	{
+		player->PendingWeapon = savedPendingWeap;
+	}
+
+	// [BB] Since SERVERCOMMANDS_GiveInventory overwrites the item amount
+	// of the client with item->Amount, we have have to set this to the
+	// correct amount the player has.
+	AInventory *pInventory = NULL;
+	if( player )
+	{
+		if ( player->mo )
+			pInventory = player->mo->FindInventory( type );
+	}
+	if ( pInventory != NULL && item != NULL )
+		item->Amount = pInventory->Amount;
+
+	// [BC] If we're the server, give the item to clients.
+	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( player ) && ( item ))
+	{
+		SERVERCOMMANDS_GiveInventory( player - players, item );
+		// [BB] The armor display amount has to be updated separately.
+		if( item->GetClass()->IsDescendantOf (RUNTIME_CLASS(AArmor)))
+			SERVERCOMMANDS_SetPlayerArmor( player - players );
+	}
+
+	return result;
 }
 
 //============================================================================

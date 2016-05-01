@@ -1085,7 +1085,4 @@ int		ACS_GetTranslationIndex( FRemapTable *pTranslation );
 int		ACS_PushAndReturnDynamicString ( const FString &Work );
 bool	ACS_ExistsScript( int script );
 
-// [BB] Export DoGiveInv
-bool	DoGiveInv(AActor *actor, PClassActor *info, int amount);
-
 #endif //__P_ACS_H__

@@ -280,7 +280,7 @@ void COOP_GiveStoredUVDPickupsToPlayer ( const ULONG ulPlayer )
 	{
 		PClassActor *pType = PClass::FindActor ( pair->Key.GetChars() );
 		if ( pType )
-			DoGiveInv ( players[ulPlayer].mo, pType, 1 );
+			players[ulPlayer].mo->GiveInventory ( static_cast<PClassInventory *>(pType), 1 );
 	}
 }
 
