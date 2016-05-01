@@ -861,6 +861,7 @@ endif()
 # [BB] Only complile the gl sources, if we want GL support.
 if( NOT NO_GL )
 	set( GL_SOURCES
+		gl/compatibility/gl_20.cpp
 		gl/data/gl_data.cpp
 		gl/data/gl_portaldata.cpp
 		gl/data/gl_setup.cpp
@@ -908,6 +909,7 @@ if( NOT NO_GL )
 		gl/stereo3d/gl_stereo_leftright.cpp
 		gl/stereo3d/scoped_view_shifter.cpp
 		gl/stereo3d/gl_anaglyph.cpp
+		gl/stereo3d/gl_quadstereo.cpp
 		gl/dynlights/gl_dynlight.cpp
 		gl/dynlights/gl_glow.cpp
 		gl/dynlights/gl_dynlight1.cpp
@@ -1176,7 +1178,6 @@ set( FASTMATH_SOURCES
 	sound/music_pseudo_mididevice.cpp
 	wildmidi/wildmidi_lib.cpp
 	${GL_SOURCES}
-	gl/stereo3d/gl_quadstereo.cpp
 )
 
 set (PCH_SOURCES

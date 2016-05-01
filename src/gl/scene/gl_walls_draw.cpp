@@ -342,8 +342,6 @@ void GLWall::RenderTextured(int rflags)
 	else
 	{
 		gl_RenderState.EnableSplit(true);
-		glEnable(GL_CLIP_DISTANCE3);
-		glEnable(GL_CLIP_DISTANCE4);
 
 		for (unsigned i = 0; i < lightlist->Size(); i++)
 		{
@@ -366,8 +364,6 @@ void GLWall::RenderTextured(int rflags)
 			if (low1 <= zbottom[0] && low2 <= zbottom[1]) break;
 		}
 
-		glDisable(GL_CLIP_DISTANCE3);
-		glDisable(GL_CLIP_DISTANCE4);
 		gl_RenderState.EnableSplit(false);
 	}
 	gl_RenderState.SetTextureMode(tmode);

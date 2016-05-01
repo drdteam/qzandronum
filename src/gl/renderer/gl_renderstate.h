@@ -59,12 +59,11 @@ class FRenderState
 	int mSrcBlend, mDstBlend;
 	float mAlphaThreshold;
 	int mBlendEquation;
-	bool mAlphaTest;
 	bool m2D;
 	bool mModelMatrixEnabled;
 	bool mTextureMatrixEnabled;
 	float mInterpolationFactor;
-	float mClipHeightTop, mClipHeightBottom;
+	float mClipHeight, mClipHeightDirection;
 	float mShaderTimer;
 	bool mLastDepthClamp;
 
@@ -110,9 +109,10 @@ public:
 		// textures without their own palette are a special case for use as an alpha texture:
 		// They use the color index directly as an alpha value instead of using the palette's red.
 		// To handle this case, we need to set a special translation for such textures.
+		// Without shaders this translation must be applied to any texture.
 		if (alphatexture)
 		{
-			if (mat->tex->UseBasePalette()) translation = TRANSLATION(TRANSLATION_Standard, 8);
+			if (mat->tex->UseBasePalette() || gl.glslversion == 0) translation = TRANSLATION(TRANSLATION_Standard, 8);
 		}
 		mEffectState = overrideshader >= 0? overrideshader : mat->mShaderIndex;
 		mShaderTimer = mat->tex->gl_info.shaderspeed;
@@ -135,25 +135,17 @@ public:
 		mCurrentVertexBuffer = NULL;
 	}
 
-	void SetClipHeightTop(float clip)
+	float GetClipHeight()
 	{
-		mClipHeightTop = clip;
+		return mClipHeight;
 	}
 
-	float GetClipHeightTop()
+	float GetClipHeightDirection()
 	{
-		return mClipHeightTop;
+		return mClipHeightDirection;
 	}
 
-	void SetClipHeightBottom(float clip)
-	{
-		mClipHeightBottom = clip;
-	}
-
-	float GetClipHeightBottom()
-	{
-		return mClipHeightBottom;
-	}
+	void SetClipHeight(float height, float direction);
 
 	void SetColor(float r, float g, float b, float a = 1.f, int desat = 0)
 	{
@@ -233,7 +225,20 @@ public:
 
 	void EnableSplit(bool on)
 	{
-		mSplitEnabled = on;
+		if (gl.glslversion >= 1.3f)
+		{
+			mSplitEnabled = on;
+			if (on)
+			{
+				glEnable(GL_CLIP_DISTANCE3);
+				glEnable(GL_CLIP_DISTANCE4);
+			}
+			else
+			{
+				glDisable(GL_CLIP_DISTANCE3);
+				glDisable(GL_CLIP_DISTANCE4);
+			}
+		}
 	}
 
 	void SetLightIndex(int n)
@@ -317,6 +322,11 @@ public:
 		mColormapState = cm;
 	}
 
+	int GetFixedColormap()
+	{
+		return mColormapState;
+	}
+
 	PalEntry GetFogColor() const
 	{
 		return mFogColor;
@@ -394,6 +404,10 @@ public:
 	{
 		mInterpolationFactor = fac;
 	}
+
+	// Backwards compatibility crap follows
+	void ApplyFixedFunction();
+	void DrawColormapOverlay();
 };
 
 extern FRenderState gl_RenderState;
