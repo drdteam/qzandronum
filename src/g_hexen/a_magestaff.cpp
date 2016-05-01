@@ -163,13 +163,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_MStaffAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		MStaffSpawn (self, angle + ( ANGLE_45 / 3 ), t.linetarget);
-		MStaffSpawn (self, angle-ANGLE_1*5 + ( ANGLE_45 / 3 ), t.linetarget);
-		MStaffSpawn (self, angle+ANGLE_1*5 + ( ANGLE_45 / 3 ), t.linetarget);
+		MStaffSpawn (self, angle + 15., t.linetarget);
+		MStaffSpawn (self, angle-5 + 15., t.linetarget);
+		MStaffSpawn (self, angle+5 + 15., t.linetarget);
 
-		MStaffSpawn (self, angle - ( ANGLE_45 / 3 ), t.linetarget);
-		MStaffSpawn (self, angle-ANGLE_1*5 - ( ANGLE_45 / 3 ), t.linetarget);
-		MStaffSpawn (self, angle+ANGLE_1*5 - ( ANGLE_45 / 3 ), t.linetarget);
+		MStaffSpawn (self, angle - 15., t.linetarget);
+		MStaffSpawn (self, angle-5 - 15., t.linetarget);
+		MStaffSpawn (self, angle+5 - 15., t.linetarget);
 	}
 
 	S_Sound (self, CHAN_WEAPON, "MageStaffFire", 1, ATTN_NORM);

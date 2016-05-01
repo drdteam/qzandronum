@@ -283,8 +283,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FAxeAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack (pmo, angle + ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, pufftype, true);
-		P_LineAttack (pmo, angle - ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, pufftype, true);
+		P_LineAttack (pmo, angle + 15., MELEERANGE, slope, damage, NAME_Melee, pufftype, true);
+		P_LineAttack (pmo, angle - 15., MELEERANGE, slope, damage, NAME_Melee, pufftype, true);
 	}
 
 axedone:

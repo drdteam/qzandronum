@@ -2075,8 +2075,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 		{
 			if ( self->player->cheats2 & CF2_SPREAD )
 			{
-				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle + ( ANGLE_45 / 3 ), ti, angle, flags, t );
-				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle - ( ANGLE_45 / 3 ), ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle + 15., ti, angle, flags, t );
+				A_FireCustomMissileHelper( self, ofs.X, ofs.Y, spawnheight, shootangle - 15., ti, angle, flags, t );
 			}
 		}
 

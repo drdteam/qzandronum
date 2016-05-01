@@ -100,12 +100,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FHammerAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		if (P_LineAttack (pmo, angle + ( ANGLE_45 / 3 ), HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true) != NULL)
+		if (P_LineAttack (pmo, angle + 15., HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true) != NULL)
 			pmo->special1 = false;
 		else
 			pmo->special1 = true;
 
-		if (P_LineAttack (pmo, angle - ( ANGLE_45 / 3 ), HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true) != NULL)
+		if (P_LineAttack (pmo, angle - 15., HAMMER_RANGE, slope, damage, NAME_Melee, hammertime, true) != NULL)
 			pmo->special1 = false;
 		else
 			pmo->special1 = true;

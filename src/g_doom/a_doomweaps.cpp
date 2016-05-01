@@ -64,8 +64,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 	// [BC] Apply spread.
 	if (( self->player ) && ( self->player->cheats2 & CF2_SPREAD ))
 	{
-		P_LineAttack( self, angle + ( ANGLE_45 / 3 ), MELEERANGE, pitch, damage, NAME_Melee, NAME_BulletPuff, LAF_ISMELEEATTACK);
-		P_LineAttack( self, angle - ( ANGLE_45 / 3 ), MELEERANGE, pitch, damage, NAME_Melee, NAME_BulletPuff, LAF_ISMELEEATTACK);
+		P_LineAttack( self, angle + 15., MELEERANGE, pitch, damage, NAME_Melee, NAME_BulletPuff, LAF_ISMELEEATTACK);
+		P_LineAttack( self, angle - 15., MELEERANGE, pitch, damage, NAME_Melee, NAME_BulletPuff, LAF_ISMELEEATTACK);
 	}
 
 	// [BC] If the player hit a player with his attack, potentially give him a medal.
@@ -164,12 +164,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 		fixed_t		SavedActorAngle;
 
 		SavedActorAngle = actor->angle;
-		actor->angle += ( ANGLE_45 / 3 );
+		actor->angle += 15.;
 		P_GunShot (actor, accurate, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (actor));
 		actor->angle = SavedActorAngle;
 
 		SavedActorAngle = actor->angle;
-		actor->angle -= ( ANGLE_45 / 3 );
+		actor->angle -= 15.;
 		P_GunShot (actor, accurate, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (actor));
 		actor->angle = SavedActorAngle;
 	}
@@ -268,12 +268,12 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack( self, angle + ( ANGLE_45 / 3 ), range,
-					  P_AimLineAttack( self, angle + ( ANGLE_45 / 3 ), range, &t ), damage,
+		P_LineAttack( self, angle + 15., range,
+					  P_AimLineAttack( self, angle + 15., range, &t ), damage,
 					  NAME_Melee, pufftype, false );
 
-		P_LineAttack( self, angle - ( ANGLE_45 / 3 ), range,
-					  P_AimLineAttack( self, angle - ( ANGLE_45 / 3 ), range, &t ), damage,
+		P_LineAttack( self, angle - 15., range,
+					  P_AimLineAttack( self, angle - 15., range, &t ), damage,
 					  NAME_Melee, pufftype, false );
 	}
 
@@ -448,7 +448,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 		fixed_t		SavedActorAngle;
 
 		SavedActorAngle = self->angle;
-		self->angle += ( ANGLE_45 / 3 );
+		self->angle += 15.;
 		for (i = 0; i < 7; i++)
 		{
 			P_GunShot (self, false, PClass::FindActor(NAME_BulletPuff), pitch);
@@ -456,7 +456,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 		self->angle = SavedActorAngle;
 
 		SavedActorAngle = actor->angle;
-		self->angle -= ( ANGLE_45 / 3 );
+		self->angle -= 15.;
 		for (i = 0; i < 7; i++)
 		{
 			P_GunShot (self, false, PClass::FindActor(NAME_BulletPuff), pitch);
@@ -544,13 +544,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 		if ( player->cheats2 & CF2_SPREAD )
 		{
 			P_LineAttack (actor,
-						  angle + ( ANGLE_45 / 3 ),
+						  angle + 15.,
 						  PLAYERMISSILERANGE,
 						  pitch + (pr_fireshotgun2.Random2() * 332063), damage,
 						  NAME_Hitscan, NAME_BulletPuff);
 
 			P_LineAttack (actor,
-						  angle - ( ANGLE_45 / 3 ),
+						  angle - 15.,
 						  PLAYERMISSILERANGE,
 						  pitch + (pr_fireshotgun2.Random2() * 332063), damage,
 						  NAME_Hitscan, NAME_BulletPuff);
@@ -762,12 +762,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 		fixed_t		SavedActorAngle;
 
 		SavedActorAngle = actor->angle;
-		self->angle += ( ANGLE_45 / 3 );
+		self->angle += 15.;
 		P_GunShot (self, !player->refire, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (self));
 		self->angle = SavedActorAngle;
 	
 		SavedActorAngle = self->angle;
-		self->angle -= ( ANGLE_45 / 3 );
+		self->angle -= 15.;
 		P_GunShot (self, !player->refire, PClass::FindClass(NAME_BulletPuff), P_BulletSlope (self));
 		self->angle = SavedActorAngle;
 	}

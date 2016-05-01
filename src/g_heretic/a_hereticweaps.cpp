@@ -100,8 +100,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_StaffAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack(self, angle + ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, puff, true);
-		P_LineAttack(self, angle - ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, puff, true);
+		P_LineAttack(self, angle + 15., MELEERANGE, slope, damage, NAME_Melee, puff, true);
+		P_LineAttack(self, angle - 15., MELEERANGE, slope, damage, NAME_Melee, puff, true);
 	}
 
 	if (t.linetarget)
@@ -1185,8 +1185,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBlasterPL1)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack( self, angle + ( ANGLE_45 / 3 ), PLAYERMISSILERANGE, pitch, damage, NAME_Hitscan, "BlasterPuff");
-		P_LineAttack( self, angle - ( ANGLE_45 / 3 ), PLAYERMISSILERANGE, pitch, damage, NAME_Hitscan, "BlasterPuff");
+		P_LineAttack( self, angle + 15., PLAYERMISSILERANGE, pitch, damage, NAME_Hitscan, "BlasterPuff");
+		P_LineAttack( self, angle - 15., PLAYERMISSILERANGE, pitch, damage, NAME_Hitscan, "BlasterPuff");
 	}
 
 	// [BB] If the player hit a player with his attack, potentially give him a medal.

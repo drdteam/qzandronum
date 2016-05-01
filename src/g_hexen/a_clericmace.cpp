@@ -48,10 +48,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_CMaceAttack)
 					// [BC] Apply spread.
 					if (player->cheats2 & CF2_SPREAD)
 					{
-						P_LineAttack(player->mo, angle + (ANGLE_45 / 3), 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
+						P_LineAttack(player->mo, angle + 15., 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
 						AdjustPlayerAngle(player->mo, &t);
 
-						P_LineAttack(player->mo, angle - (ANGLE_45 / 3), 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
+						P_LineAttack(player->mo, angle - 15., 2 * MELEERANGE, slope, damage, NAME_Melee, hammertime, true);
 						AdjustPlayerAngle(player->mo, &t);
 					}
 
@@ -70,8 +70,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_CMaceAttack)
 	// [BC] Apply spread.
 	if ( player->cheats2 & CF2_SPREAD )
 	{
-		P_LineAttack( player->mo, angle + ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, hammertime);
-		P_LineAttack( player->mo, angle - ( ANGLE_45 / 3 ), MELEERANGE, slope, damage, NAME_Melee, hammertime);
+		P_LineAttack( player->mo, angle + 15., MELEERANGE, slope, damage, NAME_Melee, hammertime);
+		P_LineAttack( player->mo, angle - 15., MELEERANGE, slope, damage, NAME_Melee, hammertime);
 	}
 
 	return 0;		
