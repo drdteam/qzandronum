@@ -591,7 +591,7 @@ static bool LoadNodes (FileReader * lump)
 				}
 				for (k = 0; k < 4; k++)
 				{
-					no->bbox[j][k] = LittleShort(mn->bbox[j][k])<<FRACBITS;
+					no->bbox[j][k] = (float)LittleShort(mn->bbox[j][k]);
 				}
 			}
 		}
@@ -651,7 +651,7 @@ static bool LoadNodes (FileReader * lump)
 				}
 				for (k = 0; k < 4; k++)
 				{
-					no->bbox[j][k] = LittleShort(mn->bbox[j][k])<<FRACBITS;
+					no->bbox[j][k] = (float)LittleShort(mn->bbox[j][k]);
 				}
 			}
 		}
@@ -1138,7 +1138,7 @@ static void CreateCachedNodes(MapData *map)
 		{
 			for (int k = 0; k < 4; ++k)
 			{
-				WriteWord(ZNodes, nodes[i].bbox[j][k] >> FRACBITS);
+				WriteWord(ZNodes, (short)nodes[i].bbox[j][k]);
 			}
 		}
 

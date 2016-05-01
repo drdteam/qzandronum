@@ -25,7 +25,7 @@ struct OneKey
 		if (owner->IsKindOf(RUNTIME_CLASS(AKey)))
 		{
 			// P_GetMapColorForKey() checks the key directly
-			return owner->IsA(key);
+			return owner->IsA(key) || owner->GetSpecies() == key->TypeName;
 		}
 		else 
 		{
