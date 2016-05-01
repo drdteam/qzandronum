@@ -405,7 +405,7 @@ ASTARRETURNSTRUCT_t ASTAR_Path( ULONG ulPathIdx, fixedvec3 GoalPoint, float fMax
 			subsector_t	*pSubSector;
 
 			pSubSector = R_PointInSubsector( GoalPoint.x, GoalPoint.y );
-			if (( GoalPoint.z - pSubSector->sector->floorplane.ZatPointFixed( GoalPoint.x, GoalPoint.y )) > (( 36 * FRACUNIT ) + FLOAT2FIXED ( pPath->pActor->Height ) ))
+			if (( FIXED2DBL ( GoalPoint.z ) - pSubSector->sector->floorplane.ZatPoint( FIXED2DBL ( GoalPoint.x ), FIXED2DBL ( GoalPoint.y ) )) > ( 36 + pPath->pActor->Height ))
 			{
 				ReturnVal.bIsGoal = false;
 				ReturnVal.lTotalCost = 0;
@@ -1030,7 +1030,7 @@ static void astar_ProcessNextPathNode( ASTARPATH_t *pPath, ASTARNODE_t *pNode, L
 			return;
 		}
 */
-		ulResults = BOTPATH_TryWalk( pPath->pActor, CurPos.x, CurPos.y, pSector->floorplane.ZatPointFixed( CurPos.x, CurPos.y ), DestPos.x, DestPos.y );
+		ulResults = BOTPATH_TryWalk( pPath->pActor, CurPos.x, CurPos.y, FLOAT2FIXED ( pSector->floorplane.ZatPoint( FIXED2DBL ( CurPos.x ), FIXED2DBL ( CurPos.y ) ) ), DestPos.x, DestPos.y );
 		if (( ulResults & BOTPATH_OBSTRUCTED ) || (( pPath->pActor->player->pSkullBot->m_ulPathType == BOTPATHTYPE_ROAM ) && ( ulResults & BOTPATH_DAMAGINGSECTOR )))
 			return;
 

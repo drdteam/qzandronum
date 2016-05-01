@@ -3059,10 +3059,10 @@ void SERVERCOMMANDS_SetSectorPanning( ULONG ulSector, ULONG ulPlayerExtra, Serve
 
 	NetCommand command( SVC_SETSECTORPANNING );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].GetXOffset(sector_t::ceiling) / FRACUNIT );
-	command.addShort( sectors[ulSector].GetYOffset(sector_t::ceiling, false) / FRACUNIT );
-	command.addShort( sectors[ulSector].GetXOffset(sector_t::floor) / FRACUNIT );
-	command.addShort( sectors[ulSector].GetYOffset(sector_t::floor,false) / FRACUNIT );
+	command.addShort( sectors[ulSector].GetXOffsetF(sector_t::ceiling) );
+	command.addShort( sectors[ulSector].GetYOffsetF(sector_t::ceiling, false) );
+	command.addShort( sectors[ulSector].GetXOffsetF(sector_t::floor) );
+	command.addShort( sectors[ulSector].GetYOffsetF(sector_t::floor,false) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3075,8 +3075,8 @@ void SERVERCOMMANDS_SetSectorRotation( ULONG ulSector, ULONG ulPlayerExtra, Serv
 
 	NetCommand command( SVC_SETSECTORROTATION );
 	command.addShort( ulSector );
-	command.addShort(( sectors[ulSector].GetAngle(sector_t::ceiling,false) / ANGLE_1 ));
-	command.addShort(( sectors[ulSector].GetAngle(sector_t::floor,false) / ANGLE_1 ));
+	command.addShort(static_cast<short>( sectors[ulSector].GetAngleF(sector_t::ceiling,false).Degrees ));
+	command.addShort(static_cast<short>( sectors[ulSector].GetAngleF(sector_t::floor,false).Degrees ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3100,10 +3100,10 @@ void SERVERCOMMANDS_SetSectorScale( ULONG ulSector, ULONG ulPlayerExtra, ServerC
 
 	NetCommand command( SVC_SETSECTORSCALE );
 	command.addShort( ulSector );
-	command.addShort( ( sectors[ulSector].GetXScale(sector_t::ceiling) / FRACBITS ));
-	command.addShort( ( sectors[ulSector].GetYScale(sector_t::ceiling) / FRACBITS ));
-	command.addShort( ( sectors[ulSector].GetXScale(sector_t::floor) / FRACBITS ));
-	command.addShort( ( sectors[ulSector].GetYScale(sector_t::floor) / FRACBITS ));
+	command.addShort( ( sectors[ulSector].GetXScaleF(sector_t::ceiling) ));
+	command.addShort( ( sectors[ulSector].GetYScaleF(sector_t::ceiling) ));
+	command.addShort( ( sectors[ulSector].GetXScaleF(sector_t::floor) ));
+	command.addShort( ( sectors[ulSector].GetYScaleF(sector_t::floor) ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3143,10 +3143,10 @@ void SERVERCOMMANDS_SetSectorAngleYOffset( ULONG ulSector, ULONG ulPlayerExtra, 
 
 	NetCommand command( SVC_SETSECTORANGLEYOFFSET );
 	command.addShort( ulSector );
-	command.addLong( sectors[ulSector].planes[sector_t::ceiling].xform.base_angle );
-	command.addLong( sectors[ulSector].planes[sector_t::ceiling].xform.base_yoffs );
-	command.addLong( sectors[ulSector].planes[sector_t::floor].xform.base_angle );
-	command.addLong( sectors[ulSector].planes[sector_t::floor].xform.base_yoffs );
+	command.addLong( sectors[ulSector].planes[sector_t::ceiling].xform.baseAngle.BAMs() );
+	command.addLong( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::ceiling].xform.baseyOffs ) );
+	command.addLong( sectors[ulSector].planes[sector_t::floor].xform.baseAngle.BAMs() );
+	command.addLong( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::floor].xform.baseyOffs ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

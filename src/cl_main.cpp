@@ -9092,11 +9092,11 @@ static void client_SetSectorPanning( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, set the offsets.
-	pSector->SetXOffset(sector_t::ceiling, lCeilingXOffset * FRACUNIT);
-	pSector->SetYOffset(sector_t::ceiling, lCeilingYOffset * FRACUNIT);
+	pSector->SetXOffset(sector_t::ceiling, lCeilingXOffset);
+	pSector->SetYOffset(sector_t::ceiling, lCeilingYOffset);
 
-	pSector->SetXOffset(sector_t::floor, lFloorXOffset * FRACUNIT);
-	pSector->SetYOffset(sector_t::floor, lFloorYOffset * FRACUNIT);
+	pSector->SetXOffset(sector_t::floor, lFloorXOffset);
+	pSector->SetYOffset(sector_t::floor, lFloorYOffset);
 }
 
 //*****************************************************************************
@@ -9152,10 +9152,10 @@ static void client_SetSectorScale( BYTESTREAM_s *pByteStream )
 	lSectorID = NETWORK_ReadShort( pByteStream );
 
 	// Read in the ceiling and floor scale.
-	lCeilingXScale = NETWORK_ReadShort( pByteStream ) * FRACBITS;
-	lCeilingYScale = NETWORK_ReadShort( pByteStream ) * FRACBITS;
-	lFloorXScale = NETWORK_ReadShort( pByteStream ) * FRACBITS;
-	lFloorYScale = NETWORK_ReadShort( pByteStream ) * FRACBITS;
+	lCeilingXScale = NETWORK_ReadShort( pByteStream );
+	lCeilingYScale = NETWORK_ReadShort( pByteStream );
+	lFloorXScale = NETWORK_ReadShort( pByteStream );
+	lFloorYScale = NETWORK_ReadShort( pByteStream );
 
 	// Now find the sector.
 	pSector = CLIENT_FindSectorByID( lSectorID );
@@ -9262,10 +9262,10 @@ static void client_SetSectorAngleYOffset( BYTESTREAM_s *pByteStream )
 	}
 
 	// Set the sector's angle and y-offset.
-	pSector->planes[sector_t::ceiling].xform.base_angle = lCeilingAngle;
-	pSector->planes[sector_t::ceiling].xform.base_yoffs = lCeilingYOffset;
-	pSector->planes[sector_t::floor].xform.base_angle = lFloorAngle;
-	pSector->planes[sector_t::floor].xform.base_yoffs = lFloorYOffset;
+	pSector->planes[sector_t::ceiling].xform.baseAngle = ANGLE2DBL ( lCeilingAngle );
+	pSector->planes[sector_t::ceiling].xform.yOffs = FIXED2DBL ( lCeilingYOffset );
+	pSector->planes[sector_t::floor].xform.baseAngle = ANGLE2DBL ( lFloorAngle );
+	pSector->planes[sector_t::floor].xform.yOffs = FIXED2DBL ( lFloorYOffset );
 }
 
 //*****************************************************************************

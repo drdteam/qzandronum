@@ -332,8 +332,8 @@ bool BOTPATH_IsPositionBlocked( AActor *pActor, fixed_t DestX, fixed_t DestY )
 	
 	// The base floor / ceiling is from the subsector that contains the point.
 	// Any contacted lines the step closer together will adjust them.
-	g_PathSectorFloorZ = pNewSector->sector->floorplane.ZatPointFixed( DestX, DestY );
-	g_PathSectorCeilingZ = pNewSector->sector->ceilingplane.ZatPointFixed( DestX, DestY );
+	g_PathSectorFloorZ = FLOAT2FIXED ( pNewSector->sector->floorplane.ZatPoint( FIXED2DBL ( DestX ), FIXED2DBL ( DestY ) ) );
+	g_PathSectorCeilingZ = FLOAT2FIXED ( pNewSector->sector->ceilingplane.ZatPoint( FIXED2DBL ( DestX ), FIXED2DBL ( DestY ) ) );
 	g_pPathSector = pNewSector->sector;
 
 	validcount++;
@@ -681,7 +681,7 @@ ULONG BOTPATH_TryWalk( AActor *pActor, fixed_t StartX, fixed_t StartY, fixed_t S
 						{
 							// If the ceiling is too low, we can't jump there
 							// and the path is obstructed.
-							if ( FIXED2DBL ( pFrontSector->ceilingplane.ZatPointFixed( 0, 0 ) ) - mid3d_top < pActor->Height )
+							if ( pFrontSector->ceilingplane.ZatPoint( 0., 0. ) - mid3d_top < pActor->Height )
 								return ( ulFlags | BOTPATH_OBSTRUCTED );
 
 							ulFlags |= BOTPATH_JUMPABLELEDGE;
@@ -772,10 +772,10 @@ void BOTPATH_LineOpening( line_t *pLine, fixed_t X, fixed_t Y, fixed_t RefX, fix
 	pFrontSector = pLine->frontsector;
 	pBackSector = pLine->backsector;
 
-	FrontCeiling	= pFrontSector->ceilingplane.ZatPointFixed( X, Y );
-	FrontFloor		= pFrontSector->floorplane.ZatPointFixed( X, Y );
-	BackCeiling		= pBackSector->ceilingplane.ZatPointFixed( X, Y );
-	BackFloor		= pBackSector->floorplane.ZatPointFixed( X, Y );
+	FrontCeiling	= FLOAT2FIXED ( pFrontSector->ceilingplane.ZatPoint( FIXED2DBL ( X ), FIXED2DBL ( Y ) ) );
+	FrontFloor		= FLOAT2FIXED ( pFrontSector->floorplane.ZatPoint( FIXED2DBL ( X ), FIXED2DBL ( Y ) ) );
+	BackCeiling		= FLOAT2FIXED ( pBackSector->ceilingplane.ZatPoint( FIXED2DBL ( X ), FIXED2DBL ( Y ) ) );
+	BackFloor		= FLOAT2FIXED ( pBackSector->floorplane.ZatPoint( FIXED2DBL ( X ), FIXED2DBL ( Y ) ) );
 
 	if ( FrontCeiling < BackCeiling )
 	{
