@@ -178,7 +178,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FighterAttack)
 	*/
 
 	for (int i = -2; i <= 2; i++) {
-		P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), self->Angles.Yaw + (i*ANG45)/8, 0, true); // [BB] Inform clients
+		P_SpawnMissileAngle (self, RUNTIME_CLASS(AFSwordMissile), self->Angles.Yaw + (i*45.)/8, 0, true); // [BB] Inform clients
 	}
 
 	S_Sound (self, CHAN_WEAPON, "FighterSwordFire", 1, ATTN_NORM, true);	// [TP] Inform the clients.

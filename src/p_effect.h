@@ -36,7 +36,6 @@
 #define __P_EFFECT_H__
  
 #include "vectors.h"
-#include "tables.h"
 #include "c_cvars.h"	// [BC] #include this so that we can't extern cl_respawninvuleffect.
 
 #define FX_ROCKET				0x00000001

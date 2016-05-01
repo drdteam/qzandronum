@@ -3437,7 +3437,7 @@ void CSkullBot::HandleAiming( void )
 				AngleRandom = g_RandomBotAimSeed.Random2( 360 );
 				while ( (LONG)AngleRandom < 0 )
 					AngleRandom += 360;
-				AngleRandom *= ANGLE_1;
+				AngleRandom *= (ANGLE_90/90);
 
 				// Select the range of possible angles and how long it's going to be before
 				// reaiming, based on the bot's accuracy skill level.
@@ -3445,42 +3445,42 @@ void CSkullBot::HandleAiming( void )
 				{
 				case BOTSKILL_VERYPOOR:
 
-					AngleRange = ANGLE_1 * 90;
+					AngleRange = ANGLE_90;
 					m_ulAimAtEnemyDelay = 17;
 					break;
 				case BOTSKILL_POOR:
 
-					AngleRange = ANGLE_1 * 75;
+					AngleRange = (ANGLE_90/90) * 75;
 					m_ulAimAtEnemyDelay = 12;
 					break;
 				case BOTSKILL_LOW:
 
-					AngleRange = ANGLE_1 * 60;
+					AngleRange = (ANGLE_90/90) * 60;
 					m_ulAimAtEnemyDelay = 8;
 					break;
 				case BOTSKILL_MEDIUM:
 
-					AngleRange = ANGLE_1 * 45;
+					AngleRange = ANGLE_90 / 2;
 					m_ulAimAtEnemyDelay = 6;
 					break;
 				case BOTSKILL_HIGH:
 
-					AngleRange = ANGLE_1 * 35;
+					AngleRange = (ANGLE_90/90) * 35;
 					m_ulAimAtEnemyDelay = 4;
 					break;
 				case BOTSKILL_EXCELLENT:
 
-					AngleRange = ANGLE_1 * 25;
+					AngleRange = (ANGLE_90/90) * 25;
 					m_ulAimAtEnemyDelay = 3;
 					break;
 				case BOTSKILL_SUPREME:
 
-					AngleRange = ANGLE_1 * 15;
+					AngleRange = (ANGLE_90/90) * 15;
 					m_ulAimAtEnemyDelay = 2;
 					break;
 				case BOTSKILL_GODLIKE:
 
-					AngleRange = ANGLE_1 * 10;
+					AngleRange = (ANGLE_90/90) * 10;
 					m_ulAimAtEnemyDelay = 1;
 					break;
 				case BOTSKILL_PERFECT:

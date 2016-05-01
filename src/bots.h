@@ -59,7 +59,6 @@
 #include "info.h"
 #include "m_argv.h"
 #include "r_defs.h"
-#include "tables.h"
 #include "w_wad.h"
 
 //*****************************************************************************

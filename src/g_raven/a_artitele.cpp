@@ -56,7 +56,7 @@ bool AArtiTeleport::Use (bool pickup)
 		unsigned int selections = teams[ownerTeam].TeamStarts.Size ();
 		unsigned int i = pr_tele() % selections;
 		dest = teams[ownerTeam].TeamStarts[i].pos;
-		destAngle = ANG45 * (teams[ownerTeam].TeamStarts[i].angle/45);
+		destAngle = teams[ownerTeam].TeamStarts[i].angle;
 	}
 	else if (deathmatch)
 	{

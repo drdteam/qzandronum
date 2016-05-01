@@ -1350,7 +1350,6 @@ set (PCH_SOURCES
 	sv_master.cpp #ST
 	sv_rcon.cpp #ST
 	sv_save.cpp #ST
-	tables.cpp
 	team.cpp #ST
 	teaminfo.cpp
 	tempfiles.cpp

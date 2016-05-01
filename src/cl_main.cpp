@@ -5515,11 +5515,11 @@ static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
 	if ( !currentrenderer )
 	{
 		// [BB] The user can restore ZDoom's freelook limit.
-		const fixed_t pitchLimit = -ANGLE_1*( cl_oldfreelooklimit ? 32 : 56 );
+		const fixed_t pitchLimit = -(ANGLE_90/90)*( cl_oldfreelooklimit ? 32 : 56 );
 		if (lPitch < pitchLimit)
 			lPitch = pitchLimit;
-		if (lPitch > ANGLE_1*56)
-			lPitch = ANGLE_1*56;
+		if (lPitch > (ANGLE_90/90)*56)
+			lPitch = (ANGLE_90/90)*56;
 	}
 	players[ulPlayer].mo->Angles.Pitch = ANGLE2DBL ( lPitch );
 	players[ulPlayer].mo->waterlevel = ulWaterLevel;
@@ -9117,8 +9117,8 @@ static void client_SetSectorRotation( BYTESTREAM_s *pByteStream, bool bIdentifyS
 
 		while ((secnum = itr.Next()) >= 0)
 		{
-			sectors[secnum].SetAngle(sector_t::floor, AngleToFloat ( lFloorRotation * ANGLE_1 ));
-			sectors[secnum].SetAngle(sector_t::ceiling, AngleToFloat ( lCeilingRotation * ANGLE_1 ));
+			sectors[secnum].SetAngle(sector_t::floor, static_cast<double> ( lFloorRotation ) );
+			sectors[secnum].SetAngle(sector_t::ceiling, static_cast<double> ( lCeilingRotation ) );
 		}
 	}
 	else
@@ -9132,8 +9132,8 @@ static void client_SetSectorRotation( BYTESTREAM_s *pByteStream, bool bIdentifyS
 		}
 
 		// Finally, set the rotation.
-		pSector->SetAngle(sector_t::ceiling, ( AngleToFloat ( lCeilingRotation * ANGLE_1 ) ));
-		pSector->SetAngle(sector_t::floor, ( AngleToFloat ( lFloorRotation * ANGLE_1 ) ));
+		pSector->SetAngle(sector_t::ceiling, static_cast<double> ( lCeilingRotation ) );
+		pSector->SetAngle(sector_t::floor, static_cast<double> ( lFloorRotation ) );
 	}
 }
 

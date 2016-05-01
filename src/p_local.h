@@ -25,7 +25,6 @@
 
 #include <float.h>
 #include "doomtype.h"
-#include "tables.h"
 #include "vectors.h"
 // [BB] New #includes.
 #include "po_man.h"

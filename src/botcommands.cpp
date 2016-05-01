@@ -1216,7 +1216,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	lAngle = pBot->m_ScriptData.alStack[pBot->m_ScriptData.lStackPosition - 1];
 	pBot->PopStack( );
 
-	lAngle *= ANGLE_1;
+	lAngle *= ANGLE_90/90;
 	if ( lAngle < 0 )
 		lAngle = ANGLE_MAX - labs( lAngle );
 
@@ -1770,7 +1770,7 @@ static void botcmd_Turn( CSkullBot *pBot )
 //
 static void botcmd_GetCurrentAngle( CSkullBot *pBot )
 {
-	g_iReturnInt = ( pBot->GetPlayer( )->mo->Angles.Yaw.BAMs() / ANGLE_1 );
+	g_iReturnInt = ( pBot->GetPlayer( )->mo->Angles.Yaw.BAMs() / ( ANGLE_90 / 90 ) );
 }
 
 //*****************************************************************************
