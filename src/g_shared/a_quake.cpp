@@ -40,7 +40,8 @@ DEarthquake::DEarthquake()
 
 DEarthquake::DEarthquake(AActor *center, int intensityX, int intensityY, int intensityZ, int duration,
 	int damrad, int tremrad, FSoundID quakesound, int flags,
-	double waveSpeedX, double waveSpeedY, double waveSpeedZ, int falloff, int highpoint)
+	double waveSpeedX, double waveSpeedY, double waveSpeedZ, int falloff, int highpoint, int rollIntensity,
+	double rollWave)
 	: DThinker(STAT_EARTHQUAKE)
 {
 
@@ -62,6 +63,8 @@ DEarthquake::DEarthquake(AActor *center, int intensityX, int intensityY, int int
 	m_Falloff = falloff;
 	m_Highpoint = highpoint;
 	m_MiniCount = highpoint;
+	m_RollIntensity = rollIntensity;
+	m_RollWave = rollWave;
 }
 
 //==========================================================================
@@ -78,6 +81,10 @@ void DEarthquake::Serialize (FArchive &arc)
 		<< m_QuakeSFX << m_Flags << m_CountdownStart
 		<< m_WaveSpeed
 		<< m_Falloff << m_Highpoint << m_MiniCount;
+	if (SaveVersion >= 4544)
+	{
+		arc << m_RollIntensity << m_RollWave;
+	}
 }
 
 //==========================================================================
@@ -290,11 +297,12 @@ int DEarthquake::StaticGetQuakeIntensities(AActor *victim, FQuakeJiggers &jigger
 				double x = quake->GetModIntensity(quake->m_Intensity.X);
 				double y = quake->GetModIntensity(quake->m_Intensity.Y);
 				double z = quake->GetModIntensity(quake->m_Intensity.Z);
-				
+				double r = quake->GetModIntensity(quake->m_RollIntensity);
 
 				if (!(quake->m_Flags & QF_WAVE))
 				{
 					jiggers.Falloff = MAX(falloff, jiggers.Falloff);
+					jiggers.RollIntensity = MAX(r, jiggers.RollIntensity);
 					if (quake->m_Flags & QF_RELATIVE)
 					{
 						jiggers.RelIntensity.X = MAX(x, jiggers.RelIntensity.X);
@@ -311,9 +319,11 @@ int DEarthquake::StaticGetQuakeIntensities(AActor *victim, FQuakeJiggers &jigger
 				else
 				{
 					jiggers.WFalloff = MAX(falloff, jiggers.WFalloff);
+					double mr = r * quake->GetModWave(quake->m_RollWave);
 					double mx = x * quake->GetModWave(quake->m_WaveSpeed.X);
 					double my = y * quake->GetModWave(quake->m_WaveSpeed.Y);
 					double mz = z * quake->GetModWave(quake->m_WaveSpeed.Z);
+					jiggers.RollWave = r * quake->GetModWave(quake->m_RollWave);
 
 					// [RH] This only gives effect to the last sine quake. I would
 					// prefer if some way was found to make multiples coexist
@@ -347,7 +357,8 @@ int DEarthquake::StaticGetQuakeIntensities(AActor *victim, FQuakeJiggers &jigger
 
 bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY, int intensityZ, int duration,
 	int damrad, int tremrad, FSoundID quakesfx, int flags,
-	double waveSpeedX, double waveSpeedY, double waveSpeedZ, int falloff, int highpoint)
+	double waveSpeedX, double waveSpeedY, double waveSpeedZ, int falloff, int highpoint, 
+	int rollIntensity, double rollWave)
 {
 	AActor *center;
 	bool res = false;
@@ -361,7 +372,7 @@ bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY,
 		if (activator != NULL)
 		{
 			new DEarthquake(activator, intensityX, intensityY, intensityZ, duration, damrad, tremrad,
-				quakesfx, flags, waveSpeedX, waveSpeedY, waveSpeedZ, falloff, highpoint);
+				quakesfx, flags, waveSpeedX, waveSpeedY, waveSpeedZ, falloff, highpoint, rollIntensity, rollWave);
 			return true;
 		}
 	}
@@ -372,7 +383,7 @@ bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY,
 		{
 			res = true;
 			new DEarthquake(center, intensityX, intensityY, intensityZ, duration, damrad, tremrad,
-				quakesfx, flags, waveSpeedX, waveSpeedY, waveSpeedZ, falloff, highpoint);
+				quakesfx, flags, waveSpeedX, waveSpeedY, waveSpeedZ, falloff, highpoint, rollIntensity, rollWave);
 		}
 	}
 	
@@ -381,5 +392,5 @@ bool P_StartQuakeXYZ(AActor *activator, int tid, int intensityX, int intensityY,
 
 bool P_StartQuake(AActor *activator, int tid, int intensity, int duration, int damrad, int tremrad, FSoundID quakesfx)
 {	//Maintains original behavior by passing 0 to intensityZ, flags, and everything else after QSFX.
-	return P_StartQuakeXYZ(activator, tid, intensity, intensity, 0, duration, damrad, tremrad, quakesfx, 0, 0, 0, 0, 0, 0);
+	return P_StartQuakeXYZ(activator, tid, intensity, intensity, 0, duration, damrad, tremrad, quakesfx, 0, 0, 0, 0, 0, 0, 0, 0);
 }
