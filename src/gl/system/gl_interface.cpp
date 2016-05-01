@@ -51,11 +51,9 @@
 char myGlBeginCharArray[4] = {0,0,0,0};
 #endif
 
+void gl_PatchMenu();
 static TArray<FString>  m_Extensions;
-
 RenderContext gl;
-
-int occlusion_type=0;
 
 //==========================================================================
 //
@@ -282,6 +280,7 @@ void gl_LoadExtensions()
 	FUDGE_FUNC(glDeleteRenderbuffers, EXT);
 	FUDGE_FUNC(glRenderbufferStorage, EXT);
 	FUDGE_FUNC(glBindRenderbuffer, EXT);
+	gl_PatchMenu();
 }
 
 //==========================================================================
