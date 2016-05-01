@@ -38,6 +38,7 @@
 #include "actor.h"
 struct FLightNode;
 struct FGLSection;
+struct FPortal;
 struct seg_t;
 
 #include "dthinker.h"
@@ -507,7 +508,6 @@ struct subsector_t;
 struct sector_t;
 struct side_t;
 extern bool gl_plane_reflection_i;
-struct FPortal;
 
 // Ceiling/floor flags
 enum
@@ -1015,7 +1015,7 @@ public:
 
 	int GetPortalType(int plane)
 	{
-		return SkyBoxes[plane]->special1;
+		return SkyBoxes[plane] == nullptr? -1 : SkyBoxes[plane]->special1;
 	}
 
 	int GetOppositePortalGroup(int plane)
@@ -1173,6 +1173,8 @@ public:
 
 	float GetReflect(int pos) { return gl_plane_reflection_i? reflect[pos] : 0; }
 	bool VBOHeightcheck(int pos) const { return vboheight[pos] == GetPlaneTexZ(pos); }
+	FPortal *GetGLPortal(int plane) { return portals[plane]; }
+	void ClearPortal(int plane) { portals[plane] = nullptr;	SkyBoxes[plane] = nullptr; }
 
 	enum
 	{
