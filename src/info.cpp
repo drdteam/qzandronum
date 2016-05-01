@@ -68,6 +68,8 @@ FRandom FState::pr_statetics("StateTics");
 
 cycle_t ActionCycles;
 
+FState *g_CallingState = NULL; // [BB] For c/s jump handling.
+
 void FState::SetAction(const char *name)
 {
 	ActionFunc = FindGlobalActionFunction(name)->Variants[0].Implementation;
@@ -77,6 +79,9 @@ bool FState::CallAction(AActor *self, AActor *stateowner, FState **stateret)
 {
 	if (ActionFunc != NULL)
 	{
+		// [BB]
+		g_CallingState = this;
+
 		ActionCycles.Clock();
 
 		static VMFrameStack stack;
