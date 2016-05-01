@@ -122,20 +122,36 @@ void gl_FlushModels()
 
 FModelVertexBuffer::FModelVertexBuffer(bool needindex)
 {
-	glBindVertexArray(vao_id);
-
 	ibo_id = 0;
 	if (needindex)
 	{
 		glGenBuffers(1, &ibo_id);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 	}
+}
 
+//===========================================================================
+//
+//
+//
+//===========================================================================
+
+void FModelVertexBuffer::BindVBO()
+{
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-	glEnableVertexAttribArray(VATTR_VERTEX);
-	glEnableVertexAttribArray(VATTR_TEXCOORD);
-	glEnableVertexAttribArray(VATTR_VERTEX2);
-	glBindVertexArray(0);
+	if (gl.glslversion > 0)
+	{
+		glEnableVertexAttribArray(VATTR_VERTEX);
+		glEnableVertexAttribArray(VATTR_TEXCOORD);
+		glEnableVertexAttribArray(VATTR_VERTEX2);
+		glDisableVertexAttribArray(VATTR_COLOR);
+	}
+	else
+	{
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+	}
 }
 
 //===========================================================================
@@ -220,9 +236,18 @@ void FModelVertexBuffer::UnlockIndexBuffer()
 unsigned int FModelVertexBuffer::SetupFrame(unsigned int frame1, unsigned int frame2)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-	glVertexAttribPointer(VATTR_VERTEX, 3, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame1].x);
-	glVertexAttribPointer(VATTR_TEXCOORD, 2, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame1].u);
-	glVertexAttribPointer(VATTR_VERTEX2, 3, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame2].x);
+	if (gl.glslversion > 0)
+	{
+		glVertexAttribPointer(VATTR_VERTEX, 3, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame1].x);
+		glVertexAttribPointer(VATTR_TEXCOORD, 2, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame1].u);
+		glVertexAttribPointer(VATTR_VERTEX2, 3, GL_FLOAT, false, sizeof(FModelVertex), &VMO[frame2].x);
+	}
+	else
+	{
+		// only used for single frame models so there is no vertex2 here, which has no use without a shader.
+		glVertexPointer(3, GL_FLOAT, sizeof(FModelVertex), &VMO[frame1].x);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(FModelVertex), &VMO[frame1].u);
+	}
 	return frame1;
 }
 

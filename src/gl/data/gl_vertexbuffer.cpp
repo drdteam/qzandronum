@@ -57,12 +57,10 @@
 //
 //==========================================================================
 
-FVertexBuffer::FVertexBuffer()
+FVertexBuffer::FVertexBuffer(bool wantbuffer)
 {
-	vao_id = vbo_id = 0;
-	glGenBuffers(1, &vbo_id);
-	glGenVertexArrays(1, &vao_id);
-
+	vbo_id = 0;
+	if (wantbuffer) glGenBuffers(1, &vbo_id);
 }
 	
 FVertexBuffer::~FVertexBuffer()
@@ -71,15 +69,6 @@ FVertexBuffer::~FVertexBuffer()
 	{
 		glDeleteBuffers(1, &vbo_id);
 	}
-	if (vao_id != 0)
-	{
-		glDeleteVertexArrays(1, &vao_id);
-	}
-}
-
-void FVertexBuffer::BindVBO()
-{
-	glBindVertexArray(vao_id);
 }
 
 //==========================================================================
@@ -89,7 +78,7 @@ void FVertexBuffer::BindVBO()
 //==========================================================================
 
 FFlatVertexBuffer::FFlatVertexBuffer()
-: FVertexBuffer()
+: FVertexBuffer(!!(gl.flags & RFL_BUFFER_STORAGE))
 {
 	if (gl.flags & RFL_BUFFER_STORAGE)
 	{
@@ -97,17 +86,10 @@ FFlatVertexBuffer::FFlatVertexBuffer()
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 		glBufferStorage(GL_ARRAY_BUFFER, bytesize, NULL, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 		map = (FFlatVertex*)glMapBufferRange(GL_ARRAY_BUFFER, 0, bytesize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-
-		glBindVertexArray(vao_id);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-		glVertexAttribPointer(VATTR_VERTEX, 3,GL_FLOAT, false, sizeof(FFlatVertex), &VTO->x);
-		glVertexAttribPointer(VATTR_TEXCOORD, 2,GL_FLOAT, false, sizeof(FFlatVertex), &VTO->u);
-		glEnableVertexAttribArray(VATTR_VERTEX);
-		glEnableVertexAttribArray(VATTR_TEXCOORD);
-		glBindVertexArray(0);
 	}
 	else
 	{
+		// The fallback path uses immediate mode rendering and does not set up an actual vertex buffer
 		vbo_shadowdata.Reserve(BUFFER_SIZE);
 		map = &vbo_shadowdata[0];
 	}
@@ -121,6 +103,35 @@ FFlatVertexBuffer::~FFlatVertexBuffer()
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+}
+
+
+void FFlatVertexBuffer::BindVBO()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+	if (gl.glslversion > 0)
+	{
+		if (vbo_id != 0)	// set this up only if there is an actual buffer.
+		{
+			glVertexAttribPointer(VATTR_VERTEX, 3, GL_FLOAT, false, sizeof(FFlatVertex), &VTO->x);
+			glVertexAttribPointer(VATTR_TEXCOORD, 2, GL_FLOAT, false, sizeof(FFlatVertex), &VTO->u);
+			glEnableVertexAttribArray(VATTR_VERTEX);
+			glEnableVertexAttribArray(VATTR_TEXCOORD);
+		}
+		else
+		{
+			glDisableVertexAttribArray(VATTR_VERTEX);
+			glDisableVertexAttribArray(VATTR_TEXCOORD);
+		}
+		glDisableVertexAttribArray(VATTR_COLOR);
+		glDisableVertexAttribArray(VATTR_VERTEX2);
+	}
+	else
+	{
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
 	}
 }
 
@@ -138,10 +149,21 @@ void FFlatVertexBuffer::ImmRenderBuffer(unsigned int primtype, unsigned int offs
 	// this will only get called if we can't acquire a persistently mapped buffer.
 #ifndef CORE_PROFILE
 	glBegin(primtype);
-	for (unsigned int i = 0; i < count; i++)
+	if (gl.glslversion > 0)
 	{
-		glVertexAttrib2fv(VATTR_TEXCOORD, &map[offset + i].u);
-		glVertexAttrib3fv(VATTR_VERTEX, &map[offset + i].x);
+		for (unsigned int i = 0; i < count; i++)
+		{
+			glVertexAttrib2fv(VATTR_TEXCOORD, &map[offset + i].u);
+			glVertexAttrib3fv(VATTR_VERTEX, &map[offset + i].x);
+		}
+	}
+	else	// no shader means no vertex attributes, so use the old stuff instead.
+	{
+		for (unsigned int i = 0; i < count; i++)
+		{
+			glTexCoord2fv(&map[offset + i].u);
+			glVertex3fv(&map[offset + i].x);
+		}
 	}
 	glEnd();
 #endif

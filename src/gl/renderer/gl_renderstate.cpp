@@ -286,7 +286,14 @@ void FRenderState::Apply()
 		else mVertexBuffer->BindVBO();
 		mCurrentVertexBuffer = mVertexBuffer;
 	}
-	ApplyShader();
+	if (gl.glslversion > 0) 
+	{
+		ApplyShader();
+	}
+	else
+	{
+		//ApplyFixedFunction();
+	}
 }
 
 
@@ -316,9 +323,12 @@ void FRenderState::ApplyMatrices()
 
 void FRenderState::ApplyLightIndex(int index)
 {
-	if (GLRenderer->mLights->GetBufferType() == GL_UNIFORM_BUFFER && index > -1)
+	if (gl.lightmethod != LM_SOFTWARE)
 	{
-		index = GLRenderer->mLights->BindUBO(index);
+		if (index > -1 && GLRenderer->mLights->GetBufferType() == GL_UNIFORM_BUFFER)
+		{
+			index = GLRenderer->mLights->BindUBO(index);
+		}
+		activeShader->muLightIndex.Set(index);
 	}
-	activeShader->muLightIndex.Set(index);
 }

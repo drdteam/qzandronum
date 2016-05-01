@@ -116,35 +116,78 @@ static void InitContext()
 //
 //==========================================================================
 
+#define FUDGE_FUNC(name, ext) 	if (_ptrc_##name == NULL) _ptrc_##name = _ptrc_##name##ext;
+
+
 void gl_LoadExtensions()
 {
 	InitContext();
 	CollectExtensions();
 
 	const char *version = Args->CheckValue("-glversion");
-	if (version == NULL) version = (const char*)glGetString(GL_VERSION);
-	else Printf("Emulating OpenGL v %s\n", version);
+	const char *glversion = (const char*)glGetString(GL_VERSION);
+
+	if (version == NULL)
+	{
+		version = glversion;
+	}
+	else
+	{
+		double v1 = strtod(version, NULL);
+		double v2 = strtod(glversion, NULL);
+		if (v2 < v1) version = glversion;
+		else Printf("Emulating OpenGL v %s\n", version);
+	}
+
+	gl.version = strtod(version, NULL) + 0.01f;
 
 	// Don't even start if it's lower than 3.0
-	if (strcmp(version, "3.0") < 0)
+	if ((gl.version < 2.0 || !CheckExtension("GL_EXT_framebuffer_object")) && gl.version < 3.0)
 	{
-		I_FatalError("Unsupported OpenGL version.\nAt least OpenGL 3.0 is required to run " GAMENAME ".\n");
+		I_FatalError("Unsupported OpenGL version.\nAt least OpenGL 2.0 with framebuffer support is required to run " GAMENAME ".\n");
 	}
 
 	// add 0.01 to account for roundoff errors making the number a tad smaller than the actual version
-	gl.version = strtod(version, NULL) + 0.01f;
 	gl.glslversion = strtod((char*)glGetString(GL_SHADING_LANGUAGE_VERSION), NULL) + 0.01f;
 
 	gl.vendorstring = (char*)glGetString(GL_VENDOR);
+	gl.lightmethod = LM_SOFTWARE;
 
 	if (gl.version >= 3.3f || CheckExtension("GL_ARB_sampler_objects"))
 	{
 		gl.flags |= RFL_SAMPLER_OBJECTS;
 	}
+	
+	// Buffer lighting is only feasible with GLSL 1.3 and higher, even if 1.2 supports the extension.
+	if (gl.version > 3.0f && (gl.version >= 3.3f || CheckExtension("GL_ARB_uniform_buffer_object")))
+	{
+		gl.lightmethod = LM_DEFERRED;
+	}
 
-	if (CheckExtension("GL_ARB_texture_compression")) gl.flags|=RFL_TEXTURE_COMPRESSION;
-	if (CheckExtension("GL_EXT_texture_compression_s3tc")) gl.flags|=RFL_TEXTURE_COMPRESSION_S3TC;
-	if (!Args->CheckParm("-gl3"))
+	if (CheckExtension("GL_ARB_texture_compression")) gl.flags |= RFL_TEXTURE_COMPRESSION;
+	if (CheckExtension("GL_EXT_texture_compression_s3tc")) gl.flags |= RFL_TEXTURE_COMPRESSION_S3TC;
+
+	if (Args->CheckParm("-noshader") || gl.glslversion < 1.2f)
+	{
+		gl.version = 2.11f;
+		gl.glslversion = 0;
+		gl.lightmethod = LM_SOFTWARE;
+	}
+	else if (gl.version < 3.0f)
+	{
+		if (CheckExtension("GL_NV_GPU_shader4") || CheckExtension("GL_EXT_GPU_shader4")) gl.glslversion = 1.21f;	// for pre-3.0 drivers that support capable hardware. Needed for Apple.
+		else gl.glslversion = 0;
+	}
+	else if (gl.version < 4.f)
+	{
+		if (strstr(gl.vendorstring, "ATI Tech")) 
+		{
+			gl.version = 2.11f;
+			gl.glslversion = 1.21f;
+			gl.lightmethod = LM_SOFTWARE;		// do not use uniform buffers with the fallback shader, it may cause problems.
+		}
+	}
+	else
 	{
 		// don't use GL 4.x features when running in GL 3 emulation mode.
 		if (CheckExtension("GL_ARB_buffer_storage"))
@@ -160,9 +203,21 @@ void gl_LoadExtensions()
 				}
 			}
 			gl.flags |= RFL_BUFFER_STORAGE;
+			gl.lightmethod = LM_DIRECT;
+		}
+		else
+		{
+			gl.version = 3.3f;
 		}
 	}
-	
+
+	const char *lm = Args->CheckValue("-lightmethod");
+	if (lm != NULL)
+	{
+		if (!stricmp(lm, "deferred") && gl.lightmethod == LM_DIRECT) gl.lightmethod = LM_DEFERRED;	
+		if (!stricmp(lm, "textured")) gl.lightmethod = LM_SOFTWARE;
+	}
+
 	int v;
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &v);
 	gl.maxuniforms = v;
@@ -170,9 +225,26 @@ void gl_LoadExtensions()
 	gl.maxuniformblock = v;
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &v);
 	gl.uniformblockalignment = v;
-	
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&gl.max_texturesize);
+
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl.max_texturesize);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	// fudge a bit with the framebuffer stuff to avoid redundancies in the main code. Some of the older cards do not have the ARB stuff but the calls are nearly identical.
+	FUDGE_FUNC(glGenerateMipmap, EXT);
+	FUDGE_FUNC(glGenFramebuffers, EXT);
+	FUDGE_FUNC(glBindFramebuffer, EXT);
+	FUDGE_FUNC(glDeleteFramebuffers, EXT);
+	FUDGE_FUNC(glFramebufferTexture2D, EXT);
+	FUDGE_FUNC(glGenerateMipmap, EXT);
+	FUDGE_FUNC(glGenFramebuffers, EXT);
+	FUDGE_FUNC(glBindFramebuffer, EXT);
+	FUDGE_FUNC(glDeleteFramebuffers, EXT);
+	FUDGE_FUNC(glFramebufferTexture2D, EXT);
+	FUDGE_FUNC(glFramebufferRenderbuffer, EXT);
+	FUDGE_FUNC(glGenRenderbuffers, EXT);
+	FUDGE_FUNC(glDeleteRenderbuffers, EXT);
+	FUDGE_FUNC(glRenderbufferStorage, EXT);
+	FUDGE_FUNC(glBindRenderbuffer, EXT);
 }
 
 //==========================================================================
