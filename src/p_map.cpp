@@ -3106,7 +3106,7 @@ void FSlide::OldHitSlideLine(line_t *ld)
 
 	lineangle = ld->Delta().Angle().BAMs();
 	if (side == 1)
-		lineangle += ANG180;
+		lineangle += ANGLE_180;
 	moveangle = tmmove.Angle().BAMs();;
 
 	// killough 3/2/98:
@@ -3118,27 +3118,27 @@ void FSlide::OldHitSlideLine(line_t *ld)
 	// rounding error                              //   |
 	deltaangle = moveangle-lineangle;                                 //   V
 	movelen = P_AproxDistance (FLOAT2FIXED ( tmmove.X ), FLOAT2FIXED ( tmmove.Y ));
-	if (icyfloor && (deltaangle > ANG45) && (deltaangle < ANG90+ANG45))
+	if (icyfloor && (deltaangle > ANGLE_90/2) && (deltaangle < ANGLE_90+ANGLE_90/2))
 	{
 		moveangle = lineangle - deltaangle;
 		movelen /= 2; // absorb
 		//S_StartSound(slidemo,sfx_oof); // oooff!
-		moveangle >>= ANGLETOFINESHIFT;
-		tmmove.X = FIXED2DBL ( FixedMul (movelen, finecosine[moveangle]) );
-		tmmove.Y = FIXED2DBL ( FixedMul (movelen, finesine[moveangle]) );
+		DAngle moveAngle = AngleToFloat ( moveangle );
+		tmmove.X = FIXED2DBL ( movelen ) * moveAngle.Cos();
+		tmmove.Y = FIXED2DBL ( movelen ) * moveAngle.Sin();
 	}                                                               //   ^
 	else                                                              //   |
 	{                                                               // phares
-		if (deltaangle > ANG180)
-			deltaangle += ANG180;
+		if (deltaangle > ANGLE_180)
+			deltaangle += ANGLE_180;
 
 		//  I_Error ("SlideLine: ang>ANG180");
 
-		lineangle >>= ANGLETOFINESHIFT;
-		deltaangle >>= ANGLETOFINESHIFT;
-		newlen = FixedMul (movelen, finecosine[deltaangle]);
-		tmmove.X = FIXED2DBL ( FixedMul (newlen, finecosine[lineangle]) );
-		tmmove.Y = FIXED2DBL ( FixedMul (newlen, finesine[lineangle]) );
+		DAngle lineAngle = AngleToFloat ( lineangle );
+		DAngle deltaAngle = AngleToFloat ( deltaangle );
+		newlen = FixedMul ( movelen, FLOAT2FIXED (  deltaAngle.Cos() ) );
+		tmmove.X = FIXED2DBL ( newlen ) * lineAngle.Cos();
+		tmmove.Y = FIXED2DBL ( newlen ) * lineAngle.Sin();
 	}                                                               // phares
 }
 
@@ -6009,17 +6009,15 @@ void P_UseItems( player_t *pPlayer )
 
 player_t *P_PlayerScan( AActor *pSource )
 {
-	fixed_t vx, vy, vz;
+	double vX, vY, vZ;
 	FTraceResults	trace;
-	int				pitch;
-	angle_t			angle;
 
-	angle = pSource->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT;
-	pitch = (angle_t)( pSource->Angles.Pitch.BAMs() ) >> ANGLETOFINESHIFT;
+	DAngle Angle = pSource->Angles.Yaw;
+	DAngle Pitch = pSource->Angles.Pitch;
 
-	vx = FixedMul (finecosine[pitch], finecosine[angle]);
-	vy = FixedMul (finecosine[pitch], finesine[angle]);
-	vz = -finesine[pitch];
+	vX = Pitch.Cos() * Angle.Cos();
+	vY = Pitch.Cos() * Angle.Sin();
+	vZ = -Pitch.Sin();
 
 	const double shootz = pSource->Z() - pSource->Floorclip + (pSource->Height/2) + 8;
 
@@ -6027,8 +6025,8 @@ player_t *P_PlayerScan( AActor *pSource )
 							pSource->Y(), // Actor y
 							shootz ),	// Actor z
 		pSource->Sector,
-		DVector3 ( FIXED2DBL ( vx ), FIXED2DBL ( vy ), FIXED2DBL ( vz ) ),
-		( 32 * 64 * FRACUNIT ) /* MISSILERANGE */,	// Maximum distance
+		DVector3 ( vX, vY, vZ ),
+		32 * 64 /* MISSILERANGE */,	// Maximum distance
 		MF_SHOOTABLE,	// Actor mask
 		ML_BLOCKEVERYTHING,	// Wall mask
 		pSource,		// Actor to ignore

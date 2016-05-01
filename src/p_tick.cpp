@@ -188,8 +188,8 @@ void P_Ticker (void)
 			ULONG				ulFlags;
 			DHUDMessageFadeOut	*pMsg;
 
-			DestX = FLOAT2FIXED ( players[consoleplayer].camera->X() ) + ( botdebug_walktest * finecosine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
-			DestY = FLOAT2FIXED ( players[consoleplayer].camera->Y() ) + ( botdebug_walktest * finesine[players[consoleplayer].camera->Angles.Yaw.BAMs() >> ANGLETOFINESHIFT] );
+			DestX = FLOAT2FIXED ( players[consoleplayer].camera->X() + botdebug_walktest * players[consoleplayer].camera->Angles.Yaw.Cos() );
+			DestY = FLOAT2FIXED ( players[consoleplayer].camera->Y() + botdebug_walktest * players[consoleplayer].camera->Angles.Yaw.Sin() );
 
 			szString[0] = 0;
 			ulFlags = BOTPATH_TryWalk( players[consoleplayer].camera, players[consoleplayer].camera->Pos(), DestX, DestY );

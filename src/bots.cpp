@@ -714,23 +714,23 @@ bool PTR_AimTraverse (intercept_t* in);
 
 bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 {
-	angle_t			Angle;
-	angle_t			Pitch;
-	angle_t			Meat;
+	DAngle			angle;
+	DAngle			pitch;
+	//angle_t			Meat;
 	FTraceResults	TraceResults;
-	fixed_t			vx, vy, vz, sz;
+	double			vx, vy, vz;//, sz;
 
-	Meat = pSource->Angles.Yaw.BAMs();
-	Angle = /*pSource->angle*/Meat >> ANGLETOFINESHIFT;
-	Pitch = 0;//pSource->pitch >> ANGLETOFINESHIFT;
+	//Meat = pSource->Angles.Yaw.BAMs();
+	angle = pSource->Angles.Yaw;///*pSource->angle*/Meat >> ANGLETOFINESHIFT;
+	pitch = 0.;//pSource->pitch >> ANGLETOFINESHIFT;
 
-	vx = FixedMul( finecosine[Pitch], finecosine[Angle] );
-	vy = FixedMul( finecosine[Pitch], finesine[Angle] );
+	vx = pitch.Cos() * angle.Cos();
+	vy = pitch.Cos() * angle.Sin();
 //	vx = FixedMul( pSource->x, Distance );
 //	vy = FixedMul( pSource->y, Distance );
-	vz = finesine[Pitch];
+	vz = pitch.Sin();
 
-	sz = FLOAT2FIXED ( pSource->Top() - pSource->Floorclip );// + (fixed_t)(chase_height * FRACUNIT);
+	//sz = FLOAT2FIXED ( pSource->Top() - pSource->Floorclip );// + (fixed_t)(chase_height * FRACUNIT);
 
 //	if ( P_PathTraverse( CurPos.x, CurPos.y, DestPos.x, DestPos.y, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false )
 //	return ( P_PathTraverse( pSource->x, pSource->y, vx, vy, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse ) == false );
@@ -739,8 +739,8 @@ bool BOTS_IsPathObstructed( fixed_t Distance, AActor *pSource )
 							// [BB] gameinfo.StepHeight seems to be gone from ZDoom, but even before the removal it was always 0.
 							pSource->Pos().Z /*+ gameinfo.StepHeight*/) ,//sz,				// Source Z
 				pSource->Sector,// Source sector
-				DVector3 ( FIXED2DBL ( vx ), FIXED2DBL ( vy ), FIXED2DBL ( vz ) ),
-				Distance * FRACUNIT,	// Maximum search distance
+				DVector3 ( vx, vy, vz ),
+				Distance,	// Maximum search distance
 				MF_SOLID|MF_SHOOTABLE,		// Actor mask (ignore actors without this flag)
 				0,				// Wall mask
 				pSource,		// Actor to ignore

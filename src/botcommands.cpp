@@ -1208,7 +1208,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	LONG		lDistance;
 	fixed_t		DestX;
 	fixed_t		DestY;
-	fixed_t		Angle;
+	DAngle		angle;
 
 	lDistance = pBot->m_ScriptData.alStack[pBot->m_ScriptData.lStackPosition - 1];
 	pBot->PopStack( );
@@ -1220,13 +1220,11 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 	if ( lAngle < 0 )
 		lAngle = ANGLE_MAX - labs( lAngle );
 
-	Angle = pBot->GetPlayer( )->mo->Angles.Yaw.BAMs();
-	Angle += lAngle;
+	angle = pBot->GetPlayer( )->mo->Angles.Yaw;
+	angle += AngleToFloat ( lAngle );
 
-	Angle >>= ANGLETOFINESHIFT;
-
-	DestX = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) * finecosine[Angle];
-	DestY = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) * finesine[Angle];
+	DestX = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() * angle.Cos() );
+	DestY = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() * angle.Sin() );
 
 	g_iReturnInt = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), DestX, DestY );
 }
@@ -1236,7 +1234,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 static void botcmd_PathToGoal( CSkullBot *pBot )
 {
 	fixedvec3			GoalPos;
-	angle_t				Angle;
+	DAngle				angle;
 	ULONG				ulFlags;
 	float				fSpeed;
 	ASTARRETURNSTRUCT_t	ReturnVal;
@@ -1299,15 +1297,14 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y))).BAMs();
+	angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y)));
 
-	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
+	pBot->GetPlayer( )->mo->Angles.Yaw = angle;
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
-	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() + USERANGE * angle.Cos() );
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() + USERANGE * angle.Sin() );
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
@@ -1351,7 +1348,7 @@ static void botcmd_PathToGoal( CSkullBot *pBot )
 static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 {
 	fixedvec3			GoalPos;
-	angle_t				Angle;
+	DAngle				angle;
 	ULONG				ulFlags;
 	float				fSpeed;
 	ASTARRETURNSTRUCT_t	ReturnVal;
@@ -1403,9 +1400,9 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y))).BAMs();
+	angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y)));
 
-	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
+	pBot->GetPlayer( )->mo->Angles.Yaw = angle;
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
 	Distance = FLOAT2FIXED ( pBot->GetPlayer( )->mo->radius );
@@ -1418,9 +1415,8 @@ static void botcmd_PathToLastKnownEnemyPosition( CSkullBot *pBot )
 	}
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
-	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() + USERANGE * angle.Cos() );
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() + USERANGE * angle.Sin() );
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
@@ -1476,7 +1472,7 @@ static void botcmd_PathToLastHeardSound( CSkullBot *pBot )
 static void botcmd_Roam( CSkullBot *pBot )
 {
 	fixedvec3			GoalPos;
-	angle_t				Angle;
+	DAngle				angle;
 	ULONG				ulFlags;
 	float				fSpeed;
 	ASTARRETURNSTRUCT_t	ReturnVal;
@@ -1537,9 +1533,9 @@ static void botcmd_Roam( CSkullBot *pBot )
 		return;
 	}
 
-	Angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y))).BAMs ();
+	angle = VecToAngle (pBot->GetPlayer ()->mo->Pos ().XY () - DVector2 (FIXED2DBL (GoalPos.x), FIXED2DBL (GoalPos.y)));
 
-	pBot->GetPlayer( )->mo->Angles.Yaw = ANGLE2DBL ( Angle );
+	pBot->GetPlayer( )->mo->Angles.Yaw = angle;
 	pBot->GetPlayer( )->cmd.ucmd.forwardmove = ( 0x32 << 8 ) * ( fSpeed / 100.0f );
 
 	Distance = FLOAT2FIXED ( pBot->GetPlayer( )->mo->radius );
@@ -1547,9 +1543,8 @@ static void botcmd_Roam( CSkullBot *pBot )
 		pBot->m_ulPathType = BOTPATHTYPE_NONE;
 
 	// We don't need GoalPos anymore, so we can corrupt it! KEKE!
-	Angle = Angle >> ANGLETOFINESHIFT;
-	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finecosine[Angle];
-	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() ) + ( FLOAT2FIXED ( USERANGE ) >> FRACBITS ) * finesine[Angle];
+	GoalPos.x = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() + USERANGE * angle.Cos() );
+	GoalPos.y = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() + USERANGE * angle.Sin() );
 
 	ulFlags = BOTPATH_TryWalk( pBot->GetPlayer( )->mo, pBot->GetPlayer( )->mo->Pos(), GoalPos.x, GoalPos.y );
 	if ( ulFlags & BOTPATH_JUMPABLELEDGE )
