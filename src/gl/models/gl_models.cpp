@@ -855,12 +855,12 @@ void gl_RenderFrameModels( const FSpriteModelFrame *smf,
 // [BB] Small helper function for MDL_ROLLAGAINSTANGLE.
 float gl_RollAgainstAngleHelper ( AActor *actor )
 {
-	float angleDiff = AngleToFloat ( R_PointToAngle2 (viewx, viewy, FLOAT2FIXED ( actor->X() ), FLOAT2FIXED ( actor->Y() ) ) ) - AngleToFloat ( actor->Angles.Yaw.BAMs() );
+	float angleDiff = AngleToFloat ( R_PointToAngle2 ( FLOAT2FIXED ( ViewPos[0] ), FLOAT2FIXED ( ViewPos[1] ), FLOAT2FIXED ( actor->X() ), FLOAT2FIXED ( actor->Y() ) ) ) - AngleToFloat ( actor->Angles.Yaw.BAMs() );
 	if ( angleDiff > 180 )
 		angleDiff -= 360;
 	else if ( angleDiff < -180 )
 		angleDiff += 360;
-	if ( actor->Z() > viewz )
+	if ( actor->Z() > ViewPos[2] )
 		angleDiff *= -1;
 	if ( ( angleDiff < 90 ) && ( angleDiff > - 90 ) )
 		angleDiff *= -1;
@@ -938,13 +938,13 @@ void gl_RenderModel(GLSprite * spr)
 		gl_RenderState.mModelMatrix.rotate(-angle, 0, 1, 0);
 	// [BB] Change the angle so that the object is exactly facing the camera in the x/y plane.
 	else
-		gl_RenderState.mModelMatrix.rotate( -AngleToFloat ( R_PointToAngle2 (viewx, viewy, FLOAT2FIXED ( spr->actor->X() ), FLOAT2FIXED ( spr->actor->Y() ) ) ), 0, 1, 0);
+		gl_RenderState.mModelMatrix.rotate( -AngleToFloat ( R_PointToAngle2 ( FLOAT2FIXED ( ViewPos[0] ), FLOAT2FIXED ( ViewPos[1] ), FLOAT2FIXED ( spr->actor->X() ), FLOAT2FIXED ( spr->actor->Y() ) ) ), 0, 1, 0);
 
 	// [BB] Change the pitch so that the object is vertically facing the camera (only makes sense combined with MDL_ALIGNANGLE).
 	if ( (smf->flags & MDL_ALIGNPITCH) )
 	{
-		const fixed_t distance = R_PointToDist2( FLOAT2FIXED ( spr->actor->X() ) - viewx, FLOAT2FIXED ( spr->actor->Y() ) - viewy );
-		const float pitch = RAD2DEG ( atan2( spr->actor->Z() - FIXED2FLOAT ( viewz ), FIXED2FLOAT ( distance ) ) );
+		const fixed_t distance = R_PointToDist2( FLOAT2FIXED ( spr->actor->X() - ViewPos[0] ) , FLOAT2FIXED ( spr->actor->Y() - ViewPos[1] ) );
+		const float pitch = RAD2DEG ( atan2( spr->actor->Z() - ViewPos[2], FIXED2FLOAT ( distance ) ) );
 		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 	}
 	else
