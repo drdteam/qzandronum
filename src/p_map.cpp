@@ -3054,10 +3054,10 @@ void FSlide::OldHitSlideLine(line_t *ld)
 
 	side = P_PointOnLineSide (slidemo->X(), slidemo->Y(), ld);
 
-	lineangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( ld->Delta().X ), FLOAT2FIXED ( ld->Delta().Y ));
+	lineangle = ld->Delta().Angle().BAMs();
 	if (side == 1)
 		lineangle += ANG180;
-	moveangle = R_PointToAngle2 (0,0, FLOAT2FIXED ( tmmove.X ), FLOAT2FIXED ( tmmove.Y ));
+	moveangle = tmmove.Angle().BAMs();;
 
 	// killough 3/2/98:
 	// The moveangle+=10 breaks v1.9 demo compatibility in

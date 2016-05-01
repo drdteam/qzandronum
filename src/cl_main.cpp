@@ -3340,7 +3340,7 @@ void CLIENT_SpawnMissile( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, f
 	pActor->Vel.Z = FIXED2FLOAT ( VelZ );
 
 	// Derive the thing's angle from its velocity.
-	pActor->Angles.Yaw = ANGLE2DBL ( R_PointToAngle2( 0, 0, VelX, VelY ) );
+	pActor->Angles.Yaw = pActor->Vel.XY().Angle();
 
 	pActor->lNetID = lNetID;
 	g_NetIDList.useID ( lNetID, pActor );

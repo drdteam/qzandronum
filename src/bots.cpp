@@ -3343,8 +3343,8 @@ void CSkullBot::HandleAiming( void )
 {
 	if (( m_bAimAtEnemy ) && ( m_ulPlayerEnemy != MAXPLAYERS ) && ( players[m_ulPlayerEnemy].mo ))
 	{
-		fixed_t	Distance;
-		fixed_t	ShootZ;
+		double	distance;
+		double	shootZ;
 		SDWORD	lTopPitch;
 		SDWORD	lBottomPitch;
 		fixedvec3	EnemyPos;
@@ -3365,11 +3365,11 @@ void CSkullBot::HandleAiming( void )
 		else
 			m_pPlayer->mo->Angles.Yaw += ANGLE2DBL(m_AngleOffBy);
 
-		ShootZ = FLOAT2FIXED ( m_pPlayer->mo->Z() - m_pPlayer->mo->Floorclip + ( m_pPlayer->mo->Height / 2 ) + 8 );
-		Distance = FLOAT2FIXED ( m_pPlayer->mo->Distance2D ( FIXED2DBL ( EnemyPos.x ), FIXED2DBL ( EnemyPos.y ) ) );
+		shootZ = m_pPlayer->mo->Z() - m_pPlayer->mo->Floorclip + ( m_pPlayer->mo->Height / 2 ) + 8;
+		distance = m_pPlayer->mo->Distance2D ( FIXED2DBL ( EnemyPos.x ), FIXED2DBL ( EnemyPos.y ) );
 //		m_pPlayer->mo->pitch = R_PointToAngle( Distance, ( EnemyPos.z + ( players[m_ulPlayerEnemy].mo->height / 2 )) - m_pPlayer->mo->z );
-		lTopPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z + FLOAT2FIXED ( players[m_ulPlayerEnemy].mo->Height ) );
-		lBottomPitch = -(SDWORD)R_PointToAngle2( 0, ShootZ, Distance, EnemyPos.z );
+		lTopPitch = -(SDWORD)(DVector2 ( distance, FIXED2DBL ( EnemyPos.z ) + players[m_ulPlayerEnemy].mo->Height - shootZ ).Angle().BAMs());
+		lBottomPitch = -(SDWORD)(DVector2 ( distance, FIXED2DBL ( EnemyPos.z ) - shootZ ).Angle().BAMs());
 
 		m_pPlayer->mo->Angles.Pitch = ANGLE2DBL ( ( lTopPitch / 2 ) + ( lBottomPitch / 2 ) );
 /*
