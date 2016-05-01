@@ -3588,10 +3588,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			}
 		}
 
-		if (( sectors[ulIdx].SavedFloorXOffset != sectors[ulIdx].GetXOffsetF(sector_t::floor) ) ||
-			( sectors[ulIdx].SavedFloorYOffset != sectors[ulIdx].GetYOffsetF(sector_t::floor,false) ) ||
-			( sectors[ulIdx].SavedCeilingXOffset != sectors[ulIdx].GetXOffsetF(sector_t::ceiling) ) ||
-			( sectors[ulIdx].SavedCeilingYOffset != sectors[ulIdx].GetYOffsetF(sector_t::ceiling,false) ))
+		if (( sectors[ulIdx].SavedFloorXOffset != sectors[ulIdx].GetXOffset(sector_t::floor) ) ||
+			( sectors[ulIdx].SavedFloorYOffset != sectors[ulIdx].GetYOffset(sector_t::floor,false) ) ||
+			( sectors[ulIdx].SavedCeilingXOffset != sectors[ulIdx].GetXOffset(sector_t::ceiling) ) ||
+			( sectors[ulIdx].SavedCeilingYOffset != sectors[ulIdx].GetYOffset(sector_t::ceiling,false) ))
 		{
 			sectors[ulIdx].SetXOffset(sector_t::floor, sectors[ulIdx].SavedFloorXOffset);
 			sectors[ulIdx].SetYOffset(sector_t::floor, sectors[ulIdx].SavedFloorYOffset);
@@ -3602,10 +3602,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorPanning( ulIdx );
 		}
 
-		if (( sectors[ulIdx].SavedFloorXScale != sectors[ulIdx].GetXScaleF(sector_t::floor) ) ||
-			( sectors[ulIdx].SavedFloorYScale != sectors[ulIdx].GetYScaleF(sector_t::floor) ) ||
-			( sectors[ulIdx].SavedCeilingXScale != sectors[ulIdx].GetXScaleF(sector_t::ceiling) ) ||
-			( sectors[ulIdx].SavedCeilingYScale != sectors[ulIdx].GetYScaleF(sector_t::ceiling) ))
+		if (( sectors[ulIdx].SavedFloorXScale != sectors[ulIdx].GetXScale(sector_t::floor) ) ||
+			( sectors[ulIdx].SavedFloorYScale != sectors[ulIdx].GetYScale(sector_t::floor) ) ||
+			( sectors[ulIdx].SavedCeilingXScale != sectors[ulIdx].GetXScale(sector_t::ceiling) ) ||
+			( sectors[ulIdx].SavedCeilingYScale != sectors[ulIdx].GetYScale(sector_t::ceiling) ))
 		{
 			sectors[ulIdx].SetXScale(sector_t::floor, sectors[ulIdx].SavedFloorXScale);
 			sectors[ulIdx].SetYScale(sector_t::floor, sectors[ulIdx].SavedFloorYScale);
@@ -3616,8 +3616,8 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				SERVERCOMMANDS_SetSectorScale( ulIdx );
 		}
 
-		if (( sectors[ulIdx].SavedFloorAngle != sectors[ulIdx].GetAngleF(sector_t::floor,false) ) ||
-			( sectors[ulIdx].SavedCeilingAngle != sectors[ulIdx].GetAngleF(sector_t::ceiling,false) ))
+		if (( sectors[ulIdx].SavedFloorAngle != sectors[ulIdx].GetAngle(sector_t::floor,false) ) ||
+			( sectors[ulIdx].SavedCeilingAngle != sectors[ulIdx].GetAngle(sector_t::ceiling,false) ))
 		{
 			sectors[ulIdx].SetAngle(sector_t::floor, sectors[ulIdx].SavedFloorAngle);
 			sectors[ulIdx].SetAngle(sector_t::ceiling, sectors[ulIdx].SavedCeilingAngle);

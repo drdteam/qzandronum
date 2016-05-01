@@ -146,7 +146,7 @@ void DScroller::Serialize (FArchive &arc)
 
 static void RotationComp(const sector_t *sec, int which, double dx, double dy, double &tdx, double &tdy)
 {
-	DAngle an = sec->GetAngleF(which);
+	DAngle an = sec->GetAngle(which);
 	if (an == 0)
 	{
 		tdx = dx;

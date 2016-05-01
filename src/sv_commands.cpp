@@ -3059,10 +3059,10 @@ void SERVERCOMMANDS_SetSectorPanning( ULONG ulSector, ULONG ulPlayerExtra, Serve
 
 	NetCommand command( SVC_SETSECTORPANNING );
 	command.addShort( ulSector );
-	command.addShort( sectors[ulSector].GetXOffsetF(sector_t::ceiling) );
-	command.addShort( sectors[ulSector].GetYOffsetF(sector_t::ceiling, false) );
-	command.addShort( sectors[ulSector].GetXOffsetF(sector_t::floor) );
-	command.addShort( sectors[ulSector].GetYOffsetF(sector_t::floor,false) );
+	command.addShort( sectors[ulSector].GetXOffset(sector_t::ceiling) );
+	command.addShort( sectors[ulSector].GetYOffset(sector_t::ceiling, false) );
+	command.addShort( sectors[ulSector].GetXOffset(sector_t::floor) );
+	command.addShort( sectors[ulSector].GetYOffset(sector_t::floor,false) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3075,8 +3075,8 @@ void SERVERCOMMANDS_SetSectorRotation( ULONG ulSector, ULONG ulPlayerExtra, Serv
 
 	NetCommand command( SVC_SETSECTORROTATION );
 	command.addShort( ulSector );
-	command.addShort(static_cast<short>( sectors[ulSector].GetAngleF(sector_t::ceiling,false).Degrees ));
-	command.addShort(static_cast<short>( sectors[ulSector].GetAngleF(sector_t::floor,false).Degrees ));
+	command.addShort(static_cast<short>( sectors[ulSector].GetAngle(sector_t::ceiling,false).Degrees ));
+	command.addShort(static_cast<short>( sectors[ulSector].GetAngle(sector_t::floor,false).Degrees ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3100,10 +3100,10 @@ void SERVERCOMMANDS_SetSectorScale( ULONG ulSector, ULONG ulPlayerExtra, ServerC
 
 	NetCommand command( SVC_SETSECTORSCALE );
 	command.addShort( ulSector );
-	command.addShort( ( sectors[ulSector].GetXScaleF(sector_t::ceiling) ));
-	command.addShort( ( sectors[ulSector].GetYScaleF(sector_t::ceiling) ));
-	command.addShort( ( sectors[ulSector].GetXScaleF(sector_t::floor) ));
-	command.addShort( ( sectors[ulSector].GetYScaleF(sector_t::floor) ));
+	command.addShort( ( sectors[ulSector].GetXScale(sector_t::ceiling) ));
+	command.addShort( ( sectors[ulSector].GetYScale(sector_t::ceiling) ));
+	command.addShort( ( sectors[ulSector].GetXScale(sector_t::floor) ));
+	command.addShort( ( sectors[ulSector].GetYScale(sector_t::floor) ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
