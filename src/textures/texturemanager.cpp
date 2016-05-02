@@ -1228,51 +1228,6 @@ int FTextureManager::CountLumpTextures (int lumpnum)
 	return 0;
 }
 
-//===========================================================================
-//
-// R_PrecacheLevel
-//
-
-// Preloads all relevant graphics for the level.
-//
-//===========================================================================
-
-void FTextureManager::PrecacheLevel (void)
-{
-	BYTE *hitlist;
-	int cnt = NumTextures();
-
-	// [BC] The server doesn't need to precache the level.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		return;
-
-	// [BC] Support for client-side demos.
-	if (demoplayback || CLIENTDEMO_IsPlaying( ))
-		return;
-
-	precacheTime = I_FPSTime();
-
-	hitlist = new BYTE[cnt];
-	memset (hitlist, 0, cnt);
-
-	screen->GetHitlist(hitlist);
-
-	for (unsigned i = 0; i < level.info->PrecacheTextures.Size(); i++)
-	{
-		FTextureID tex = TexMan.CheckForTexture(level.info->PrecacheTextures[i], FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable|FTextureManager::TEXMAN_TryAny|FTextureManager::TEXMAN_ReturnFirst);
-		if (tex.Exists()) hitlist[tex.GetIndex()] |= FTextureManager::HIT_Wall;
-	}
-
-	for (int i = cnt - 1; i >= 0; i--)
-	{
-		Renderer->PrecacheTexture(ByIndex(i), hitlist[i]);
-	}
-
-	delete[] hitlist;
-}
-
-
-
 
 //==========================================================================
 //

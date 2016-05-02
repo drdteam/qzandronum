@@ -349,6 +349,7 @@ struct level_info_t
 
 	TArray<FSoundID> PrecacheSounds;
 	TArray<FString> PrecacheTextures;
+	TArray<FName> PrecacheClasses;
 
 	//[BL] Link a sectinfo to a map
 	SectInfo	SectorInfo;

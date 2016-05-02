@@ -403,8 +403,7 @@ public:
 	virtual FNativePalette *CreatePalette(FRemapTable *remap);
 
 	// Precaches or unloads a texture
-	virtual void GetHitlist(BYTE *hitlist);
-
+	
 	// Report a game restart
 	virtual void GameRestart();
 
