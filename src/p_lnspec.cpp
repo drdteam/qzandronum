@@ -1152,7 +1152,7 @@ static void ThrustThingHelper(AActor *it, DAngle angle, double force, INTBOOL no
 	if ((NETWORK_IsConsolePlayerOrNotInClientMode(it->player) == false) && !(it->ulNetworkFlags & NETFL_CLIENTSIDEONLY))
 		return;
 
-	it->VelFromAngle(angle, force);
+	it->Thrust(angle, force);
 	if (!nolimit)
 	{
 		it->Vel.X = clamp(it->Vel.X, -MAXMOVE, MAXMOVE);
