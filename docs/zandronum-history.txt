@@ -48,6 +48,9 @@
 -	- Fixed: clients were told to play the 'poison cough' sound even when the poisoning by flechette didn't happen (for example because the player is invulnerable). [Edward-san]
 -	- Fixed: clients were not informed correctly about the actors being in alert when another actor is hit by a dagger attack. [Edward-san]
 -	- Fixed: clients would play the sounds from the world-activated ACS function ActivatorSound differently from offline. [Edward-san]
+-	- Fixed: the server didn't inform the clients to not apply the DROPPED flag to level-spawned items which don't have it by default. [Edward-san]
+-	- Fixed: clients were not informed correctly about the morphed player's morph style. [Edward-san]
+-	- Fixed: morphing players could leave dummy players behind online. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
@@ -60,6 +63,7 @@
 !	- ZDoom changed the jumping physics in ZDoom SVN revisions 2238 and 2970. The old jumping behavior known from Skulltag can be restored with the new CVAR compat_skulltagjumping. [Torr Samaho]
 !	- con_virtualwidth and con_virtualheight now default to 640 and 480, respectively. [Dusk]
 !	- kickfromgame and kickfromgame_idx have been renamed to forcespec and forcespec_idx, respectively, though the old names still exist for compatibility with e.g. aliases. Same also with the ACS function KickFromGame, whose new name is ForceToSpectate.
+!	- A new non-fatal 'Script Error' message will be printed if in a MAPINFO episode definition it's present either 'botskillname' or 'botskillpicname' but not 'botepisode'.
 
 
 2.2

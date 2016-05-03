@@ -360,6 +360,7 @@ static void client_predict_DoPrediction( player_t *pPlayer, ULONG ulTicks )
 		pPlayer->mo->flags2 |= MF2_ONMOBJ;
 	else
 		pPlayer->mo->flags2 &= ~MF2_ONMOBJ;
+	pPlayer->onground = g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS];
 	if ( g_bSavedOnFloor[lTick % CLIENT_PREDICTION_TICS] )
 		pPlayer->mo->SetZ ( client_predict_GetPredictedFloorZ ( pPlayer, lTick ) );
 

@@ -569,7 +569,10 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	// command.addByte( players[ulPlayer].userinfo.GetPlayerClassNum() );
 
 	if ( bMorph )
+	{
+		command.addShort( players[ulPlayer].MorphStyle );
 		command.addShort( usActorNetworkIndex );
+	}
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
@@ -1487,6 +1490,11 @@ void SERVERCOMMANDS_SpawnThing( AActor *pActor, ULONG ulPlayerExtra, ServerComma
 	command.addShort( usActorNetworkIndex );
 	command.addShort( pActor->lNetID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
+
+	if ( pActor->ulSTFlags & STFL_LEVELSPAWNED )
+	{
+		SERVERCOMMANDS_SetThingFlags( pActor, FLAGSET_FLAGS, ulPlayerExtra, flags );
+	}
 }
 
 //*****************************************************************************

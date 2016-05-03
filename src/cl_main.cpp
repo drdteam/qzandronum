@@ -3962,6 +3962,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	bool			bWasWatchingPlayer;
 	AActor			*pCameraActor;
 	APlayerPawn		*pOldActor;
+	int				MorphStyle;
 	USHORT			usActorNetworkIndex = 0;
 	PClassActor	*pType;
 
@@ -3999,6 +4000,9 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 
 	if ( bMorph )
 	{
+		// [EP] Read in the morph style.
+		MorphStyle = NETWORK_ReadShort( pByteStream );
+
 		// [BB] Read in the identification of the morphed playerpawn
 		usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
 	}
@@ -4314,14 +4318,20 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// [EP] Still, assign the current class pointer, because it's used by the status bar
 		if ( pType && pType->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
 			pPlayer->MorphedPlayerClass = static_cast<PClassPlayerPawn *>(pType);
+		// [EP] Set the morph style, too.
+		pPlayer->MorphStyle = MorphStyle;
 	}
 	else
 	{
 		pPlayer->morphTics = 0;
 
 		// [BB] If the player was just unmorphed, we need to set reactiontime to the same value P_UndoPlayerMorph uses.
+		// [EP] The morph style, too.
 		if ( bPlayerWasMorphed )
+		{
 			pPlayer->mo->reactiontime = 18;
+			pPlayer->MorphStyle = 0;
+		}
 	}
 
 

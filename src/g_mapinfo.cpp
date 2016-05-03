@@ -1685,7 +1685,7 @@ void FMapInfoParser::ParseEpisodeInfo ()
 	bool extended = false;
 	//[BC]
 	bool	bBotEpisode = false;
-	char	szBotSkillTitle[64];
+	FString botskilltitle;
 	bool	bBotSkillPicIsGFX = false;
 
 	// Get map name
@@ -1741,6 +1741,7 @@ void FMapInfoParser::ParseEpisodeInfo ()
 		{
 			noskill = true;
 		}
+		// [BC]
 		else if ( sc.Compare( "botepisode" ))
 		{
 			bBotEpisode = true;
@@ -1748,13 +1749,13 @@ void FMapInfoParser::ParseEpisodeInfo ()
 		else if ( sc.Compare( "botskillname" ))
 		{
 			sc.MustGetString( );
-			sprintf( szBotSkillTitle, "%s", sc.String );
+			botskilltitle = sc.String;
 			bBotSkillPicIsGFX = false;
 		}
 		else if ( sc.Compare( "botskillpicname" ))
 		{
 			sc.MustGetString( );
-			sprintf( szBotSkillTitle, "%s", sc.String );
+			botskilltitle = sc.String;
 			bBotSkillPicIsGFX = true;
 		}
 		else if (!ParseCloseBrace())
@@ -1816,9 +1817,11 @@ void FMapInfoParser::ParseEpisodeInfo ()
 		epi->mShortcut = tolower(key);
 		epi->mNoSkill = noskill;
 		// [BB] Support for Skulltag's bot episodes
+		if ( botskilltitle.IsNotEmpty() && ( bBotEpisode == false ))
+			sc.ScriptMessage("'%s' used without 'botepisode' in the episode definition. It will be ignored.\n", bBotSkillPicIsGFX ? "botskillpicname" : "botskillname");
 		epi->bBotEpisode = bBotEpisode;
 		epi->bBotSkillFullText = !bBotSkillPicIsGFX;
-		epi->BotSkillTitle = szBotSkillTitle;
+		epi->BotSkillTitle = botskilltitle;
 	}
 }
 
