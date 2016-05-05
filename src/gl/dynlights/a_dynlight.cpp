@@ -162,6 +162,7 @@ void ADynamicLight::BeginPlay()
 
 	m_Radius[0] = args[LIGHT_INTENSITY];
 	m_Radius[1] = args[LIGHT_SECONDARY_INTENSITY];
+	visibletoplayer = true;
 }
 
 //==========================================================================
@@ -246,6 +247,7 @@ void ADynamicLight::Tick()
 			return;
 		}
 		if (target->flags & MF_UNMORPHED) return;
+		visibletoplayer = target->IsVisibleToPlayer();	// cache this value for the renderer to speed up calculations.
 	}
 
 	// Don't bother if the light won't be shown

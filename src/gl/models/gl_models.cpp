@@ -524,6 +524,7 @@ void gl_InitModels()
 		{
 			if (sc.Compare("model"))
 			{
+				path = "";
 				sc.MustGetString();
 				memset(&smf, 0, sizeof(smf));
 				smf.modelIDs[1] = smf.modelIDs[2] = smf.modelIDs[3] = -1;
@@ -534,7 +535,6 @@ void gl_InitModels()
 				{
 					sc.ScriptError("MODELDEF: Unknown actor type '%s'\n", sc.String);
 				}
-				GetDefaultByType(smf.type)->hasmodel=true;
 				sc.MustGetStringName("{");
 				while (!sc.CheckString("}"))
 				{
@@ -760,6 +760,7 @@ void gl_InitModels()
 							if (map[c]) continue;
 							smf.frame=c;
 							SpriteModelFrames.Push(smf);
+							GetDefaultByType(smf.type)->hasmodel = true;
 							map[c]=1;
 						}
 					}
@@ -965,16 +966,19 @@ void gl_RenderModel(GLSprite * spr)
 		const double x = spr->actor->Vel.X;
 		const double y = spr->actor->Vel.Y;
 		const double z = spr->actor->Vel.Z;
-		
-		// [BB] Calculate the pitch using spherical coordinates.
-		if(z || x || y) pitch = float(atan( z/sqrt(x*x+y*y) ) / M_PI * 180);
-				
-        // Correcting pitch if model is moving backwards
-        if(x || y) 
+
+		if (spr->actor->Vel.LengthSquared() > EQUAL_EPSILON)
 		{
-			if((x * cos(angle * M_PI / 180) + y * sin(angle * M_PI / 180)) / sqrt(x * x + y * y) < 0) pitch *= -1;
+			// [BB] Calculate the pitch using spherical coordinates.
+			if (z || x || y) pitch = float(atan(z / sqrt(x*x + y*y)) / M_PI * 180);
+
+			// Correcting pitch if model is moving backwards
+			if (fabs(x) > EQUAL_EPSILON || fabs(y) > EQUAL_EPSILON)
+			{
+				if ((x * cos(angle * M_PI / 180) + y * sin(angle * M_PI / 180)) / sqrt(x * x + y * y) < 0) pitch *= -1;
+			}
+			else pitch = fabs(pitch);
 		}
-		else pitch = fabs(pitch);
 	}
 
 	if( smf->flags & MDL_ROTATING )
@@ -1009,7 +1013,7 @@ void gl_RenderModel(GLSprite * spr)
 		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 	}
 	else
-		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
+		gl_RenderState.mModelMatrix.rotate(-pitch, 0, 0, 1);
 
 	// [BB] Special flag for flat, beam like models.
 	if ( (smf->flags & MDL_ROLLAGAINSTANGLE) )
