@@ -159,7 +159,9 @@ void P_SetPsprite (player_t *player, int position, FState *state, bool nofunctio
 	}
 
 	psp = &player->psprites[position];
-	psp->processPending = false; // Do not subsequently perform periodic processing within the same tick.
+	// [BB] This ZDoom fix causes client/server weapon sync problems.
+	// Till those are fixed, this stays disabled.
+	//psp->processPending = false; // Do not subsequently perform periodic processing within the same tick.
 
 	do
 	{

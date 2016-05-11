@@ -4602,6 +4602,16 @@ bool SERVER_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			unsigned int argsSent = NETWORK_ReadByte( pByteStream );
 			int args[5] = { 0, 0, 0, 0, 0 };
 
+			// [TP] Ensure that the client does not send more than five arguments.
+			if ( argsSent > countof( args ))
+			{
+				for ( unsigned int i = 0; i < argsSent; ++i )
+					NETWORK_ReadLong( pByteStream );
+
+				SERVER_KickPlayer( g_lCurrentClient, "Sent an invalid packet." );
+				return true;
+			}
+
 			for ( unsigned int i = 0; i < argsSent; ++i )
 				args[i] = NETWORK_ReadLong( pByteStream );
 
