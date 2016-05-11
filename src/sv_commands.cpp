@@ -2984,7 +2984,7 @@ void SERVERCOMMANDS_SetSectorLightLevel( ULONG ulSector, ULONG ulPlayerExtra, Se
 
 	NetCommand command( SVC_SETSECTORLIGHTLEVEL );
 	command.addShort( ulSector );
-	command.addByte( clamp<int>( sectors[ulSector].lightlevel, 0, 255 ));
+	command.addShort( sectors[ulSector].lightlevel );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3215,8 +3215,8 @@ void SERVERCOMMANDS_DoSectorLightFireFlicker( ULONG ulSector, LONG lMaxLight, LO
 
 	NetCommand command( SVC_DOSECTORLIGHTFIREFLICKER );
 	command.addShort( ulSector );
-	command.addByte( lMaxLight );
-	command.addByte( lMinLight );
+	command.addShort( lMaxLight );
+	command.addShort( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3229,8 +3229,8 @@ void SERVERCOMMANDS_DoSectorLightFlicker( ULONG ulSector, LONG lMaxLight, LONG l
 
 	NetCommand command( SVC_DOSECTORLIGHTFLICKER );
 	command.addShort( ulSector );
-	command.addByte( lMaxLight );
-	command.addByte( lMinLight );
+	command.addShort( lMaxLight );
+	command.addShort( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3243,8 +3243,8 @@ void SERVERCOMMANDS_DoSectorLightLightFlash( ULONG ulSector, LONG lMaxLight, LON
 
 	NetCommand command( SVC_DOSECTORLIGHTLIGHTFLASH );
 	command.addShort( ulSector );
-	command.addByte( lMaxLight );
-	command.addByte( lMinLight );
+	command.addShort( lMaxLight );
+	command.addShort( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3259,8 +3259,8 @@ void SERVERCOMMANDS_DoSectorLightStrobe( ULONG ulSector, LONG lDarkTime, LONG lB
 	command.addShort( ulSector );
 	command.addShort( lDarkTime );
 	command.addShort( lBrightTime );
-	command.addByte( lMaxLight );
-	command.addByte( lMinLight );
+	command.addShort( lMaxLight );
+	command.addShort( lMinLight );
 	command.addByte( lCount );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
@@ -3286,8 +3286,8 @@ void SERVERCOMMANDS_DoSectorLightGlow2( ULONG ulSector, LONG lStart, LONG lEnd, 
 
 	NetCommand command( SVC_DOSECTORLIGHTGLOW2 );
 	command.addShort( ulSector );
-	command.addByte( lStart );
-	command.addByte( lEnd );
+	command.addShort( lStart );
+	command.addShort( lEnd );
 	command.addShort( lTics );
 	command.addShort( lMaxTics );
 	command.addByte( bOneShot );
@@ -3303,7 +3303,7 @@ void SERVERCOMMANDS_DoSectorLightPhased( ULONG ulSector, LONG lBaseLevel, LONG l
 
 	NetCommand command ( SVC_DOSECTORLIGHTPHASED );
 	command.addShort ( ulSector );
-	command.addByte ( lBaseLevel );
+	command.addShort ( lBaseLevel );
 	command.addByte ( lPhase );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
