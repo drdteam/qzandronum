@@ -722,7 +722,7 @@ int main( int argc, char **argv )
 	BYTESTREAM_s	*pByteStream;
 
 	std::cerr << "=== Zandronum Master ===\n";
-	std::cerr << "Revision: "HG_TIME"\n";
+	std::cerr << "Revision: " HG_TIME "\n";
 
 	std::cerr << "Port: " << DEFAULT_MASTER_PORT << std::endl << std::endl;
 

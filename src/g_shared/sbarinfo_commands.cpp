@@ -236,6 +236,10 @@ class CommandDrawImage : public SBarInfoCommandFlowControl
 		{
 			SBarInfoCommandFlowControl::Tick(block, statusBar, hudChanged);
 
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			texture = NULL;
 			alpha = 1.;
 			if (applyscale)
@@ -533,6 +537,10 @@ class CommandDrawSwitchableImage : public CommandDrawImage
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			// DrawSwitchable image allows 2 or 4 images to be supplied.
 			// drawAlt toggles these:
 			// 1 = first image
@@ -1784,6 +1792,10 @@ class CommandDrawSelectedInventory : public CommandDrawImage, private CommandDra
 		{
 			SBarInfoCommandFlowControl::Tick(block, statusBar, hudChanged);
 
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			if(artiflashTick > 0)
 				artiflashTick--;
 			if(itemflashFade > 0)
@@ -2749,6 +2761,10 @@ class CommandDrawBar : public SBarInfoCommand
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			double value = 0;
 			int max = 0;
 			switch(type)
@@ -3178,6 +3194,10 @@ class CommandHasWeaponPiece : public SBarInfoCommandFlowControl
 		{
 			SBarInfoCommandFlowControl::Tick(block, statusBar, hudChanged);
 
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			for(AInventory *inv = statusBar->CPlayer->mo->Inventory;inv != NULL;inv=inv->Inventory)
 			{
 				if(inv->IsKindOf(RUNTIME_CLASS(AWeaponHolder)))
@@ -3282,6 +3302,10 @@ class CommandDrawGem : public SBarInfoCommand
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
+
 			goalValue = armor ? (statusBar->armor ? statusBar->armor->Amount : 0) : statusBar->CPlayer->mo->health;
 			int max = armor ? 100 : statusBar->CPlayer->mo->GetMaxHealth() + statusBar->CPlayer->mo->stamina;
 			if(max != 0 && goalValue > 0)
@@ -3463,6 +3487,10 @@ class CommandInInventory : public SBarInfoNegatableFlowControl
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
 		{
 			SBarInfoNegatableFlowControl::Tick(block, statusBar, hudChanged);
+
+			// [EP] The code below assumes that this pointer is not NULL, but it can be NULL in Zandronum.
+			if ( statusBar->CPlayer->mo == NULL )
+				return;
 
 			AInventory *invItem[2] = { statusBar->CPlayer->mo->FindInventory(item[0]), statusBar->CPlayer->mo->FindInventory(item[1]) };
 			if (invItem[0] != NULL && amount[0] > 0 && invItem[0]->Amount < amount[0]) invItem[0] = NULL;

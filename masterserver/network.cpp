@@ -184,7 +184,7 @@ void NETWORK_Construct( USHORT usPort, const char *pszIPAddress )
 	// [BB] We are using a specified IP, so we don't need to figure out what IP we have, but just use the specified one.
 	else
 	{
-		LocalAddress = NETADDRESS_s::FromString( pszIPAddress );
+		LocalAddress.LoadFromString ( pszIPAddress );
 		LocalAddress.usPort = htons ( NETWORK_GetLocalPort() );
 	}
 
@@ -259,7 +259,7 @@ int NETWORK_GetPackets( void )
 	g_NetworkMessage.ByteStream.pbStreamEnd = g_NetworkMessage.ByteStream.pbStream + g_NetworkMessage.ulCurrentSize;
 
 	// Store the IP address of the sender.
-	g_AddressFrom = NETADDRESS_s::FromSocketAddress( SocketFrom );
+	g_AddressFrom.LoadFromSocketAddress( SocketFrom );
 
 	return ( g_NetworkMessage.ulCurrentSize );
 }
@@ -348,7 +348,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 	szBuffer[512-1] = 0;
 
 	// Convert the host name to our local 
-	NETADDRESS_s Address = NETADDRESS_s::FromString( szBuffer );
+	NETADDRESS_s Address ( szBuffer );
 
 	iNameLength = sizeof( SocketAddress );
 #ifndef	WIN32
