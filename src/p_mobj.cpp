@@ -5574,6 +5574,7 @@ bool AActor::IsActive( void ) const
 void AActor::Destroy ()
 {
 	ClearRenderSectorList();
+	ClearRenderLineList();
 
 	// [BC/BB] Free it's network ID.
 	g_NetIDList.freeID ( lNetID );
