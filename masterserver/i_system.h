@@ -57,7 +57,5 @@
 #define atterm atexit
 #define I_FatalError printf
 #define Printf printf
-#define M_Malloc(s) malloc(s)
-#define M_Free(s) free(s)
 
 #endif

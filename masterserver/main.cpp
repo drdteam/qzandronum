@@ -50,7 +50,7 @@
 
 #include "../src/networkheaders.h"
 #include "../src/networkshared.h"
-#include "svnrevision.h"
+#include "gitinfo.h"
 #include "network.h"
 #include "main.h"
 #include <sstream>

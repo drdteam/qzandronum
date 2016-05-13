@@ -1,8 +1,16 @@
 project( Masterserver )
 cmake_minimum_required( VERSION 2.4 )
+
+include( CheckFunctionExists )
+
 set( ZAN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src )
 include_directories( ${ZAN_DIR} )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
+
+CHECK_FUNCTION_EXISTS( strnicmp STRNICMP_EXISTS )
+if( NOT STRNICMP_EXISTS )
+   add_definitions( -Dstrnicmp=strncasecmp )
+endif( NOT STRNICMP_EXISTS )
 
 add_executable( master-97
 	main.cpp
