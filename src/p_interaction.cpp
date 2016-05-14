@@ -1189,7 +1189,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	bool forcedPain = false;
 	int fakeDamage = 0;
 	int holdDamage = 0;
-	int rawdamage = damage; 
+	const int rawdamage = damage; 
 	// [BC]
 	LONG	lOldTargetHealth;
 
@@ -1587,7 +1587,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 				else
 					return -1;
 			}
-
+			// Armor for players.
 			if (!(flags & DMG_NO_ARMOR) && player->mo->Inventory != NULL)
 			{
 				int newdam = damage;
@@ -1600,7 +1600,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 					// if we are telefragging don't let the damage value go below that magic value. Some further checks would fail otherwise.
 					damage = newdam;
 				}
-
+				
 				if (damage <= 0)
 				{
 					// [BB] The player didn't lose health but armor. The server needs
@@ -1608,12 +1608,18 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 						SERVERCOMMANDS_SetPlayerArmor( player - players );
 
+					// [MC] Godmode doesn't need checking here, it's already being handled above.
+					if ((target->flags5 & MF5_NOPAIN) || (inflictor && (inflictor->flags5 & MF5_PAINLESS)))
+						return damage;
+					
 					// If MF6_FORCEPAIN is set, make the player enter the pain state.
-					if (!(target->flags5 & MF5_NOPAIN) && inflictor != NULL &&
-						(inflictor->flags6 & MF6_FORCEPAIN) && !(inflictor->flags5 & MF5_PAINLESS) 
-						&& (!(player->mo->flags2 & MF2_INVULNERABLE)) && (!(player->cheats & CF_GODMODE)) && (!(player->cheats & CF_GODMODE2)))
-					{
+					if ((inflictor && (inflictor->flags6 & MF6_FORCEPAIN)))
 						goto dopain;
+					else if (((player->mo->flags7 & MF7_ALLOWPAIN) && (rawdamage > 0)) ||
+							(inflictor && (inflictor->flags7 & MF7_CAUSEPAIN)))
+					{
+						invulpain = true;
+						goto fakepain;
 					}
 					return damage;
 				}

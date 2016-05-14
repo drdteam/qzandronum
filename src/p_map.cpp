@@ -2837,11 +2837,7 @@ bool P_CheckMove(AActor *thing, const DVector2 &pos, int flags)
 			}
 			else if ((flags & PCM_DROPOFF) && !(thing->flags & (MF_FLOAT|MF_DROPOFF)))
 			{
-				const DVector3 oldpos = thing->Pos();
-				thing->SetOrigin(pos.X, pos.Y, newz, true);
-				bool hcheck = (newz - thing->dropoffz > thing->MaxDropOffHeight);
-				thing->SetOrigin(oldpos, true);
-				if (hcheck)
+				if (newz - tm.dropoffz > thing->MaxDropOffHeight)
 				{
 					return false;
 				}
@@ -5692,7 +5688,7 @@ void P_AimCamera(AActor *t1, DVector3 &campos, DAngle &camangle, sector_t *&Came
 	}
 	else
 	{
-		campos = trace.HitPos;
+		campos = trace.HitPos - trace.HitVector * 1/256.;
 	}
 	CameraSector = trace.Sector;
 	unlinked = trace.unlinked;
@@ -6337,7 +6333,7 @@ void P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bo
 							if ( ( (zadmflags & ZADF_NO_ROCKET_JUMPING) == false ) ||
 								( bombsource == NULL ) || ( bombsource->player == NULL ) || ( thing->player == NULL ) )
 							{
-								if (!(flags & RADF_NODAMAGE))
+								if (!(flags & RADF_NODAMAGE) || (flags & RADF_THRUSTZ))
 									thing->Vel.Z += vz;	// this really doesn't work well
 							}
 							}
