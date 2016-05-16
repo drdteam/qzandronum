@@ -194,7 +194,9 @@ bool ARaiseAlarm::TryPickup (AActor *&toucher)
 
 bool ARaiseAlarm::SpecialDropAction (AActor *dropper)
 {
-	P_NoiseAlert (dropper->target, dropper->target);
+	if (dropper->target != nullptr)
+	{
+		P_NoiseAlert(dropper->target, dropper->target);
 
 	// [CW] Let the server sort out the messages.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER && dropper->target->player != NULL )
@@ -225,9 +227,10 @@ bool ARaiseAlarm::SpecialDropAction (AActor *dropper)
 		return ( true );
 	}
 
-	if (dropper->target->CheckLocalView (consoleplayer))
-	{
-		Printf ("You Fool!  You've set off the alarm.\n");
+		if (dropper->target->CheckLocalView(consoleplayer))
+		{
+			Printf("You Fool!  You've set off the alarm.\n");
+		}
 	}
 	Destroy ();
 	return true;
@@ -273,11 +276,14 @@ bool ACloseDoor222::TryPickup (AActor *&toucher)
 bool ACloseDoor222::SpecialDropAction (AActor *dropper)
 {
 	EV_DoDoor (DDoor::doorClose, NULL, dropper, 222, 2., 0, 0, 0);
-	if (dropper->target->CheckLocalView (consoleplayer))
+	if (dropper->target != nullptr)
 	{
-		Printf ("You're dead!  You set off the alarm.\n");
+		if (dropper->target->CheckLocalView(consoleplayer))
+		{
+			Printf("You're dead!  You set off the alarm.\n");
+		}
+		P_NoiseAlert(dropper->target, dropper->target);
 	}
-	P_NoiseAlert (dropper->target, dropper->target);
 	Destroy ();
 	return true;
 }
