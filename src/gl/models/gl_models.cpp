@@ -995,7 +995,7 @@ void gl_RenderModel(GLSprite * spr)
 
 	// Added MDL_INHERITACTORPITCH and MDL_INHERITACTORROLL flags processing.
 	// If both flags MDL_INHERITACTORPITCH and MDL_PITCHFROMMOMENTUM are set, the pitch sums up the actor pitch and the momentum vector pitch.
-	if(smf->flags & MDL_INHERITACTORPITCH) pitch += spr->actor->Angles.Pitch.Degrees;
+	if(smf->flags & MDL_INHERITACTORPITCH) pitch -= spr->actor->Angles.Pitch.Degrees;
 	if(smf->flags & MDL_INHERITACTORROLL) roll += spr->actor->Angles.Roll.Degrees;
 
 	gl_RenderState.mModelMatrix.loadIdentity();
@@ -1019,7 +1019,7 @@ void gl_RenderModel(GLSprite * spr)
 		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 	}
 	else
-		gl_RenderState.mModelMatrix.rotate(-pitch, 0, 0, 1);
+		gl_RenderState.mModelMatrix.rotate(pitch, 0, 0, 1);
 
 	// [BB] Special flag for flat, beam like models.
 	if ( (smf->flags & MDL_ROLLAGAINSTANGLE) )
