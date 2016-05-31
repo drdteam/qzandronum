@@ -293,6 +293,7 @@ struct MiniDumpThreadData
 // EXTERNAL FUNCTION PROTOTYPES --------------------------------------------
 
 // PUBLIC FUNCTION PROTOTYPES ----------------------------------------------
+void I_FlushBufferedConsoleStuff();
 
 // PRIVATE FUNCTION PROTOTYPES ---------------------------------------------
 
@@ -688,6 +689,7 @@ void CreateCrashLog (char *custominfo, DWORD customsize, HWND richlog)
 	}
 	if (richlog != NULL)
 	{
+		I_FlushBufferedConsoleStuff();
 		AddFile (WriteLogFile(richlog), "log.rtf");
 	}
 	CloseHandle (DbgProcess);
