@@ -439,37 +439,6 @@ enum EDmgFlags
 bool P_AlignFlat (int linenum, int side, int fc);
 
 // [BB] Moved here from po_man.cpp
-class DPolyAction : public DThinker
-{
-	DECLARE_CLASS (DPolyAction, DThinker)
-	HAS_OBJECT_POINTERS
-public:
-	DPolyAction (int polyNum);
-	void Serialize (FArchive &arc);
-	void Destroy();
-	void Stop();
-	double GetSpeed() const { return m_Speed; }
-
-	void StopInterpolation ();
-
-	void	SetSpeed( double speed );
-
-	double	GetDist( void );
-	void	SetDist( double dist );
-
-	LONG	GetPolyObj( void );
-
-	virtual void UpdateToClient( ULONG ulClient ); // [WS] We need this here.
-protected:
-	DPolyAction ();
-	int m_PolyObj;
-	double m_Speed;
-	double m_Dist;
-	TObjPtr<DInterpolation> m_Interpolation;
-
-	void SetInterpolation ();
-};
-
 class DRotatePoly : public DPolyAction
 {
 	DECLARE_CLASS (DRotatePoly, DPolyAction)

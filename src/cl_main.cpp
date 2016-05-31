@@ -11875,7 +11875,7 @@ static void client_SetPolyDoorSpeedPosition( BYTESTREAM_s *pByteStream )
 	if ( pPoly->specialdata == NULL )
 		return;
 
-	static_cast<DPolyDoor *>( pPoly->specialdata )->SetSpeedV( speedv );
+	static_cast<DPolyDoor*>( &(*pPoly->specialdata) )->SetSpeedV( speedv );
 }
 
 //*****************************************************************************
@@ -11908,7 +11908,7 @@ static void client_SetPolyDoorSpeedRotation( BYTESTREAM_s *pByteStream )
 	if ( pPoly->specialdata == NULL )
 		return;
 
-	static_cast<DPolyDoor *>( pPoly->specialdata )->SetSpeed( speed );
+	static_cast<DPolyDoor *>( &(*pPoly->specialdata) )->SetSpeed( speed );
 }
 
 //*****************************************************************************

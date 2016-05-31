@@ -5,7 +5,36 @@
 #include "r_defs.h"
 #include "m_bbox.h"
 
-class DPolyAction;
+class DPolyAction : public DThinker
+{
+	DECLARE_CLASS(DPolyAction, DThinker)
+	HAS_OBJECT_POINTERS
+public:
+	DPolyAction(int polyNum);
+	void Serialize(FArchive &arc);
+	void Destroy();
+	void Stop();
+	double GetSpeed() const { return m_Speed; }
+
+	void StopInterpolation();
+
+	void	SetSpeed( double speed );
+
+	double	GetDist( void );
+	void	SetDist( double dist );
+
+	LONG	GetPolyObj( void );
+
+	virtual void UpdateToClient( ULONG ulClient ); // [WS] We need this here.
+protected:
+	DPolyAction();
+	int m_PolyObj;
+	double m_Speed;
+	double m_Dist;
+	TObjPtr<DInterpolation> m_Interpolation;
+
+	void SetInterpolation();
+};
 
 struct FPolyVertex
 {
@@ -67,7 +96,7 @@ struct FPolyObj
 	int			seqType;
 	double		Size;			// polyobj size (area of POLY_AREAUNIT == size of FRACUNIT)
 	FPolyNode	*subsectorlinks;
-	DPolyAction	*specialdata;	// pointer to a thinker, if the poly is moving
+	TObjPtr<DPolyAction> specialdata;	// pointer to a thinker, if the poly is moving
 	TObjPtr<DInterpolation> interpolation;
 
 	// [BC/BB] Has this polyobject moved at all? If so, we need to tell connecting clients of its new position.
