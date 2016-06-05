@@ -2204,6 +2204,7 @@ void G_SerializeLevel (FArchive &arc, bool hubLoad)
 	// [BB] The server doesn't have a Renderer.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		Renderer->StartSerialize(arc);
+	if (arc.IsLoading()) P_DestroyThinkers(hubLoad);
 	gl_SerializeGlobals(arc);
 
 	arc << level.flags
