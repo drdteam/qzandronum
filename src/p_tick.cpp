@@ -149,16 +149,11 @@ void P_Ticker (void)
 		// Since things will be moving, it's okay to interpolate them in the renderer.
 		r_NoInterpolate = false;
 
-		P_ResetSpawnCounters( );
 
 		// Since things will be moving, it's okay to interpolate them in the renderer.
 		r_NoInterpolate = false;
 
-		// Don't run particles while in freeze mode.
-		if ( !(level.flags2 & LEVEL2_FROZEN) )
-		{
-			P_ThinkParticles ();	// [RH] make the particles think
-		}
+		P_ThinkParticles();	// [RH] make the particles think
 	}
 
 	// Predict the console player's position.

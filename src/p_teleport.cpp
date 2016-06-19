@@ -91,14 +91,22 @@ void P_SpawnTeleportFog(AActor *mobj, const DVector3 &pos, bool beforeTele, bool
 	}
 	else
 	{
-		mo = Spawn((beforeTele ? mobj->TeleFogSourceType : mobj->TeleFogDestType), pos, ALLOW_REPLACE);
+		double fogDelta = mobj->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
+		mo = Spawn((beforeTele ? mobj->TeleFogSourceType : mobj->TeleFogDestType), DVector3(pos, pos.Z + fogDelta), ALLOW_REPLACE);
 	}
 
 	if (mo != NULL && setTarget)
 		mo->target = mobj;
-	// [BB] If we're the server, tell the clients to spawn the fog.
-	if ( mo && spawnOnClient && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
-		SERVERCOMMANDS_SpawnThing( mo );
+	// [BB] If we're the server, possibly tell the clients to spawn the fog.
+	if ( mo && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
+	{
+		if ( spawnOnClient )
+			SERVERCOMMANDS_SpawnThing( mo );
+		// [BB] In this case, clients spawn the fog on their own. Giving the fog the NETFL_ALLOWCLIENTSPAWN flag will prevent
+		// the server from telling the clients to spawn the fog again during a full update.
+		else
+			mo->ulNetworkFlags |= NETFL_ALLOWCLIENTSPAWN;
+	}
 }
 
 //
@@ -203,10 +211,9 @@ bool P_Teleport (AActor *thing, DVector3 pos, DAngle angle, int flags)
 	{
 		if (!predicting)
 		{
-			double fogDelta = thing->flags & MF_MISSILE ? 0 : TELEFOGHEIGHT;
 			DVector2 vector = angle.ToVector(20);
 			DVector2 fogpos = P_GetOffsetPosition(pos.X, pos.Y, vector.X, vector.Y);
-			P_SpawnTeleportFog(thing, DVector3(fogpos, thing->Z() + fogDelta), false, true);
+			P_SpawnTeleportFog(thing, DVector3(fogpos, thing->Z()), false, true);
 
 		}
 		if (thing->player)

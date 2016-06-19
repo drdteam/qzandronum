@@ -84,8 +84,6 @@ DEFINE_ACTION_FUNCTION(AActor, A_Beacon)
 
 	AActor *owner = self->target;
 	AActor *rebel;
-	// [BC]
-	AActor	*pFog;
 
 	// [BC] This is handled server-side.
 	if ( NETWORK_InClientMode() )
@@ -137,13 +135,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_Beacon)
 
 	rebel->SetState (rebel->SeeState);
 	rebel->Angles.Yaw = self->Angles.Yaw;
-	pFog = Spawn<ATeleportFog> (rebel->Vec3Angle(20., self->Angles.Yaw, TELEFOGHEIGHT), ALLOW_REPLACE);
-	// [BC] Spawn the teleport fog.
-	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
-		( pFog ))
-	{
-		SERVERCOMMANDS_SpawnThing( pFog );
-	}
+	// [BC/BB] Tell clients to spawn.
+	P_SpawnTeleportFog(rebel, rebel->Vec3Angle(20., self->Angles.Yaw, 0), false, true, true);
 
 	if (--self->health < 0)
 	{

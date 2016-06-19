@@ -366,12 +366,8 @@ DEFINE_ACTION_FUNCTION(AActor, A_GenWizard)
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_SpawnThing( mo );
 
-			// Heretic did not offset it by TELEFOGHEIGHT, so I won't either.
-			mo = Spawn<ATeleportFog> (self->Pos(), ALLOW_REPLACE);
-
-			// [BC]
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SpawnThing( mo );
+			// [BC/BB] Tell clients to spawn.
+			P_SpawnTeleportFog(self, self->Pos(), false, true, true);
 		}
 	}
 	return 0;

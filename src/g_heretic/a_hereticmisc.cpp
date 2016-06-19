@@ -17,6 +17,7 @@
 #include "farchive.h"
 #include "d_player.h"
 #include "a_morph.h"
+#include "p_spec.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "sv_commands.h"

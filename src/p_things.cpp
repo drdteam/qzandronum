@@ -124,7 +124,7 @@ bool P_Thing_Spawn (int tid, AActor *source, int type, DAngle angle, bool fog, i
 				if (fog)
 				{
 					// [BB] Tell clients to spawn.
-					P_SpawnTeleportFog(mobj, spot->PosPlusZ(TELEFOGHEIGHT), false, true, true);
+					P_SpawnTeleportFog(mobj, spot->Pos(), false, true, true);
 				}
 
 				// [BC] Respawned keys in Skulltag CANNOT be dropped items.
@@ -793,7 +793,7 @@ bool P_Thing_CheckProximity(AActor *self, PClass *classname, double distance, in
 
 	// We need these to check out.
 	if (!ref || !classname || distance <= 0)
-		return nullptr;
+		return false;
 	
 	int counter = 0;
 	bool result = false;

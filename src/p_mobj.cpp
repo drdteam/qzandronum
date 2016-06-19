@@ -3722,18 +3722,10 @@ void P_NightmareRespawn (AActor *mobj)
 	}
 
 	// spawn a teleport fog at old spot because of removal of the body?
-	P_SpawnTeleportFog(mobj, mobj->PosPlusZ(TELEFOGHEIGHT), true, true);
-
-		// [BC] If we're the server, tell clients to spawn the thing.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnThing( mo );
+	P_SpawnTeleportFog(mobj, mobj->Pos(), true, true, true); // [BC/BB] Tell clients to spawn.
 
 	// spawn a teleport fog at the new spot
-	P_SpawnTeleportFog(mobj, DVector3(mobj->SpawnPoint, z + TELEFOGHEIGHT), false, true);
-
-		// [BC] If we're the server, tell clients to spawn the thing.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			SERVERCOMMANDS_SpawnThing( mo );
+	P_SpawnTeleportFog(mobj, DVector3(mobj->SpawnPoint, z), false, true, true); // [BC/BB] Tell clients to spawn.
 
 	// [BC] Tell clients to destroy the old monster.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -6025,12 +6017,7 @@ APlayerPawn *P_SpawnPlayer (FPlayerStart *mthing, int playernum, int flags)
 		( p->bDeadSpectator == false ) && ( p->bSpectating == false ) && !(flags & SPF_TEMPPLAYER ) &&
 		( !( zacompatflags & ZACOMPATF_SILENT_WEST_SPAWNS ) || mobj->Angles.Yaw != 180. ))
 	{
-		// [BB] Save the pointer.
-		AActor *pFog = Spawn ("TeleportFog", mobj->Vec3Angle(20., mobj->Angles.Yaw, TELEFOGHEIGHT), ALLOW_REPLACE);
-		// [BB] Clients spawn the fog on their own. Giving the fog the NETFL_ALLOWCLIENTSPAWN flag will prevent
-		// the server from telling the clients to spawn the fog again during a full update.
-		if ( pFog && ( NETWORK_GetState( ) == NETSTATE_SERVER ) )
-			pFog->ulNetworkFlags |= NETFL_ALLOWCLIENTSPAWN;
+		P_SpawnTeleportFog(mobj, mobj->Vec3Angle(20., mobj->Angles.Yaw, 0.), false, true);
 	}
 
 	// [BB] Moved the exec.wad MAP01 "fix" up.

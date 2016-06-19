@@ -551,6 +551,36 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, GetCrouchFactor)
 	return 0;
 }
 
+//==========================================================================
+//
+// GetCVar
+//
+// NON-ACTION function that works like ACS's GetCVar.
+//
+//==========================================================================
+
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, GetCVar)
+{
+	if (numret > 0)
+	{
+		assert(ret != nullptr);
+		PARAM_SELF_PROLOGUE(AActor);
+		PARAM_STRING(cvarname);
+
+		FBaseCVar *cvar = GetCVar(self, cvarname);
+		if (cvar == nullptr)
+		{
+			ret->SetFloat(0);
+		}
+		else
+		{
+			ret->SetFloat(cvar->GetGenericRep(CVAR_Float).Float);
+		}
+		return 1;
+	}
+	return 0;
+}
+
 //===========================================================================
 //
 // __decorate_internal_state__
@@ -3807,6 +3837,7 @@ enum SPFflag
 	SPF_RELVEL =			1 << 2,
 	SPF_RELACCEL =			1 << 3,
 	SPF_RELANG =			1 << 4,
+	SPF_NOTIMEFREEZE =		1 << 5,
 };
 
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnParticle)
@@ -3815,7 +3846,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnParticle)
 	PARAM_COLOR		(color);
 	PARAM_INT_OPT	(flags)			{ flags = 0; }
 	PARAM_INT_OPT	(lifetime)		{ lifetime = 35; }
-	PARAM_INT_OPT	(size)			{ size = 1; }
+	PARAM_FLOAT_OPT	(size)			{ size = 1.; }
 	PARAM_ANGLE_OPT	(angle)			{ angle = 0.; }
 	PARAM_FLOAT_OPT	(xoff)			{ xoff = 0; }
 	PARAM_FLOAT_OPT	(yoff)			{ yoff = 0; }
@@ -3828,11 +3859,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnParticle)
 	PARAM_FLOAT_OPT	(accelz)		{ accelz = 0; }
 	PARAM_FLOAT_OPT	(startalpha)	{ startalpha = 1.; }
 	PARAM_FLOAT_OPT	(fadestep)		{ fadestep = -1.; }
+	PARAM_FLOAT_OPT (sizestep)		{ sizestep = 0.; }
 
 	startalpha = clamp(startalpha, 0., 1.);
 	if (fadestep > 0) fadestep = clamp(fadestep, 0., 1.);
-	size = clamp<int>(size, 0, 65535);			// Clamp to word
-
+	size = fabs(size);
 	if (lifetime != 0)
 	{
 		if (flags & SPF_RELANG) angle += self->Angles.Yaw;
@@ -3859,7 +3890,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnParticle)
 			acc.X = accelx * c + accely * s;
 			acc.Y = accelx * s - accely * c;
 		}
-		P_SpawnParticle(self->Vec3Offset(pos), vel, acc, color, !!(flags & SPF_FULLBRIGHT), startalpha, lifetime, size, fadestep);
+		P_SpawnParticle(self->Vec3Offset(pos), vel, acc, color, startalpha, lifetime, size, fadestep, sizestep, flags);
 	}
 	return 0;
 }
