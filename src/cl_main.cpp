@@ -4063,7 +4063,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// frame of its death state.
 		if ( pOldActor->health > 0 )
 		{
-			A_Unblock ( pOldActor, true );
+			A_Unblock( pOldActor, true, true );
 
 			// Put him in the last frame of his death state.
 			CLIENT_SetActorToLastDeathStateFrame ( pOldActor );
@@ -7274,7 +7274,7 @@ static void client_ThingIsCorpse( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	A_Unblock ( pActor, true );	// [RH] Use this instead of A_PainDie
+	A_Unblock( pActor, true, true );
 
 	// Do some other stuff done in AActor::Die.
 	pActor->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY|MF_NOGRAVITY);

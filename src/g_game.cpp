@@ -3355,6 +3355,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		}
 	}
 
+	// [EP] Remove all the HUD messages.
+	if ( StatusBar )
+		StatusBar->DetachAllMessages ();
+
 	// This is all we do in client mode.
 	if ( NETWORK_InClientMode() )
 	{

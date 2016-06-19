@@ -116,7 +116,7 @@ static	NETADDRESS_s		g_AuthServerAddress;
 static	NETBUFFER_s			g_AuthServerBuffer;
 
 // [BB] Hostname of the authentication server.
-CVAR( String, authhostname, "localhost", CVAR_ARCHIVE|CVAR_GLOBALCONFIG )
+CVAR( String, authhostname, "auth.zandronum.com:16666", CVAR_ARCHIVE|CVAR_GLOBALCONFIG )
 
 //*****************************************************************************
 //	PROTOTYPES

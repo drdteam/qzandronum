@@ -751,12 +751,13 @@ void INVASION_StartFirstCountdown( ULONG ulTicks )
 	// Announce that the fight will soon start.
 	ANNOUNCER_PlayEntry( cl_announcer, "PrepareToFight" );
 
+	// Reset the map.
+	GAME_ResetMap( false );
+
 	// Tell clients to start the countdown.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		SERVERCOMMANDS_DoGameModeCountdown( ulTicks );
 
-	// Reset the map.
-	GAME_ResetMap( false );
 	// [BB] Since the map reset possibly alters floor heights, players may get
 	// stuck if we don't respawn them now.
 	GAMEMODE_RespawnAllPlayers();

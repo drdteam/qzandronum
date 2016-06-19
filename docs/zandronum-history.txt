@@ -26,6 +26,7 @@
 +	- Players' positions in the join queue are now rendered on the scoreboard. [Dusk]
 +	- The internal server browser now automatically loads the wads of the selected server when joining. For this, all wads need to be in a place where they can be found with the '-file' command line option. In the browser menu, the left and right keys allow to scroll through the list of filtered servers. [Torr Samaho]
 +	- The 'Join the game' command key used by spectators is now customizable in the 'Customize Controls' menu. [Edward-san, Dusk]
++	- The default 'authhostname' CVAR has been changed to the official zandronum game authentication server ( auth.zandronum.com:16666 ). [AlexMax, Edward-san]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]
@@ -52,6 +53,8 @@
 -	- Fixed: clients were not informed correctly about the morphed player's morph style. [Edward-san]
 -	- Fixed: clients were not informed to play the active sound of a PowerProtection powerup. [Edward-san]
 -	- Fixed: clients couldn't hide the RaiseAlarm item released by dying NPC actors. [Edward-san]
+-	- Fixed: clients were not informed correctly about actors being affected by A_NoBlocking invoked by an item pickup. [Edward-san]
+-	- Fixed: HUDMessage messages weren't cleared on map resets. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
@@ -65,6 +68,7 @@
 !	- con_virtualwidth and con_virtualheight now default to 640 and 480, respectively. [Dusk]
 !	- kickfromgame and kickfromgame_idx have been renamed to forcespec and forcespec_idx, respectively, though the old names still exist for compatibility with e.g. aliases. Same also with the ACS function KickFromGame, whose new name is ForceToSpectate.
 !	- A new non-fatal 'Script Error' message will be printed if in a MAPINFO episode definition it's present either 'botskillname' or 'botskillpicname' but not 'botepisode'.
+!	- The CVARs gl_render_things, gl_render_walls and gl_render_flats are now restricted to beta builds. [Torr Samaho]
 
 
 2.2

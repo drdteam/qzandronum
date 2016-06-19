@@ -59,9 +59,10 @@ EXTERN_CVAR(Bool, gl_render_segs)
 Clipper clipper;
 
 
-CVAR(Bool, gl_render_things, true, 0)
-CVAR(Bool, gl_render_walls, true, 0)
-CVAR(Bool, gl_render_flats, true, 0)
+// [BB] Don't allow this in release builds.
+CVAR(Bool, gl_render_things, true, CVAR_DEBUGONLY)
+CVAR(Bool, gl_render_walls, true, CVAR_DEBUGONLY)
+CVAR(Bool, gl_render_flats, true, CVAR_DEBUGONLY)
 
 extern fixed_t viewx, viewy;
 

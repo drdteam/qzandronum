@@ -13,6 +13,9 @@
 #include "templates.h"
 #include "farchive.h"
 #include "r_data/r_translate.h"
+// [EP] New #includes.
+#include "network.h"
+#include "sv_commands.h"
 
 static FRandom pr_freezedeath ("FreezeDeath");
 static FRandom pr_icesettics ("IceSetTics");
@@ -66,16 +69,33 @@ IMPLEMENT_CLASS (ASwitchingDecoration)
 //
 //----------------------------------------------------------------------------
 
-void A_Unblock(AActor *self, bool drop)
+void A_Unblock(AActor *self, bool drop, bool okforclients) // [EP] Added 'okforclients'.
 {
+	// [EP] Don't let the clients execute it, except when necessary.
+	if ( NETWORK_InClientMode() && ( okforclients == false ))
+		return;
+
 	// [RH] Andy Baker's stealth monsters
 	if (self->flags & MF_STEALTH)
 	{
 		self->Alpha = 1.;
 		self->visdir = 0;
+
+		// [EP] Inform the clients if needed.
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+			SERVERCOMMANDS_FlashStealthMonster( self );
 	}
 
+	// [EP] Save the previous flags.
+	DWORD oldflags = self->flags;
+
 	self->flags &= ~MF_SOLID;
+
+	// [EP] Inform the clients if needed.
+	if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( oldflags != self->flags ))
+	{
+		SERVERCOMMANDS_SetThingFlags( self, FLAGSET_FLAGS );
+	}
 
 	// If the actor has a conversation that sets an item to drop, drop that.
 	if (self->Conversation != NULL && self->Conversation->DropType != NULL)
