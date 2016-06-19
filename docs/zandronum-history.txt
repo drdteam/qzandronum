@@ -50,6 +50,7 @@
 -	- Fixed: clients would play the sounds from the world-activated ACS function ActivatorSound differently from offline. [Edward-san]
 -	- Fixed: the server didn't inform the clients to not apply the DROPPED flag to level-spawned items which don't have it by default. [Edward-san]
 -	- Fixed: clients were not informed correctly about the morphed player's morph style. [Edward-san]
+-	- Fixed: clients were not informed to play the active sound of a PowerProtection powerup. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]

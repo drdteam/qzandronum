@@ -1799,7 +1799,7 @@ void APowerProtection::ModifyDamage(int damage, FName damageType, int &newdamage
 		{
 			newdam = damage / 4;
 		}
-		if (Owner != NULL && newdam < damage) S_Sound(Owner, CHAN_AUTO, ActiveSound, 1.0f, ATTN_NONE);
+		if (Owner != NULL && newdam < damage) S_Sound(Owner, CHAN_AUTO, ActiveSound, 1.0f, ATTN_NONE, true);	// [EP] Inform the clients.
 		newdamage = newdam;
 	}
 	if (Inventory != NULL)
