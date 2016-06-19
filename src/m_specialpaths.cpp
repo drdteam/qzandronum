@@ -503,6 +503,8 @@ FString GetUserFile (const char *file)
 		// This can be removed after a release or two
 		// Transfer the old zdoom directory to the new location
 		bool moved = false;
+// [BB] Don't move the config if we are using a beta build.
+#if ( BUILD_ID == BUILD_RELEASE )
 		FString oldpath = NicePath("~/." GAMENAMELOWERCASE "/");
 		if (stat (oldpath, &extrainfo) != -1)
 		{
@@ -514,6 +516,7 @@ FString GetUserFile (const char *file)
 			else
 				moved = true;
 		}
+#endif
 
 		if (!moved && mkdir (path, S_IRUSR | S_IWUSR | S_IXUSR) == -1)
 		{
