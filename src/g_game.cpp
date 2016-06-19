@@ -375,8 +375,7 @@ CCMD (centerview)
 		Net_WriteByte (DEM_CENTERVIEW);
 	else
 	{
-		if ( players[consoleplayer].mo )
-			players[consoleplayer].mo->Angles.Pitch = 0.;
+		Net_DoCommand( DEM_CENTERVIEW, NULL, consoleplayer );
 
 		if ( CLIENTDEMO_IsRecording( ))
 			CLIENTDEMO_WriteLocalCommand( CLD_LCMD_CENTERVIEW, NULL );
