@@ -44,7 +44,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Punch)
 	if (self->player != NULL)
 	{
 		AWeapon *weapon = self->player->ReadyWeapon;
-		if (weapon != NULL && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
+		if (weapon != NULL && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_PSPRITE())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire))
 				return 0;
@@ -116,7 +116,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FirePistol is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/pistol", true, 0, false );
+	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/pistol", true, 0, false );
 	A_GunFlash ( self );
 /*
 	bool accurate;
@@ -124,7 +124,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	if (self->player != nullptr)
 	{
 		AWeapon *weapon = self->player->ReadyWeapon;
-		if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
+		if (weapon != nullptr && ACTION_CALL_FROM_PSPRITE())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 				return 0;
@@ -256,7 +256,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Saw)
 	slope = P_AimLineAttack (self, angle, range, &t) + spread_z * (pr_saw.Random2() / 255.);
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if ((weapon != NULL) && !(flags & SF_NOUSEAMMO) && !(!t.linetarget && (flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_WEAPON())
+	if ((weapon != NULL) && !(flags & SF_NOUSEAMMO) && !(!t.linetarget && (flags & SF_NOUSEAMMOMISS)) && !(weapon->WeaponFlags & WIF_DEHAMMO) && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
 			return 0;
@@ -400,7 +400,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FireShotgun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 5.6, 0., 7, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/shotgf", true, 0, false );
+	A_CustomFireBullets( self, 5.6, 0., 7, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/shotgf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int i;
@@ -417,7 +417,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 
 	S_Sound (self, CHAN_WEAPON,  "weapons/shotgf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
@@ -482,7 +482,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FireShotgun2 is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 11.2, 7.1, 20, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/sshotf", true, 0, false );
+	A_CustomFireBullets( self, 11.2, 7.1, 20, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/sshotf", true, 0, false );
 	A_GunFlash ( self );
 /*
 	int 		i;
@@ -501,7 +501,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 
 	S_Sound (self, CHAN_WEAPON, "weapons/sshotf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 2))
 			return 0;
@@ -699,7 +699,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 		}
 	}
 	// [BB] A_FireCGun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_WEAPON(), "weapons/chngun" );
+	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/chngun" );
 //	A_GunFlash( self );
 /*
 	player_t *player;
@@ -710,7 +710,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 	}
 
 	AWeapon *weapon = player->ReadyWeapon;
-	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
@@ -792,7 +792,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireMissile)
 		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != NULL && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
@@ -865,7 +865,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireSTGrenade)
 		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != NULL && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire))
 			return 0;
@@ -903,7 +903,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePlasma)
 		return 0;
 	}
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != NULL && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
@@ -991,21 +991,21 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireRailgun)
 {
 	PARAM_ACTION_PROLOGUE;
 	PARAM_CLASS_OPT	(pufftype, AActor) { pufftype = PClass::FindActor(NAME_BulletPuff); }
-	FireRailgun(self, 0, ACTION_CALL_FROM_WEAPON(), pufftype );
+	FireRailgun(self, 0, ACTION_CALL_FROM_PSPRITE(), pufftype );
 	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunRight)
 {
 	PARAM_ACTION_PROLOGUE;
-	FireRailgun(self, 10, ACTION_CALL_FROM_WEAPON());
+	FireRailgun(self, 10, ACTION_CALL_FROM_PSPRITE());
 	return 0;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, A_FireRailgunLeft)
 {
 	PARAM_ACTION_PROLOGUE;
-	FireRailgun(self, -10, ACTION_CALL_FROM_WEAPON());
+	FireRailgun(self, -10, ACTION_CALL_FROM_PSPRITE());
 	return 0;
 }
 
@@ -1052,7 +1052,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != NULL && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, deh.BFGCells))
 			return 0;
@@ -1232,7 +1232,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireOldBFG)
 	}
 
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (!ACTION_CALL_FROM_WEAPON()) weapon = NULL;
+	if (!ACTION_CALL_FROM_PSPRITE()) weapon = NULL;
 	if (weapon != NULL)
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))

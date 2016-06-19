@@ -158,7 +158,6 @@ bool ACustomInventory::CallStateChain (AActor *actor, FState *state)
 	ret[0].PointerAt((void **)&nextstate);
 	ret[1].IntAt(&retval);
 
-	this->flags5 |= MF5_INSTATECALL;
 	FState *savedstate = this->state;
 
 	while (state != NULL)
@@ -229,7 +228,6 @@ bool ACustomInventory::CallStateChain (AActor *actor, FState *state)
 		}
 		state = nextstate;
 	}
-	this->flags5 &= ~MF5_INSTATECALL;
 	this->state = savedstate;
 	return !!result;
 }
@@ -1974,7 +1972,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_JumpIfNoAmmo)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_STATE(jump);
 
-	if (!ACTION_CALL_FROM_WEAPON())
+	if (!ACTION_CALL_FROM_PSPRITE() || self->player->ReadyWeapon == nullptr)
 	{
 		ACTION_RETURN_STATE(NULL);
 	}
@@ -2199,7 +2197,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireBullets)
 
 	if (!self->player) return 0;
 
-	A_CustomFireBullets( self, spread_xy, spread_z, numbullets, damageperbullet, pufftype, ACTION_CALL_FROM_WEAPON(), NULL, flags, range);
+	A_CustomFireBullets( self, spread_xy, spread_z, numbullets, damageperbullet, pufftype, ACTION_CALL_FROM_PSPRITE(), NULL, flags, range);
 
 	return 0;
 }
@@ -2272,7 +2270,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 	FTranslatedLineTarget t;
 
 		// Only use ammo if called from a weapon
-	if (useammo && ACTION_CALL_FROM_WEAPON() && weapon)
+	if (useammo && ACTION_CALL_FROM_PSPRITE() && weapon)
 	{
 		if (!weapon->DepleteAmmo(weapon->bAltFire, true))
 			return 0;	// out of ammo
@@ -2394,7 +2392,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomPunch)
 	pitch = P_AimLineAttack (self, angle, range, &t);
 
 	// only use ammo when actually hitting something!
-	if ((flags & CPF_USEAMMO) && t.linetarget && weapon && ACTION_CALL_FROM_WEAPON())
+	if ((flags & CPF_USEAMMO) && t.linetarget && weapon && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo(weapon->bAltFire, true))
 			return 0;	// out of ammo
@@ -2515,7 +2513,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RailAttack)
 	AWeapon *weapon = self->player->ReadyWeapon;
 
 	// only use ammo when actually hitting something!
-	if (useammo && weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (useammo && weapon != NULL && ACTION_CALL_FROM_PSPRITE())
 	{
 		if (!weapon->DepleteAmmo(weapon->bAltFire, true))
 			return 0;	// out of ammo
@@ -3157,7 +3155,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItem)
 		ACTION_RETURN_BOOL(true);
 	}
 
-	if (ACTION_CALL_FROM_WEAPON())
+	if (ACTION_CALL_FROM_PSPRITE())
 	{
 		// Used from a weapon, so use some ammo
 		AWeapon *weapon = self->player->ReadyWeapon;
@@ -3334,7 +3332,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_ThrowGrenade)
 	{
 		ACTION_RETURN_BOOL(true);
 	}
-	if (ACTION_CALL_FROM_WEAPON())
+	if (ACTION_CALL_FROM_PSPRITE())
 	{
 		// Used from a weapon, so use some ammo
 		AWeapon *weapon = self->player->ReadyWeapon;
@@ -6644,7 +6642,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetTics)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_INT(tics_to_set);
 
-	if (ACTION_CALL_FROM_WEAPON())
+	if (ACTION_CALL_FROM_PSPRITE())
 	{
 		DPSprite *pspr = self->player->FindPSprite(stateinfo->mPSPIndex);
 		if (pspr != nullptr)
