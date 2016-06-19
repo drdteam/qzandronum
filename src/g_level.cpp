@@ -870,10 +870,7 @@ void G_ExitLevel (int position, bool keepFacing)
 		return;
 	}
 
-	// [BB] We need to pass ( (dmflags & DF_NO_MONSTERS) == DF_NO_MONSTERS ) as last
-	// argument, otherwise this flag will be cleared by G_ChangeLevel, no matter if
-	// it is set or not.
-	G_ChangeLevel(G_GetExitMap(), position, ( keepFacing ? CHANGELEVEL_KEEPFACING : 0 ) | ( (dmflags & DF_NO_MONSTERS) == DF_NO_MONSTERS ) ? CHANGELEVEL_NOMONSTERS : 0 ); 
+	G_ChangeLevel(G_GetExitMap(), position, keepFacing ? CHANGELEVEL_KEEPFACING : 0); 
 }
 
 void G_SecretExitLevel (int position) 
@@ -884,9 +881,8 @@ void G_SecretExitLevel (int position)
 	{
 		return;
 	}
-	
-	// [TL] Pass additional parameters to make "nextsecret" CCMD work online.
-	G_ChangeLevel(G_GetSecretExitMap(), position, ( (dmflags & DF_NO_MONSTERS) == DF_NO_MONSTERS ) ? CHANGELEVEL_NOMONSTERS : 0 );
+
+	G_ChangeLevel(G_GetSecretExitMap(), position, 0);
 }
 
 //==========================================================================

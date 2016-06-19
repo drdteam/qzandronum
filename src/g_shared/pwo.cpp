@@ -67,6 +67,7 @@ CVAR ( Bool, pwo_switchonunknown, false, CVAR_ARCHIVE )
 
 static TDeletingArray<PWOWeaponInfo*> WeaponInfo;
 static TMap<const PClass*, PWOWeaponInfo*> WeaponInfoPerClass;
+bool ParsingPWO;
 
 // =================================================================================================
 //
@@ -79,6 +80,8 @@ static TMap<const PClass*, PWOWeaponInfo*> WeaponInfoPerClass;
 void PWO_Init()
 {
 	Printf( "PWO_Init: Initializing preferred weapon order.\n" );
+
+	ParsingPWO = true;
 
 	// Collect weapons and store class references. PWO_GetWeaponsForClass will initialize weapons
 	// before returning them.
@@ -93,6 +96,8 @@ void PWO_Init()
 	// Read preferences from the ini. This cannot be done when the ini loads because that
 	// happens before WADs are loaded.
 	GameConfig->ReadPWO( GameNames[gameinfo.gametype] );
+
+	ParsingPWO = false;
 }
 
 // =================================================================================================

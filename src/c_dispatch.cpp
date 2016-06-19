@@ -117,6 +117,9 @@ static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *na
 // [BB]
 extern TArray<FString> autoloadedwads;
 
+// [EP]
+extern bool ParsingPWO;
+
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
 
 CVAR (Bool, lookspring, true, CVAR_ARCHIVE);	// Generate centerview when -mlook encountered?
@@ -641,7 +644,8 @@ void C_DoCommand (const char *cmd, int keynum)
 			return;
 		}
 
-		if (gamestate != GS_STARTUP || ParsingKeyConf ||
+		// [EP] PWO needs this.
+		if (gamestate != GS_STARTUP || ParsingKeyConf || ParsingPWO ||
 			(len == 3 && strnicmp (beg, "set", 3) == 0) ||
 			(len == 7 && strnicmp (beg, "logfile", 7) == 0) ||
 			(len == 9 && strnicmp (beg, "unbindall", 9) == 0) ||
