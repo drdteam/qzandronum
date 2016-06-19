@@ -105,6 +105,7 @@
 -	- Fixed: Player TIDs were not synced to newly connecting clients. [Dusk]
 -	- Fixed: sv_forcegldefaults 1 didn't honor the MAPINFO lightmode option if present. [Edward-san]
 -	- Fixed: Invisible and translucent map things lost their visual effect on map restarts. [Edward-san]
+-	- Fixed: Boom-style generic ceilings did not cause texture changes properly online. [Dusk]
 +	- The authentication mechanism for non-map related lumps now allows Freedoom 0.10/Doom clients to join Doom/Freedoom 0.10 servers. [Torr Samaho] 
 !	- Spectators may now move freely even when the game has ended and players are frozen in place. [Dusk]
 !	- The "wrong protocol version" network error now shows the full server and client version. [Torr Samaho]
