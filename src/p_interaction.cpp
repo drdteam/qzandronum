@@ -3218,8 +3218,7 @@ void PLAYER_ClearWeapon( player_t *pPlayer )
 
 	pPlayer->ReadyWeapon = NULL;
 	pPlayer->PendingWeapon = WP_NOCHANGE;
-	pPlayer->psprites[ps_weapon].state = NULL;
-	pPlayer->psprites[ps_flash].state = NULL;
+	pPlayer->DestroyPSprites();
 	// [BB] Assume that it was not the client's decision to clear the weapon.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		pPlayer->bClientSelectedWeapon = false;

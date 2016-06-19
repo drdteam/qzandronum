@@ -1075,7 +1075,7 @@ void SERVERCOMMANDS_SetPlayerPieces( ULONG ulPlayer, ULONG ulPlayerExtra, Server
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, LONG lPosition, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, PSPLayers layer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	FString			stateLabel;
 	LONG			lOffset;
@@ -1085,6 +1085,18 @@ void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, LONG lPosi
 
 	if ( players[ulPlayer].ReadyWeapon == NULL )
 		return;
+
+	int position = 0;
+	if ( layer == PSP_WEAPON )
+		position = 0;
+	else if ( layer == PSP_FLASH )
+		position = 1;
+	else
+	{
+		if ( sv_showwarnings )
+			Printf ( "Warning: Unexpected PSPLayers layer value!\n" );
+		return;
+	}
 
 	// [BB] Try to find the state label and the correspoding offset belonging to the target state.
 	FindStateLabelAndOffset( players[ulPlayer].ReadyWeapon, pState, stateLabel, lOffset, true );
@@ -1117,7 +1129,7 @@ void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, LONG lPosi
 	command.addByte( ulPlayer );
 	command.addString( stateLabel.GetChars() );
 	command.addByte( lOffset );
-	command.addByte( lPosition );
+	command.addByte( position );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

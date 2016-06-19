@@ -121,16 +121,15 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 /*
 	bool accurate;
 
-	if (self->player != NULL)
+	if (self->player != nullptr)
 	{
 		AWeapon *weapon = self->player->ReadyWeapon;
-		if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+		if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
 		{
 			if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 				return 0;
 
-			P_SetPsprite (self->player, ps_flash, weapon->FindState(NAME_Flash));
-			self->player->psprites[ps_flash].processPending = true;
+			P_SetPsprite(self->player, PSP_FLASH, weapon->FindState(NAME_Flash), true);
 		}
 		self->player->mo->PlayAttacking2 ();
 
@@ -407,7 +406,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	int i;
 	player_t *player;
 
-	if (NULL == (player = self->player))
+	if (nullptr == (player = self->player))
 	{
 		return 0;
 	}
@@ -418,12 +417,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 
 	S_Sound (self, CHAN_WEAPON,  "weapons/shotgf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
-		P_SetPsprite (player, ps_flash, weapon->FindState(NAME_Flash));
-		self->player->psprites[ps_flash].processPending = true;
+		P_SetPsprite(player, PSP_FLASH,  weapon->FindState(NAME_Flash), true);
 	}
 	player->mo->PlayAttacking2 ();
 
@@ -492,7 +490,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 	int 		damage;
 	player_t *player;
 
-	if (NULL == (player = self->player))
+	if (nullptr == (player = self->player))
 	{
 		return 0;
 	}
@@ -503,12 +501,11 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 
 	S_Sound (self, CHAN_WEAPON, "weapons/sshotf", 1, ATTN_NORM);
 	AWeapon *weapon = self->player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 2))
 			return 0;
-		P_SetPsprite (player, ps_flash, weapon->FindState(NAME_Flash));
-		self->player->psprites[ps_flash].processPending = true;
+		P_SetPsprite(player, PSP_FLASH,  weapon->FindState(NAME_Flash), true);
 	}
 	player->mo->PlayAttacking2 ();
 
@@ -641,15 +638,13 @@ void P_SetSafeFlash(AWeapon *weapon, player_t *player, FState *flashstate, int i
 			if (flashstate + index < cls->OwnedStates + cls->NumOwnedStates)
 			{
 				// we're ok so set the state
-				P_SetPsprite (player, ps_flash, flashstate + index);
-				player->psprites[ps_flash].processPending = true;
+				P_SetPsprite(player, PSP_FLASH,  flashstate + index, true);
 				return;
 			}
 			else
 			{
 				// oh, no! The state is beyond the end of the state table so use the original flash state.
-				P_SetPsprite (player, ps_flash, flashstate);
-				player->psprites[ps_flash].processPending = true;
+				P_SetPsprite(player, PSP_FLASH,  flashstate, true);
 				return;
 			}
 		}
@@ -665,8 +660,7 @@ void P_SetSafeFlash(AWeapon *weapon, player_t *player, FState *flashstate, int i
 	{ // Invalid state. With no index offset, it should at least be valid.
 		index = 0;
 	}
-	P_SetPsprite (player, ps_flash, flashstate + index);
-	player->psprites[ps_flash].processPending = true;
+	P_SetPsprite(player, PSP_FLASH,  flashstate + index, true);
 }
 
 //
@@ -695,7 +689,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 		{
 			FState * atk = weapon->FindState(NAME_Fire);
 
-			int theflash = clamp (int(player->psprites[ps_weapon].state - atk), 0, 1);
+			int theflash = clamp (int(player->GetPSprite(PSP_WEAPON)->GetState() - atk), 0, 1);
 
 			if (flash[theflash].sprite != flash->sprite)
 			{
@@ -710,13 +704,13 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 /*
 	player_t *player;
 
-	if (self == NULL || NULL == (player = self->player))
+	if (self == nullptr || nullptr == (player = self->player))
 	{
 		return 0;
 	}
 
 	AWeapon *weapon = player->ReadyWeapon;
-	if (weapon != NULL && ACTION_CALL_FROM_WEAPON())
+	if (weapon != nullptr && ACTION_CALL_FROM_WEAPON())
 	{
 		if (!weapon->DepleteAmmo (weapon->bAltFire, true, 1))
 			return 0;
@@ -728,12 +722,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireCGun)
 			SERVERCOMMANDS_WeaponSound( ULONG( player - players ), "weapons/chngun", ULONG( player - players ), SVCF_SKIPTHISCLIENT );
 
 		FState *flash = weapon->FindState(NAME_Flash);
-		if (flash != NULL)
+		if (flash != nullptr)
 		{
 			// [RH] Fix for Sparky's messed-up Dehacked patch! Blargh!
 			FState * atk = weapon->FindState(NAME_Fire);
 
-			int theflash = clamp (int(player->psprites[ps_weapon].state - atk), 0, 1);
+			int theflash = clamp (int(player->GetPSprite(PSP_WEAPON)->GetState() - atk), 0, 1);
 
 			if (flash[theflash].sprite != flash->sprite)
 			{
@@ -1034,7 +1028,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_CheckRailReload)
 	{
 		// Go back to the refire frames, instead of continuing on to the reload frames.
 		if ( self->player->ReadyWeapon->GetClass( ) == PClass::FindClass("Railgun" ))
-			P_SetPsprite( self->player, ps_weapon, self->player->ReadyWeapon->FindState(NAME_Fire) + 8 );
+			P_SetPsprite( self->player, PSP_WEAPON, self->player->ReadyWeapon->FindState(NAME_Fire) + 8 );
 	}
 	else
 		// We need to reload. However, don't reload if we're out of ammo.
@@ -1088,6 +1082,12 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireBFG)
 // A_BFGSpray
 // Spawn a BFG explosion on every monster in view
 //
+enum BFG_Flags
+{
+	BFGF_HURTSOURCE = 1,
+	BFGF_MISSILEORIGIN = 2,
+};
+
 DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 {
 	PARAM_ACTION_PROLOGUE;
@@ -1098,12 +1098,14 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 	PARAM_FLOAT_OPT	(distance)				{ distance = 0; }
 	PARAM_ANGLE_OPT	(vrange)				{ vrange = 0.; }
 	PARAM_INT_OPT	(defdamage)				{ defdamage = 0; }
+	PARAM_INT_OPT	(flags)					{ flags = 0; }
 
 	int 				i;
 	int 				j;
 	int 				damage;
 	DAngle 				an;
 	FTranslatedLineTarget t;
+	AActor				*originator;
 
 	// [BC] This is not done on the client end.
 	if ( NETWORK_InClientMode() )
@@ -1122,13 +1124,16 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 	if (!self->target)
 		return 0;
 
+	// [XA] Set the originator of the rays to the projectile (self) if
+	//      the new flag is set, else set it to the player (self->target)
+	originator = (flags & BFGF_MISSILEORIGIN) ? self : (AActor *)(self->target);
+
 	// offset angles from its attack angle
 	for (i = 0; i < numrays; i++)
 	{
 		an = self->Angles.Yaw - angle / 2 + angle / numrays*i;
 
-		// self->target is the originator (player) of the missile
-		P_AimLineAttack(self->target, an, distance, &t, vrange);
+		P_AimLineAttack(originator, an, distance, &t, vrange);
 
 		if (t.linetarget != NULL)
 		{
@@ -1139,7 +1144,8 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 
 			if (spray != NULL)
 			{
-				if (spray->flags6 & MF6_MTHRUSPECIES && self->target->GetSpecies() == t.linetarget->GetSpecies())
+				if ((spray->flags6 & MF6_MTHRUSPECIES && self->target->GetSpecies() == t.linetarget->GetSpecies()) || 
+					(!(flags & BFGF_HURTSOURCE) && self->target == t.linetarget)) // [XA] Don't hit oneself unless we say so.
 				{
 					spray->Destroy(); // [MC] Remove it because technically, the spray isn't trying to "hit" them.
 					continue;
@@ -1166,7 +1172,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_BFGSpray)
 				damage = defdamage;
 			}
 
-			int newdam = P_DamageMobj(t.linetarget, self->target, self->target, damage, dmgType, dmgFlags|DMG_USEANGLE, t.angleFromSource.Degrees);
+			int newdam = P_DamageMobj(t.linetarget, originator, self->target, damage, dmgType, dmgFlags|DMG_USEANGLE, t.angleFromSource.Degrees);
 			P_TraceBleed(newdam > 0 ? newdam : damage, &t, self);
 		}
 	}

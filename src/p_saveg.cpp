@@ -60,7 +60,7 @@
 #include "cl_demo.h"
 #include "network.h"
 
-static void CopyPlayer (player_t *dst, player_t *src, const char *name);
+void CopyPlayer (player_t *dst, player_t *src, const char *name);
 static void ReadOnePlayer (FArchive &arc, bool skipload);
 static void ReadMultiplePlayers (FArchive &arc, int numPlayers, int numPlayersNow, bool skipload);
 static void SpawnExtraPlayers ();
@@ -259,7 +259,7 @@ static void ReadMultiplePlayers (FArchive &arc, int numPlayers, int numPlayersNo
 	delete[] nametemp;
 }
 
-static void CopyPlayer (player_t *dst, player_t *src, const char *name)
+void CopyPlayer (player_t *dst, player_t *src, const char *name)
 {
 	// The userinfo needs to be saved for real players, but it
 	// needs to come from the save for bots.
@@ -279,7 +279,7 @@ static void CopyPlayer (player_t *dst, player_t *src, const char *name)
 	dst->cheats |= chasecam;
 
 	/* [BB] Zandronum treats bots differently.
-	if (dst->Bot != NULL)
+	if (dst->Bot != nullptr)
 	{
 		botinfo_t *thebot = bglobal.botinfo;
 		while (thebot && stricmp (name, thebot->name))
@@ -302,10 +302,23 @@ static void CopyPlayer (player_t *dst, player_t *src, const char *name)
 	dst->userinfo.SkinNumChanged(R_FindSkin(skins[dst->userinfo.GetSkin()].name, dst->CurrentPlayerClass));
 
 	// Make sure the player pawn points to the proper player struct.
-	if (dst->mo != NULL)
+	if (dst->mo != nullptr)
 	{
 		dst->mo->player = dst;
 	}
+
+	// Same for the psprites.
+	DPSprite *pspr = dst->psprites;
+	while (pspr)
+	{
+		pspr->Owner = dst;
+
+		pspr = pspr->Next;
+	}
+
+	// Don't let the psprites be destroyed when src is destroyed.
+	src->psprites = nullptr;
+
 	// These 2 variables may not be overwritten.
 	dst->attackdown = attackdown;
 	dst->usedown = usedown;

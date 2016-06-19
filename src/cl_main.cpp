@@ -3695,7 +3695,7 @@ void PLAYER_ResetPlayerData( player_t *pPlayer )
 	{
 		pPlayer->userinfo.Reset();
 	}
-	memset( pPlayer->psprites, 0, sizeof( pPlayer->psprites ));
+	pPlayer->DestroyPSprites();
 
 	memset( &pPlayer->ulMedalCount, 0, sizeof( ULONG ) * NUM_MEDALS );
 	memset( &pPlayer->ServerXYZ, 0, sizeof( fixed_t ) * 3 );
@@ -5343,6 +5343,14 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 	// Read in the position (ps_weapon, etc.).
 	lPosition = NETWORK_ReadByte( pByteStream );
 
+	PSPLayers layer = PSP_WEAPON;
+	if ( lPosition == 0 )
+		layer = PSP_WEAPON;
+	else if ( lPosition == 1 )
+		layer == PSP_FLASH;
+	else
+		return;
+
 	// Not in a level; nothing to do (shouldn't happen!)
 	if ( gamestate != GS_LEVEL )
 		return;
@@ -5388,7 +5396,7 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 		if ( pNewState == NULL )
 			return;
 
-		P_SetPsprite( &players[ulPlayer], lPosition, pNewState );
+		P_SetPsprite( &players[ulPlayer], layer, pNewState );
 		return;
 	}
 	if ( pNewState )
@@ -5407,7 +5415,7 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 				return;
 			}
 		}
-		P_SetPsprite( &players[ulPlayer], lPosition, pNewState + lOffset );
+		P_SetPsprite( &players[ulPlayer], layer, pNewState + lOffset );
 	}
 }
 

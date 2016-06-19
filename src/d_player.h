@@ -492,6 +492,7 @@ class player_t
 {
 public:
 	player_t();
+	~player_t();
 	player_t &operator= (const player_t &p);
 
 	void Serialize (FArchive &arc);
@@ -543,6 +544,7 @@ public:
 
 	AWeapon	   *ReadyWeapon;
 	AWeapon	   *PendingWeapon;			// WP_NOCHANGE if not changing
+	TObjPtr<DPSprite> psprites; // view sprites (gun, etc)
 
 	int			cheats;					// bit flags
 	int			cheats2;				// [BB] More bit flags
@@ -562,7 +564,6 @@ public:
 	int			extralight;				// so gun flashes light up areas
 	short		fixedcolormap;			// can be set to REDCOLORMAP, etc.
 	short		fixedlightlevel;
-	pspdef_t	psprites[NUMPSPRITES];	// view sprites (gun, etc)
 	int			morphTics;				// player is a chicken/pig if > 0
 	PClassPlayerPawn *MorphedPlayerClass;		// [MH] (for SBARINFO) class # for this player instance when morphed
 	int			MorphStyle;				// which effects to apply for this player instance when morphed
@@ -785,6 +786,12 @@ public:
 	}
 
 	int GetSpawnClass();
+
+	// PSprite layers
+	void TickPSprites();
+	void DestroyPSprites();
+	DPSprite *FindPSprite(int layer);
+	DPSprite *GetPSprite(PSPLayers layer); // Used ONLY for compatibility with the old hardcoded layers.
 };
 
 // Bookkeeping on players - state.

@@ -111,7 +111,7 @@ void	SERVERCOMMANDS_SetPlayerCheats( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPL
 void	SERVERCOMMANDS_SetPlayerPendingWeapon( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //void	SERVERCOMMANDS_SetPlayerPieces( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
-void	SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, LONG lPosition, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, PSPLayers layer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetPlayerBlend( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetPlayerMaxHealth( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetPlayerLivesLeft( ULONG ulPlayer, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );

@@ -104,6 +104,7 @@ static FRandom pr_spawnitemex ("SpawnItemEx");
 static FRandom pr_burst ("Burst");
 static FRandom pr_monsterrefire ("MonsterRefire");
 static FRandom pr_teleport("A_Teleport");
+static FRandom pr_bfgselfdamage("BFGSelfDamage");
 
 extern FState *g_CallingState; // [BB] For c/s jump handling.
 
@@ -170,8 +171,9 @@ bool ACustomInventory::CallStateChain (AActor *actor, FState *state)
 			VMFrameStack stack;
 			PPrototype *proto = state->ActionFunc->Proto;
 			VMReturn *wantret;
+			FStateParamInfo stp = { state, STATE_StateChain, PSP_WEAPON };
 
-			params[2] = VMValue(state, ATAG_STATE);
+			params[2] = VMValue(&stp, ATAG_STATEINFO);
 			retval = true;		// assume success
 			wantret = NULL;		// assume no return value wanted
 			numret = 0;
@@ -1105,18 +1107,18 @@ static void SERVER_HandleJump(AActor *self, FState *callingstate, FState *jumpto
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		return;
 
-	if (self->player != NULL && callingstate == self->player->psprites[ps_weapon].state)
+	if (self->player != NULL && callingstate == self->player->GetPSprite(PSP_WEAPON)->GetState())
 	{
 		// [BB] Tell clients to change the thing's state.
 		if ( clientUpdateFlags & CLIENTUPDATE_FRAME )
-			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, ps_weapon );
+			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, PSP_WEAPON );
 	}
-	else if (self->player != NULL && callingstate == self->player->psprites[ps_flash].state)
+	else if (self->player != NULL && callingstate == self->player->GetPSprite(PSP_FLASH)->GetState())
 	{
 		// [BB] Tell clients to change the thing's state.
 		if ( clientUpdateFlags & CLIENTUPDATE_FRAME )
 		{
-			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, ps_flash );
+			SERVER_HandleWeaponStateJump ( static_cast<ULONG>( self->player - players ), jumpto, PSP_FLASH );
 		}
 	}
 	else if (callingstate == self->state)
@@ -1323,7 +1325,7 @@ int DoJumpIfInventory(AActor *owner, AActor *self, VMValue *param, int numparam,
 	// [BC] Don't jump here in client mode.
 	ClientJumpUpdateFlags clientUpdateFlags = 0;
 	if (( self->player ) &&
-		(( g_CallingState == self->player->psprites[ps_weapon].state ) || ( g_CallingState == self->player->psprites[ps_flash].state )))
+		(( g_CallingState == self->player->GetPSprite(PSP_WEAPON)->GetState() ) || ( g_CallingState == self->player->GetPSprite(PSP_FLASH)->GetState() )))
 	{
 	}
 	else
@@ -1521,6 +1523,72 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusThrust)
 	{
 		self->target->flags2 |= MF2_NODMGTHRUST;
 	}
+	return 0;
+}
+
+//==========================================================================
+//
+// A_RadiusDamageSelf
+//
+//==========================================================================
+enum
+{
+	RDSF_BFGDAMAGE = 1,
+};
+
+DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RadiusDamageSelf)
+{
+	PARAM_ACTION_PROLOGUE;
+	PARAM_INT_OPT(damage) { damage = 128; }
+	PARAM_FLOAT_OPT(distance) { distance = 128; }
+	PARAM_INT_OPT(flags) { flags = 0; }
+	PARAM_CLASS_OPT(flashtype, AActor) { flashtype = NULL; }
+
+	int 				i;
+	int 				damageSteps;
+	int 				actualDamage;
+	double 				actualDistance;
+
+	actualDistance = self->Distance3D(self->target);
+	if (actualDistance < distance)
+	{
+		// [XA] Decrease damage with distance. Use the BFG damage
+		//      calculation formula if the flag is set (essentially
+		//      a generalization of SMMU's BFG11K behavior, used
+		//      with fraggle's blessing.)
+		damageSteps = damage - int(damage * actualDistance / distance);
+		if (flags & RDSF_BFGDAMAGE)
+		{
+			actualDamage = 0;
+			for (i = 0; i < damageSteps; ++i)
+				actualDamage += (pr_bfgselfdamage() & 7) + 1;
+		}
+		else
+		{
+			actualDamage = damageSteps;
+		}
+
+		// optional "flash" effect -- spawn an actor on
+		// the player to indicate bad things happened.
+		AActor *flash = NULL;
+		if(flashtype != NULL)
+			flash = Spawn(flashtype, self->target->PosPlusZ(self->target->Height / 4), ALLOW_REPLACE);
+
+		int dmgFlags = 0;
+		FName dmgType = NAME_BFGSplash;
+
+		if (flash != NULL)
+		{
+			if (flash->flags5 & MF5_PUFFGETSOWNER) flash->target = self->target;
+			if (flash->flags3 & MF3_FOILINVUL) dmgFlags |= DMG_FOILINVUL;
+			if (flash->flags7 & MF7_FOILBUDDHA) dmgFlags |= DMG_FOILBUDDHA;
+			dmgType = flash->DamageType;
+		}
+
+		int newdam = P_DamageMobj(self->target, self, self->target, actualDamage, dmgType, dmgFlags);
+		P_TraceBleed(newdam > 0 ? newdam : actualDamage, self->target, self);
+	}
+
 	return 0;
 }
 
@@ -2436,6 +2504,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RailAttack)
 	PARAM_CLASS_OPT	(spawnclass, AActor){ spawnclass = NULL; }
 	PARAM_FLOAT_OPT	(spawnofs_z)		{ spawnofs_z = 0; }
 	PARAM_INT_OPT	(SpiralOffset)		{ SpiralOffset = 270; }
+	PARAM_INT_OPT	(limit)				{ limit = 0; }
 	
 	if (range == 0) range = 8192;
 	if (sparsity == 0) sparsity=1.0;
@@ -2485,6 +2554,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_RailAttack)
 	p.drift = driftspeed;
 	p.spawnclass = spawnclass;
 	p.SpiralOffset = SpiralOffset;
+	p.limit = limit;
 	P_RailAttackWithPossibleSpread(&p);
 	return 0;
 }
@@ -2522,6 +2592,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 	PARAM_CLASS_OPT	(spawnclass, AActor){ spawnclass = NULL; }
 	PARAM_FLOAT_OPT	(spawnofs_z)		{ spawnofs_z = 0; }
 	PARAM_INT_OPT	(SpiralOffset)		{ SpiralOffset = 270; }
+	PARAM_INT_OPT	(limit)				{ limit = 0; }
 
 	if (range == 0) range = 8192.;
 	if (sparsity == 0) sparsity = 1;
@@ -2604,6 +2675,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomRailgun)
 	p.drift = driftspeed;
 	p.spawnclass = spawnclass;
 	p.SpiralOffset = SpiralOffset;
+	p.limit = 0;
 	P_RailAttackWithPossibleSpread(&p);
 
 	self->SetXYZ(savedpos);
@@ -2637,7 +2709,7 @@ static bool DoGiveInventory(AActor *receiver, bool orresult, VM_ARGS, AActor *se
 
 	// [BC] Don't jump here in client mode.
 	if (( self->player ) &&
-		(( g_CallingState == self->player->psprites[ps_weapon].state ) || ( g_CallingState == self->player->psprites[ps_flash].state )))
+		(( g_CallingState == self->player->GetPSprite(PSP_WEAPON)->GetState() ) || ( g_CallingState == self->player->GetPSprite(PSP_FLASH)->GetState() )))
 	{
 		bNeedClientUpdate = false;
 	}
@@ -2762,7 +2834,7 @@ bool DoTakeInventory(AActor *receiver, bool orresult, VM_ARGS, AActor *self) // 
 	
 	// [BC] Don't jump here in client mode.
 	if (( self->player ) &&
-		(( g_CallingState == self->player->psprites[ps_weapon].state ) || ( g_CallingState == self->player->psprites[ps_flash].state )))
+		(( g_CallingState == self->player->GetPSprite(PSP_WEAPON)->GetState() ) || ( g_CallingState == self->player->GetPSprite(PSP_FLASH)->GetState() )))
 	{
 		bNeedClientUpdate = false;
 	}
@@ -6572,19 +6644,21 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetTics)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_INT(tics_to_set);
 
-	if (stateowner != self && self->player != NULL && stateowner->IsKindOf(RUNTIME_CLASS(AWeapon)))
-	{ // Is this a weapon? Need to check psp states for a match, then. Blah.
-		for (int i = 0; i < NUMPSPRITES; ++i)
+	if (ACTION_CALL_FROM_WEAPON())
+	{
+		DPSprite *pspr = self->player->FindPSprite(stateinfo->mPSPIndex);
+		if (pspr != nullptr)
 		{
-			if (self->player->psprites[i].state == callingstate)
-			{
-				self->player->psprites[i].tics = tics_to_set;
-				return 0;
-			}
+			pspr->Tics = tics_to_set;
+			return 0;
 		}
 	}
-	// Just set tics for self.
-	self->tics = tics_to_set;
+	else if (ACTION_CALL_FROM_ACTOR())
+	{
+		// Just set tics for self.
+		self->tics = tics_to_set;
+	}
+	// for inventory state chains this needs to be ignored.
 	return 0;
 }
 
@@ -7742,10 +7816,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FaceMovementDirection)
 	{
 		DAngle current = mobj->Angles.Pitch;
 		const DVector2 velocity = mobj->Vel.XY();
-		DAngle pitch = VecToAngle(velocity.Length(), -mobj->Vel.Z);
+		DAngle pitch = VecToAngle(velocity.Length(), mobj->Vel.Z);
 		if (pitchlimit > 0)
 		{
-			DAngle pdelta = deltaangle(current, pitch);
+			DAngle pdelta = deltaangle(-current, pitch);
 
 			if (fabs(pdelta) > pitchlimit)
 			{

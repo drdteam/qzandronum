@@ -768,7 +768,7 @@ DAnimatedDoor::DAnimatedDoor ()
 }
 
 DAnimatedDoor::DAnimatedDoor (sector_t *sec)
-	: DMovingCeiling (sec)
+	: DMovingCeiling (sec, false)
 {
 }
 

@@ -4693,7 +4693,7 @@ void SERVER_GiveInventoryToPlayer( const player_t *player, AInventory *pInventor
 
 //*****************************************************************************
 // [BB]
-void SERVER_HandleWeaponStateJump( ULONG ulPlayer, FState *pState, LONG lPosition )
+void SERVER_HandleWeaponStateJump( ULONG ulPlayer, FState *pState, PSPLayers layer )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
@@ -4704,7 +4704,7 @@ void SERVER_HandleWeaponStateJump( ULONG ulPlayer, FState *pState, LONG lPositio
 		return;
 
 	// [BB] First set the weapon sprite of the player according to the jump.
-	SERVERCOMMANDS_SetPlayerPSprite( ulPlayer, pState, lPosition );
+	SERVERCOMMANDS_SetPlayerPSprite( ulPlayer, pState, layer );
 
 	// [BB] During the time it takes for the server to instruct the client to do the jump
 	// the client possible executes code pointers it shouldn't because the client just ignores

@@ -113,7 +113,7 @@ void P_Ticker (void)
 			return;
 	}
 
-	P_NewPspriteTick();
+	DPSprite::NewTick();
 
 	// [BC] Server doesn't need any of this.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )

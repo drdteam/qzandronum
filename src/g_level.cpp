@@ -435,7 +435,6 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 	bool wantFast;
 	int i;
 
-	G_ClearHubInfo();
 
 	// [BB] If there is a free spectator player from the last map, be sure to get rid of it.
 	if ( CLIENTDEMO_IsPlaying() )
@@ -446,6 +445,7 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 	if ((!savegamerestore) &&
 		( NETWORK_InClientMode() == false ))
 	{
+		G_ClearHubInfo();
 		G_ClearSnapshots ();
 		P_RemoveDefereds ();
 
