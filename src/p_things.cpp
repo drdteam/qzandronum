@@ -486,7 +486,7 @@ void P_RemoveThing(AActor * actor)
 		if (actor->IsKindOf(RUNTIME_CLASS(AInventory)) && static_cast<AInventory*>(actor)->Owner != NULL) return;
 
 		// [BC] DESTROY!
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( actor ) == false ))
 			SERVERCOMMANDS_DestroyThing( actor );
 
 		// be friendly to the level statistics. ;)

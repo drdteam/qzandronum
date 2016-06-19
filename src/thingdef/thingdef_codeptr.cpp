@@ -3662,7 +3662,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeIn)
 	}
 
 	// [BB] Inform the clients about the alpha change and possibly about RenderStyle.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( self ) == false ))
 	{
 		if ( renderStyleChanged )
 			SERVERCOMMANDS_SetThingProperty( self, APROP_RenderStyle );
@@ -3700,7 +3700,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeOut)
 	self->Alpha -= reduce;
 
 	// [BB] Inform the clients about the alpha change and possibly about RenderStyle.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+	if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( self ) == false ))
 	{
 		if ( renderStyleChanged )
 			SERVERCOMMANDS_SetThingProperty( self, APROP_RenderStyle );
@@ -3770,7 +3770,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FadeTo)
 	}
 
 	// [EP] Inform the clients about possible alpha and renderstyle changes.
-	if ( NETWORK_GetState() == NETSTATE_SERVER )
+	if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( self ) == false ))
 	{
 		if ( self->RenderStyle.Flags != oldrenderstyleflags )
 			SERVERCOMMANDS_SetThingProperty( self, APROP_RenderStyle );
@@ -3818,7 +3818,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SetScale)
 		ref->Scale = { scalex, scaley };
 
 		// [EP] Tell the clients to change the scale if anything changed.
-		if ( NETWORK_GetState() == NETSTATE_SERVER )
+		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( self ) == false ))
 		{
 			unsigned int scaleFlags = 0;
 			if ( savedScale.X != ref->Scale.X )
@@ -6261,7 +6261,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Warp)
 	if (P_Thing_Warp(self, reference, xofs, yofs, zofs, angle, flags, heightoffset, radiusoffset, pitch))
 	{
 		// [BB] Inform the clients.
-		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		if (( NETWORK_GetState() == NETSTATE_SERVER ) && ( NETWORK_IsActorClientHandled( self ) == false ))
 			SERVERCOMMANDS_MoveThing( self, CM_X|CM_Y|CM_Z|CM_ANGLE );
 
 		if (success_state)
