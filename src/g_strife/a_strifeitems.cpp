@@ -198,40 +198,43 @@ bool ARaiseAlarm::SpecialDropAction (AActor *dropper)
 	{
 		P_NoiseAlert(dropper->target, dropper->target);
 
-	// [CW] Let the server sort out the messages.
-	if ( NETWORK_GetState( ) == NETSTATE_SERVER && dropper->target->player != NULL )
-	{
-		ULONG	ulIdx;
-
-		// [CW] If we didn't activate the alarm, tell the other clients who did.
-		for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+		// [CW] Let the server sort out the messages.
+		if ( NETWORK_GetState( ) == NETSTATE_SERVER && dropper->target->player != NULL )
 		{
-			if ( SERVER_IsValidClient( ulIdx ) == false )
-				continue;
+			ULONG	ulIdx;
 
-			// [CW] Send this message to the activator.
-			if ( ulIdx == static_cast<unsigned> (dropper->target->player - players) )
+			// [CW] If we didn't activate the alarm, tell the other clients who did.
+			for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 			{
-				SERVER_PrintfPlayer( ulIdx, "You Fool!  You've set off the alarm.\n" );
-				continue;
+				if ( SERVER_IsValidClient( ulIdx ) == false )
+					continue;
+
+				// [CW] Send this message to the activator.
+				if ( ulIdx == static_cast<unsigned> (dropper->target->player - players) )
+				{
+					SERVER_PrintfPlayer( ulIdx, "You Fool!  You've set off the alarm.\n" );
+					continue;
+				}
+
+				// [CW] Tell other clients who set the alarm off!
+				SERVER_PrintfPlayer( ulIdx, "%s\\c- set off the alarm!\n", dropper->target->player->userinfo.GetName() );
 			}
 
-			// [CW] Tell other clients who set the alarm off!
-			SERVER_PrintfPlayer( ulIdx, "%s\\c- set off the alarm!\n", dropper->target->player->userinfo.GetName() );
+			// [CW] Tell the server who set the alarm off!
+			Printf( PRINT_HIGH, "%s set off the alarm!\n", dropper->target->player->userinfo.GetName() );
 		}
-
-		// [CW] Tell the server who set the alarm off!
-		Printf( PRINT_HIGH, "%s set off the alarm!\n", dropper->target->player->userinfo.GetName() );
-
-		Destroy( );
-		return ( true );
-	}
-
-		if (dropper->target->CheckLocalView(consoleplayer))
+		else if (dropper->target->CheckLocalView (consoleplayer))
 		{
 			Printf("You Fool!  You've set off the alarm.\n");
 		}
 	}
+
+	// [EP] Inform the clients to destroy the item.
+	if ( NETWORK_GetState() == NETSTATE_SERVER )
+	{
+		SERVERCOMMANDS_DestroyThing( this );
+	}
+
 	Destroy ();
 	return true;
 }
