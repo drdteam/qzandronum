@@ -167,14 +167,6 @@ static	void	client_BeginSnapshot( BYTESTREAM_s *pByteStream );
 static	void	client_EndSnapshot( BYTESTREAM_s *pByteStream );
 
 // Player functions.
-static	void	client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph = false );
-static	void	client_MovePlayer( BYTESTREAM_s *pByteStream );
-static	void	client_DamagePlayer( BYTESTREAM_s *pByteStream );
-static	void	client_KillPlayer( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerHealth( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerArmor( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerState( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerUserInfo( BYTESTREAM_s *pByteStream );
 static	void	client_SetPlayerFrags( BYTESTREAM_s *pByteStream );
 static	void	client_SetPlayerPoints( BYTESTREAM_s *pByteStream );
 static	void	client_SetPlayerWins( BYTESTREAM_s *pByteStream );
@@ -1608,42 +1600,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_ENDSNAPSHOT:
 
 		client_EndSnapshot( pByteStream );
-		break;
-	case SVC_SPAWNPLAYER:
-
-		client_SpawnPlayer( pByteStream );
-		break;
-	case SVC_SPAWNMORPHPLAYER:
-
-		client_SpawnPlayer( pByteStream, true );
-		break;
-	case SVC_MOVEPLAYER:
-
-		client_MovePlayer( pByteStream );
-		break;
-	case SVC_DAMAGEPLAYER:
-
-		client_DamagePlayer( pByteStream );
-		break;
-	case SVC_KILLPLAYER:
-
-		client_KillPlayer( pByteStream );
-		break;
-	case SVC_SETPLAYERHEALTH:
-
-		client_SetPlayerHealth( pByteStream );
-		break;
-	case SVC_SETPLAYERARMOR:
-
-		client_SetPlayerArmor( pByteStream );
-		break;
-	case SVC_SETPLAYERSTATE:
-
-		client_SetPlayerState( pByteStream );
-		break;
-	case SVC_SETPLAYERUSERINFO:
-
-		client_SetPlayerUserInfo( pByteStream );
 		break;
 	case SVC_SETPLAYERFRAGS:
 
@@ -3983,81 +3939,29 @@ static void client_EndSnapshot( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
+void ServerCommands::SpawnPlayer::Execute()
 {
-	ULONG			ulPlayer;
-	player_t		*pPlayer;
-	APlayerPawn		*pActor;
-	LONG			lID;
-	fixed_t			X;
-	fixed_t			Y;
-	fixed_t			Z;
-	angle_t			Angle;
-	bool			bSpectating;
-	bool			bDeadSpectator;
-	bool			bIsBot;
-	LONG			lPlayerState;
-	LONG			lState;
-	LONG			lPlayerClass;
-	LONG			lSkin;
-	bool			bWasWatchingPlayer;
-	AActor			*pCameraActor;
-	APlayerPawn		*pOldActor;
-	int				MorphStyle;
-	USHORT			usActorNetworkIndex = 0;
-	PClassActor	*pType;
+	ULONG					ulPlayer = player - players;
+	player_t				*pPlayer = player;
+	APlayerPawn				*pActor;
+	LONG					lSkin;
+	bool					bWasWatchingPlayer;
+	AActor					*pCameraActor;
+	APlayerPawn				*pOldActor;
 
-	// Which player is being spawned?
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's state prior to being spawned. This determines whether or not we
-	// should wipe his weapons, etc.
-	lPlayerState = NETWORK_ReadByte( pByteStream );
-
-	// Is the player a bot?
-	bIsBot = !!NETWORK_ReadByte( pByteStream );
-
-	// State of the player?
-	lState = NETWORK_ReadByte( pByteStream );
-
-	// Is he spectating?
-	bSpectating = !!NETWORK_ReadByte( pByteStream );
-
-	// Is he a dead spectator?
-	bDeadSpectator = !!NETWORK_ReadByte( pByteStream );
-
-	// Network ID of the player's body.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Angle of the player.
-	Angle = NETWORK_ReadLong( pByteStream );
-
-	// XYZ position of the player.
-	X = NETWORK_ReadLong( pByteStream );
-	Y = NETWORK_ReadLong( pByteStream );
-	Z = NETWORK_ReadLong( pByteStream );
-
-	lPlayerClass = NETWORK_ReadByte( pByteStream );
-
-	if ( bMorph )
+	if ( gamestate != GS_LEVEL )
 	{
-		// [EP] Read in the morph style.
-		MorphStyle = NETWORK_ReadShort( pByteStream );
-
-		// [BB] Read in the identification of the morphed playerpawn
-		usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
+		CLIENT_PrintWarning( "SpawnPlayer: not in a level\n" );
+		return;
 	}
 
-	// Invalid player ID or not in a level.
-	if (( ulPlayer >= MAXPLAYERS ) || ( gamestate != GS_LEVEL ))
-		return;
+	AActor *pOldNetActor = g_NetIDList.findPointerByID ( netid );
 
-	AActor *pOldNetActor = g_NetIDList.findPointerByID ( lID );
 	// If there's already an actor with this net ID, kill it!
 	if ( pOldNetActor != NULL )
 	{
 		pOldNetActor->Destroy( );
-		g_NetIDList.freeID ( lID );
+		g_NetIDList.freeID ( netid );
 	}
 
 	// [BB] Remember if we were already ignoring WeaponSelect commands. If so, the server
@@ -4068,7 +3972,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	CLIENT_IgnoreWeaponSelect ( true );
 
 	// [BB] Possibly play a connect sound.
-	if ( cl_connectsound && ( playeringame[ulPlayer] == false ) && bSpectating && ( ulPlayer != static_cast<ULONG>(consoleplayer) )
+	if ( cl_connectsound && ( playeringame[ulPlayer] == false ) && isSpectating && ( ulPlayer != static_cast<ULONG>(consoleplayer) )
 		&& ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT ) )
 		S_Sound( CHAN_AUTO, "zandronum/connect", 1.f, ATTN_NONE );
 
@@ -4115,10 +4019,10 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		if ( pOldActor->CheckLocalView( consoleplayer ))
 			bWasWatchingPlayer = true;
 
-		if (( lPlayerState == PST_REBORN ) ||
-			( lPlayerState == PST_REBORNNOINVENTORY ) ||
-			( lPlayerState == PST_ENTER ) ||
-			( lPlayerState == PST_ENTERNOINVENTORY ))
+		if (( priorState == PST_REBORN ) ||
+			( priorState == PST_REBORNNOINVENTORY ) ||
+			( priorState == PST_ENTER ) ||
+			( priorState == PST_ENTERNOINVENTORY ))
 		{
 			pOldActor->player = NULL;
 			// [BB] This will eventually free the player's body's network ID.
@@ -4137,49 +4041,47 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	const BYTE oldPlayerClass = pPlayer->CurrentPlayerClass;
 
 	// Set up the player class.
-	pPlayer->CurrentPlayerClass = lPlayerClass;
+	pPlayer->CurrentPlayerClass = playerClass;
 	pPlayer->cls = PlayerClasses[pPlayer->CurrentPlayerClass].Type;
 
-	if ( bMorph )
+	if ( isMorphed )
 	{
-		// [BB] Get the morphed player class.
-		pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
 		// [BB] We'll be casting the spawned body to APlayerPawn, so we must check
 		// if the desired class is valid.
-		if ( pType && pType->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
-			pPlayer->cls = static_cast<PClassPlayerPawn *>(pType);
+		if ( morphedClass && morphedClass->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
+			pPlayer->cls = static_cast<PClassPlayerPawn *>(morphedClass);
 	}
 
 	// Spawn the body.
-	pActor = static_cast<APlayerPawn *>( Spawn( pPlayer->cls, DVector3 ( FIXED2FLOAT(X), FIXED2FLOAT(Y), FIXED2FLOAT(Z) ), NO_REPLACE ));
+	pActor = static_cast<APlayerPawn *>( Spawn( pPlayer->cls, DVector3 ( FIXED2FLOAT(x), FIXED2FLOAT(y), FIXED2FLOAT(z) ), NO_REPLACE ));
 
 	pPlayer->mo = pActor;
 	pActor->player = pPlayer;
-	pPlayer->playerstate = lState;
+	pPlayer->playerstate = playerState;
 
 	// If we were watching through this player's eyes, reattach the camera.
 	if ( bWasWatchingPlayer )
 		players[consoleplayer].camera = pPlayer->mo;
 
 	// Set the network ID.
-	pPlayer->mo->lNetID = lID;
-	g_NetIDList.useID ( lID, pPlayer->mo );
+	pPlayer->mo->lNetID = netid;
+	g_NetIDList.useID ( netid, pPlayer->mo );
 
 	// Set the spectator variables [after G_PlayerReborn so our data doesn't get lost] [BB] Why?.
 	// [BB] To properly handle that spectators don't get default inventory, we need to set this
 	// before calling G_PlayerReborn (which in turn calls GiveDefaultInventory).
-	pPlayer->bSpectating = bSpectating;
-	pPlayer->bDeadSpectator = bDeadSpectator;
+	pPlayer->bSpectating = isSpectating;
+	pPlayer->bDeadSpectator = isDeadSpectator;
 
-	if (( lPlayerState == PST_REBORN ) ||
-		( lPlayerState == PST_REBORNNOINVENTORY ) ||
-		( lPlayerState == PST_ENTER ) ||
-		( lPlayerState == PST_ENTERNOINVENTORY ))
+	if (( priorState == PST_REBORN ) ||
+		( priorState == PST_REBORNNOINVENTORY ) ||
+		( priorState == PST_ENTER ) ||
+		( priorState == PST_ENTERNOINVENTORY ))
 	{
-		G_PlayerReborn( ulPlayer );
+		G_PlayerReborn( pPlayer - players );
 	}
 	// [BB] The player possibly changed the player class, so we have to correct the health (usually done in G_PlayerReborn).
-	else if ( lPlayerState == PST_LIVE )
+	else if ( priorState == PST_LIVE )
 		pPlayer->health = pPlayer->mo->GetDefault ()->health;
 
 	// Give all cards in death match mode.
@@ -4189,7 +4091,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	// Special inventory handling for respawning in coop.
 	// [BB] Also don't do so if the player changed the player class.
 	else if (( teamgame == false ) &&
-			 ( lPlayerState == PST_REBORN ) &&
+			 ( priorState == PST_REBORN ) &&
 			 ( oldPlayerClass == pPlayer->CurrentPlayerClass ) &&
 			 ( pOldActor ))
 	{
@@ -4206,7 +4108,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		JOINQUEUE_RemovePlayerFromQueue( consoleplayer );
 
 	// Set the player's bot status.
-	pPlayer->bIsBot = bIsBot;
+	pPlayer->bIsBot = isBot;
 
 	// [BB] If this if not "our" player, clear the weapon selected from the inventory and wait for
 	// the server to tell us the selected weapon.
@@ -4218,7 +4120,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 
 	// [WS] Don't set custom skin color when the player is morphed.
 	// [BB] In team games (where we assume that all players are on a team), we allow the team color for morphed players.
-	if (!(pActor->flags2 & MF2_DONTTRANSLATE) && ( !bMorph || ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )))
+	if (!(pActor->flags2 & MF2_DONTTRANSLATE) && ( !isMorphed || ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS )))
 	{
 		// [RH] Be sure the player has the right translation
 		R_BuildPlayerTranslation ( ulPlayer );
@@ -4226,7 +4128,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// [RH] set color translations for player sprites
 		pActor->Translation = TRANSLATION( TRANSLATION_Players, ulPlayer );
 	}
-	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
+	pActor->Angles.Yaw = ANGLE2DBL ( angle );
 	pActor->Angles.Pitch = pActor->Angles.Roll = 0.;
 	pActor->health = pPlayer->health;
 	pActor->lFixedColormap = NOFIXEDCOLORMAP;
@@ -4255,7 +4157,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		lSkin = R_FindSkin( "base", pPlayer->CurrentPlayerClass );
 
 	// [BB] There is no skin for the morphed class.
-	if ( !bMorph )
+	if ( !isMorphed )
 	{
 		pActor->sprite = skins[lSkin].sprite;
 		pActor->Scale = skins[lSkin].Scale;
@@ -4322,7 +4224,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	}
 	// [BB] Don't spawn fog when receiving a snapshot.
 	// [WS] Don't spawn fog when a player is morphing. The server will tell us.
-	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !bMorph && !bPlayerWasMorphed )
+	else if ( CLIENT_GetConnectionState() != CTS_RECEIVINGSNAPSHOT && !isMorphed && !bPlayerWasMorphed )
 	{
 		// Spawn the respawn fog.
 		DVector2 vector = pActor->Angles.Yaw.ToVector(20);
@@ -4333,11 +4235,11 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	}
 
 	pPlayer->playerstate = PST_LIVE;
-	
+
 	// [BB] If the player is reborn, we have to substitute all pointers
 	// to the old body to the new one. Otherwise (among other things) CLIENTSIDE
 	// ENTER scripts stop working after the corresponding player is respawned.
-	if (lPlayerState == PST_REBORN || lPlayerState == PST_REBORNNOINVENTORY)
+	if (priorState == PST_REBORN || priorState == PST_REBORNNOINVENTORY)
 	{
 		if ( pOldActor != NULL )
 		{
@@ -4349,7 +4251,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		}
 	}
 
-	if ( bMorph )
+	if ( isMorphed )
 	{
 		// [BB] Bring up the weapon of the morphed class.
 		pPlayer->mo->ActivateMorphWeapon();
@@ -4357,10 +4259,10 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 		// morph time since the server handles the timing of the unmorphing.
 		pPlayer->morphTics = -1;
 		// [EP] Still, assign the current class pointer, because it's used by the status bar
-		if ( pType && pType->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
-			pPlayer->MorphedPlayerClass = static_cast<PClassPlayerPawn *>(pType);
+		if ( morphedClass && morphedClass->IsKindOf( RUNTIME_CLASS( PClassPlayerPawn ) ) )
+			pPlayer->MorphedPlayerClass = static_cast<PClassPlayerPawn *>(morphedClass);
 		// [EP] Set the morph style, too.
-		pPlayer->MorphStyle = MorphStyle;
+		pPlayer->MorphStyle = morphStyle;
 	}
 	else
 	{
@@ -4376,7 +4278,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	}
 
 
-	// If this is the consoleplayer, set the realorigin and ServerXYZVel.
+	// If this is the consoleplayer, set the realorigin and ServerXYZMom.
 	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
 	{
 		CLIENT_AdjustPredictionToServerSideConsolePlayerMove( pPlayer->mo->Pos() );
@@ -4408,7 +4310,7 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 	if ( D_ShouldOverridePlayerColors() )
 	{
 		bool joinedgame = ( ulPlayer == static_cast<ULONG>( consoleplayer ))
-			&& ( lPlayerState == PST_ENTER || lPlayerState == PST_ENTERNOINVENTORY );
+			&& ( priorState == PST_ENTER || priorState == PST_ENTERNOINVENTORY );
 		D_UpdatePlayerColors( joinedgame ? MAXPLAYERS : ulPlayer );
 	}
 
@@ -4418,251 +4320,143 @@ static void client_SpawnPlayer( BYTESTREAM_s *pByteStream, bool bMorph )
 
 //*****************************************************************************
 //
-static void client_MovePlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::MovePlayer::Execute()
 {
-	ULONG		ulPlayer;
-	bool		bVisible;
-	fixed_t		X = 0;
-	fixed_t		Y = 0;
-	fixed_t		Z = 0;
-	angle_t		Angle = 0;
-	fixed_t		VelX = 0;
-	fixed_t		VelY = 0;
-	fixed_t		VelZ = 0;
-	bool		bCrouching = false;
-
-	// Read in the player number.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Is this player visible? If not, there's no other information to read in.
-	ULONG ulFlags = NETWORK_ReadByte( pByteStream );
-	bVisible = ( ulFlags & PLAYER_VISIBLE );
-
-	// The server only sends position, angle, etc. information if the player is actually
-	// visible to us.
-	if ( bVisible )
+	// Check to make sure everything is valid. If not, break out.
+	if ( gamestate != GS_LEVEL )
 	{
-		// Read in the player's XYZ position.
-		// [BB] The x/y position has to be sent at full precision.
-		X = NETWORK_ReadLong( pByteStream );
-		Y = NETWORK_ReadLong( pByteStream );
-		Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-		// Read in the player's angle.
-		Angle = NETWORK_ReadLong( pByteStream );
-
-		// Read in the player's XYZ velocity.
-		VelX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		VelY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		VelZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-		// Read in whether or not the player's crouching.
-		bCrouching = !!NETWORK_ReadByte( pByteStream );
+		CLIENT_PrintWarning( "MovePlayer: not in a level\n" );
+		return;
 	}
 
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ) || ( gamestate != GS_LEVEL ))
-		return;
-
 	// If we're not allowed to know the player's location, then just make him invisible.
-	if ( bVisible == false )
+	if ( IsVisible() == false )
 	{
-		players[ulPlayer].mo->renderflags |= RF_INVISIBLE;
+		player->mo->renderflags |= RF_INVISIBLE;
 
 		// Don't move the player since the server didn't send any useful position information.
 		return;
 	}
 	else
-		players[ulPlayer].mo->renderflags &= ~RF_INVISIBLE;
+		player->mo->renderflags &= ~RF_INVISIBLE;
 
 	// Set the player's XYZ position.
 	// [BB] But don't just set the position, but also properly set floorz and ceilingz, etc.
-	CLIENT_MoveThing( players[ulPlayer].mo, X, Y, Z );
+	CLIENT_MoveThing( player->mo, x, y, z );
 
 	// Set the player's angle.
-	players[ulPlayer].mo->Angles.Yaw = ANGLE2DBL ( Angle );
+	player->mo->Angles.Yaw = ANGLE2DBL ( angle );
 
-	// Set the player's XYZ velocity.
-	players[ulPlayer].mo->Vel.X = FIXED2FLOAT ( VelX );
-	players[ulPlayer].mo->Vel.Y = FIXED2FLOAT ( VelY );
-	players[ulPlayer].mo->Vel.Z = FIXED2FLOAT ( VelZ );
+	// Set the player's XYZ momentum.
+	player->mo->Vel.X = FIXED2FLOAT ( velx );
+	player->mo->Vel.Y = FIXED2FLOAT ( vely );
+	player->mo->Vel.Z = FIXED2FLOAT ( velz );
 
 	// Is the player crouching?
-	players[ulPlayer].crouchdir = ( bCrouching ) ? 1 : -1;
+	player->crouchdir = ( isCrouching ) ? 1 : -1;
 
-	if (( players[ulPlayer].crouchdir == 1 ) &&
-		( players[ulPlayer].crouchfactor < 1 ) &&
-		(( players[ulPlayer].mo->Top() ) < players[ulPlayer].mo->ceilingz ))
+	if (( player->crouchdir == 1 ) &&
+		( player->crouchfactor < 1 ) &&
+		(( player->mo->Top() ) < player->mo->ceilingz ))
 	{
-		P_CrouchMove( &players[ulPlayer], 1 );
+		P_CrouchMove( player, 1 );
 	}
-	else if (( players[ulPlayer].crouchdir == -1 ) &&
-		( players[ulPlayer].crouchfactor > 0.5 ))
+	else if (( player->crouchdir == -1 ) &&
+		( player->crouchfactor > 0.5 ))
 	{
-		P_CrouchMove( &players[ulPlayer], -1 );
+		P_CrouchMove( player, -1 );
 	}
 
 	// [BB] Set whether the player is attacking or not.
 	// Check: Is it a good idea to only do this, when the player is visible?
-	if ( ulFlags & PLAYER_ATTACK )
-		players[ulPlayer].cmd.ucmd.buttons |= BT_ATTACK;
+	if ( flags & PLAYER_ATTACK )
+		player->cmd.ucmd.buttons |= BT_ATTACK;
 	else
-		players[ulPlayer].cmd.ucmd.buttons &= ~BT_ATTACK;
+		player->cmd.ucmd.buttons &= ~BT_ATTACK;
 
-	if ( ulFlags & PLAYER_ALTATTACK )
-		players[ulPlayer].cmd.ucmd.buttons |= BT_ALTATTACK;
+	if ( flags & PLAYER_ALTATTACK )
+		player->cmd.ucmd.buttons |= BT_ALTATTACK;
 	else
-		players[ulPlayer].cmd.ucmd.buttons &= ~BT_ALTATTACK;
+		player->cmd.ucmd.buttons &= ~BT_ALTATTACK;
 }
 
 //*****************************************************************************
 //
-static void client_DamagePlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::DamagePlayer::Execute()
 {
-	ULONG		ulPlayer;
-	LONG		lHealth;
-	LONG		lArmor;
-	LONG		lDamage;
-	ABasicArmor	*pArmor;
-	FState		*pPainState;
-
-	// Read in the player being damaged.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the new health and armor values.
-	lHealth = NETWORK_ReadShort( pByteStream );
-	lArmor = NETWORK_ReadShort( pByteStream );
-
-	// [BB] Read in the NetID of the damage inflictor and find the corresponding actor.
-	AActor *pAttacker = CLIENT_FindThingByNetID( NETWORK_ReadShort( pByteStream ) );
-
 	// Level not loaded, ignore...
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
 	// Calculate the amount of damage being taken based on the old health value, and the
 	// new health value.
-	lDamage = players[ulPlayer].health - lHealth;
+	int damage = player->health - health;
 
 	// Do the damage.
 //	P_DamageMobj( players[ulPlayer].mo, NULL, NULL, lDamage, 0, 0 );
 
 	// Set the new health value.
-	players[ulPlayer].mo->health = players[ulPlayer].health = lHealth;
+	player->mo->health = player->health = health;
 
-	pArmor = players[ulPlayer].mo->FindInventory<ABasicArmor>( );
-	if ( pArmor )
-		pArmor->Amount = lArmor;
+	ABasicArmor *basicArmor = player->mo->FindInventory<ABasicArmor>( );
+	if ( basicArmor )
+		basicArmor->Amount = armor;
 
 	// [BB] Set the inflictor of the damage (necessary to let the HUD mugshot look in direction of the inflictor).
-	players[ulPlayer].attacker = pAttacker;
+	player->attacker = attacker;
 
 	// Set the damagecount, for blood on the screen.
-	players[ulPlayer].damagecount += lDamage;
-	if ( players[ulPlayer].damagecount > 100 )
-		players[ulPlayer].damagecount = 100;
-	if ( players[ulPlayer].damagecount < 0 )
-		players[ulPlayer].damagecount = 0;
+	player->damagecount += damage;
+	if ( player->damagecount > 100 )
+		player->damagecount = 100;
+	if ( player->damagecount < 0 )
+		player->damagecount = 0;
 
-	if ( players[ulPlayer].mo->CheckLocalView( consoleplayer ))
+	if ( player->mo->CheckLocalView( consoleplayer ))
 	{
-		if ( lDamage > 100 )
-			lDamage = 100;
+		if ( damage > 100 )
+			damage = 100;
 
-		I_Tactile( 40,10,40 + lDamage * 2 );
+		I_Tactile( 40,10,40 + damage * 2 );
 	}
 
 	// Also, make sure they get put into the pain state.
-	pPainState = players[ulPlayer].mo->FindState( NAME_Pain );
-	if ( pPainState )
-		players[ulPlayer].mo->SetState( pPainState );
+	FState *painState = player->mo->FindState( NAME_Pain );
+	if ( painState )
+		player->mo->SetState( painState );
 }
 
 //*****************************************************************************
 //
-static void client_KillPlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::KillPlayer::Execute()
 {
-	ULONG		ulPlayer;
-	LONG		lSourceID;
-	LONG		lInflictorID;
-	LONG		lHealth;
-	FName		MOD;
-	USHORT		usActorNetworkIndex;
-	FName		DamageType;
-	AActor		*pSource;
-	AActor		*pInflictor;
-	AWeapon		*pWeapon;
-	ULONG		ulIdx;
-	ULONG		ulSourcePlayer;
-
-	// Read in the player who's dying.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the actor that killed the player.
-	lSourceID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the inflictor.
-	lInflictorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in how much health they currently have (for gibs).
-	lHealth = NETWORK_ReadShort( pByteStream );
-
-	// Read in the means of death.
-	MOD = NETWORK_ReadString( pByteStream );
-
-	// Read in the thing's damage type.
-	DamageType = NETWORK_ReadString( pByteStream );
-
-	// Read in the player who did the killing's ready weapon's identification so we can properly do obituary
-	// messages.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
-	// Find the actor associated with the source. It's okay if this actor does not exist.
-	if ( lSourceID != -1 )
-		pSource = CLIENT_FindThingByNetID( lSourceID );
-	else
-		pSource = NULL;
-
-	// Find the actor associated with the inflictor. It's okay if this actor does not exist.
-	if ( lInflictorID != -1 )
-		pInflictor = CLIENT_FindThingByNetID( lInflictorID );
-	else
-		pInflictor = NULL;
-
 	// Set the player's new health.
-	players[ulPlayer].health = players[ulPlayer].mo->health = lHealth;
+	player->health = player->mo->health = health;
 
 	// Set the player's damage type.
-	players[ulPlayer].mo->DamageType = DamageType;
+	player->mo->DamageType = damageType;
 
 	// Kill the player.
-	players[ulPlayer].mo->Die( pSource, pInflictor, 0 );
+	player->mo->Die( source, inflictor, 0 );
 
 	// [BB] Set the attacker, necessary to let the death view follow the killer.
-	players[ulPlayer].attacker = pSource;
+	player->attacker = source;
 
 	// If health on the status bar is less than 0%, make it 0%.
-	if ( players[ulPlayer].health <= 0 )
-		players[ulPlayer].health = 0;
+	if ( player->health <= 0 )
+		player->health = 0;
 
-	ulSourcePlayer = MAXPLAYERS;
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+	// [TP] FIXME: Wouldn't this be much easier to compute using source->player?
+	ULONG ulSourcePlayer = MAXPLAYERS;
+	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
 		if (( playeringame[ulIdx] == false ) ||
-			( players[ulIdx].mo == NULL ))
+			( player->mo == NULL ))
 		{
 			continue;
 		}
 
-		if ( players[ulIdx].mo == pSource )
+		if ( player->mo == source )
 		{
 			ulSourcePlayer = ulIdx;
 			break;
@@ -4672,7 +4466,7 @@ static void client_KillPlayer( BYTESTREAM_s *pByteStream )
 	if (( (GAMEMODE_GetCurrentFlags() & GMF_COOPERATIVE) == false ) &&
 		( cl_showlargefragmessages ) &&
 		( ulSourcePlayer < MAXPLAYERS ) &&
-		( ulPlayer != ulSourcePlayer ) &&
+		( static_cast<ULONG>( player - players ) != ulSourcePlayer ) &&
 		( MOD != NAME_SpawnTelefrag ) &&
 		( GAMEMODE_IsGameInProgress() ))
 	{
@@ -4681,11 +4475,11 @@ static void client_KillPlayer( BYTESTREAM_s *pByteStream )
 			(( ( ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNWINS ) && ( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) ) == false ) || (( winlimit == 0 ) || ( TEAM_GetWinCount( players[ulSourcePlayer].ulTeam ) < winlimit ))))
 		{
 			// Display a large "You were fragged by <name>." message in the middle of the screen.
-			if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
+			if ( player == &players[consoleplayer] )
 				SCOREBOARD_DisplayFraggedMessage( &players[ulSourcePlayer] );
 			// Display a large "You fragged <name>!" message in the middle of the screen.
 			else if ( ulSourcePlayer == static_cast<ULONG>(consoleplayer) )
-				SCOREBOARD_DisplayFragMessage( &players[ulPlayer] );
+				SCOREBOARD_DisplayFragMessage( player );
 		}
 	}
 
@@ -4694,21 +4488,21 @@ static void client_KillPlayer( BYTESTREAM_s *pByteStream )
 
 	if ( ulSourcePlayer < MAXPLAYERS )
 	{
-		if ( NETWORK_GetClassFromIdentification( usActorNetworkIndex ) == NULL )
+		if ( weaponType == NULL )
 			players[ulSourcePlayer].ReadyWeapon = NULL;
 		else if ( players[ulSourcePlayer].mo )
 		{
-			pWeapon = static_cast<AWeapon *>( players[ulSourcePlayer].mo->FindInventory( NETWORK_GetClassFromIdentification( usActorNetworkIndex )));
-			if ( pWeapon == NULL )
-				pWeapon = static_cast<AWeapon *>( players[ulSourcePlayer].mo->GiveInventoryType( NETWORK_GetClassFromIdentification( usActorNetworkIndex )));
+			AWeapon *weapon = static_cast<AWeapon *>( players[ulSourcePlayer].mo->FindInventory( weaponType ));
+			if ( weapon == NULL )
+				weapon = static_cast<AWeapon *>( players[ulSourcePlayer].mo->GiveInventoryType( weaponType ));
 
-			if ( pWeapon )
-				players[ulSourcePlayer].ReadyWeapon = pWeapon;
+			if ( weapon )
+				players[ulSourcePlayer].ReadyWeapon = weapon;
 		}
 	}
 
 	// Finally, print the obituary string.
-	ClientObituary( players[ulPlayer].mo, pInflictor, pSource, ( ulSourcePlayer < MAXPLAYERS ) ? DMG_PLAYERATTACK : 0, MOD );
+	ClientObituary( player->mo, inflictor, source, ( ulSourcePlayer < MAXPLAYERS ) ? DMG_PLAYERATTACK : 0, MOD );
 
 	// [BB] Restore the weapon the player actually is using now.
 	if ( ( ulSourcePlayer < MAXPLAYERS ) && ( players[ulSourcePlayer].ReadyWeapon != pSavedReadyWeapon ) )
@@ -4726,94 +4520,48 @@ static void client_KillPlayer( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetPlayerHealth( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerHealth::Execute()
 {
-	LONG	lHealth;
-	ULONG	ulPlayer;
-
-	// Read in the player whose health is being altered.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the health;
-	lHealth = NETWORK_ReadShort( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	players[ulPlayer].health = lHealth;
-	if ( players[ulPlayer].mo )
-		players[ulPlayer].mo->health = lHealth;
+	player->health = health;
+	if ( player->mo )
+		player->mo->health = health;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerArmor( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerArmor::Execute()
 {
-	ULONG		ulPlayer;
-	LONG		lArmorAmount;
-	const char	*pszArmorIconName;
-	AInventory	*pArmor;
-
-	// Read in the player whose armor display is updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the armor amount and icon.
-	lArmorAmount = NETWORK_ReadShort( pByteStream );
-	pszArmorIconName = NETWORK_ReadString( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	pArmor = players[ulPlayer].mo ? players[ulPlayer].mo->FindInventory<ABasicArmor>( ) : NULL;
+	AInventory *pArmor = player->mo->FindInventory<ABasicArmor>();
 	if ( pArmor != NULL )
 	{
-		pArmor->Amount = lArmorAmount;
-		pArmor->Icon = TexMan.GetTexture( pszArmorIconName, 0 );
+		pArmor->Amount = armorAmount;
+		pArmor->Icon = TexMan.GetTexture( armorIcon, 0 );
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerState( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerState::Execute()
 {
-	ULONG			ulPlayer;
-	PLAYERSTATE_e	ulState;
-
-	// Read in the player whose state is being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-	
-	// Read in the state to update him to.
-	ulState = static_cast<PLAYERSTATE_e>(NETWORK_ReadByte( pByteStream ));
-
-	// If this isn't a valid player, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-	{
-		CLIENT_PrintWarning( "client_SetPlayerState: No player object for player: %lu\n", ulPlayer );
-		return;
-	}
-
 	// If the player is dead, then we shouldn't have to update his state.
-	if ( players[ulPlayer].mo->health <= 0 )
+	if ( player->mo->health <= 0 )
 		return;
 
 	// Finally, change the player's state to whatever the server told us it was.
-	switch( ulState )
+	switch( static_cast<PLAYERSTATE_e>( state ))
 	{
 	case STATE_PLAYER_IDLE:
-
-		players[ulPlayer].mo->PlayIdle( );
+		player->mo->PlayIdle( );
 		break;
+
 	case STATE_PLAYER_SEE:
-
-		players[ulPlayer].mo->SetState( players[ulPlayer].mo->SpawnState );
-		players[ulPlayer].mo->PlayRunning( );
+		player->mo->SetState( player->mo->SpawnState );
+		player->mo->PlayRunning( );
 		break;
+
 	case STATE_PLAYER_ATTACK:
 	case STATE_PLAYER_ATTACK_ALTFIRE:
-
-		players[ulPlayer].mo->PlayAttacking( );
+		player->mo->PlayAttacking( );
 		// [BB] This partially fixes the problem that attack animations are not displayed in demos
 		// if you are spying a player that you didn't spy when recording the demo. Still has problems
 		// with A_ReFire.
@@ -4837,160 +4585,91 @@ static void client_SetPlayerState( BYTESTREAM_s *pByteStream )
 		}
 		*/
 		break;
+
 	case STATE_PLAYER_ATTACK2:
-
-		players[ulPlayer].mo->PlayAttacking2( );
+		player->mo->PlayAttacking2( );
 		break;
-	default:
 
-		CLIENT_PrintWarning( "client_SetPlayerState: Unknown state: %d\n", ulState );
+	default:
+		CLIENT_PrintWarning( "client_SetPlayerState: Unknown state: %d\n", state );
 		break;
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerUserInfo( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerUserInfo::Execute()
 {
-	ULONG		ulIdx;
-    player_t	*pPlayer;
-	ULONG		ulPlayer;
-	ULONG		ulFlags;
-	char		szName[MAXPLAYERNAME + 1];
-	LONG		lGender = 0;
-	LONG		lColor = 0;
-	const char	*pszSkin = NULL;
-	LONG		lRailgunTrailColor = 0;
-	LONG		lHandicap = 0;
-	LONG		lSkin;
-	ULONG		ulTicsPerUpdate;
-	ULONG		ulConnectionType;
-	BYTE		clientFlags;
-
-	// Read in the player whose userinfo is being sent to us.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in what userinfo entries are going to be updated.
-	ulFlags = NETWORK_ReadShort( pByteStream );
-
-	// Read in the player's name.
-	if ( ulFlags & USERINFO_NAME )
-	{
-		strncpy( szName, NETWORK_ReadString( pByteStream ), MAXPLAYERNAME );
-		szName[MAXPLAYERNAME] = 0;
-	}
-
-	// Read in the player's gender.
-	if ( ulFlags & USERINFO_GENDER )
-		lGender = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's color.
-	if ( ulFlags & USERINFO_COLOR )
-		lColor = NETWORK_ReadLong( pByteStream );
-
-	// Read in the player's railgun trail color.
-	if ( ulFlags & USERINFO_RAILCOLOR )
-		lRailgunTrailColor = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's skin.
-	if ( ulFlags & USERINFO_SKIN )
-		pszSkin = NETWORK_ReadString( pByteStream );
-
-	// Read in the player's handicap.
-	if ( ulFlags & USERINFO_HANDICAP )
-		lHandicap = NETWORK_ReadByte( pByteStream );
-
-	// [BB] Read in the player's respawnonfire setting.
-	if ( ulFlags & USERINFO_TICSPERUPDATE )
-		ulTicsPerUpdate = NETWORK_ReadByte( pByteStream );
-
-	// [BB]
-	if ( ulFlags & USERINFO_CONNECTIONTYPE )
-		ulConnectionType = NETWORK_ReadByte( pByteStream );
-
-	// [CK] We do bitfields now.
-	if ( ulFlags & USERINFO_CLIENTFLAGS )
-		clientFlags = NETWORK_ReadByte( pByteStream );
-
-	// If this isn't a valid player, break out.
-	// We actually send the player's userinfo before he gets spawned, thus putting him in
-	// the game. Therefore, this call won't work unless the way the server sends the data
-	// changes.
-//	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-//		return;
-	if ( ulPlayer >= MAXPLAYERS )
-		return;
-
 	// Now that everything's been read in, actually set the player's userinfo properties.
 	// Player's name.
-    pPlayer = &players[ulPlayer];
-	if ( ulFlags & USERINFO_NAME )
+	if ( ContainsName() )
 	{
-		if ( strlen( szName ) > MAXPLAYERNAME )
-			szName[MAXPLAYERNAME] = '\0';
-		pPlayer->userinfo.NameChanged ( szName );
+		if ( name.Len() > MAXPLAYERNAME )
+			name = name.Left( MAXPLAYERNAME );
+		player->userinfo.NameChanged ( name );
 	}
 
 	// Other info.
-	if ( ulFlags & USERINFO_GENDER )
-		pPlayer->userinfo.GenderNumChanged ( static_cast<int>(lGender) );
-	if ( ulFlags & USERINFO_COLOR )
-	    pPlayer->userinfo.ColorChanged ( lColor );
-	if ( ulFlags & USERINFO_RAILCOLOR )
-		pPlayer->userinfo.RailColorChanged ( lRailgunTrailColor );
+	if ( ContainsGender() )
+		player->userinfo.GenderNumChanged ( gender );
+	if ( ContainsColor() )
+		player->userinfo.ColorChanged ( color );
+	if ( ContainsRailgunTrailColor() )
+		player->userinfo.RailColorChanged ( railgunTrailColor );
 
 	// Make sure the skin is valid.
-	if ( ulFlags & USERINFO_SKIN )
+	if ( ContainsSkinName() )
 	{
-		pPlayer->userinfo.SkinNumChanged ( R_FindSkin( pszSkin, pPlayer->CurrentPlayerClass ) );
+		int skin;
+		player->userinfo.SkinNumChanged ( R_FindSkin( skinName, player->CurrentPlayerClass ) );
 
 		// [BC] Handle cl_skins here.
 		if ( cl_skins <= 0 )
 		{
-			lSkin = R_FindSkin( "base", pPlayer->CurrentPlayerClass );
-			if ( pPlayer->mo )
-				pPlayer->mo->flags4 |= MF4_NOSKIN;
+			skin = R_FindSkin( "base", player->CurrentPlayerClass );
+			if ( player->mo )
+				player->mo->flags4 |= MF4_NOSKIN;
 		}
 		else if ( cl_skins >= 2 )
 		{
-			if ( skins[pPlayer->userinfo.GetSkin()].bCheat )
+			if ( skins[player->userinfo.GetSkin()].bCheat )
 			{
-				lSkin = R_FindSkin( "base", pPlayer->CurrentPlayerClass );
-				if ( pPlayer->mo )
-					pPlayer->mo->flags4 |= MF4_NOSKIN;
+				skin = R_FindSkin( "base", player->CurrentPlayerClass );
+				if ( player->mo )
+					player->mo->flags4 |= MF4_NOSKIN;
 			}
 			else
-				lSkin = pPlayer->userinfo.GetSkin();
+				skin = player->userinfo.GetSkin();
 		}
 		else
-			lSkin = pPlayer->userinfo.GetSkin();
+			skin = player->userinfo.GetSkin();
 
-		if (( lSkin < 0 ) || ( lSkin >= static_cast<LONG>(skins.Size()) ))
-			lSkin = R_FindSkin( "base", pPlayer->CurrentPlayerClass );
+		if (( skin < 0 ) || ( skin >= static_cast<signed>(skins.Size()) ))
+			skin = R_FindSkin( "base", player->CurrentPlayerClass );
 
-		if ( pPlayer->mo )
+		if ( player->mo )
 		{
-			pPlayer->mo->sprite = skins[lSkin].sprite;
-			pPlayer->mo->Scale = skins[lSkin].Scale;
+			player->mo->sprite = skins[skin].sprite;
+			player->mo->Scale = skins[skin].Scale;
 		}
 	}
 
 	// Read in the player's handicap.
-	if ( ulFlags & USERINFO_HANDICAP )
-		pPlayer->userinfo.HandicapChanged ( lHandicap );
+	if ( ContainsHandicap() )
+		player->userinfo.HandicapChanged ( handicap );
 
-	if ( ulFlags & USERINFO_TICSPERUPDATE )
-		pPlayer->userinfo.TicsPerUpdateChanged ( ulTicsPerUpdate );
+	if ( ContainsTicsPerUpdate() )
+		player->userinfo.TicsPerUpdateChanged ( ticsPerUpdate );
 
-	if ( ulFlags & USERINFO_CONNECTIONTYPE )
-		pPlayer->userinfo.ConnectionTypeChanged ( ulConnectionType );
+	if ( ContainsConnectionType() )
+		player->userinfo.ConnectionTypeChanged ( connectionType );
 
 	// [CK] We do compressed bitfields now.
-	if ( ulFlags & USERINFO_CLIENTFLAGS )
-		pPlayer->userinfo.ClientFlagsChanged ( clientFlags );
+	if ( ContainsClientFlags() )
+		player->userinfo.ClientFlagsChanged ( clientFlags );
 
 	// Build translation tables, always gotta do this!
-	R_BuildPlayerTranslation( ulPlayer );
+	R_BuildPlayerTranslation( player - players );
 }
 
 //*****************************************************************************

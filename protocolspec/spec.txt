@@ -147,4 +147,5 @@
 #
 
 Protocol GameServerToClient
+	Include "spec.players.txt"
 EndProtocol

@@ -81,6 +81,7 @@
 #include "network_enums.h"
 #include "decallib.h"
 #include "network/netcommand.h"
+#include "network/servercommands.h"
 #include "r_utility.h"
 
 CVAR (Bool, sv_showwarnings, false, CVAR_GLOBALCONFIG|CVAR_ARCHIVE)
@@ -342,33 +343,24 @@ void SERVERCOMMANDS_SpawnPlayer( ULONG ulPlayer, LONG lPlayerState, ULONG ulPlay
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	USHORT usActorNetworkIndex = 0;
-
-	if ( players[ulPlayer].mo )
-		usActorNetworkIndex = players[ulPlayer].mo->GetClass( )->getActorNetworkIndex();
-
-	NetCommand command( bMorph ? SVC_SPAWNMORPHPLAYER : SVC_SPAWNPLAYER );
-	command.addByte( ulPlayer );
-	command.addByte( lPlayerState );
-	command.addByte( players[ulPlayer].bIsBot );
+	ServerCommands::SpawnPlayer command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetPriorState( lPlayerState );
+	command.SetIsBot( players[ulPlayer].bIsBot );
 	// Do we really need to send this? Shouldn't it always be PST_LIVE?
-	command.addByte( players[ulPlayer].playerstate );
-	command.addByte( players[ulPlayer].bSpectating );
-	command.addByte( players[ulPlayer].bDeadSpectator );
-	command.addShort( players[ulPlayer].mo->lNetID );
-	command.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
-	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
-	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
-	command.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) );
-	command.addByte( players[ulPlayer].CurrentPlayerClass );
+	command.SetPlayerState( players[ulPlayer].playerstate );
+	command.SetIsSpectating( players[ulPlayer].bSpectating );
+	command.SetIsDeadSpectator( players[ulPlayer].bDeadSpectator );
+	command.SetIsMorphed( bMorph );
+	command.SetNetid( players[ulPlayer].mo->lNetID );
+	command.SetAngle( players[ulPlayer].mo->Angles.Yaw.BAMs() );
+	command.SetX( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
+	command.SetY( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
+	command.SetZ( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) );
+	command.SetPlayerClass( players[ulPlayer].CurrentPlayerClass );
 	// command.addByte( players[ulPlayer].userinfo.GetPlayerClassNum() );
-
-	if ( bMorph )
-	{
-		command.addShort( players[ulPlayer].MorphStyle );
-		command.addShort( usActorNetworkIndex );
-	}
-
+	command.SetMorphedClass( players[ulPlayer].mo ? players[ulPlayer].mo->GetClass() : NULL );
+	command.SetMorphStyle( players[ulPlayer].MorphStyle );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
 	// [BB]: If the player still has any cheats activated from the last level, tell
@@ -394,32 +386,27 @@ void SERVERCOMMANDS_MovePlayer( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComma
 	if ( players[ulPlayer].cmd.ucmd.buttons & BT_ALTATTACK )
 		ulPlayerAttackFlags |= PLAYER_ALTATTACK;
 
-	NetCommand fullCommand( SVC_MOVEPLAYER );
-	fullCommand.setUnreliable( true );
-	fullCommand.addByte( ulPlayer );
-	fullCommand.addByte( PLAYER_VISIBLE | ulPlayerAttackFlags );
-	// [BB] The x/y position has to be sent at full precision, otherwise the player may be rounded to a neighboring sector
-	// on the clients, potentially completely changing its Z position.
-	fullCommand.addLong( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
-	fullCommand.addLong( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
-	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) >> FRACBITS );
-	fullCommand.addLong( players[ulPlayer].mo->Angles.Yaw.BAMs() );
-	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) >> FRACBITS );
-	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) >> FRACBITS );
-	fullCommand.addShort( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Z ) >> FRACBITS );
-	fullCommand.addByte(( players[ulPlayer].crouchdir >= 0 ) ? true : false );
+	ServerCommands::MovePlayer fullCommand;
+	fullCommand.SetPlayer ( &players[ulPlayer] );
+	fullCommand.SetFlags( ulPlayerAttackFlags | PLAYER_VISIBLE );
+	fullCommand.SetX( FLOAT2FIXED ( players[ulPlayer].mo->X() ) );
+	fullCommand.SetY( FLOAT2FIXED ( players[ulPlayer].mo->Y() ) );
+	fullCommand.SetZ( FLOAT2FIXED ( players[ulPlayer].mo->Z() ) );
+	fullCommand.SetAngle( players[ulPlayer].mo->Angles.Yaw.BAMs() );
+	fullCommand.SetVelx( FLOAT2FIXED ( players[ulPlayer].mo->Vel.X ) );
+	fullCommand.SetVely( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Y ) );
+	fullCommand.SetVelz( FLOAT2FIXED ( players[ulPlayer].mo->Vel.Z ) );
+	fullCommand.SetIsCrouching(( players[ulPlayer].crouchdir >= 0 ) ? true : false );
 
-	NetCommand stubCommand( SVC_MOVEPLAYER );
-	stubCommand.setUnreliable( true );
-	stubCommand.addByte( ulPlayer );
-	stubCommand.addByte( ulPlayerAttackFlags );
+	ServerCommands::MovePlayer stubCommand = fullCommand;
+	stubCommand.SetFlags( ulPlayerAttackFlags );
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
 	{
 		if ( SERVER_IsPlayerVisible( *it, ulPlayer ))
-			fullCommand.sendCommandToOneClient( *it );
+			fullCommand.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 		else
-			stubCommand.sendCommandToOneClient( *it );
+			stubCommand.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
 
@@ -445,18 +432,18 @@ void SERVERCOMMANDS_DamagePlayer( ULONG ulPlayer )
 		ulArmorPoints = ( pArmor != NULL ) ? pArmor->Amount : 0;
 	}
 
-	NetCommand fullCommand( SVC_DAMAGEPLAYER );
-	fullCommand.addByte( ulPlayer );
-	fullCommand.addShort( players[ulPlayer].health );
-	fullCommand.addShort( ulArmorPoints );
-	fullCommand.addShort( players[ulPlayer].attacker ? players[ulPlayer].attacker->lNetID : -1 );
+	ServerCommands::DamagePlayer fullCommand;
+	fullCommand.SetPlayer( &players[ulPlayer] );
+	fullCommand.SetHealth( players[ulPlayer].health );
+	fullCommand.SetArmor( ulArmorPoints );
+	fullCommand.SetAttacker( players[ulPlayer].attacker );
 
 	for ( ClientIterator it; it.notAtEnd(); ++it )
 	{
 		// [EP] Send the updated health and armor of the player who's being damaged to this client
 		// only if this client is allowed to know (still, don't forget the pain state!).
 		if ( SERVER_IsPlayerAllowedToKnowHealth( *it, ulPlayer ))
-			fullCommand.sendCommandToOneClient( *it );
+			fullCommand.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 		else
 			SERVERCOMMANDS_SetThingState( players[ulPlayer].mo, STATE_PAIN, *it, SVCF_ONLYTHISCLIENT );
 	}
@@ -466,15 +453,13 @@ void SERVERCOMMANDS_DamagePlayer( ULONG ulPlayer )
 //
 void SERVERCOMMANDS_KillPlayer( ULONG ulPlayer, AActor *pSource, AActor *pInflictor, FName MOD )
 {
-	ULONG	ulIdx;
-	USHORT	usActorNetworkIndex = 0;
-	LONG	lSourceID;
-	LONG	lInflictorID;
-
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
+	PClassWeapon *weaponType = NULL;
+
+	// [TP] FIXME: Wouldn't it be miles easier to find find the killing player with pSource->player?
+	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
 		if (( playeringame[ulIdx] == false ) ||
 			( players[ulIdx].mo == NULL ))
@@ -485,34 +470,20 @@ void SERVERCOMMANDS_KillPlayer( ULONG ulPlayer, AActor *pSource, AActor *pInflic
 		if ( players[ulIdx].mo == pSource )
 		{
 			if ( players[ulIdx].ReadyWeapon != NULL )
-				usActorNetworkIndex = players[ulIdx].ReadyWeapon->GetClass( )->getActorNetworkIndex();
-			else
-				usActorNetworkIndex = 0;
+				weaponType = players[ulIdx].ReadyWeapon->GetClass();
 			break;
 		}
 	}
 
-	if ( pSource )
-		lSourceID = pSource->lNetID;
-	else
-		lSourceID = -1;
-
-	if ( pInflictor )
-		lInflictorID = pInflictor->lNetID;
-	else
-		lInflictorID = -1;
-
+	ServerCommands::KillPlayer command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetSource( pSource );
+	command.SetInflictor( pInflictor );
 	// [BB] We only send the health as short, so make sure that it doesn't exceed the corresponding range.
-	WORD wHealth = clamp ( players[ulPlayer].mo->health, SHRT_MIN, SHRT_MAX );
-
-	NetCommand command ( SVC_KILLPLAYER );
-	command.addByte( ulPlayer );
-	command.addShort( lSourceID );
-	command.addShort( lInflictorID );
-	command.addShort( wHealth );
-	command.addString( MOD.GetChars() );
-	command.addString( players[ulPlayer].mo->DamageType.GetChars() );
-	command.addShort( usActorNetworkIndex );
+	command.SetHealth( clamp ( players[ulPlayer].mo->health, SHRT_MIN, SHRT_MAX ));
+	command.SetMOD( MOD.GetChars() );
+	command.SetDamageType( players[ulPlayer].mo->DamageType.GetChars() );
+	command.SetWeaponType( weaponType );
 	command.sendCommandToClients();
 }
 
@@ -523,14 +494,14 @@ void SERVERCOMMANDS_SetPlayerHealth( ULONG ulPlayer, ULONG ulPlayerExtra, Server
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command ( SVC_SETPLAYERHEALTH );
-	command.addByte( ulPlayer );
-	command.addShort( players[ulPlayer].health );
+	ServerCommands::SetPlayerHealth command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetHealth( players[ulPlayer].health );
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
 	{
 		if ( SERVER_IsPlayerAllowedToKnowHealth( *it, ulPlayer ))
-			command.sendCommandToOneClient( *it );
+			command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
 
@@ -546,15 +517,15 @@ void SERVERCOMMANDS_SetPlayerArmor( ULONG ulPlayer, ULONG ulPlayerExtra, ServerC
 	if ( pArmor == NULL )
 		return;
 
-	NetCommand command ( SVC_SETPLAYERARMOR );
-	command.addByte( ulPlayer );
-	command.addShort( pArmor->Amount );
-	command.addString( pArmor->Icon.isValid() ? TexMan( pArmor->Icon )->Name : "" );
+	ServerCommands::SetPlayerArmor command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetArmorAmount( pArmor->Amount );
+	command.SetArmorIcon( pArmor->Icon.isValid() ? TexMan( pArmor->Icon )->Name : "" );
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
 	{
 		if ( SERVER_IsPlayerAllowedToKnowHealth( *it, ulPlayer ))
-			command.sendCommandToOneClient( *it );
+			command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
 
@@ -592,7 +563,7 @@ void SERVERCOMMANDS_SetPlayerArmorAndMaxArmorBonus( ULONG ulPlayer, ULONG ulPlay
 	if ( pArmor && ( pArmor->BonusCount > 0 ) )
 	{
 		AInventory *pInventory = static_cast<AInventory*> ( Spawn( "MaxArmorBonus" ) );
-		if ( pInventory ) 
+		if ( pInventory )
 		{
 			pInventory->Amount = pArmor->BonusCount;
 			SERVERCOMMANDS_GiveInventory( ulPlayer, pInventory, ulPlayerExtra, flags );
@@ -610,9 +581,9 @@ void SERVERCOMMANDS_SetPlayerState( ULONG ulPlayer, PLAYERSTATE_e ulState, ULONG
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERSTATE );
-	command.addByte( ulPlayer );
-	command.addByte( ulState );
+	ServerCommands::SetPlayerState command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetState( ulState );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -623,38 +594,18 @@ void SERVERCOMMANDS_SetPlayerUserInfo( ULONG ulPlayer, ULONG ulUserInfoFlags, UL
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERUSERINFO );
-	command.addByte( ulPlayer );
-	command.addShort( ulUserInfoFlags );
-
-	if ( ulUserInfoFlags & USERINFO_NAME )
-		command.addString( players[ulPlayer].userinfo.GetName() );
-
-	if ( ulUserInfoFlags & USERINFO_GENDER )
-		command.addByte( players[ulPlayer].userinfo.GetGender() );
-
-	if ( ulUserInfoFlags & USERINFO_COLOR )
-		command.addLong( players[ulPlayer].userinfo.GetColor() );
-
-	if ( ulUserInfoFlags & USERINFO_RAILCOLOR )
-		command.addByte( players[ulPlayer].userinfo.GetRailColor() );
-
-	if ( ulUserInfoFlags & USERINFO_SKIN )
-		command.addString( SERVER_GetClient( ulPlayer )->szSkin );
-
-	if ( ulUserInfoFlags & USERINFO_HANDICAP )
-		command.addByte( players[ulPlayer].userinfo.GetHandicap() );
-
-	if ( ulUserInfoFlags & USERINFO_TICSPERUPDATE )
-		command.addByte( players[ulPlayer].userinfo.GetTicsPerUpdate() );
-
-	if ( ulUserInfoFlags & USERINFO_CONNECTIONTYPE )
-		command.addByte( players[ulPlayer].userinfo.GetConnectionType() );
-
-	// [CK] We use a bitfield now.
-	if ( ulUserInfoFlags & USERINFO_CLIENTFLAGS )
-		command.addByte( players[ulPlayer].userinfo.GetClientFlags() );
-
+	ServerCommands::SetPlayerUserInfo command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetFlags( ulUserInfoFlags );
+	command.SetName( players[ulPlayer].userinfo.GetName() );
+	command.SetGender( players[ulPlayer].userinfo.GetGender() );
+	command.SetColor( players[ulPlayer].userinfo.GetColor() );
+	command.SetRailgunTrailColor( players[ulPlayer].userinfo.GetRailColor() );
+	command.SetSkinName( SERVER_GetClient( ulPlayer )->szSkin );
+	command.SetHandicap( players[ulPlayer].userinfo.GetHandicap() );
+	command.SetTicsPerUpdate( players[ulPlayer].userinfo.GetTicsPerUpdate() );
+	command.SetConnectionType( players[ulPlayer].userinfo.GetConnectionType() );
+	command.SetClientFlags( players[ulPlayer].userinfo.GetClientFlags() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

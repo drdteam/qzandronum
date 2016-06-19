@@ -1,0 +1,116 @@
+Command SpawnPlayer
+	Player player with IndexTestOnly
+	Byte priorState
+	# Do we really need to send this? Shouldn't it always be PST_LIVE?
+	Byte playerState
+	Bool isBot
+	Bool isSpectating
+	Bool isDeadSpectator
+	Bool isMorphed
+	Short netid
+	Angle angle
+	Fixed x
+	Fixed y
+	Fixed z
+	Byte playerClass
+
+	If (isMorphed)
+		Short morphStyle
+		Class morphedClass
+	EndIf
+EndCommand
+
+Command MovePlayer
+	UnreliableCommand
+	Player player with MoTest
+	Byte flags
+
+	# The server only sends position, angle, etc. information if the player is actually visible.
+	If (flags & PLAYER_VISIBLE)
+		CheckFunction IsVisible
+		# [BB] The x/y position has to be sent at full precision, otherwise the player may be rounded to a neighboring
+		# sector on the clients, potentially completely changing its Z position.
+		Fixed x
+		Fixed y
+		AproxFixed z
+		Angle angle
+		AproxFixed velx
+		AproxFixed vely
+		AproxFixed velz
+		Bool isCrouching
+	EndIf
+EndCommand
+
+Command DamagePlayer
+	Player player with MoTest
+	Short health
+	Short armor
+	Actor attacker with NullAllowed
+EndCommand
+
+Command KillPlayer
+	Player player with MoTest
+	Actor source with NullAllowed
+	Actor inflictor with NullAllowed
+	Short health
+	String<Name> MOD
+	String damageType
+	Class weaponType with NullAllowed
+EndCommand
+
+Command SetPlayerHealth
+	Player player
+	Short health
+EndCommand
+
+Command SetPlayerArmor
+	Player player with MoTest
+	Short armorAmount
+	String armorIcon
+EndCommand
+
+Command SetPlayerState
+	Player player with MoTest
+	Byte state
+EndCommand
+
+Command SetPlayerUserInfo
+	# We actually send the player's userinfo before he gets spawned, thus putting him in the game.
+	Player player with IndexTestOnly
+	Short flags
+	If (flags & USERINFO_NAME)
+		String name
+	EndIf
+
+	If (flags & USERINFO_GENDER)
+		Byte gender
+	EndIf
+
+	If (flags & USERINFO_COLOR)
+		Long color
+	EndIf
+
+	If (flags & USERINFO_RAILCOLOR)
+		Byte railgunTrailColor
+	EndIf
+
+	If (flags & USERINFO_SKIN)
+		String skinName
+	EndIf
+
+	If (flags & USERINFO_HANDICAP)
+		Byte handicap
+	EndIf
+
+	If (flags & USERINFO_TICSPERUPDATE)
+		Byte ticsPerUpdate
+	EndIf
+
+	If (flags & USERINFO_CONNECTIONTYPE)
+		Byte connectionType
+	EndIf
+
+	If (flags & USERINFO_CLIENTFLAGS)
+		Byte clientFlags
+	EndIf
+EndCommand

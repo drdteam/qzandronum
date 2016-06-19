@@ -259,7 +259,7 @@ class ActorParameter(SpecParameter):
 class ClassParameter(SpecParameter):
 	def __init__(self, **args):
 		super().__init__(**args)
-		self.cxxtypename = 'const PClass *'
+		self.cxxtypename = 'PClassActor *'
 
 	def writeread(self, writer, command, parametername):
 		# To read in a class we'll first write code to read in the identification number, and then
