@@ -1158,19 +1158,18 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Jump)
 	paramnum++;		// Increment paramnum to point at the first jump target
 	int count = numparam - paramnum;
 
-	// [TP] Heuristic: if we will certainly do the jump and we only have one possible jump target,
-	// we know exactly where state flow is going, so we can do the jump on our own as the client.
-	bool predictable = ( maxchance >= 256 ) && ( count == 2 );
-
 	// [BC] Don't jump here in client mode.
-	if ( NETWORK_InClientModeAndActorNotClientHandled( self ) && ( predictable == false ) )
-		return 0;
+	if ( NETWORK_InClientMode() )
+	{
+		if (( self->ulNetworkFlags & NETFL_CLIENTSIDEONLY ) == false )
+			return 0;
+	}
 
 	if (count > 0 && (maxchance >= 256 || pr_cajump() < maxchance))
 	{
 		int jumpnum = (count == 1 ? 0 : (pr_cajump() % count));
 		PARAM_STATE_AT(paramnum + jumpnum, jumpto);
-		SERVER_JUMP(jumpto, ( predictable == false ) ? CLIENTUPDATE_FRAME : ClientJumpUpdateFlags::FromInt ( 0 ) ); // [BC] Random state changes shouldn't be client-side.
+		SERVER_JUMP(jumpto, CLIENTUPDATE_FRAME ); // [BC] Random state changes shouldn't be client-side.
 		ACTION_RETURN_STATE(jumpto);
 	}
 	ACTION_RETURN_STATE(NULL);
