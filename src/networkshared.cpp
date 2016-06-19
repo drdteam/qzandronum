@@ -93,6 +93,8 @@ void NETWORK_ClearBuffer( NETBUFFER_s *pBuffer )
 {
 	pBuffer->ulCurrentSize = 0;
 	pBuffer->ByteStream.pbStream = pBuffer->pbData;
+	pBuffer->ByteStream.bitBuffer = NULL;
+	pBuffer->ByteStream.bitShift = -1;
 	if ( pBuffer->BufferType == BUFFERTYPE_READ )
 		pBuffer->ByteStream.pbStreamEnd = pBuffer->ByteStream.pbStream;
 	else
@@ -138,6 +140,44 @@ int NETWORK_StopTrafficMeasurement ( )
 //================================================================================
 // IO read functions
 //================================================================================
+
+//*****************************************************************************
+//
+BYTESTREAM_s::BYTESTREAM_s() :
+	bitBuffer( NULL ),
+	bitShift( -1 ) {}
+
+//*****************************************************************************
+//
+void BYTESTREAM_s::EnsureBitSpace( int bits, bool writing )
+{
+	if ( ( bitBuffer == NULL ) || ( bitShift < 0 ) || ( bitShift + bits > 8 ) )
+	{
+		if ( writing )
+		{
+			// Not enough bits left in our current byte, we need a new one.
+			NETWORK_WriteByte( this, 0 );
+			bitBuffer = pbStream - 1;
+		}
+		else
+		{
+			// No room for the value in this byte, so we need a new one.
+			if ( NETWORK_ReadByte( this ) != -1 )
+			{
+				bitBuffer = pbStream - 1;
+			}
+			else
+			{
+				// Argh! No bytes left!
+				Printf("BYTESTREAM_s::EnsureBitSpace: out of bytes to use\n");
+				static BYTE fallback = 0;
+				bitBuffer = &fallback;
+			}
+		}
+
+		bitShift = 0;
+	}
+}
 
 //*****************************************************************************
 //
@@ -232,6 +272,57 @@ const char *NETWORK_ReadString( BYTESTREAM_s *pByteStream )
 	const int endIndex = ( ulIdx < MAX_NETWORK_STRING ) ? ulIdx : MAX_NETWORK_STRING - 1;
 	s_szString[endIndex] = '\0';
 	return ( s_szString );
+}
+
+//*****************************************************************************
+//
+bool NETWORK_ReadBit( BYTESTREAM_s *byteStream )
+{
+	byteStream->EnsureBitSpace( 1, false );
+
+	// Use a bit shift to extract a bit from our current byte
+	bool result = !!( *byteStream->bitBuffer & ( 1 << byteStream->bitShift ));
+	byteStream->bitShift++;
+	return result;
+}
+
+//*****************************************************************************
+//
+int NETWORK_ReadVariable( BYTESTREAM_s *byteStream )
+{
+	// Read two bits to form an integer 0...3
+	int length = NETWORK_ReadBit( byteStream );
+	length |= NETWORK_ReadBit( byteStream ) << 1;
+
+	// Use this length to read in an integer of variable length.
+	switch ( length )
+	{
+	default:
+	case 0: return 0;
+	case 1: return NETWORK_ReadByte( byteStream );
+	case 2: return NETWORK_ReadShort( byteStream );
+	case 3: return NETWORK_ReadLong( byteStream );
+	}
+}
+
+//*****************************************************************************
+//
+int NETWORK_ReadShortByte ( BYTESTREAM_s* byteStream, int bits )
+{
+	if ( bits >= 0 && bits <= 8 )
+	{
+		byteStream->EnsureBitSpace( bits, false );
+		int mask = ( 1 << bits ) - 1; // Create a mask to cover the bits we want.
+		mask <<= byteStream->bitShift; // Shift the mask so that it covers the correct bits.
+		int result = *byteStream->bitBuffer & mask; // Apply the shifted mask on our byte to remove unwanted bits.
+		result >>= byteStream->bitShift; // Shift the result back to start from 0.
+		byteStream->bitShift += bits; // Increase shift to mark these bits as used.
+		return result;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 //================================================================================
@@ -352,6 +443,65 @@ void NETWORK_WriteBuffer( BYTESTREAM_s *pByteStream, const void *pvBuffer, int n
 void NETWORK_WriteHeader( BYTESTREAM_s *pByteStream, int Byte )
 {
 	NETWORK_WriteByte( pByteStream, Byte );
+	pByteStream->bitBuffer = NULL;
+	pByteStream->bitShift = -1;
+}
+
+//*****************************************************************************
+//
+void NETWORK_WriteBit( BYTESTREAM_s *byteStream, bool bit )
+{
+	// Add a bit to this byte
+	byteStream->EnsureBitSpace( 1, true );
+	if ( bit )
+		*byteStream->bitBuffer |= 1 << byteStream->bitShift;
+	++byteStream->bitShift;
+}
+
+//*****************************************************************************
+//
+void NETWORK_WriteVariable( BYTESTREAM_s *byteStream, int value )
+{
+	int length;
+
+	// Determine how long we need to send this value
+	if ( value == 0 )
+		length = 0; // 0 - don't bother sending it at all
+	else if (( value <= 0x7F ) && ( value >= -0x80 ))
+		length = 1; // Can be sent as a byte
+	else if (( value <= 0x7FFF ) && ( value >= -0x8000 ))
+		length = 2; // Can be sent as a short
+	else
+		length = 3; // Must be sent as a long
+
+	// Write this length as two bits
+	NETWORK_WriteBit( byteStream, !!( length & 1 ) );
+	NETWORK_WriteBit( byteStream, !!( length & 2 ) );
+
+	// Depending on the required length, write the value.
+	switch ( length )
+	{
+	case 1: NETWORK_WriteByte( byteStream, value ); break;
+	case 2: NETWORK_WriteShort( byteStream, value ); break;
+	case 3: NETWORK_WriteLong( byteStream, value ); break;
+	}
+}
+
+//*****************************************************************************
+//
+void NETWORK_WriteShortByte( BYTESTREAM_s *byteStream, int value, int bits )
+{
+	if (( bits < 1 ) || ( bits > 8 ))
+	{
+		Printf( "NETWORK_WriteShortByte: bits must be within range [1..8], got %d.\n", bits );
+		return;
+	}
+
+	byteStream->EnsureBitSpace( bits, true );
+	value &= (( 1 << bits ) - 1 ); // Form a mask from the bits and trim our value using it.
+	value <<= byteStream->bitShift; // Shift the value to its proper position.
+	*byteStream->bitBuffer |= value; // Add it to the byte.
+	byteStream->bitShift += bits; // Bump the shift value accordingly.
 }
 
 //=============================================================================

@@ -178,6 +178,10 @@ void				CLIENT_UpdatePendingWeapon( const player_t *pPlayer );
 void				CLIENT_ClearAllPlayers( void );
 void				CLIENT_LimitProtectedCVARs( void );
 bool				CLIENT_CanClipMovement( AActor *pActor );
+void				CLIENT_PrintWarning( const char* format, ... ) GCCPRINTF( 1, 2 );
+bool				CLIENT_ReadActorFromNetID( int netid, const PClass *subclass, bool allowNull, AActor *&actor,
+											   const char *commandName = "CLIENT_ReadActorFromNetID",
+											   const char *parameterName = "actor" );
 
 void				CLIENT_PREDICT_Construct( void );
 void				CLIENT_PREDICT_PlayerPredict( void );

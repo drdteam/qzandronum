@@ -19,6 +19,7 @@ server-debugobj
 fmodapi*linux
 *.kdev4
 .kdev4
+__pycache__
 
 # /getwad/
 getwad/*.ncb
@@ -101,6 +102,10 @@ src/gl/*.orig
 
 # /src/gl/r_render/
 src/gl/r_render/*.orig
+
+# src/network/
+src/network/servercommands.cpp
+src/network/servercommands.h
 
 # /src/oplsynth/
 src/oplsynth/*.orig

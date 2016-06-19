@@ -601,6 +601,8 @@ int NETWORK_GetPackets( void )
 	}
 	g_NetworkMessage.ByteStream.pbStream = g_NetworkMessage.pbData;
 	g_NetworkMessage.ByteStream.pbStreamEnd = g_NetworkMessage.ByteStream.pbStream + g_NetworkMessage.ulCurrentSize;
+	g_NetworkMessage.ByteStream.bitBuffer = NULL;
+	g_NetworkMessage.ByteStream.bitShift = -1;
 
 	return ( g_NetworkMessage.ulCurrentSize );
 }

@@ -228,14 +228,20 @@ typedef struct
 } IPADDRESSBAN_s;
 
 //*****************************************************************************
-typedef struct
+struct BYTESTREAM_s
 {
+	BYTESTREAM_s();
+	void EnsureBitSpace( int bits, bool writing );
+
 	// Pointer to our stream of data.
 	BYTE		*pbStream;
 
 	// Pointer to the end of the stream. When pbStream > pbStreamEnd, the
 	// entire stream has been read.
 	BYTE		*pbStreamEnd;
+
+	BYTE		*bitBuffer;
+	int			bitShift;
 
 #ifdef CREATE_PACKET_LOG
 	// [RC] Pointer to the start of the stream.
@@ -244,8 +250,7 @@ typedef struct
 	// [RC] Whether or not we've logged this.
 	bool		bPacketAlreadyLogged;
 #endif
-
-} BYTESTREAM_s;
+};
 
 
 //*****************************************************************************
@@ -287,11 +292,17 @@ int				NETWORK_ReadShort( BYTESTREAM_s *pByteStream );
 int				NETWORK_ReadLong( BYTESTREAM_s *pByteStream );
 float			NETWORK_ReadFloat( BYTESTREAM_s *pByteStream );
 const char		*NETWORK_ReadString( BYTESTREAM_s *pByteStream );
+bool			NETWORK_ReadBit( BYTESTREAM_s *byteStream );
+int				NETWORK_ReadVariable( BYTESTREAM_s *byteStream );
+int				NETWORK_ReadShortByte ( BYTESTREAM_s* byteStream, int bits );
 void			NETWORK_WriteByte( BYTESTREAM_s *pByteStream, int Byte );
 void			NETWORK_WriteShort( BYTESTREAM_s *pByteStream, int Short );
 void			NETWORK_WriteLong( BYTESTREAM_s *pByteStream, int Long );
 void			NETWORK_WriteFloat( BYTESTREAM_s *pByteStream, float Float );
 void			NETWORK_WriteString( BYTESTREAM_s *pByteStream, const char *pszString );
+void			NETWORK_WriteBit( BYTESTREAM_s *byteStream, bool bit );
+void			NETWORK_WriteVariable( BYTESTREAM_s *byteStream, int value );
+void			NETWORK_WriteShortByte( BYTESTREAM_s *byteStream, int value, int bits );
 
 void			NETWORK_WriteHeader( BYTESTREAM_s *pByteStream, int Byte );
 bool			NETWORK_StringToIP( const char *pszAddress, char *pszIP0, char *pszIP1, char *pszIP2, char *pszIP3 );
