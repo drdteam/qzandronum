@@ -260,7 +260,6 @@ void SERVER_MASTER_Broadcast( void )
 //
 void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ulTime, bool bBroadcasting )
 {
-	UCVarValue	Val;
 	char		szAddress[4][4];
 	ULONG		ulIdx;
 	ULONG		ulBits;
@@ -378,24 +377,15 @@ void SERVER_MASTER_SendServerInfo( NETADDRESS_s Address, ULONG ulFlags, ULONG ul
 
 	// Send the server name.
 	if ( ulBits & SQF_NAME )
-	{
-		Val = sv_hostname.GetGenericRep( CVAR_String );
-		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, Val.String );
-	}
+		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, sv_hostname );
 
 	// Send the website URL.
 	if ( ulBits & SQF_URL )
-	{
-		Val = sv_website.GetGenericRep( CVAR_String );
-		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, Val.String );
-	}
+		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, sv_website );
 
 	// Send the host's e-mail address.
 	if ( ulBits & SQF_EMAIL )
-	{
-		Val = sv_hostemail.GetGenericRep( CVAR_String );
-		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, Val.String );
-	}
+		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, sv_hostemail );
 
 	if ( ulBits & SQF_MAPNAME )
 		NETWORK_WriteString( &g_MasterServerBuffer.ByteStream, level.MapName );

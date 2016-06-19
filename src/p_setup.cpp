@@ -4584,7 +4584,7 @@ void P_SetupLevel (const char *lumpname, int position)
 			}
 		}
 
-		if ( deathmatch )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_DEATHMATCH )
 		{
 			// Set the player's state to PST_REBORNNOINVENTORY so they everything is cleared (weapons, etc.)
 			if (( players[i].playerstate != PST_ENTER ) && ( players[i].playerstate != PST_ENTERNOINVENTORY ))
@@ -4593,7 +4593,7 @@ void P_SetupLevel (const char *lumpname, int position)
 			continue;
 		}
 
-		if ( teamgame )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_TEAMGAME )
 		{
 			// Set the player's state to PST_REBORNNOINVENTORY so they everything is cleared (weapons, etc.)
 			if (( players[i].playerstate != PST_ENTER ) && ( players[i].playerstate != PST_ENTERNOINVENTORY ))

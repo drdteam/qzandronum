@@ -104,11 +104,11 @@ CUSTOM_CVAR( String, sv_banfile, "banlist.txt", CVAR_ARCHIVE|CVAR_NOSETBYACS )
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		return;
 
-	if ( !( g_ServerBans.clearAndLoadFromFile( sv_banfile.GetGenericRep( CVAR_String ).String )))
+	if ( !( g_ServerBans.clearAndLoadFromFile( sv_banfile )))
 		Printf( "%s", g_ServerBans.getErrorMessage( ));
 
 	// Re-parse the file periodically.
-	g_ulReParseTicker = sv_banfilereparsetime.GetGenericRep( CVAR_Int ).Int * TICRATE;
+	g_ulReParseTicker = sv_banfilereparsetime * TICRATE;
 }
 
 //*****************************************************************************
@@ -118,7 +118,7 @@ CUSTOM_CVAR( String, sv_banexemptionfile, "whitelist.txt", CVAR_ARCHIVE|CVAR_NOS
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
 		return;
 
-	if ( ! ( g_ServerBanExemptions.clearAndLoadFromFile( sv_banexemptionfile.GetGenericRep( CVAR_String ).String )))
+	if ( ! ( g_ServerBanExemptions.clearAndLoadFromFile( sv_banexemptionfile )))
 		Printf( "%s", g_ServerBanExemptions.getErrorMessage( ));
 }
 
@@ -139,7 +139,7 @@ void SERVERBAN_Tick( void )
 		serverban_LoadBansAndBanExemptions( );
 
 		// Parse again periodically.
-		g_ulReParseTicker = sv_banfilereparsetime.GetGenericRep( CVAR_Int ).Int * TICRATE;
+		g_ulReParseTicker = sv_banfilereparsetime * TICRATE;
 	}
 }
 
@@ -186,7 +186,7 @@ void SERVERBAN_ClearBans( void )
 	g_ServerBans.clear( );
 
 	// Export the cleared banlist.
-	if (( pFile = fopen( sv_banfile.GetGenericRep( CVAR_String ).String, "w" )) != NULL )
+	if (( pFile = fopen( sv_banfile, "w" )) != NULL )
 	{
 		FString message;
 		message.AppendFormat( "// This is a %s server IP list.\n// Format: 0.0.0.0 <mm/dd/yy> :optional comment\n\n", GAMENAME );
@@ -430,10 +430,10 @@ void SERVERBAN_BanPlayer( ULONG ulPlayer, const char *pszBanLength, const char *
 //
 static void serverban_LoadBansAndBanExemptions( void )
 {
-	if ( !( g_ServerBans.clearAndLoadFromFile( sv_banfile.GetGenericRep( CVAR_String ).String )))
+	if ( !( g_ServerBans.clearAndLoadFromFile( sv_banfile )))
 		Printf( "%s", g_ServerBans.getErrorMessage( ));
 
-	if ( !( g_ServerBanExemptions.clearAndLoadFromFile( sv_banexemptionfile.GetGenericRep( CVAR_String ).String )))
+	if ( !( g_ServerBanExemptions.clearAndLoadFromFile( sv_banexemptionfile )))
 		Printf( "%s", g_ServerBanExemptions.getErrorMessage( ));
 
 	// Kick any players using a banned address.

@@ -1888,21 +1888,8 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	// to a crash.
 	try
 	{
-		// Spawn the bot at its appropriate team start.
-		if ( teamgame )
-		{
-			if ( players[ulPlayerNum].bOnTeam )
-				G_TeamgameSpawnPlayer( ulPlayerNum, players[ulPlayerNum].ulTeam, true );
-			else
-				G_TemporaryTeamSpawnPlayer( ulPlayerNum, true );
-		}
-		// If deathmatch, just spawn at a random spot.
-		else if ( deathmatch )
-			G_DeathMatchSpawnPlayer( ulPlayerNum, true );
-		// Otherwise, just spawn at their normal player start.
-		else
-			G_CooperativeSpawnPlayer( ulPlayerNum, true );
-
+		// [BB] Spawn the bot at its appropriate start.
+		GAMEMODE_SpawnPlayer( ulPlayerNum, true );
 	}
 	catch (CRecoverableError &/*error*/)
 	{

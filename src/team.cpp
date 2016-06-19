@@ -1560,7 +1560,7 @@ bool TEAM_ShouldUseTeam( ULONG ulTeam )
 	if ( TEAM_CheckIfValid( ulTeam ) == false )
 		return ( false );
 
-	if ( teamgame && teams[ulTeam].TeamStarts.Size( ) < 1 )
+	if ( ( GAMEMODE_GetCurrentFlags() & GMF_TEAMGAME ) && teams[ulTeam].TeamStarts.Size( ) < 1 )
 		return ( false );
 
 	return ( true );
@@ -2311,7 +2311,7 @@ CCMD( changeteam )
 		players[consoleplayer].bSpectating = false;
 		players[consoleplayer].bDeadSpectator = false;
 
-		if ( teamgame )
+		if ( GAMEMODE_GetCurrentFlags() & GMF_TEAMGAME )
 			G_TeamgameSpawnPlayer( consoleplayer, players[consoleplayer].ulTeam, true );
 		else
 			G_DeathMatchSpawnPlayer( consoleplayer, true );

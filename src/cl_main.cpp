@@ -963,7 +963,7 @@ void CLIENT_AttemptConnection( void )
 	 // Send connection signal to the server.
 	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, CLCC_ATTEMPTCONNECTION );
 	NETWORK_WriteString( &g_LocalBuffer.ByteStream, DOTVERSIONSTR );
-	NETWORK_WriteString( &g_LocalBuffer.ByteStream, cl_password.GetGenericRep( CVAR_String ).String );
+	NETWORK_WriteString( &g_LocalBuffer.ByteStream, cl_password );
 	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, cl_connect_flags );
 	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, NETGAMEVERSION );
 	NETWORK_WriteString( &g_LocalBuffer.ByteStream, g_lumpsAuthenticationChecksum.GetChars() );
@@ -3087,7 +3087,7 @@ void CLIENT_QuitNetworkGame( const char *pszString )
 	// Although this is not done for any other sv_* CVAR, it is necessary here,
 	// since the server sent us level.gravity instead of its own sv_gravity value,
 	// see SERVERCOMMANDS_SetGameModeLimits.
-	sv_gravity = sv_gravity.GetGenericRepDefault( CVAR_Float ).Float;
+	sv_gravity.ResetToDefault();
 
 	// If we're recording a demo, then finish it!
 	if ( CLIENTDEMO_IsRecording( ))

@@ -647,7 +647,7 @@ void GAMEMODE_RespawnAllPlayers( BOTEVENT_e BotEvent, playerstate_t PlayerState 
 void GAMEMODE_SpawnPlayer( const ULONG ulPlayer, bool bClientUpdate )
 {
 	// Spawn the player at their appropriate team start.
-	if ( teamgame )
+	if ( GAMEMODE_GetCurrentFlags() & GMF_TEAMGAME )
 	{
 		if ( players[ulPlayer].bOnTeam )
 			G_TeamgameSpawnPlayer( ulPlayer, players[ulPlayer].ulTeam, bClientUpdate );
@@ -655,7 +655,7 @@ void GAMEMODE_SpawnPlayer( const ULONG ulPlayer, bool bClientUpdate )
 			G_TemporaryTeamSpawnPlayer( ulPlayer, bClientUpdate );
 	}
 	// If deathmatch, just spawn at a random spot.
-	else if ( deathmatch )
+	else if ( GAMEMODE_GetCurrentFlags() & GMF_DEATHMATCH )
 		G_DeathMatchSpawnPlayer( ulPlayer, bClientUpdate );
 	// Otherwise, just spawn at their normal player start.
 	else
