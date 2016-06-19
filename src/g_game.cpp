@@ -2720,7 +2720,8 @@ FPlayerStart *G_PickPlayerStart(int playernum, int flags)
 		translationtables[TRANSLATION_PlayerCorpses][modslot]->UpdateNative();
 	}
 
-	const int skinidx = body->player->userinfo.GetSkin();
+	// [BB] Added NULL check.
+	const int skinidx = ( body->player != NULL ) ? body->player->userinfo.GetSkin() : 0;
 
 	if (0 != skinidx && !(body->flags4 & MF4_NOSKIN))
 	{
