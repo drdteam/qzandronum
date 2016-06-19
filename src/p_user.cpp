@@ -761,8 +761,8 @@ void PClassPlayerPawn::ReplaceClassRef(PClass *oldclass, PClass *newclass)
 
 void player_t::SendPitchLimits() const
 {
-	// [BB] The client has to set the pitch limits directly and for all players.
-	if ( NETWORK_InClientMode() == false )
+	// [BB] Client and server have to set the pitch limits directly and for all players.
+	if ( ( NETWORK_InClientMode() == false ) && ( NETWORK_GetState( ) != NETSTATE_SERVER ) )
 	{
 		if (this - players == consoleplayer)
 		{
@@ -777,8 +777,16 @@ void player_t::SendPitchLimits() const
 		const unsigned int playerIndex = this - players;
 		if ( playerIndex < MAXPLAYERS )
 		{
-			players[playerIndex].MinPitch = -static_cast<double>(Renderer->GetMaxViewPitch(false));
-			players[playerIndex].MaxPitch = static_cast<double>(Renderer->GetMaxViewPitch(true));
+			if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+			{
+				players[playerIndex].MinPitch = -static_cast<double>(Renderer->GetMaxViewPitch(false));
+				players[playerIndex].MaxPitch = static_cast<double>(Renderer->GetMaxViewPitch(true));
+			}
+			else
+			{
+				players[playerIndex].MinPitch = - 32.;
+				players[playerIndex].MaxPitch = 56.;
+			}
 		}
 	}
 }

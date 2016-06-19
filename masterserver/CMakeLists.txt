@@ -15,6 +15,7 @@ endif( NOT STRNICMP_EXISTS )
 add_executable( master-97
 	main.cpp
 	network.cpp
+	${ZAN_DIR}/gitinfo.cpp
 	${ZAN_DIR}/networkshared.cpp
 	${ZAN_DIR}/platform.cpp
 	${ZAN_DIR}/huffman/bitreader.cpp 

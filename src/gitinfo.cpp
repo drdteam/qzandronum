@@ -36,8 +36,6 @@
 
 #include "gitinfo.h"
 #include "version.h"
-// [BB]
-#include "zstring.h"
 
 const char *GetGitDescription()
 {

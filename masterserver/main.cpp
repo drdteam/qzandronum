@@ -50,7 +50,7 @@
 
 #include "../src/networkheaders.h"
 #include "../src/networkshared.h"
-#include "gitinfo.h"
+#include "version.h"
 #include "network.h"
 #include "main.h"
 #include <sstream>
@@ -722,7 +722,7 @@ int main( int argc, char **argv )
 	BYTESTREAM_s	*pByteStream;
 
 	std::cerr << "=== Zandronum Master ===\n";
-	std::cerr << "Revision: " HG_TIME "\n";
+	std::cerr << "Revision: " << GetGitTime() << "\n";
 
 	std::cerr << "Port: " << DEFAULT_MASTER_PORT << std::endl << std::endl;
 
