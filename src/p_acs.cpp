@@ -4731,31 +4731,6 @@ bool DLevelScript::DoCheckActorTexture(int tid, AActor *activator, int string, b
 	return tex == TexMan[secpic];
 }
 
-enum
-{
-	// These are the original inputs sent by the player.
-	INPUT_OLDBUTTONS,
-	INPUT_BUTTONS,
-	INPUT_PITCH,
-	INPUT_YAW,
-	INPUT_ROLL,
-	INPUT_FORWARDMOVE,
-	INPUT_SIDEMOVE,
-	INPUT_UPMOVE,
-
-	// These are the inputs, as modified by P_PlayerThink().
-	// Most of the time, these will match the original inputs, but
-	// they can be different if a player is frozen or using a
-	// chainsaw.
-	MODINPUT_OLDBUTTONS,
-	MODINPUT_BUTTONS,
-	MODINPUT_PITCH,
-	MODINPUT_YAW,
-	MODINPUT_ROLL,
-	MODINPUT_FORWARDMOVE,
-	MODINPUT_SIDEMOVE,
-	MODINPUT_UPMOVE
-};
 
 int DLevelScript::GetPlayerInput(int playernum, int inputnum)
 {
@@ -4795,28 +4770,7 @@ int DLevelScript::GetPlayerInput(int playernum, int inputnum)
 		return 0;
 	}
 
-	switch (inputnum)
-	{
-	case INPUT_OLDBUTTONS:		return p->original_oldbuttons;		break;
-	case INPUT_BUTTONS:			return p->original_cmd.buttons;		break;
-	case INPUT_PITCH:			return p->original_cmd.pitch;		break;
-	case INPUT_YAW:				return p->original_cmd.yaw;			break;
-	case INPUT_ROLL:			return p->original_cmd.roll;		break;
-	case INPUT_FORWARDMOVE:		return p->original_cmd.forwardmove;	break;
-	case INPUT_SIDEMOVE:		return p->original_cmd.sidemove;	break;
-	case INPUT_UPMOVE:			return p->original_cmd.upmove;		break;
-
-	case MODINPUT_OLDBUTTONS:	return p->oldbuttons;				break;
-	case MODINPUT_BUTTONS:		return p->cmd.ucmd.buttons;			break;
-	case MODINPUT_PITCH:		return p->cmd.ucmd.pitch;			break;
-	case MODINPUT_YAW:			return p->cmd.ucmd.yaw;				break;
-	case MODINPUT_ROLL:			return p->cmd.ucmd.roll;			break;
-	case MODINPUT_FORWARDMOVE:	return p->cmd.ucmd.forwardmove;		break;
-	case MODINPUT_SIDEMOVE:		return p->cmd.ucmd.sidemove;		break;
-	case MODINPUT_UPMOVE:		return p->cmd.ucmd.upmove;			break;
-
-	default:					return 0;							break;
-	}
+	return P_Thing_CheckInputNum(p, inputnum);
 }
 
 enum
@@ -9089,6 +9043,20 @@ scriptwait:
 			PushToStack (G_SkillProperty(SKILLP_ACSReturn));
 			break;
 
+// [BC] Start ST PCD's
+		case PCD_ISNETWORKGAME:
+			// [BB] Replaced netgame
+			PushToStack(( NETWORK_GetState( ) == NETSTATE_SERVER ) ||
+				NETWORK_InClientMode() );
+			break;
+
+		case PCD_PLAYERTEAM:
+			if ( activator && activator->player )
+				PushToStack( activator->player->ulTeam ); // [BB] Adapted team code.
+			else
+				PushToStack( 0 );
+			break;
+
 // There aren't used anymore.
 		case PCD_PLAYERBLUESKULL:
 
@@ -9113,18 +9081,6 @@ scriptwait:
 		case PCD_PLAYERYELLOWCARD:
 
 			PushToStack( -1 );
-			break;
-		case PCD_ISMULTIPLAYER:
-			
-			PushToStack(( NETWORK_GetState( ) == NETSTATE_SERVER ) ||
-				NETWORK_InClientMode() );
-			break;
-		case PCD_PLAYERTEAM:
-
-			if ( activator && activator->player )
-				PushToStack( activator->player->ulTeam );
-			else
-				PushToStack( 0 );
 			break;
 		case PCD_PLAYERHEALTH:
 			if (activator)
@@ -9223,6 +9179,7 @@ scriptwait:
 			break;
 
 		case PCD_SINGLEPLAYER:
+			// [BB] !multiplayer -> ( NETWORK_GetState( ) == NETSTATE_SINGLE )
 			PushToStack(( NETWORK_GetState( ) == NETSTATE_SINGLE ));
 			break;
 // [BC] End ST PCD's
