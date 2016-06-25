@@ -616,9 +616,9 @@ void SERVERCOMMANDS_SetPlayerFrags( ULONG ulPlayer, ULONG ulPlayerExtra, ServerC
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command ( SVC_SETPLAYERFRAGS );
-	command.addByte ( ulPlayer );
-	command.addShort ( players[ulPlayer].fragcount );
+	ServerCommands::SetPlayerFrags command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetFragCount( players[ulPlayer].fragcount );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -629,9 +629,9 @@ void SERVERCOMMANDS_SetPlayerPoints( ULONG ulPlayer, ULONG ulPlayerExtra, Server
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERPOINTS );
-	command.addByte( ulPlayer );
-	command.addShort( players[ulPlayer].lPointCount );
+	ServerCommands::SetPlayerPoints command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetPointCount( players[ulPlayer].lPointCount );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -642,9 +642,9 @@ void SERVERCOMMANDS_SetPlayerWins( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCo
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERWINS );
-	command.addByte( ulPlayer );
-	command.addByte( players[ulPlayer].ulWins );
+	ServerCommands::SetPlayerWins command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetWins( players[ulPlayer].ulWins );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -655,23 +655,9 @@ void SERVERCOMMANDS_SetPlayerKillCount( ULONG ulPlayer, ULONG ulPlayerExtra, Ser
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERKILLCOUNT );
-	command.addByte( ulPlayer );
-	command.addShort( players[ulPlayer].killcount );
-	command.sendCommandToClients( ulPlayerExtra, flags );
-}
-
-//*****************************************************************************
-// [RC] Notifies all players about a player's boolean flag.
-//
-static void SERVERCOMMANDS_SetPlayerStatus( ULONG ulPlayer, SVC header, bool bValue, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 ) 
-{
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	NetCommand command( header );
-	command.addByte( ulPlayer );
-	command.addByte( bValue );
+	ServerCommands::SetPlayerKillCount command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetKillCount( players[ulPlayer].killcount );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -679,28 +665,40 @@ static void SERVERCOMMANDS_SetPlayerStatus( ULONG ulPlayer, SVC header, bool bVa
 //
 void SERVERCOMMANDS_SetPlayerChatStatus( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	SERVERCOMMANDS_SetPlayerStatus( ulPlayer, SVC_SETPLAYERCHATSTATUS, players[ulPlayer].bChatting, ulPlayerExtra, flags );
+	ServerCommands::SetPlayerChatStatus command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetChatting( players[ulPlayer].bChatting );
+	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
 void SERVERCOMMANDS_SetPlayerLaggingStatus( ULONG ulPlayer )
 {
-	SERVERCOMMANDS_SetPlayerStatus( ulPlayer, SVC_SETPLAYERLAGGINGSTATUS, players[ulPlayer].bLagging );
+	ServerCommands::SetPlayerLaggingStatus command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetLagging( players[ulPlayer].bLagging );
+	command.sendCommandToClients();
 }
 
 //*****************************************************************************
 //
 void SERVERCOMMANDS_SetPlayerConsoleStatus( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	SERVERCOMMANDS_SetPlayerStatus( ulPlayer, SVC_SETPLAYERCONSOLESTATUS, players[ulPlayer].bInConsole, ulPlayerExtra, flags );
+	ServerCommands::SetPlayerConsoleStatus command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetInConsole( players[ulPlayer].bInConsole );
+	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
 void SERVERCOMMANDS_SetPlayerReadyToGoOnStatus( ULONG ulPlayer )
 {
-	SERVERCOMMANDS_SetPlayerStatus( ulPlayer, SVC_SETPLAYERREADYTOGOONSTATUS, players[ulPlayer].bReadyToGoOn );
+	ServerCommands::SetPlayerReadyToGoOnStatus command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetReadyToGoOn( players[ulPlayer].bReadyToGoOn );
+	command.sendCommandToClients();
 }
 
 //*****************************************************************************
@@ -710,28 +708,28 @@ void SERVERCOMMANDS_SetPlayerTeam( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCo
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERTEAM );
-	command.addByte( ulPlayer );
+	ServerCommands::SetPlayerTeam command;
+	command.SetPlayer( &players[ulPlayer] );
 
 	if ( players[ulPlayer].bOnTeam == false )
-		command.addByte( teams.Size( ));
+		command.SetTeam( teams.Size( ));
 	else
-		command.addByte( players[ulPlayer].ulTeam );
+		command.SetTeam( players[ulPlayer].ulTeam );
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetPlayerCamera( ULONG ulPlayer, LONG lCameraNetID, bool bRevertPlease )
+void SERVERCOMMANDS_SetPlayerCamera( ULONG ulPlayer, AActor *camera, bool bRevertPlease )
 {
 	if ( SERVER_IsValidClient( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_SETPLAYERCAMERA );
-	command.addShort( lCameraNetID );
-	command.addByte( bRevertPlease );
-	command.sendCommandToOneClient( ulPlayer );
+	ServerCommands::SetPlayerCamera command;
+	command.SetCamera( camera );
+	command.SetRevertPlease( bRevertPlease );
+	command.sendCommandToClients( ulPlayer, SVCF_ONLYTHISCLIENT );
 }
 
 //*****************************************************************************
@@ -782,25 +780,21 @@ void SERVERCOMMANDS_SetPlayerCheats( ULONG ulPlayer, ULONG ulPlayerExtra, Server
 //
 void SERVERCOMMANDS_SetPlayerPendingWeapon( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	USHORT		usActorNetworkIndex = 0;
-
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	if (( players[ulPlayer].PendingWeapon != WP_NOCHANGE ) &&
-		( players[ulPlayer].PendingWeapon != NULL ))
+	if (( players[ulPlayer].PendingWeapon == WP_NOCHANGE ) ||
+		( players[ulPlayer].PendingWeapon == NULL ))
 	{
-		usActorNetworkIndex = players[ulPlayer].PendingWeapon->GetClass( )->getActorNetworkIndex();
-	}
-	else
 		return;
+	}
 
 	// Only send this info to spectators.
 	// [BB] Or if this is a COOP game.
 	// [BB] Everybody needs to know this. Otherwise the Railgun sound is broken and spying in demos doesn't work properly.
-	NetCommand command( SVC_SETPLAYERPENDINGWEAPON );
-	command.addByte( ulPlayer );
-	command.addShort( usActorNetworkIndex );
+	ServerCommands::SetPlayerPendingWeapon command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetWeaponType( players[ulPlayer].PendingWeapon->GetClass() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

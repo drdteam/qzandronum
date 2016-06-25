@@ -167,20 +167,6 @@ static	void	client_BeginSnapshot( BYTESTREAM_s *pByteStream );
 static	void	client_EndSnapshot( BYTESTREAM_s *pByteStream );
 
 // Player functions.
-static	void	client_SetPlayerFrags( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerPoints( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerWins( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerKillCount( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerChatStatus( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerConsoleStatus( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerLaggingStatus( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerReadyToGoOnStatus( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerTeam( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerCamera( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerPoisonCount( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerAmmoCapacity( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerCheats( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerPendingWeapon( BYTESTREAM_s *pByteStream );
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
 static	void	client_SetPlayerPSprite( BYTESTREAM_s *pByteStream );
@@ -1600,62 +1586,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_ENDSNAPSHOT:
 
 		client_EndSnapshot( pByteStream );
-		break;
-	case SVC_SETPLAYERFRAGS:
-
-		client_SetPlayerFrags( pByteStream );
-		break;
-	case SVC_SETPLAYERPOINTS:
-
-		client_SetPlayerPoints( pByteStream );
-		break;
-	case SVC_SETPLAYERWINS:
-
-		client_SetPlayerWins( pByteStream );
-		break;
-	case SVC_SETPLAYERKILLCOUNT:
-
-		client_SetPlayerKillCount( pByteStream );
-		break;
-	case SVC_SETPLAYERCHATSTATUS:
-
-		client_SetPlayerChatStatus( pByteStream );
-		break;
-	case SVC_SETPLAYERCONSOLESTATUS:
-
-		client_SetPlayerConsoleStatus( pByteStream );
-		break;
-	case SVC_SETPLAYERLAGGINGSTATUS:
-
-		client_SetPlayerLaggingStatus( pByteStream );
-		break;
-	case SVC_SETPLAYERREADYTOGOONSTATUS:
-
-		client_SetPlayerReadyToGoOnStatus( pByteStream );
-		break;
-	case SVC_SETPLAYERTEAM:
-
-		client_SetPlayerTeam( pByteStream );
-		break;
-	case SVC_SETPLAYERCAMERA:
-
-		client_SetPlayerCamera( pByteStream );
-		break;
-	case SVC_SETPLAYERPOISONCOUNT:
-
-		client_SetPlayerPoisonCount( pByteStream );
-		break;
-	case SVC_SETPLAYERAMMOCAPACITY:
-
-		client_SetPlayerAmmoCapacity( pByteStream );
-		break;
-	case SVC_SETPLAYERCHEATS:
-
-		client_SetPlayerCheats( pByteStream );
-		break;
-	case SVC_SETPLAYERPENDINGWEAPON:
-
-		client_SetPlayerPendingWeapon( pByteStream );
 		break;
 	/* [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 	case SVC_SETPLAYERPIECES:
@@ -4674,21 +4604,8 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 
 //*****************************************************************************
 //
-static void client_SetPlayerFrags( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerFrags::Execute()
 {
-	ULONG	ulPlayer;
-	LONG	lFragCount;
-
-	// Read in the player whose frags are being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the number of points he's supposed to get.
-	lFragCount = NETWORK_ReadShort( pByteStream );
-
-	// If this isn't a valid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
 	if (( g_ConnectionState == CTS_ACTIVE ) &&
 		( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSEARNFRAGS ) &&
 		!( GAMEMODE_GetCurrentFlags() & GMF_PLAYERSONTEAMS ) &&
@@ -4698,184 +4615,80 @@ static void client_SetPlayerFrags( BYTESTREAM_s *pByteStream )
 		// map change). Thus don't announce anything in this case.
 		( level.time != 0 ))
 	{
-		ANNOUNCER_PlayFragSounds( ulPlayer, players[ulPlayer].fragcount, lFragCount );
+		ANNOUNCER_PlayFragSounds( player - players, player->fragcount, fragCount );
 	}
 
 	// Finally, set the player's frag count, and refresh the HUD.
-	players[ulPlayer].fragcount = lFragCount;
+	player->fragcount = fragCount;
 	SCOREBOARD_RefreshHUD( );
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerPoints( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerPoints::Execute()
 {
-	ULONG	ulPlayer;
-	LONG	lPointCount;
-
-	// Read in the player whose frags are being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the number of points he's supposed to get.
-	lPointCount = NETWORK_ReadShort( pByteStream );
-
-	// If this isn't a valid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Finally, set the player's point count, and refresh the HUD.
-	players[ulPlayer].lPointCount = lPointCount;
+	player->lPointCount = pointCount;
 	SCOREBOARD_RefreshHUD( );
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerWins( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerWins::Execute()
 {
-	ULONG	ulPlayer;
-	LONG	lWins;
-
-	// Read in the player whose wins are being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the number of wins he's supposed to have.
-	lWins = NETWORK_ReadByte( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Finally, set the player's win count, and refresh the HUD.
-	players[ulPlayer].ulWins = lWins;
+	player->ulWins = wins;
 	SCOREBOARD_RefreshHUD( );
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerKillCount( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerKillCount::Execute()
 {
-	ULONG	ulPlayer;
-	LONG	lKillCount;
-
-	// Read in the player whose kill count being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the number of kills he's supposed to have.
-	lKillCount = NETWORK_ReadShort( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Finally, set the player's kill count, and refresh the HUD.
-	players[ulPlayer].killcount = lKillCount;
+	player->killcount = killCount;
 	SCOREBOARD_RefreshHUD( );
 }
 
 //*****************************************************************************
 //
-void client_SetPlayerChatStatus( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerChatStatus::Execute()
 {
-	// Read in the player.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	bool bChatting = !!NETWORK_ReadByte( pByteStream );
-
-	// Ensure that he's valid.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Read and set his chat status.
-	players[ulPlayer].bChatting = bChatting;
+	player->bChatting = chatting;
 }
 
 //*****************************************************************************
 //
-void client_SetPlayerConsoleStatus( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerConsoleStatus::Execute()
 {
-	// Read in the player.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	bool bInConsole = !!NETWORK_ReadByte( pByteStream );
-
-	// Ensure that he's valid.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Read and set his "in console" status.
-	players[ulPlayer].bInConsole = bInConsole;
+	player->bInConsole = inConsole;
 }
 
 //*****************************************************************************
 //
-void client_SetPlayerLaggingStatus( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerLaggingStatus::Execute()
 {
-	// Read in the player.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	bool bLagging = !!NETWORK_ReadByte( pByteStream );
-
-	// Ensure that he's valid.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Read and set his lag status.
-	players[ulPlayer].bLagging = bLagging;
+	player->bLagging = lagging;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerReadyToGoOnStatus( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerReadyToGoOnStatus::Execute()
 {
-	// Read in the player.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	bool bReadyToGoOn = !!NETWORK_ReadByte( pByteStream );
-
-	// Ensure that he's valid.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Read and set his "ready to go on" status.
-	players[ulPlayer].bReadyToGoOn = bReadyToGoOn;
+	player->bReadyToGoOn = readyToGoOn;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerTeam( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerTeam::Execute()
 {
-	ULONG	ulPlayer;
-	ULONG	ulTeam;
-
-	// Read in the player having his team set.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's team.
-	ulTeam = NETWORK_ReadByte( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Update the player's team.
-	PLAYER_SetTeam( &players[ulPlayer], ulTeam, false );
+	PLAYER_SetTeam( player, team, false );
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerCamera( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerCamera::Execute()
 {
-	AActor	*pCamera;
-	LONG	lID;
-	bool	bRevertPleaseStatus;
-
-	// Read in the network ID of the camera.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the "revert please" status.
-	bRevertPleaseStatus = !!NETWORK_ReadByte( pByteStream );
-
 	AActor *oldcamera = players[consoleplayer].camera;
 
-	// Find the camera by the network ID.
-	pCamera = CLIENT_FindThingByNetID( lID );
-	if ( pCamera == NULL )
+	if ( camera == NULL )
 	{
 		players[consoleplayer].camera = players[consoleplayer].mo;
 		players[consoleplayer].cheats &= ~CF_REVERTPLEASE;
@@ -4885,8 +4698,8 @@ static void client_SetPlayerCamera( BYTESTREAM_s *pByteStream )
 	}
 
 	// Finally, change the player's camera.
-	players[consoleplayer].camera = pCamera;
-	if ( bRevertPleaseStatus == false )
+	players[consoleplayer].camera = camera;
+	if ( revertPlease == false )
 		players[consoleplayer].cheats &= ~CF_REVERTPLEASE;
 	else
 		players[consoleplayer].cheats |= CF_REVERTPLEASE;
@@ -4897,50 +4710,18 @@ static void client_SetPlayerCamera( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetPlayerPoisonCount( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerPoisonCount::Execute()
 {
-	ULONG	ulPlayer;
-	ULONG	ulPoisonCount;
-
-	// Read in the player being poisoned.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the poison count.
-	ulPoisonCount = NETWORK_ReadShort( pByteStream );
-
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Finally, set the player's poison count.
-	players[ulPlayer].poisoncount = ulPoisonCount;
+	player->poisoncount = poisonCount;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerAmmoCapacity( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerAmmoCapacity::Execute()
 {
-	ULONG			ulPlayer;
-	USHORT			usActorNetworkIndex;
-	LONG			lMaxAmount;
-	AInventory		*pAmmo;
-
-	// Read in the player ID.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the identification of the type of item to give.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Read in the amount of this inventory type the player has.
-	lMaxAmount = NETWORK_ReadLong( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
 	// [BB] Remember whether we already had this ammo.
-	const bool hadAmmo = ( players[ulPlayer].mo->FindInventory( NETWORK_GetClassFromIdentification( usActorNetworkIndex ) ) != NULL );
-
-	pAmmo = CLIENT_FindPlayerInventory( ulPlayer, NETWORK_GetClassFromIdentification( usActorNetworkIndex ));
+	const bool hadAmmo = ( player->mo->FindInventory( ammoType ) != NULL );
+	AInventory *pAmmo = CLIENT_FindPlayerInventory( player - players, ammoType );
 
 	if ( pAmmo == NULL )
 		return;
@@ -4954,7 +4735,7 @@ static void client_SetPlayerAmmoCapacity( BYTESTREAM_s *pByteStream )
 		pAmmo->Amount = 0;
 
 	// Set the new maximum amount of the inventory object.
-	pAmmo->MaxAmount = lMaxAmount;
+	pAmmo->MaxAmount = maxAmount;
 
 	// Since an item displayed on the HUD may have been given, refresh the HUD.
 	SCOREBOARD_RefreshHUD( );
@@ -4962,61 +4743,29 @@ static void client_SetPlayerAmmoCapacity( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetPlayerCheats( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerCheats::Execute()
 {
-	ULONG			ulPlayer;
-	ULONG			ulCheats;
-
-	// Read in the player ID.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the cheats value.
-	ulCheats = NETWORK_ReadLong( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	players[ulPlayer].cheats = ulCheats;
+	player->cheats = cheats;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerPendingWeapon( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerPendingWeapon::Execute()
 {
-	ULONG			ulPlayer;
-	USHORT			usActorNetworkIndex;
-	PClassActor	*pType = NULL;
-	AWeapon			*pWeapon = NULL;
+	// If we dont have this weapon already, we do now!
+	AWeapon *weapon = static_cast<AWeapon *>( player->mo->FindInventory( weaponType ));
+	if ( weapon == NULL )
+		weapon = static_cast<AWeapon *>( player->mo->GiveInventoryType( weaponType ));
 
-	// Read in the player whose info is about to be updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the identification of the weapon.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// If the player doesn't exist, get out!
-	if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false )
-		return;
-
-	pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
-	if (( pType != NULL ) &&
-		( pType->IsDescendantOf( RUNTIME_CLASS( AWeapon ))))
+	// If he still doesn't have the object after trying to give it to him... then YIKES!
+	if ( weapon == NULL )
 	{
-		// If we dont have this weapon already, we do now!
-		pWeapon = static_cast<AWeapon *>( players[ulPlayer].mo->FindInventory( pType ));
-		if ( pWeapon == NULL )
-			pWeapon = static_cast<AWeapon *>( players[ulPlayer].mo->GiveInventoryType( pType ));
-
-		// If he still doesn't have the object after trying to give it to him... then YIKES!
-		if ( pWeapon == NULL )
-		{
-			CLIENT_PrintWarning( "client_SetPlayerPendingWeapon: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
-			return;
-		}
-
-		players[ulPlayer].PendingWeapon = pWeapon;
+		CLIENT_PrintWarning( "client_SetPlayerPendingWeapon: Failed to give inventory type, %s!\n",
+							 weaponType->TypeName.GetChars() );
+		return;
 	}
+
+	player->PendingWeapon = weapon;
 }
 
 //*****************************************************************************

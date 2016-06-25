@@ -114,3 +114,74 @@ Command SetPlayerUserInfo
 		Byte clientFlags
 	EndIf
 EndCommand
+
+Command SetPlayerFrags
+	Player player
+	Short fragCount
+EndCommand
+
+Command SetPlayerPoints
+	Player player
+	Short pointCount
+EndCommand
+
+Command SetPlayerWins
+	Player player
+	Byte wins
+EndCommand
+
+Command SetPlayerKillCount
+	Player player
+	Short killCount
+EndCommand
+
+Command SetPlayerChatStatus
+	Player player
+	Bool chatting
+EndCommand
+
+Command SetPlayerConsoleStatus
+	Player player
+	Bool inConsole
+EndCommand
+
+Command SetPlayerLaggingStatus
+	Player player
+	Bool lagging
+EndCommand
+
+Command SetPlayerReadyToGoOnStatus
+	Player player
+	Bool readyToGoOn
+EndCommand
+
+Command SetPlayerTeam
+	Player player
+	Byte team
+EndCommand
+
+Command SetPlayerCamera
+	Actor camera with NullAllowed
+	Bool revertPlease
+EndCommand
+
+Command SetPlayerPoisonCount
+	Player player
+	Short poisonCount
+EndCommand
+
+Command SetPlayerAmmoCapacity
+	Player player with MoTest
+	Class<AAmmo> ammoType
+	Long maxAmount
+EndCommand
+
+Command SetPlayerCheats
+	Player player
+	Long cheats
+EndCommand
+
+Command SetPlayerPendingWeapon
+	Player player
+	Class<AWeapon> weaponType
+EndCommand

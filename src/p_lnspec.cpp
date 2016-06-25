@@ -3003,7 +3003,7 @@ FUNC(LS_ChangeCamera)
 
 				// [BC] If we're the server, tell this player to change his camera.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetPlayerCamera( i, camera->lNetID, ( arg2 ) ? true : false );
+					SERVERCOMMANDS_SetPlayerCamera( i, camera, ( arg2 ) ? true : false );
 			}
 			else
 			{
@@ -3012,7 +3012,7 @@ FUNC(LS_ChangeCamera)
 
 				// [BC] If we're the server, tell this player to change his camera.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetPlayerCamera( i, players[i].mo->lNetID, false );
+					SERVERCOMMANDS_SetPlayerCamera( i, players[i].mo, false );
 			}
 			if (oldcamera != players[i].camera)
 			{
@@ -3031,7 +3031,7 @@ FUNC(LS_ChangeCamera)
 
 			// [BC] If we're the server, tell this player to change his camera.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SetPlayerCamera( ULONG( it->player - players ), camera->lNetID, ( arg2 ) ? true : false );
+				SERVERCOMMANDS_SetPlayerCamera( ULONG( it->player - players ), camera, ( arg2 ) ? true : false );
 		}
 		else
 		{
@@ -3040,7 +3040,7 @@ FUNC(LS_ChangeCamera)
 
 			// [BC] If we're the server, tell this player to change his camera.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-				SERVERCOMMANDS_SetPlayerCamera( ULONG( it->player - players ), it->lNetID, false );
+				SERVERCOMMANDS_SetPlayerCamera( ULONG( it->player - players ), it, false );
 		}
 		if (oldcamera != it->player->camera)
 		{
