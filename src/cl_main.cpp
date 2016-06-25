@@ -225,7 +225,6 @@ static	void	client_MissileExplode( BYTESTREAM_s *pByteStream );
 // Weapon commands.
 static	void	client_WeaponSound( BYTESTREAM_s *pByteStream );
 static	void	client_WeaponChange( BYTESTREAM_s *pByteStream );
-static	void	client_WeaponRailgun( BYTESTREAM_s *pByteStream );
 
 // Sector commands.
 static	void	client_SetSectorFloorPlane( BYTESTREAM_s *pByteStream );
@@ -264,9 +263,6 @@ static	void	client_SetSomeLineFlags( BYTESTREAM_s *pByteStream );
 
 // Side commands.
 static	void	client_SetSideFlags( BYTESTREAM_s *pByteStream );
-
-// ACS commands.
-static	void	client_ACSScriptExecute( BYTESTREAM_s *pByteStream );
 
 // Sound commands.
 static	void	client_Sound( BYTESTREAM_s *pByteStream );
@@ -1723,10 +1719,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_WeaponChange( pByteStream );
 		break;
-	case SVC_WEAPONRAILGUN:
-
-		client_WeaponRailgun( pByteStream );
-		break;
 	case SVC_SETSECTORFLOORPLANE:
 
 		client_SetSectorFloorPlane( pByteStream );
@@ -1858,10 +1850,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_SETSIDEFLAGS:
 
 		client_SetSideFlags( pByteStream );
-		break;
-	case SVC_ACSSCRIPTEXECUTE:
-
-		client_ACSScriptExecute( pByteStream );
 		break;
 	case SVC_SOUND:
 
@@ -6999,59 +6987,22 @@ static void client_WeaponChange( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_WeaponRailgun( BYTESTREAM_s *pByteStream )
+void ServerCommands::WeaponRailgun::Execute()
 {
-	// Read in the network ID of the source actor, and find the actor associated with the given network ID.
-	int id = NETWORK_ReadShort( pByteStream );
-	AActor *source = CLIENT_FindThingByNetID( id );
-
-	// Read in the XYZ position of the start of the trail.
-	TVector3<double> start;
-	start.X = NETWORK_ReadFloat( pByteStream );
-	start.Y = NETWORK_ReadFloat( pByteStream );
-	start.Z = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the XYZ position of the end of the trail.
-	TVector3<double> end;
-	end.X = NETWORK_ReadFloat( pByteStream );
-	end.Y = NETWORK_ReadFloat( pByteStream );
-	end.Z = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the colors of the trail.
-	int color1 = NETWORK_ReadLong( pByteStream );
-	int color2 = NETWORK_ReadLong( pByteStream );
-
-	// Read in maxdiff.
-	float maxdiff = NETWORK_ReadFloat( pByteStream );
-
-	// Read in flags.
-	int flags = NETWORK_ReadByte( pByteStream );
-
-	DAngle angle = source->Angles.Yaw;
-	PClassActor* spawnclass = NULL;
-	int duration = 0;
-	float sparsity = 1.0f;
-	float drift = 1.0f;
-
-	if ( flags & 0x80 )
+	// If this is not an extended railgun command, we'll need to assume some defaults.
+	if ( CheckExtended() == false )
 	{
-		// [TP] The server has signaled that more information follows
-		angle = source->Angles.Yaw + ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
-		spawnclass = NETWORK_GetClassFromIdentification( NETWORK_ReadShort( pByteStream ));
-		duration = NETWORK_ReadShort( pByteStream );
-		sparsity = NETWORK_ReadFloat( pByteStream );
-		drift = NETWORK_ReadFloat( pByteStream );
-	}
-
-	if ( source == NULL )
-	{
-		CLIENT_PrintWarning( "client_WeaponRailgun: Couldn't find thing: %d\n", id );
-		return;
+		angleoffset = 0;
+		spawnclass = NULL;
+		duration = 0;
+		sparsity = 1.0f;
+		drift = 1.0f;
 	}
 
 	// [BB] For now the client doesn't know about portal hits, so just use an empty array.
 	TArray<SPortalHit> portalhits;
-	P_DrawRailTrail( source/*, start*/, portalhits/*, end*/, color1, color2, maxdiff, flags & ~0x80, spawnclass, angle, duration, sparsity, drift );
+	DAngle angle = source->Angles.Yaw + ANGLE2DBL ( angleoffset );
+	P_DrawRailTrail( source/*, start*/, portalhits/*, end*/, color1, color2, maxdiff, flags, spawnclass, angle, duration, sparsity, drift );
 }
 
 //*****************************************************************************
@@ -8074,52 +8025,14 @@ static void client_SetSideFlags( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
+void ServerCommands::ACSScriptExecute::Execute()
 {
-	LONG			lID;
-	LONG			lLineIdx;
-	bool			bBackSide;
-	int				args[3] = {0};
-	bool			bAlways;
-	AActor			*pActor;
-	line_t			*pLine;
-	FString			mapname;
-	level_info_t*	levelinfo;
-	int				levelnum;
-	BYTE			argheader;
-
-	// [TP] Read in and resolve the script netid into a script number
-	int scriptNum = NETWORK_ACSScriptFromNetID( NETWORK_ReadShort( pByteStream ));
-
-	// Read in the ID of the activator.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the line index.
-	lLineIdx = NETWORK_ReadShort( pByteStream );
-
-	// [TP] Read in the levelnum of the map to execute the script on
-	levelnum = NETWORK_ReadByte( pByteStream );
-
-	// [TP] Argument header, see notes in sv_commands.cpp
-	argheader = NETWORK_ReadByte( pByteStream );
-
-	// [TP] Read in the arguments using the argument header data
-	for( int i = 0; i < 3; ++i )
-	{
-		switch (( argheader >> ( 2 * i )) & 3 )
-		{
-			case 1: args[i] = static_cast<SBYTE>( NETWORK_ReadByte( pByteStream )); break;
-			case 2: args[i] = NETWORK_ReadShort( pByteStream ); break;
-			case 3: args[i] = NETWORK_ReadLong( pByteStream ); break;
-			default: break;
-		}
-	}
-
-	// [TP] Unpack bBackSide and bAlways
-	bBackSide = !!(( argheader >> 6 ) & 1 );
-	bAlways = !!(( argheader >> 7 ) & 1 );
+	// [TP] Resolve the script netid into a script number
+	int scriptNum = NETWORK_ACSScriptFromNetID( netid );
 
 	// [TP] Make a name out of the levelnum
+	FString mapname;
+	level_info_t *levelinfo;
 	if ( levelnum == 0 )
 	{
 		mapname = level.MapName;
@@ -8134,26 +8047,14 @@ static void client_ACSScriptExecute( BYTESTREAM_s *pByteStream )
 		return;
 	}
 
-	// Find the actor that matches the given network ID.
-	// [BB] If the netID is invalid, assume that there is no activator, i.e. the world activated the script.
-	if ( lID == -1 )
-		pActor = NULL;
+	line_t* line;
+	if (( lineid <= 0 ) || ( lineid >= numlines ))
+		line = NULL;
 	else
-	{
-		pActor = CLIENT_FindThingByNetID( lID );
-		if ( pActor == NULL )
-		{
-			CLIENT_PrintWarning( "client_ACSScriptExecute: Couldn't find thing: %ld\n", lID );
-			return;
-		}
-	}
+		line = &lines[lineid];
 
-	if (( lLineIdx <= 0 ) || ( lLineIdx >= numlines ))
-		pLine = NULL;
-	else
-		pLine = &lines[lLineIdx];
-
-	P_StartScript( pActor, pLine, scriptNum, mapname, args, 3, ( bBackSide ? ACS_BACKSIDE : 0 ) | ( bAlways ? ACS_ALWAYS : 0 ) );
+	int args[3] = { arg0, arg1, arg2 };
+	P_StartScript( activator, line, scriptNum, mapname, args, 3, ( backSide ? ACS_BACKSIDE : 0 ) | ( always ? ACS_ALWAYS : 0 ) );
 }
 
 //*****************************************************************************

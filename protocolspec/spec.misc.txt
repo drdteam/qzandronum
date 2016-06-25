@@ -1,0 +1,11 @@
+Command ACSScriptExecute
+	Short netid
+	Actor activator with NullAllowed
+	Short lineid
+	Byte levelnum
+	Variable arg0
+	Variable arg1
+	Variable arg2
+	Bit backSide
+	Bit always
+EndCommand

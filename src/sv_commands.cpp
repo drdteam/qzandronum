@@ -2551,37 +2551,27 @@ void SERVERCOMMANDS_WeaponRailgun( AActor *source, const TVector3<double> &start
 	if ( !EnsureActorHasNetID (source) )
 		return;
 
-	NetCommand command ( SVC_WEAPONRAILGUN );
-	command.addShort( source->lNetID );
-	command.addFloat( start.X );
-	command.addFloat( start.Y );
-	command.addFloat( start.Z );
-	command.addFloat( end.X );
-	command.addFloat( end.Y );
-	command.addFloat( end.Z );
-	command.addLong( color1 );
-	command.addLong( color2 );
-	command.addFloat( maxdiff );
+	ServerCommands::WeaponRailgun command;
+	command.SetSource( source );
+	command.SetStart( start );
+	command.SetEnd( end );
+	command.SetColor1( color1 );
+	command.SetColor2( color2 );
+	command.SetMaxdiff( maxdiff );
+	command.SetAngleoffset( angleoffset );
+	command.SetSpawnclass( spawnclass );
+	command.SetDuration( duration );
+	command.SetSparsity( sparsity );
+	command.SetDrift( drift );
+	command.SetFlags( railflags );
 
 	// [TP] Recent ZDoom versions have added more railgun parameters. Add these parameters to the command
-	// only if they're not at defaults. We signal these parameters by adding 0x80 to the flags byte.
-	if ( angleoffset != 0
+	// only if they're not at defaults.
+	command.SetExtended( angleoffset != 0
 		|| spawnclass != NULL
 		|| duration != 0
 		|| fabs( sparsity - 1.0f ) > 1e-8
-		|| fabs( drift - 1.0f ) > 1e-8 )
-	{
-		command.addByte( railflags | 0x80 );
-		command.addLong( angleoffset );
-		command.addShort( spawnclass ? spawnclass->getActorNetworkIndex() : 0 );
-		command.addShort( duration ); // Let's play safe and send this as a short
-		command.addFloat( sparsity );
-		command.addFloat( drift );
-	}
-	else
-	{
-		command.addByte( railflags );
-	}
+		|| fabs( drift - 1.0f ) > 1e-8 );
 
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
@@ -3098,43 +3088,6 @@ void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lL
 	if ( ACS_ExistsScript( ScriptNum ) == false )
 		return;
 
-	LONG lActivatorID = ( pActivator ? pActivator->lNetID : -1 );
-
-	// [TP] Argument header:
-	// Bits 0-1: length of arg0
-	// Bits 2-3: length of arg1
-	// Bits 4-5: length of arg2
-	// Bit 6: bBackSide
-	// Bit 7: bAlways
-	//
-	// Length is:
-	//	0: not sent, assume 0
-	//	1: sent as a signed byte [-128, 127]
-	//	2: sent as a signed short [-32768, 32767]
-	//	3: sent as a signed long (<= -32769 || >= -32768)
-	//
-	BYTE argheader = 0;
-	const int args[] = {iArg0, iArg1, iArg2};
-	int arglength[3];
-
-	for ( int i = 0; i < 3; ++i )
-	{
-		if ( args[i] == 0 )
-			arglength[i] = 0;
-		else if (( args[i] <= 0x7F ) && ( args[i] >= -0x80 ))
-			arglength[i] = 1;
-		else if (( args[i] <= 0x7FFF ) && ( args[i] >= -0x8000 ))
-			arglength[i] = 2;
-		else
-			arglength[i] = 3;
-
-		// [TP] Store length in the argument header
-		argheader |= arglength[i] << ( 2 * i );
-	}
-
-	argheader |= ( bBackSide ? 1 : 0 ) << 6;
-	argheader |= ( bAlways ? 1 : 0 ) << 7;
-
 	int netid = NETWORK_ACSScriptToNetID( ScriptNum );
 
 	if ( netid == NO_SCRIPT_NETID )
@@ -3148,25 +3101,16 @@ void SERVERCOMMANDS_ACSScriptExecute( int ScriptNum, AActor *pActivator, LONG lL
 		return;
 	}
 
-	NetCommand command ( SVC_ACSSCRIPTEXECUTE );
-	command.addShort( netid );
-	command.addShort( lActivatorID );
-	command.addShort( lLineIdx );
-	command.addByte( levelnum );
-	command.addByte( argheader );
-
-	// [TP] Now send the arguments.
-	for ( int i = 0; i < 3; ++i )
-	{
-		switch( arglength[i] )
-		{
-			case 1: command.addByte( args[i] ); break;
-			case 2: command.addShort( args[i] ); break;
-			case 3: command.addLong( args[i] ); break;
-			default: break;
-		}
-	}
-
+	ServerCommands::ACSScriptExecute command;
+	command.SetNetid( netid );
+	command.SetActivator( pActivator );
+	command.SetLineid( lLineIdx );
+	command.SetLevelnum( levelnum );
+	command.SetArg0( iArg0 );
+	command.SetArg1( iArg1 );
+	command.SetArg2( iArg2 );
+	command.SetAlways( bAlways );
+	command.SetBackSide( bBackSide );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

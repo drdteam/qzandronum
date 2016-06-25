@@ -340,7 +340,7 @@ class PlayerParameter(SpecParameter):
 class Vector3Parameter(SpecParameter):
 	def __init__(self, **args):
 		super().__init__(**args)
-		self.cxxtypename = 'FVector3'
+		self.cxxtypename = 'TVector3<double>'
 
 	def writeread(self, writer, command, parametername):
 		writer.writecontext('''
