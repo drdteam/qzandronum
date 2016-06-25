@@ -1732,7 +1732,7 @@ void SERVERCOMMANDS_SetThingFrame( AActor *pActor, FState *pState, ULONG ulPlaye
 
 	// [BB] Special handling of certain states. This perhaps is not necessary
 	// but at least saves a little net traffic.
-	if ( bCallStateFunction 
+	if ( bCallStateFunction
 		 && (ulPlayerExtra == MAXPLAYERS)
 		 && (flags == 0)
 		)
@@ -1830,11 +1830,22 @@ void SERVERCOMMANDS_SetThingFrame( AActor *pActor, FState *pState, ULONG ulPlaye
 			stateLabel = ":S";
 	}
 
-	NetCommand command( bCallStateFunction ? SVC_SETTHINGFRAME : SVC_SETTHINGFRAMENF );
-	command.addShort( pActor->lNetID );
-	command.addString( stateLabel.GetChars( ) );
-	command.addByte( lOffset );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	if ( bCallStateFunction )
+	{
+		ServerCommands::SetThingFrame command;
+		command.SetActor( pActor );
+		command.SetStatename( stateLabel );
+		command.SetOffset( lOffset );
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
+	else
+	{
+		ServerCommands::SetThingFrameNF command;
+		command.SetActor( pActor );
+		command.SetStatename( stateLabel );
+		command.SetOffset( lOffset );
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
 }
 
 //*****************************************************************************
@@ -1847,10 +1858,10 @@ void SERVERCOMMANDS_SetWeaponAmmoGive( AActor *pActor, ULONG ulPlayerExtra, Serv
 	if ( pActor->IsKindOf( RUNTIME_CLASS( AWeapon )) == false )
 		return;
 
-	NetCommand command( SVC_SETWEAPONAMMOGIVE );
-	command.addShort( pActor->lNetID );
-	command.addShort( static_cast<AWeapon *>( pActor )->AmmoGive1 );
-	command.addShort( static_cast<AWeapon *>( pActor )->AmmoGive2 );
+	ServerCommands::SetWeaponAmmoGive command;
+	command.SetWeapon( static_cast<AWeapon *>( pActor ) );
+	command.SetAmmoGive1( static_cast<AWeapon *>( pActor )->AmmoGive1 );
+	command.SetAmmoGive2( static_cast<AWeapon *>( pActor )->AmmoGive2 );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1861,9 +1872,9 @@ void SERVERCOMMANDS_ThingIsCorpse( AActor *pActor, ULONG ulPlayerExtra, ServerCo
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_THINGISCORPSE );
-	command.addShort( pActor->lNetID );
-	command.addByte( pActor->CountsAsKill( ) ? true : false );
+	ServerCommands::ThingIsCorpse command;
+	command.SetActor( pActor );
+	command.SetIsMonster( pActor->CountsAsKill() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1875,8 +1886,8 @@ void SERVERCOMMANDS_HideThing( AActor *pActor, ULONG ulPlayerExtra, ServerComman
 	if ( !EnsureActorHasNetID (pActor) || !(pActor->IsKindOf( RUNTIME_CLASS( AInventory ))) )
 		return;
 
-	NetCommand command( SVC_HIDETHING );
-	command.addShort( pActor->lNetID );
+	ServerCommands::HideThing command;
+	command.SetItem( static_cast<AInventory*>( pActor ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1887,19 +1898,19 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_TELEPORTTHING );
-	command.addShort( pActor->lNetID );
-	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Vel.X ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Vel.Y ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Vel.Z ) >> FRACBITS );
-	command.addShort( pActor->reactiontime );
-	command.addLong( pActor->Angles.Yaw.BAMs() );
-	command.addByte( bSourceFog );
-	command.addByte( bDestFog );
-	command.addByte( bTeleZoom );
+	ServerCommands::TeleportThing command;
+	command.SetActor( pActor );
+	command.SetX( FLOAT2FIXED ( pActor->X() ) );
+	command.SetY( FLOAT2FIXED ( pActor->Y() ) );
+	command.SetZ( FLOAT2FIXED ( pActor->Z() ) );
+	command.SetMomx( FLOAT2FIXED ( pActor->Vel.X ) );
+	command.SetMomy( FLOAT2FIXED ( pActor->Vel.Y ) );
+	command.SetMomz( FLOAT2FIXED ( pActor->Vel.Z ) );
+	command.SetReactiontime( pActor->reactiontime );
+	command.SetAngle( pActor->Angles.Yaw.BAMs() );
+	command.SetSourcefog( bSourceFog );
+	command.SetDestfog( bDestFog );
+	command.SetTelezoom( bTeleZoom );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1910,14 +1921,9 @@ void SERVERCOMMANDS_ThingActivate( AActor *pActor, AActor *pActivator, ULONG ulP
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_THINGACTIVATE );
-	command.addShort( pActor->lNetID );
-
-	if ( pActivator != NULL )
-		command.addShort( pActivator->lNetID );
-	else
-		command.addShort( -1 );
-
+	ServerCommands::ThingActivate command;
+	command.SetActor( pActor );
+	command.SetActivator( pActivator );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1928,14 +1934,9 @@ void SERVERCOMMANDS_ThingDeactivate( AActor *pActor, AActor *pActivator, ULONG u
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_THINGDEACTIVATE );
-	command.addShort( pActor->lNetID );
-
-	if ( pActivator != NULL )
-		command.addShort( pActivator->lNetID );
-	else
-		command.addShort( -1 );
-
+	ServerCommands::ThingDeactivate command;
+	command.SetActor( pActor );
+	command.SetActivator( pActivator );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1946,9 +1947,9 @@ void SERVERCOMMANDS_RespawnDoomThing( AActor *pActor, bool bFog, ULONG ulPlayerE
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_RESPAWNDOOMTHING );
-	command.addShort( pActor->lNetID );
-	command.addByte( bFog );
+	ServerCommands::RespawnDoomThing command;
+	command.SetActor( pActor );
+	command.SetFog( bFog );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1959,8 +1960,8 @@ void SERVERCOMMANDS_RespawnRavenThing( AActor *pActor, ULONG ulPlayerExtra, Serv
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_RESPAWNRAVENTHING );
-	command.addShort( pActor->lNetID );
+	ServerCommands::RespawnRavenThing command;
+	command.SetActor( pActor );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1972,13 +1973,13 @@ void SERVERCOMMANDS_SpawnBlood( fixed_t x, fixed_t y, fixed_t z, angle_t dir, in
 	if ( originator == NULL )
 		return;
 
-	NetCommand command ( SVC_SPAWNBLOOD );
-	command.addShort( x >> FRACBITS );
-	command.addShort( y >> FRACBITS );
-	command.addShort( z >> FRACBITS );
-	command.addShort( dir >> FRACBITS );
-	command.addByte( damage );
-	command.addShort( originator->lNetID );
+	ServerCommands::SpawnBlood command;
+	command.SetX( x );
+	command.SetY( y );
+	command.SetZ( z );
+	command.SetDir( dir );
+	command.SetDamage( damage );
+	command.SetOriginator( originator );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1989,12 +1990,24 @@ void SERVERCOMMANDS_SpawnBloodSplatter( fixed_t x, fixed_t y, fixed_t z, AActor 
 	if ( originator == NULL )
 		return;
 
-	NetCommand command( isBloodSplatter2 ? SVC_SPAWNBLOODSPLATTER2 : SVC_SPAWNBLOODSPLATTER );
-	command.addShort( x >> FRACBITS );
-	command.addShort( y >> FRACBITS );
-	command.addShort( z >> FRACBITS );
-	command.addShort( originator->lNetID );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	if ( isBloodSplatter2 == false )
+	{
+		ServerCommands::SpawnBloodSplatter command;
+		command.SetX( x );
+		command.SetY( y );
+		command.SetZ( z );
+		command.SetOriginator( originator );
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
+	else
+	{
+		ServerCommands::SpawnBloodSplatter2 command;
+		command.SetX( x );
+		command.SetY( y );
+		command.SetZ( z );
+		command.SetOriginator( originator );
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
 }
 
 //*****************************************************************************
@@ -2004,19 +2017,14 @@ void SERVERCOMMANDS_SpawnPuff( AActor *pActor, ULONG ulState, bool bSendTranslat
 	if ( pActor == NULL )
 		return;
 
-	USHORT usActorNetworkIndex = pActor->GetClass()->getActorNetworkIndex();
-
-	NetCommand command( SVC_SPAWNPUFF );
-	command.addShort( FLOAT2FIXED ( pActor->X() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Y() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pActor->Z() ) >> FRACBITS );
-	command.addShort( usActorNetworkIndex );
-	command.addByte( ulState );
-	command.addByte( !!bSendTranslation );
-
-	if ( bSendTranslation )
-		command.addLong( pActor->Translation );
-
+	ServerCommands::SpawnPuff command;
+	command.SetX( FLOAT2FIXED ( pActor->X() ) );
+	command.SetY( FLOAT2FIXED ( pActor->Y() ) );
+	command.SetZ( FLOAT2FIXED ( pActor->Z() ) );
+	command.SetPufftype( pActor->GetClass() );
+	command.SetStateid( ulState );
+	command.SetReceiveTranslation( !!bSendTranslation );
+	command.SetTranslation( pActor->Translation );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

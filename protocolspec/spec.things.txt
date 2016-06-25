@@ -240,3 +240,116 @@ Command SetThingGravity
 	Actor actor
 	Long gravity
 EndCommand
+
+Command SetThingFrame
+	Actor actor
+	String statename
+	Byte offset
+EndCommand
+
+Command SetThingFrameNF
+	Actor actor
+	String statename
+	Byte offset
+EndCommand
+
+Command SetWeaponAmmoGive
+	Actor<AWeapon> weapon
+	Short ammoGive1
+	Short ammoGive2
+EndCommand
+
+Command SetThingScale
+	ExtendedCommand
+	Actor actor
+	Byte scaleflags
+
+	If (scaleflags & ACTORSCALE_X)
+		Long scaleX
+	EndIf
+
+	If (scaleflags & ACTORSCALE_Y)
+		Long scaleY
+	EndIf
+EndCommand
+
+Command ThingIsCorpse
+	Actor actor
+	# [TP] TODO: Does this really need to be sent? The client should be able to deduce this.
+	Bool isMonster
+EndCommand
+
+Command HideThing
+	# [BB] You can call HideIndefinitely only on AInventory and descendants.
+	Actor<AInventory> item
+EndCommand
+
+Command TeleportThing
+	Actor actor
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	AproxFixed momx
+	AproxFixed momy
+	AproxFixed momz
+	Short reactiontime
+	Angle angle
+	Bit sourcefog
+	Bit destfog
+	Bit telezoom
+EndCommand
+
+Command ThingActivate
+	Actor actor
+	Actor activator with NullAllowed
+EndCommand
+
+Command ThingDeactivate
+	Actor actor
+	Actor activator with NullAllowed
+EndCommand
+
+Command RespawnDoomThing
+	Actor actor
+	Bool fog
+EndCommand
+
+Command RespawnRavenThing
+	Actor actor
+EndCommand
+
+Command SpawnBlood
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	AproxAngle dir
+	Byte damage
+	Actor originator
+EndCommand
+
+Command SpawnBloodSplatter
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Actor originator
+EndCommand
+
+Command SpawnBloodSplatter2
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Actor originator
+EndCommand
+
+Command SpawnPuff
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Class pufftype
+	Byte stateid
+	Bool receiveTranslation
+
+	If (receiveTranslation)
+		Long translation
+	EndIf
+EndCommand
