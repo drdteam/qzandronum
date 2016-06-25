@@ -1,0 +1,135 @@
+Command SpawnThing
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Class type
+	Short id
+EndCommand
+
+Command SpawnThingNoNetID
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Class type
+EndCommand
+
+Command SpawnThingExact
+	Fixed x
+	Fixed y
+	Fixed z
+	Class type
+	Short id
+EndCommand
+
+Command SpawnThingExactNoNetID
+	Fixed x
+	Fixed y
+	Fixed z
+	Class type
+EndCommand
+
+Command MoveThing
+	Actor actor
+	Short bits
+
+	If (bits & CM_X)
+		AproxFixed newX
+	EndIf
+
+	If (bits & CM_Y)
+		AproxFixed newY
+	EndIf
+
+	If (bits & CM_Z)
+		AproxFixed newZ
+	EndIf
+
+	If (bits & CM_LAST_X)
+		AproxFixed lastX
+	EndIf
+
+	If (bits & CM_LAST_Y)
+		AproxFixed lastY
+	EndIf
+
+	If (bits & CM_LAST_Z)
+		AproxFixed lastZ
+	EndIf
+
+	If (bits & CM_ANGLE)
+		Angle angle
+	EndIf
+
+	If (bits & CM_VELX)
+		AproxFixed velX
+	EndIf
+
+	If (bits & CM_VELY)
+		AproxFixed velY
+	EndIf
+
+	If (bits & CM_VELZ)
+		AproxFixed velZ
+	EndIf
+
+	If (bits & CM_PITCH)
+		Long pitch
+	EndIf
+
+	If (bits & CM_MOVEDIR)
+		Byte movedir
+	EndIf
+EndCommand
+
+Command MoveThingExact
+	Actor actor
+	Short bits
+
+	If (bits & CM_X)
+		Fixed newX
+	EndIf
+
+	If (bits & CM_Y)
+		Fixed newY
+	EndIf
+
+	If (bits & CM_Z)
+		Fixed newZ
+	EndIf
+
+	If (bits & CM_LAST_X)
+		Fixed lastX
+	EndIf
+
+	If (bits & CM_LAST_Y)
+		Fixed lastY
+	EndIf
+
+	If (bits & CM_LAST_Z)
+		Fixed lastZ
+	EndIf
+
+	If (bits & CM_ANGLE)
+		Angle angle
+	EndIf
+
+	If (bits & CM_VELX)
+		Fixed velX
+	EndIf
+
+	If (bits & CM_VELY)
+		Fixed velY
+	EndIf
+
+	If (bits & CM_VELZ)
+		Fixed velZ
+	EndIf
+
+	If (bits & CM_PITCH)
+		Long pitch
+	EndIf
+
+	If (bits & CM_MOVEDIR)
+		Byte movedir
+	EndIf
+EndCommand

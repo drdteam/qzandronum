@@ -148,4 +148,5 @@
 
 Protocol GameServerToClient
 	Include "spec.players.txt"
+	Include "spec.things.txt"
 EndProtocol

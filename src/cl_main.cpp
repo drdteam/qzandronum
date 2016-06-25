@@ -180,12 +180,6 @@ static	void	client_PlayerDropInventory( BYTESTREAM_s *pByteStream );
 static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
 
 // Thing functions.
-static	void	client_SpawnThing( BYTESTREAM_s *pByteStream );
-static	void	client_SpawnThingNoNetID( BYTESTREAM_s *pByteStream );
-static	void	client_SpawnThingExact( BYTESTREAM_s *pByteStream );
-static	void	client_SpawnThingExactNoNetID( BYTESTREAM_s *pByteStream );
-static	void	client_MoveThing( BYTESTREAM_s *pByteStream );
-static	void	client_MoveThingExact( BYTESTREAM_s *pByteStream );
 static	void	client_KillThing( BYTESTREAM_s *pByteStream );
 static	void	client_SetThingState( BYTESTREAM_s *pByteStream );
 static	void	client_SetThingTarget( BYTESTREAM_s *pByteStream );
@@ -1613,30 +1607,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_PLAYERDROPINVENTORY:
 
 		client_PlayerDropInventory( pByteStream );
-		break;
-	case SVC_SPAWNTHING:
-
-		client_SpawnThing( pByteStream );
-		break;
-	case SVC_SPAWNTHINGNONETID:
-
-		client_SpawnThingNoNetID( pByteStream );
-		break;
-	case SVC_SPAWNTHINGEXACT:
-
-		client_SpawnThingExact( pByteStream );
-		break;
-	case SVC_SPAWNTHINGEXACTNONETID:
-
-		client_SpawnThingExactNoNetID( pByteStream );
-		break;
-	case SVC_MOVETHING:
-
-		client_MoveThing( pByteStream );
-		break;
-	case SVC_MOVETHINGEXACT:
-
-		client_MoveThingExact( pByteStream );
 		break;
 	case SVC_KILLTHING:
 
@@ -5272,327 +5242,168 @@ static void client_PlayerDropInventory( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SpawnThing( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnThing::Execute()
 {
-	fixed_t			X;
-	fixed_t			Y;
-	fixed_t			Z;
-	USHORT			usActorNetworkIndex;
-	LONG			lID;
-
-	// Read in the XYZ location of the item.
-	X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-	// Read in the identification of the item class.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the item.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the thing.
-	CLIENT_SpawnThing( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, lID );
+	CLIENT_SpawnThing( type, x, y, z, id );
 }
 
 //*****************************************************************************
 //
-static void client_SpawnThingNoNetID( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnThingNoNetID::Execute()
 {
-	fixed_t			X;
-	fixed_t			Y;
-	fixed_t			Z;
-	USHORT			usActorNetworkIndex;
-
-	// Read in the XYZ location of the item.
-	X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-	// Read in the identification of the item class.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the thing.
-	CLIENT_SpawnThing( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, -1 );
+	CLIENT_SpawnThing( type, x, y, z, -1 );
 }
 
 //*****************************************************************************
 //
-static void client_SpawnThingExact( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnThingExact::Execute()
 {
-	fixed_t			X;
-	fixed_t			Y;
-	fixed_t			Z;
-	USHORT			usActorNetworkIndex;
-	LONG			lID;
-
-	// Read in the XYZ location of the item.
-	X = NETWORK_ReadLong( pByteStream );
-	Y = NETWORK_ReadLong( pByteStream );
-	Z = NETWORK_ReadLong( pByteStream );
-
-	// Read in the identification of the item class.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the item.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the thing.
-	CLIENT_SpawnThing( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, lID );
+	CLIENT_SpawnThing( type, x, y, z, id );
 }
 
 //*****************************************************************************
 //
-static void client_SpawnThingExactNoNetID( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnThingExactNoNetID::Execute()
 {
-	fixed_t			X;
-	fixed_t			Y;
-	fixed_t			Z;
-	USHORT			usActorNetworkIndex;
-
-	// Read in the XYZ location of the item.
-	X = NETWORK_ReadLong( pByteStream );
-	Y = NETWORK_ReadLong( pByteStream );
-	Z = NETWORK_ReadLong( pByteStream );
-
-	// Read in the identification of the item class.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the thing.
-	CLIENT_SpawnThing( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, -1 );
+	CLIENT_SpawnThing( type, x, y, z, -1 );
 }
 
 //*****************************************************************************
 //
-static void client_MoveThing( BYTESTREAM_s *pByteStream )
+void ServerCommands::MoveThing::Execute()
 {
-	LONG	lID;
-	LONG	lBits;
-	AActor	*pActor;
-	fixed_t	X;
-	fixed_t	Y;
-	fixed_t	Z;
-
-	// Read in the network ID of the thing to update.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the data that will be updated.
-	lBits = NETWORK_ReadShort( pByteStream );
-
-	// Try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-
-	if (( pActor == NULL ) || gamestate != GS_LEVEL )
-	{
-		// No thing up update; skip the rest of the message.
-		if ( lBits & CM_X ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_Y ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_Z ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_LAST_X ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_LAST_Y ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_LAST_Z ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_ANGLE ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_VELX ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_VELY ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_VELZ ) NETWORK_ReadShort( pByteStream );
-		if ( lBits & CM_PITCH ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOVEDIR ) NETWORK_ReadByte( pByteStream );
-
+	if (( actor == NULL ) || gamestate != GS_LEVEL )
 		return;
-	}
 
-	X = FLOAT2FIXED ( pActor->X() );
-	Y = FLOAT2FIXED ( pActor->Y() );
-	Z = FLOAT2FIXED ( pActor->Z() );
+	fixed_t x = ContainsNewX() ? newX : FLOAT2FIXED ( actor->X() );
+	fixed_t y = ContainsNewY() ? newY : FLOAT2FIXED ( actor->Y() );
+	fixed_t z = ContainsNewZ() ? newZ : FLOAT2FIXED ( actor->Z() );
 
-	// Read in the position data.
-	if ( lBits & CM_X )
-	{
-		X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastX = X;
-	}
-	if ( lBits & CM_Y )
-	{
-		Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastY = Y;
-	}
-	if ( lBits & CM_Z )
-	{
-		Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastZ = Z;
-	}
+	if ( ContainsNewX() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastX = x;
+	if ( ContainsNewY() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastY = y;
+	if ( ContainsNewZ() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastZ = z;
 
 	// Read in the last position data.
-	if ( lBits & CM_LAST_X )
-		pActor->lastX = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	if ( lBits & CM_LAST_Y )
-		pActor->lastY = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	if ( lBits & CM_LAST_Z )
-		pActor->lastZ = NETWORK_ReadShort( pByteStream ) << FRACBITS;
+	if ( ContainsLastX() )
+		actor->lastX = lastX;
+	if ( ContainsLastY() )
+		actor->lastY = lastY;
+	if ( ContainsLastZ() )
+		actor->lastZ = lastZ;
 
 	// [WS] Clients will reuse their last updated position.
-	if ( lBits & CM_REUSE_X )
-		X = pActor->lastX;
-	if ( lBits & CM_REUSE_Y )
-		Y = pActor->lastY;
-	if ( lBits & CM_REUSE_Z )
-		Z = pActor->lastZ;
+	if ( bits & CM_REUSE_X )
+		x = actor->lastX;
+	if ( bits & CM_REUSE_Y )
+		y = actor->lastY;
+	if ( bits & CM_REUSE_Z )
+		z = actor->lastZ;
 
 	// Update the thing's position.
-	if ( lBits & (CM_X|CM_Y|CM_Z|CM_REUSE_X|CM_REUSE_Y|CM_REUSE_Z) )
-		CLIENT_MoveThing( pActor, X, Y, Z );
+	if ( bits & ( CM_X|CM_Y|CM_Z|CM_REUSE_X|CM_REUSE_Y|CM_REUSE_Z ))
+		CLIENT_MoveThing( actor, x, y, z );
 
 	// Read in the angle data.
-	if ( lBits & CM_ANGLE )
-		pActor->Angles.Yaw = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
+	if ( ContainsAngle() )
+		actor->Angles.Yaw = ANGLE2DBL ( angle );
 
-	// Read in the velocity data.
-	if ( lBits & CM_VELX )
-		pActor->Vel.X = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-	if ( lBits & CM_VELY )
-		pActor->Vel.Y = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-	if ( lBits & CM_VELZ )
-		pActor->Vel.Z = FIXED2FLOAT ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
+	// Read in the momentum data.
+	if ( ContainsVelX() )
+		actor->Vel.X = FIXED2FLOAT ( velX );
+	if ( ContainsVelY() )
+		actor->Vel.Y = FIXED2FLOAT ( velY );
+	if ( ContainsVelZ() )
+		actor->Vel.Z = FIXED2FLOAT ( velZ );
 
-	// [Dusk] if the actor that's being moved is a player and his velocity
-	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
-	// as well.
-	if ((pActor->player != NULL) && (pActor->Vel.X == 0) && (pActor->Vel.Y == 0)) {
-		pActor->player->Vel.X = 0;
-		pActor->player->Vel.Y = 0;
-	}
+	// [TP] If this is a player that's being moved around, and his velocity becomes zero,
+	// we need to stop his bobbing as well.
+	if ( actor->player && ( actor->Vel.X == 0 ) && ( actor->Vel.Y == 0 ))
+		actor->player->Vel.X = actor->player->Vel.Y = 0;
 
 	// Read in the pitch data.
-	if ( lBits & CM_PITCH )
-		pActor->Angles.Pitch = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
+	if ( ContainsPitch() )
+		actor->Angles.Pitch = ANGLE2DBL ( pitch );
 
 	// Read in the movedir data.
-	if ( lBits & CM_MOVEDIR )
-		pActor->movedir = NETWORK_ReadByte( pByteStream );
+	if ( ContainsMovedir() )
+		actor->movedir = movedir;
 
 	// If the server is moving us, don't let our prediction get messed up.
-	if ( pActor == players[consoleplayer].mo )
+	if ( actor == players[consoleplayer].mo )
 	{
-		players[consoleplayer].ServerXYZ[0] = X;
-		players[consoleplayer].ServerXYZ[1] = Y;
-		players[consoleplayer].ServerXYZ[2] = Z;
+		players[consoleplayer].ServerXYZ[0] = x;
+		players[consoleplayer].ServerXYZ[1] = y;
+		players[consoleplayer].ServerXYZ[2] = z;
 		CLIENT_PREDICT_PlayerTeleported( );
 	}
 }
 
 //*****************************************************************************
 //
-static void client_MoveThingExact( BYTESTREAM_s *pByteStream )
+void ServerCommands::MoveThingExact::Execute()
 {
-	LONG	lID;
-	LONG	lBits;
-	AActor	*pActor;
-	fixed_t	X;
-	fixed_t	Y;
-	fixed_t	Z;
-
-	// Read in the network ID of the thing to update.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the data that will be updated.
-	lBits = NETWORK_ReadShort( pByteStream );
-
-	// Try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-
-	if (( pActor == NULL ) || gamestate != GS_LEVEL )
-	{
-		// No thing up update; skip the rest of the message.
-		if ( lBits & CM_X ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_Y ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_Z ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_LAST_X ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_LAST_Y ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_LAST_Z ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_ANGLE ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_VELX ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_VELY ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_VELZ ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_PITCH ) NETWORK_ReadLong( pByteStream );
-		if ( lBits & CM_MOVEDIR ) NETWORK_ReadByte( pByteStream );
-
+	if (( actor == NULL ) || gamestate != GS_LEVEL )
 		return;
-	}
 
-	X = FLOAT2FIXED ( pActor->X() );
-	Y = FLOAT2FIXED ( pActor->Y() );
-	Z = FLOAT2FIXED ( pActor->Z() );
+	fixed_t x = ContainsNewX() ? newX : FLOAT2FIXED ( actor->X() );
+	fixed_t y = ContainsNewY() ? newY : FLOAT2FIXED ( actor->Y() );
+	fixed_t z = ContainsNewZ() ? newZ : FLOAT2FIXED ( actor->Z() );
 
 	// Read in the position data.
-	if ( lBits & CM_X )
-	{
-		X = NETWORK_ReadLong( pByteStream );
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastX = X;
-	}
-	if ( lBits & CM_Y )
-	{
-		Y = NETWORK_ReadLong( pByteStream );
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastY = Y;
-	}
-	if ( lBits & CM_Z )
-	{
-		Z = NETWORK_ReadLong( pByteStream );
-		if ( !(lBits & CM_NOLAST) )
-			pActor->lastZ = Z;
-	}
+	if ( ContainsNewX() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastX = x;
+	if ( ContainsNewY() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastY = y;
+	if ( ContainsNewZ() && (( bits & CM_NOLAST ) == 0 ))
+		actor->lastZ = z;
 
 	// Read in the last position data.
-	if ( lBits & CM_LAST_X )
-		pActor->lastX = NETWORK_ReadLong( pByteStream );
-	if ( lBits & CM_LAST_Y )
-		pActor->lastY = NETWORK_ReadLong( pByteStream );
-	if ( lBits & CM_LAST_Z )
-		pActor->lastZ = NETWORK_ReadLong( pByteStream );
+	if ( ContainsLastX() )
+		actor->lastX = lastX;
+	if ( ContainsLastY() )
+		actor->lastY = lastY;
+	if ( ContainsLastZ() )
+		actor->lastZ = lastZ;
 
 	// [WS] Clients will reuse their last updated position.
-	if ( lBits & CM_REUSE_X )
-		X = pActor->lastX;
-	if ( lBits & CM_REUSE_Y )
-		Y = pActor->lastY;
-	if ( lBits & CM_REUSE_Z )
-		Z = pActor->lastZ;
+	if ( bits & CM_REUSE_X )
+		x = actor->lastX;
+	if ( bits & CM_REUSE_Y )
+		y = actor->lastY;
+	if ( bits & CM_REUSE_Z )
+		z = actor->lastZ;
 
 	// Update the thing's position.
-	if ( lBits & (CM_X|CM_Y|CM_Z|CM_REUSE_X|CM_REUSE_Y|CM_REUSE_Z) )
-		CLIENT_MoveThing( pActor, X, Y, Z );
+	if ( bits & ( CM_X|CM_Y|CM_Z|CM_REUSE_X|CM_REUSE_Y|CM_REUSE_Z ))
+		CLIENT_MoveThing( actor, x, y, z );
 
 	// Read in the angle data.
-	if ( lBits & CM_ANGLE )
-		pActor->Angles.Yaw = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
+	if ( ContainsAngle() )
+		actor->Angles.Yaw = ANGLE2DBL ( angle );
 
-	// Read in the velocity data.
-	if ( lBits & CM_VELX )
-		pActor->Vel.X = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
-	if ( lBits & CM_VELY )
-		pActor->Vel.Y = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
-	if ( lBits & CM_VELZ )
-		pActor->Vel.Z = FIXED2FLOAT ( NETWORK_ReadLong( pByteStream ) );
+	// Read in the momentum data.
+	if ( ContainsVelX() )
+		actor->Vel.X = FIXED2FLOAT ( velX );
+	if ( ContainsVelY() )
+		actor->Vel.Y = FIXED2FLOAT ( velY );
+	if ( ContainsVelZ() )
+		actor->Vel.Z = FIXED2FLOAT ( velZ );
 
-	// [Dusk] if the actor that's being moved is a player and his velocity
-	// is being zeroed (i.e. we're stopping him), we need to stop his bobbing
-	// as well.
-	if ((pActor->player != NULL) && (pActor->Vel.X == 0) && (pActor->Vel.Y == 0)) {
-		pActor->player->Vel.X = 0;
-		pActor->player->Vel.Y = 0;
-	}
+	// [TP] If this is a player that's being moved around, and his velocity becomes zero,
+	// we need to stop his bobbing as well.
+	if ( actor->player && ( actor->Vel.X == 0 ) && ( actor->Vel.Y == 0 ))
+		actor->player->Vel.X = actor->player->Vel.Y = 0;
 
 	// Read in the pitch data.
-	if ( lBits & CM_PITCH )
-		pActor->Angles.Pitch = ANGLE2DBL ( NETWORK_ReadLong( pByteStream ) );
+	if ( ContainsPitch() )
+		actor->Angles.Pitch = ANGLE2DBL ( pitch );
 
 	// Read in the movedir data.
-	if ( lBits & CM_MOVEDIR )
-		pActor->movedir = NETWORK_ReadByte( pByteStream );
+	if ( ContainsMovedir() )
+		actor->movedir = movedir;
 }
 
 //*****************************************************************************
