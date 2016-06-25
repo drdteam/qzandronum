@@ -169,17 +169,6 @@ static	void	client_EndSnapshot( BYTESTREAM_s *pByteStream );
 // Player functions.
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerPSprite( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerBlend( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerMaxHealth( BYTESTREAM_s *pByteStream );
-static	void	client_SetPlayerLivesLeft( BYTESTREAM_s *pByteStream );
-static	void	client_UpdatePlayerPing( BYTESTREAM_s *pByteStream );
-static	void	client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream );
-static	void	client_UpdatePlayerTime( BYTESTREAM_s *pByteStream );
-static	void	client_MoveLocalPlayer( BYTESTREAM_s *pByteStream );
-static	void	client_DisconnectPlayer( BYTESTREAM_s *pByteStream );
-static	void	client_SetConsolePlayer( BYTESTREAM_s *pByteStream );
-static	void	client_ConsolePlayerKicked( BYTESTREAM_s *pByteStream );
 static	void	client_GivePlayerMedal( BYTESTREAM_s *pByteStream );
 static	void	client_ResetAllPlayersFragcount( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerIsSpectator( BYTESTREAM_s *pByteStream );
@@ -1593,50 +1582,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		client_SetPlayerPieces( pByteStream );
 		break;
 	*/
-	case SVC_SETPLAYERPSPRITE:
-
-		client_SetPlayerPSprite( pByteStream );
-		break;
-	case SVC_SETPLAYERBLEND:
-
-		client_SetPlayerBlend( pByteStream );
-		break;
-	case SVC_SETPLAYERMAXHEALTH:
-
-		client_SetPlayerMaxHealth( pByteStream );
-		break;
-	case SVC_SETPLAYERLIVESLEFT:
-
-		client_SetPlayerLivesLeft( pByteStream );
-		break;
-	case SVC_UPDATEPLAYERPING:
-
-		client_UpdatePlayerPing( pByteStream );
-		break;
-	case SVC_UPDATEPLAYEREXTRADATA:
-
-		client_UpdatePlayerExtraData( pByteStream );
-		break;
-	case SVC_UPDATEPLAYERTIME:
-
-		client_UpdatePlayerTime( pByteStream );
-		break;
-	case SVC_MOVELOCALPLAYER:
-
-		client_MoveLocalPlayer( pByteStream );
-		break;
-	case SVC_DISCONNECTPLAYER:
-
-		client_DisconnectPlayer( pByteStream );
-		break;
-	case SVC_SETCONSOLEPLAYER:
-
-		client_SetConsolePlayer( pByteStream );
-		break;
-	case SVC_CONSOLEPLAYERKICKED:
-
-		client_ConsolePlayerKicked( pByteStream );
-		break;
 	case SVC_GIVEPLAYERMEDAL:
 
 		client_GivePlayerMedal( pByteStream );
@@ -4792,30 +4737,14 @@ static void client_SetPlayerPieces( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerPSprite::Execute()
 {
-	ULONG			ulPlayer;
-	const char		*pszState;
-	LONG			lOffset;
-	LONG			lPosition;
 	FState			*pNewState;
 
-	// Read in the player.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the state.
-	pszState = NETWORK_ReadString( pByteStream );
-
-	// Offset into the state label.
-	lOffset = NETWORK_ReadByte( pByteStream );
-
-	// Read in the position (ps_weapon, etc.).
-	lPosition = NETWORK_ReadByte( pByteStream );
-
 	PSPLayers layer = PSP_WEAPON;
-	if ( lPosition == 0 )
+	if ( position == 0 )
 		layer = PSP_WEAPON;
-	else if ( lPosition == 1 )
+	else if ( position == 1 )
 		layer == PSP_FLASH;
 	else
 		return;
@@ -4824,39 +4753,35 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	// Check to make sure everything is valid. If not, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	if ( players[ulPlayer].ReadyWeapon == NULL )
+	if ( player->ReadyWeapon == NULL )
 		return;
 
 	// [BB] In this case lOffset is just the offset from the ready state.
 	// Handle this accordingly.
-	if ( stricmp( pszState, ":R" ) == 0 )
+	if ( stricmp( state, ":R" ) == 0 )
 	{
-		pNewState = players[ulPlayer].ReadyWeapon->GetReadyState( );
+		pNewState = player->ReadyWeapon->GetReadyState( );
 	}
 	// [BB] In this case lOffset is just the offset from the flash state.
-	else if ( stricmp( pszState, ":F" ) == 0 )
+	else if ( stricmp( state, ":F" ) == 0 )
 	{
-		pNewState = players[ulPlayer].ReadyWeapon->FindState(NAME_Flash);
+		pNewState = player->ReadyWeapon->FindState(NAME_Flash);
 	}
 	else
 	{
 		// Build the state name list.
-		TArray<FName> &StateList = MakeStateNameList( pszState );
+		TArray<FName> &StateList = MakeStateNameList( state );
 
 		// [BB] Obviously, we can't access StateList[0] if StateList is empty.
 		if ( StateList.Size( ) == 0 )
 			return;
 
-		pNewState = players[ulPlayer].ReadyWeapon->GetClass( )->FindState( StateList.Size( ), &StateList[0] );
+		pNewState = player->ReadyWeapon->GetClass( )->FindState( StateList.Size( ), &StateList[0] );
 
 		// [BB] The offset was calculated by FindStateLabelAndOffset using GetNextState(),
 		// so we have to use this here, too, to propely find the target state.
 		// Note: The same loop is used in client_SetThingFrame and could be moved to a new function.
-		for ( int i = 0; i < lOffset; i++ )
+		for ( int i = 0; i < offset; i++ )
 		{
 			if ( pNewState != NULL )
 				pNewState = pNewState->GetNextState( );
@@ -4865,210 +4790,96 @@ static void client_SetPlayerPSprite( BYTESTREAM_s *pByteStream )
 		if ( pNewState == NULL )
 			return;
 
-		P_SetPsprite( &players[ulPlayer], layer, pNewState );
+		P_SetPsprite( player, layer, pNewState );
 		return;
 	}
 	if ( pNewState )
 	{
 		// [BB] The offset is only guaranteed to work if the actor owns the state.
-		if ( lOffset != 0 )
+		if ( offset != 0 )
 		{
-			if ( ActorOwnsState ( players[ulPlayer].ReadyWeapon, pNewState ) == false )
+			if ( ActorOwnsState ( player->ReadyWeapon, pNewState ) == false )
 			{
-				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s\n", players[ulPlayer].ReadyWeapon->GetClass()->TypeName.GetChars(), pszState );
+				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s\n", player->ReadyWeapon->GetClass()->TypeName.GetChars(), state.GetChars() );
 				return;
 			}
-			if ( ActorOwnsState ( players[ulPlayer].ReadyWeapon, pNewState + lOffset ) == false )
+			if ( ActorOwnsState ( player->ReadyWeapon, pNewState + offset ) == false )
 			{
-				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s + %ld\n", players[ulPlayer].ReadyWeapon->GetClass()->TypeName.GetChars(), pszState, lOffset );
+				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s + %d\n", player->ReadyWeapon->GetClass()->TypeName.GetChars(), state.GetChars(), offset );
 				return;
 			}
 		}
-		P_SetPsprite( &players[ulPlayer], layer, pNewState + lOffset );
+		P_SetPsprite( player, layer, pNewState + offset );
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerBlend( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerBlend::Execute()
 {
-	ULONG			ulPlayer;
-
-	// Read in the player.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	if ( ulPlayer < MAXPLAYERS )
-	{
-		players[ulPlayer].BlendR = NETWORK_ReadFloat( pByteStream );
-		players[ulPlayer].BlendG = NETWORK_ReadFloat( pByteStream );
-		players[ulPlayer].BlendB = NETWORK_ReadFloat( pByteStream );
-		players[ulPlayer].BlendA = NETWORK_ReadFloat( pByteStream );
-	}
-	else
-	{
-		NETWORK_ReadFloat( pByteStream );
-		NETWORK_ReadFloat( pByteStream );
-		NETWORK_ReadFloat( pByteStream );
-		NETWORK_ReadFloat( pByteStream );
-	}
+	player->BlendR = blendR;
+	player->BlendG = blendG;
+	player->BlendB = blendB;
+	player->BlendA = blendA;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerMaxHealth( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerMaxHealth::Execute()
 {
-	// [BB] Read in the player and the new MaxHealth.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	LONG lMaxHealth =  NETWORK_ReadLong( pByteStream );
-
-	// [BB] Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
-	players[ulPlayer].mo->MaxHealth = lMaxHealth;
+	player->mo->MaxHealth = maxHealth;
 }
 
 //*****************************************************************************
 //
-static void client_SetPlayerLivesLeft( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetPlayerLivesLeft::Execute()
 {
-	// [BB] Read in the player and the new LivesLeft.
-	ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-	ULONG ulLivesLeft =  NETWORK_ReadByte( pByteStream );
-
-	// [BB] Check to make sure everything is valid. If not, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	players[ulPlayer].ulLivesLeft = ulLivesLeft;
+	player->ulLivesLeft = livesLeft;
 }
 
 //*****************************************************************************
 //
-static void client_UpdatePlayerPing( BYTESTREAM_s *pByteStream )
+void ServerCommands::UpdatePlayerPing::Execute()
 {
-	ULONG	ulPlayer;
-	ULONG	ulPing;
-
-	// Read in the player whose ping is being updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's ping.
-	ulPing = NETWORK_ReadShort( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Finally, set the player's ping.
-	players[ulPlayer].ulPing = ulPing;
+	player->ulPing = ping;
 }
 
 //*****************************************************************************
 //
-static void client_UpdatePlayerExtraData( BYTESTREAM_s *pByteStream )
+void ServerCommands::UpdatePlayerExtraData::Execute()
 {
-	ULONG	ulPlayer;
-//	ULONG	ulPendingWeapon;
-//	ULONG	ulReadyWeapon;
-	LONG	lPitch;
-	ULONG	ulWaterLevel;
-	ULONG	ulButtons;
-	LONG	lViewZ;
-	LONG	lBob;
-
-	// Read in the player who's info is about to be updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's pitch.
-	lPitch = NETWORK_ReadLong( pByteStream );
-
-	// Read in the player's water level.
-	ulWaterLevel = NETWORK_ReadByte( pByteStream );
-
-	// Read in the player's buttons.
-	ulButtons = NETWORK_ReadByte( pByteStream );
-
-	// Read in the view and weapon bob.
-	lViewZ = NETWORK_ReadLong( pByteStream );
-	lBob = NETWORK_ReadLong( pByteStream );
-
-	// If the player doesn't exist, get out!
-	if (( players[ulPlayer].mo == NULL ) || ( playeringame[ulPlayer] == false ))
-		return;
-
 	// [BB] If the spectated player uses the GL renderer and we are using software,
 	// the viewangle has to be limited.	We don't care about cl_disallowfullpitch here.
 	if ( !currentrenderer )
 	{
 		// [BB] The user can restore ZDoom's freelook limit.
 		const fixed_t pitchLimit = -(ANGLE_90/90)*( cl_oldfreelooklimit ? 32 : 56 );
-		if (lPitch < pitchLimit)
-			lPitch = pitchLimit;
-		if (lPitch > (ANGLE_90/90)*56)
-			lPitch = (ANGLE_90/90)*56;
+		if (pitch < pitchLimit)
+			pitch = pitchLimit;
+		if (pitch > (ANGLE_90/90)*56)
+			pitch = (ANGLE_90/90)*56;
 	}
-	players[ulPlayer].mo->Angles.Pitch = ANGLE2DBL ( lPitch );
-	players[ulPlayer].mo->waterlevel = ulWaterLevel;
+	player->mo->Angles.Pitch = ANGLE2DBL ( pitch );
+	player->mo->waterlevel = waterLevel;
 	// [BB] The attack buttons are now already set in *_MovePlayer, so additionally setting
 	// them here is obsolete. I don't want to change this before 97D2 final though.
-	players[ulPlayer].cmd.ucmd.buttons = ulButtons;
-//	players[ulPlayer].velx = lMomX;
-//	players[ulPlayer].vely = lMomY;
-	players[ulPlayer].viewz = FIXED2DBL ( lViewZ );
-	players[ulPlayer].bob = FIXED2DBL ( lBob );
+	player->cmd.ucmd.buttons = buttons;
+	player->viewz = FIXED2DBL ( viewZ );
+	player->bob = FIXED2DBL ( bob );
 }
 
 //*****************************************************************************
 //
-static void client_UpdatePlayerTime( BYTESTREAM_s *pByteStream )
+void ServerCommands::UpdatePlayerTime::Execute()
 {
-	ULONG	ulPlayer;
-	ULONG	ulTime;
-
-	// Read in the player.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the time.
-	ulTime = NETWORK_ReadShort( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	players[ulPlayer].ulTime = ulTime * ( TICRATE * 60 );
+	player->ulTime = time * ( TICRATE * 60 );
 }
 
 //*****************************************************************************
 //
-static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::MoveLocalPlayer::Execute()
 {
-	player_t	*pPlayer;
-	ULONG		ulClientTicOnServerEnd;
-	fixed_t		X;
-	fixed_t		Y;
-	fixed_t		Z;
-	fixed_t		VelX;
-	fixed_t		VelY;
-	fixed_t		VelZ;
-
-	pPlayer = &players[consoleplayer];
-	
-	// Read in the last tick that we sent to the server.
-	ulClientTicOnServerEnd = NETWORK_ReadLong( pByteStream );
-
-	// [CK] This should be our latest server tick we will record.
-	const int latestServerGametic = NETWORK_ReadLong( pByteStream );
-
-	// Get XYZ.
-	X = NETWORK_ReadLong( pByteStream );
-	Y = NETWORK_ReadLong( pByteStream );
-	Z = NETWORK_ReadLong( pByteStream );
-
-	// Get XYZ velocity.
-	VelX = NETWORK_ReadLong( pByteStream );
-	VelY = NETWORK_ReadLong( pByteStream );
-	VelZ = NETWORK_ReadLong( pByteStream );
+	player_t *pPlayer = &players[consoleplayer];
 
 	// No player object to update.
 	if ( pPlayer->mo == NULL )
@@ -5084,11 +4895,11 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 	CLIENT_SetLatestServerGametic( latestServerGametic );
 
 	// "ulClientTicOnServerEnd" is the gametic of the last time we sent a movement command.
-	CLIENT_SetLastConsolePlayerUpdateTick( ulClientTicOnServerEnd );
+	CLIENT_SetLastConsolePlayerUpdateTick( clientTicOnServerEnd );
 
 	// If the last time the server heard from us exceeds one second, the client is lagging!
 	// [BB] But don't think we are lagging immediately after receiving a full update.
-	if (( gametic - CLIENTDEMO_GetGameticOffset( ) - ulClientTicOnServerEnd >= TICRATE ) && (( gametic + CLIENTDEMO_GetGameticOffset( ) - g_ulEndFullUpdateTic ) > TICRATE ))
+	if (( gametic - CLIENTDEMO_GetGameticOffset( ) - clientTicOnServerEnd >= TICRATE ) && (( gametic + CLIENTDEMO_GetGameticOffset( ) - g_ulEndFullUpdateTic ) > TICRATE ))
 		g_bClientLagging = true;
 	else
 		g_bClientLagging = false;
@@ -5101,67 +4912,58 @@ static void client_MoveLocalPlayer( BYTESTREAM_s *pByteStream )
 	// Now that everything's check out, update stuff.
 	if ( pPlayer->bSpectating == false )
 	{
-		pPlayer->ServerXYZ[0] = X;
-		pPlayer->ServerXYZ[1] = Y;
-		pPlayer->ServerXYZ[2] = Z;
+		pPlayer->ServerXYZ[0] = x;
+		pPlayer->ServerXYZ[1] = y;
+		pPlayer->ServerXYZ[2] = z;
 
-		pPlayer->ServerXYZVel[0] = VelX;
-		pPlayer->ServerXYZVel[1] = VelY;
-		pPlayer->ServerXYZVel[2] = VelZ;
+		pPlayer->ServerXYZVel[0] = velx;
+		pPlayer->ServerXYZVel[1] = vely;
+		pPlayer->ServerXYZVel[2] = velz;
 	}
 	else
 	{
 		// [BB] Calling CLIENT_MoveThing instead of setting the x,y,z position directly should make
 		// sure that the spectator body doesn't get stuck.
-		CLIENT_MoveThing ( pPlayer->mo, X, Y, Z );
+		CLIENT_MoveThing ( pPlayer->mo, x, y, z );
 
-		pPlayer->mo->Vel.X = FIXED2FLOAT ( VelX );
-		pPlayer->mo->Vel.Y = FIXED2FLOAT ( VelY );
-		pPlayer->mo->Vel.Z = FIXED2FLOAT ( VelZ );
+		pPlayer->mo->Vel.X = FIXED2FLOAT ( velx );
+		pPlayer->mo->Vel.Y = FIXED2FLOAT ( vely );
+		pPlayer->mo->Vel.Z = FIXED2FLOAT ( velz );
 	}
 }
 
 //*****************************************************************************
 //
-void client_DisconnectPlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::DisconnectPlayer::Execute()
 {
-	ULONG	ulPlayer;
-
-	// Read in the player who's being disconnected (could be us!).
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
 	// If we were a spectator and looking through this player's eyes, revert them.
-	if ( players[ulPlayer].mo->CheckLocalView( consoleplayer ))
+	if ( player->mo->CheckLocalView( consoleplayer ))
 	{
 		CLIENT_ResetConsolePlayerCamera( );
 	}
 
 	// Create a little disconnect particle effect thingamabobber!
 	// [BB] Only do this if a non-spectator disconnects.
-	if ( players[ulPlayer].bSpectating == false )
+	if ( player->bSpectating == false )
 	{
-		P_DisconnectEffect( players[ulPlayer].mo );
+		P_DisconnectEffect( player->mo );
 
 		// [BB] Stop all CLIENTSIDE scripts of the player that are still running.
 		if ( !( zacompatflags & ZACOMPATF_DONT_STOP_PLAYER_SCRIPTS_ON_DISCONNECT ) )
-			FBehavior::StaticStopMyScripts ( players[ulPlayer].mo );
+			FBehavior::StaticStopMyScripts ( player->mo );
 	}
 
 	// Destroy the actor associated with the player.
-	if ( players[ulPlayer].mo )
+	if ( player->mo )
 	{
-		players[ulPlayer].mo->Destroy( );
-		players[ulPlayer].mo = NULL;
+		player->mo->Destroy( );
+		player->mo = NULL;
 	}
 
-	playeringame[ulPlayer] = false;
+	playeringame[player - players] = false;
 
 	// Zero out all the player information.
-	PLAYER_ResetPlayerData( &players[ulPlayer] );
+	PLAYER_ResetPlayerData( player );
 
 	// Refresh the HUD because this affects the number of players in the game.
 	SCOREBOARD_RefreshHUD( );
@@ -5169,23 +4971,20 @@ void client_DisconnectPlayer( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetConsolePlayer( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetConsolePlayer::Execute()
 {
-	LONG	lConsolePlayer;
-
-	// Read in what our local player index is.
-	lConsolePlayer = NETWORK_ReadByte( pByteStream );
-
 	// If this index is invalid, break out.
-	if ( lConsolePlayer >= MAXPLAYERS )
+	// [TP] playerNumber < 0 could happen if the packet is too short. However, the code generator
+	// should already ward against executing truncated commands. But let's add a check anyway...
+	if (( playerNumber < 0 ) || ( playerNumber >= MAXPLAYERS ))
 		return;
 
 	// In a client demo, don't lose the userinfo we gave to our console player.
 	if ( CLIENTDEMO_IsPlaying( ))
-		memcpy( &players[lConsolePlayer].userinfo, &players[consoleplayer].userinfo, sizeof( userinfo_t ));
+		memcpy( &players[playerNumber].userinfo, &players[consoleplayer].userinfo, sizeof( userinfo_t ));
 
 	// Otherwise, since it's valid, set our local player index to this.
-	consoleplayer = lConsolePlayer;
+	consoleplayer = playerNumber;
 
 	// Finally, apply our local userinfo to this player slot.
 	D_SetupUserInfo( );
@@ -5193,7 +4992,7 @@ static void client_SetConsolePlayer( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_ConsolePlayerKicked( BYTESTREAM_s *pByteStream )
+void ServerCommands::ConsolePlayerKicked::Execute()
 {
 	// Set the connection state to "disconnected" before calling CLIENT_QuitNetworkGame( ),
 	// so that we don't send a disconnect signal to the server.

@@ -185,3 +185,74 @@ Command SetPlayerPendingWeapon
 	Player player
 	Class<AWeapon> weaponType
 EndCommand
+
+Command SetPlayerPSprite
+	Player player
+	String state
+	Byte offset
+	Byte position
+EndCommand
+
+Command SetPlayerBlend
+	Player player with IndexTestOnly
+	Float blendR
+	Float blendG
+	Float blendB
+	Float blendA
+EndCommand
+
+Command SetPlayerMaxHealth
+	Player player with MoTest
+	Long maxHealth
+EndCommand
+
+Command SetPlayerLivesLeft
+	Player player
+	Byte livesLeft
+EndCommand
+
+Command UpdatePlayerPing
+	UnreliableCommand
+	Player player
+	UShort ping
+EndCommand
+
+Command UpdatePlayerExtraData
+	UnreliableCommand
+	Player player with MoTest
+	Long pitch
+	Byte waterLevel
+	Byte buttons
+	Long viewZ
+	Long bob
+EndCommand
+
+Command UpdatePlayerTime
+	UnreliableCommand
+	Player player
+	UShort time
+EndCommand
+
+Command MoveLocalPlayer
+	UnreliableCommand
+	ULong clientTicOnServerEnd
+	# [CK] This should be our latest server tick we will record.
+	Long latestServerGametic
+	Fixed x
+	Fixed y
+	Fixed z
+	Fixed velx
+	Fixed vely
+	Fixed velz
+EndCommand
+
+Command DisconnectPlayer
+	Player player
+EndCommand
+
+Command SetConsolePlayer
+	Byte playerNumber
+EndCommand
+
+Command ConsolePlayerKicked
+EndCommand
