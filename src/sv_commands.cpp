@@ -1377,28 +1377,15 @@ void SERVERCOMMANDS_MoveThingExact( AActor *actor, ULONG bits, ULONG ulPlayerExt
 //
 void SERVERCOMMANDS_KillThing( AActor *pActor, AActor *pSource, AActor *pInflictor )
 {
-	LONG	lSourceID;
-	LONG	lInflictorID;
-
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	if ( pSource )
-		lSourceID = pSource->lNetID;
-	else
-		lSourceID = -1;
-
-	if ( pInflictor )
-		lInflictorID = pInflictor->lNetID;
-	else
-		lInflictorID = -1;
-
-	NetCommand command( SVC_KILLTHING );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->health );
-	command.addString( pActor->DamageType.GetChars() );
-	command.addShort( lSourceID );
-	command.addShort( lInflictorID );
+	ServerCommands::KillThing command;
+	command.SetVictim( pActor );
+	command.SetSource( pSource );
+	command.SetInflictor( pInflictor );
+	command.SetDamageType( pActor->DamageType.GetChars() );
+	command.SetHealth( pActor->health );
 	command.sendCommandToClients();
 }
 
@@ -1409,9 +1396,9 @@ void SERVERCOMMANDS_SetThingState( AActor *pActor, ULONG ulState, ULONG ulPlayer
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGSTATE );
-	command.addShort( pActor->lNetID );
-	command.addByte( ulState );
+	ServerCommands::SetThingState command;
+	command.SetActor( pActor );
+	command.SetState( ulState );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1422,9 +1409,9 @@ void SERVERCOMMANDS_SetThingTarget( AActor *pActor )
 	if ( !EnsureActorHasNetID (pActor) || !EnsureActorHasNetID(pActor->target) )
 		return;
 
-	NetCommand command( SVC_SETTHINGTARGET );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->target->lNetID );
+	ServerCommands::SetThingTarget command;
+	command.SetActor( pActor );
+	command.SetTarget( pActor->target );
 	command.sendCommandToClients();
 }
 
@@ -1435,8 +1422,8 @@ void SERVERCOMMANDS_DestroyThing( AActor *pActor )
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_DESTROYTHING );
-	command.addShort( pActor->lNetID );
+	ServerCommands::DestroyThing command;
+	command.SetActor( pActor );
 	command.sendCommandToClients();
 }
 
@@ -1447,9 +1434,9 @@ void SERVERCOMMANDS_SetThingAngle( AActor *pActor, ULONG ulPlayerExtra, ServerCo
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGANGLE );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->Angles.Yaw.BAMs() >> FRACBITS );
+	ServerCommands::SetThingAngle command;
+	command.SetActor( pActor );
+	command.SetAngle( pActor->Angles.Yaw.BAMs() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1460,9 +1447,9 @@ void SERVERCOMMANDS_SetThingAngleExact( AActor *pActor, ULONG ulPlayerExtra, Ser
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGANGLEEXACT );
-	command.addShort( pActor->lNetID );
-	command.addLong( pActor->Angles.Yaw.BAMs() );
+	ServerCommands::SetThingAngleExact command;
+	command.SetActor( pActor );
+	command.SetAngle( pActor->Angles.Yaw.BAMs() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1473,9 +1460,9 @@ void SERVERCOMMANDS_SetThingWaterLevel( AActor *pActor, ULONG ulPlayerExtra, Ser
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGWATERLEVEL );
-	command.addShort( pActor->lNetID );
-	command.addByte( pActor->waterlevel );
+	ServerCommands::SetThingWaterLevel command;
+	command.SetActor( pActor );
+	command.SetWaterlevel( pActor->waterlevel );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1483,28 +1470,28 @@ void SERVERCOMMANDS_SetThingWaterLevel( AActor *pActor, ULONG ulPlayerExtra, Ser
 //
 void SERVERCOMMANDS_SetThingFlags( AActor *pActor, FlagSet flagset, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	ULONG	ulActorFlags;
-
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
+	int actorFlags;
+
 	switch ( flagset )
 	{
-		case FLAGSET_FLAGS:		ulActorFlags = pActor->flags; break;
-		case FLAGSET_FLAGS2:	ulActorFlags = pActor->flags2; break;
-		case FLAGSET_FLAGS3:	ulActorFlags = pActor->flags3; break;
-		case FLAGSET_FLAGS4:	ulActorFlags = pActor->flags4; break;
-		case FLAGSET_FLAGS5:	ulActorFlags = pActor->flags5; break;
-		case FLAGSET_FLAGS6:	ulActorFlags = pActor->flags6; break;
-		case FLAGSET_FLAGS7:	ulActorFlags = pActor->flags7; break;
-		case FLAGSET_FLAGSST:	ulActorFlags = pActor->ulSTFlags; break;
+		case FLAGSET_FLAGS:		actorFlags = pActor->flags; break;
+		case FLAGSET_FLAGS2:	actorFlags = pActor->flags2; break;
+		case FLAGSET_FLAGS3:	actorFlags = pActor->flags3; break;
+		case FLAGSET_FLAGS4:	actorFlags = pActor->flags4; break;
+		case FLAGSET_FLAGS5:	actorFlags = pActor->flags5; break;
+		case FLAGSET_FLAGS6:	actorFlags = pActor->flags6; break;
+		case FLAGSET_FLAGS7:	actorFlags = pActor->flags7; break;
+		case FLAGSET_FLAGSST:	actorFlags = pActor->ulSTFlags; break;
 		default: return;
 	}
 
-	NetCommand command( SVC_SETTHINGFLAGS );
-	command.addShort( pActor->lNetID );
-	command.addByte( flagset );
-	command.addLong( ulActorFlags );
+	ServerCommands::SetThingFlags command;
+	command.SetActor( pActor );
+	command.SetFlagset( flagset );
+	command.SetFlags( actorFlags );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1550,13 +1537,13 @@ void SERVERCOMMANDS_SetThingArguments( AActor *pActor, ULONG ulPlayerExtra, Serv
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGARGUMENTS );
-	command.addShort( pActor->lNetID );
-	command.addLong( pActor->args[0] );
-	command.addLong( pActor->args[1] );
-	command.addLong( pActor->args[2] );
-	command.addLong( pActor->args[3] );
-	command.addLong( pActor->args[4] );
+	ServerCommands::SetThingArguments command;
+	command.SetActor( pActor );
+	command.SetArg0( pActor->args[0] );
+	command.SetArg1( pActor->args[1] );
+	command.SetArg2( pActor->args[2] );
+	command.SetArg3( pActor->args[3] );
+	command.SetArg4( pActor->args[4] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1567,9 +1554,9 @@ void SERVERCOMMANDS_SetThingTranslation( AActor *pActor, ULONG ulPlayerExtra, Se
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGTRANSLATION );
-	command.addShort( pActor->lNetID );
-	command.addLong( pActor->Translation );
+	ServerCommands::SetThingTranslation command;
+	command.SetActor( pActor );
+	command.SetTranslation( pActor->Translation );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1577,40 +1564,39 @@ void SERVERCOMMANDS_SetThingTranslation( AActor *pActor, ULONG ulPlayerExtra, Se
 //
 void SERVERCOMMANDS_SetThingProperty( AActor *pActor, ULONG ulProperty, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	ULONG	ulPropertyValue = 0;
-
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
+
+	int value = 0;
 
 	// Set one of the actor's properties, depending on what was read in.
 	switch ( ulProperty )
 	{
 	case APROP_Speed:
-
-		ulPropertyValue = FLOAT2FIXED ( pActor->Speed );
+		value = FLOAT2FIXED ( pActor->Speed );
 		break;
+
 	case APROP_Alpha:
-
-		ulPropertyValue = FLOAT2FIXED( pActor->Alpha );
+		value = FLOAT2FIXED( pActor->Alpha );
 		break;
+
 	case APROP_RenderStyle:
-
-		ulPropertyValue = pActor->RenderStyle.AsDWORD;
+		value = pActor->RenderStyle.AsDWORD;
 		break;
+
 	case APROP_JumpZ:
-
 		if ( pActor->IsKindOf( RUNTIME_CLASS( APlayerPawn )))
-			ulPropertyValue = FLOAT2FIXED ( static_cast<APlayerPawn *>( pActor )->JumpZ );
+			value = FLOAT2FIXED ( static_cast<APlayerPawn *>( pActor )->JumpZ );
 		break;
-	default:
 
+	default:
 		return;
 	}
 
-	NetCommand command( SVC_SETTHINGPROPERTY );
-	command.addShort( pActor->lNetID );
-	command.addByte( ulProperty );
-	command.addLong( ulPropertyValue );
+	ServerCommands::SetThingProperty command;
+	command.SetActor( pActor );
+	command.SetProperty( ulProperty );
+	command.SetValue( value );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1621,10 +1607,10 @@ void SERVERCOMMANDS_SetThingSound( AActor *pActor, ULONG ulSound, const char *ps
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGSOUND );
-	command.addShort( pActor->lNetID );
-	command.addByte( ulSound );
-	command.addString( pszSound );
+	ServerCommands::SetThingSound command;
+	command.SetActor( pActor );
+	command.SetSoundType( ulSound );
+	command.SetSound( pszSound );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1635,11 +1621,11 @@ void SERVERCOMMANDS_SetThingSpawnPoint( AActor *pActor, ULONG ulPlayerExtra, Ser
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGSPAWNPOINT );
-	command.addShort( pActor->lNetID );
-	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[0] ) );
-	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[1] ) );
-	command.addLong( FLOAT2FIXED ( pActor->SpawnPoint[2] ) );
+	ServerCommands::SetThingSpawnPoint command;
+	command.SetActor( pActor );
+	command.SetSpawnPointX( FLOAT2FIXED ( pActor->SpawnPoint[0] ) );
+	command.SetSpawnPointY( FLOAT2FIXED ( pActor->SpawnPoint[1] ) );
+	command.SetSpawnPointZ( FLOAT2FIXED ( pActor->SpawnPoint[2] ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1663,9 +1649,9 @@ void SERVERCOMMANDS_SetThingSpecial1( AActor *pActor, ULONG ulPlayerExtra, Serve
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGSPECIAL1 );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->special1 );
+	ServerCommands::SetThingSpecial1 command;
+	command.SetActor( pActor );
+	command.SetSpecial1( pActor->special1 );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1676,9 +1662,9 @@ void SERVERCOMMANDS_SetThingSpecial2( AActor *pActor, ULONG ulPlayerExtra, Serve
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGSPECIAL2 );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->special2 );
+	ServerCommands::SetThingSpecial2 command;
+	command.SetActor( pActor );
+	command.SetSpecial2( pActor->special2 );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1689,9 +1675,9 @@ void SERVERCOMMANDS_SetThingTics( AActor *pActor, ULONG ulPlayerExtra, ServerCom
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGTICS );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->tics );
+	ServerCommands::SetThingTics command;
+	command.SetActor( pActor );
+	command.SetTics( pActor->tics );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1702,9 +1688,9 @@ void SERVERCOMMANDS_SetThingReactionTime( AActor *pActor, ULONG ulPlayerExtra, S
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC2_SETTHINGREACTIONTIME );
-	command.addShort( pActor->lNetID );
-	command.addShort( pActor->reactiontime );
+	ServerCommands::SetThingReactionTime command;
+	command.SetActor( pActor );
+	command.SetReactiontime( pActor->reactiontime );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1715,9 +1701,9 @@ void SERVERCOMMANDS_SetThingTID( AActor *pActor, ULONG ulPlayerExtra, ServerComm
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGTID );
-	command.addShort( pActor->lNetID );
-	command.addLong( pActor->tid );
+	ServerCommands::SetThingTID command;
+	command.SetActor( pActor );
+	command.SetTid( pActor->tid );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1728,9 +1714,9 @@ void SERVERCOMMANDS_SetThingGravity( AActor *pActor, ULONG ulPlayerExtra, Server
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
-	NetCommand command( SVC_SETTHINGGRAVITY );
-	command.addShort( pActor->lNetID );
-	command.addLong( FLOAT2FIXED ( pActor->Gravity ) );
+	ServerCommands::SetThingGravity command;
+	command.SetActor( pActor );
+	command.SetGravity( FLOAT2FIXED ( pActor->Gravity ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

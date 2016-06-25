@@ -180,24 +180,6 @@ static	void	client_PlayerDropInventory( BYTESTREAM_s *pByteStream );
 static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
 
 // Thing functions.
-static	void	client_KillThing( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingState( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingTarget( BYTESTREAM_s *pByteStream );
-static	void	client_DestroyThing( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingAngle( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingAngleExact( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingWaterLevel( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingFlags( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingArguments( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingTranslation( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingProperty( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingSound( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingSpawnPoint( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingSpecial1( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingSpecial2( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingTics( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingTID( BYTESTREAM_s *pByteStream );
-static	void	client_SetThingGravity( BYTESTREAM_s *pByteStream );
 static	void	client_SetThingFrame( BYTESTREAM_s *pByteStream, bool bCallStateFunction );
 static	void	client_SetThingScale( BYTESTREAM_s *pByteStream );
 static	void	client_SetWeaponAmmoGive( BYTESTREAM_s *pByteStream );
@@ -1607,78 +1589,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_PLAYERDROPINVENTORY:
 
 		client_PlayerDropInventory( pByteStream );
-		break;
-	case SVC_KILLTHING:
-
-		client_KillThing( pByteStream );
-		break;
-	case SVC_SETTHINGSTATE:
-
-		client_SetThingState( pByteStream );
-		break;
-	case SVC_SETTHINGTARGET:
-
-		client_SetThingTarget( pByteStream );
-		break;
-	case SVC_DESTROYTHING:
-
-		client_DestroyThing( pByteStream );
-		break;
-	case SVC_SETTHINGANGLE:
-
-		client_SetThingAngle( pByteStream );
-		break;
-	case SVC_SETTHINGANGLEEXACT:
-
-		client_SetThingAngleExact( pByteStream );
-		break;
-	case SVC_SETTHINGWATERLEVEL:
-
-		client_SetThingWaterLevel( pByteStream );
-		break;
-	case SVC_SETTHINGFLAGS:
-
-		client_SetThingFlags( pByteStream );
-		break;
-	case SVC_SETTHINGARGUMENTS:
-
-		client_SetThingArguments( pByteStream );
-		break;
-	case SVC_SETTHINGTRANSLATION:
-
-		client_SetThingTranslation( pByteStream );
-		break;
-	case SVC_SETTHINGPROPERTY:
-
-		client_SetThingProperty( pByteStream );
-		break;
-	case SVC_SETTHINGSOUND:
-
-		client_SetThingSound( pByteStream );
-		break;
-	case SVC_SETTHINGSPAWNPOINT:
-
-		client_SetThingSpawnPoint( pByteStream );
-		break;
-	case SVC_SETTHINGSPECIAL1:
-
-		client_SetThingSpecial1( pByteStream );
-		break;
-	case SVC_SETTHINGSPECIAL2:
-
-		client_SetThingSpecial2( pByteStream );
-		break;
-	case SVC_SETTHINGTICS:
-
-		client_SetThingTics( pByteStream );
-		break;
-	case SVC_SETTHINGTID:
-
-		client_SetThingTID( pByteStream );
-		break;
-	case SVC_SETTHINGGRAVITY:
-
-		client_SetThingGravity( pByteStream );
 		break;
 	case SVC_SETTHINGFRAME:
 
@@ -5408,145 +5318,80 @@ void ServerCommands::MoveThingExact::Execute()
 
 //*****************************************************************************
 //
-static void client_KillThing( BYTESTREAM_s *pByteStream )
+void ServerCommands::KillThing::Execute()
 {
-	LONG		lID;
-	LONG		lHealth;
-	FName		DamageType;
-	LONG		lSourceID;
-	LONG		lInflictorID;
-	AActor		*pActor;
-	AActor		*pSource;
-	AActor		*pInflictor;
-
-	// Read in the network ID of the thing that died.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's health.
-	lHealth = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's damage type.
-	DamageType = NETWORK_ReadString( pByteStream );
-
-	// Read in the actor that killed the player.Thi
-	lSourceID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the inflictor.
-	lInflictorID = NETWORK_ReadShort( pByteStream );
-
 	// Level not loaded; ingore.
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	// Find the actor that matches the given network ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_KillThing: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Find the actor associated with the source. It's okay if this actor does not exist.
-	if ( lSourceID != -1 )
-		pSource = CLIENT_FindThingByNetID( lSourceID );
-	else
-		pSource = NULL;
-
-	// Find the actor associated with the inflictor. It's okay if this actor does not exist.
-	if ( lInflictorID != -1 )
-		pInflictor = CLIENT_FindThingByNetID( lInflictorID );
-	else
-		pInflictor = NULL;
-
 	// Set the thing's health. This should enable the proper death state to play.
-	pActor->health = lHealth;
+	victim->health = health;
 
 	// Set the thing's damage type.
-	pActor->DamageType = DamageType;
+	victim->DamageType = damageType;
 
 	// Kill the thing.
-	pActor->Die( pSource, pInflictor );
+	victim->Die( source, inflictor );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingState( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingState::Execute()
 {
-	AActor		*pActor;
-	LONG		lID;
-	LONG		lState;
-	FState		*pNewState = NULL;
+	FState *newState = NULL;
 
-	// Read in the network ID for the object to have its state changed.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the state.
-	lState = NETWORK_ReadByte( pByteStream );
-
-	// Not in a level; nothing to do (shouldn't happen!)
-	if ( gamestate != GS_LEVEL )
-		return;
-
-	// Find the actor associated with the ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingState: Unknown thing, %ld!\n", lID );
-		return;
-	}
-
-	switch ( lState )
+	switch ( state )
 	{
 	case STATE_SEE:
 
-		pNewState = pActor->SeeState;
+		newState = actor->SeeState;
 		break;
 	case STATE_SPAWN:
 
-		pNewState = pActor->SpawnState;
+		newState = actor->SpawnState;
 		break;
 	case STATE_PAIN:
 
-		pNewState = pActor->FindState(NAME_Pain);
+		newState = actor->FindState(NAME_Pain);
 		break;
 	case STATE_MELEE:
 
-		pNewState = pActor->MeleeState;
+		newState = actor->MeleeState;
 		break;
 	case STATE_MISSILE:
 
-		pNewState = pActor->MissileState;
+		newState = actor->MissileState;
 		break;
 	case STATE_DEATH:
 
-		pNewState = pActor->FindState(NAME_Death);
+		newState = actor->FindState(NAME_Death);
 		break;
 	case STATE_XDEATH:
 
-		pNewState = pActor->FindState(NAME_XDeath);
+		newState = actor->FindState(NAME_XDeath);
 		break;
 	case STATE_RAISE:
 
 		// When an actor raises, we need to do a whole bunch of other stuff.
-		P_Thing_Raise( pActor, NULL, true );
+		P_Thing_Raise( actor, NULL, true );
 		return;
 	case STATE_HEAL:
 
 		// [BB] The monster count is increased when STATE_RAISE is set, so
 		// don't do it here.
-		if ( pActor->FindState(NAME_Heal) )
+		if ( actor->FindState(NAME_Heal) )
 		{
-			pNewState = pActor->FindState(NAME_Heal);
-			S_Sound( pActor, CHAN_BODY, "vile/raise", 1, ATTN_IDLE );
+			newState = actor->FindState(NAME_Heal);
+			S_Sound( actor, CHAN_BODY, "vile/raise", 1, ATTN_IDLE );
 		}
-		else if ( pActor->IsKindOf( PClass::FindClass("Archvile")))
+		else if ( actor->IsKindOf( PClass::FindClass("Archvile")))
 		{
 			PClassActor *archvile = PClass::FindActor("Archvile");
 			if (archvile != NULL)
 			{
-				pNewState = archvile->FindState(NAME_Heal);
+				newState = archvile->FindState(NAME_Heal);
 			}
-			S_Sound( pActor, CHAN_BODY, "vile/raise", 1, ATTN_IDLE );
+			S_Sound( actor, CHAN_BODY, "vile/raise", 1, ATTN_IDLE );
 		}
 		else
 			return;
@@ -5555,248 +5400,125 @@ static void client_SetThingState( BYTESTREAM_s *pByteStream )
 
 	case STATE_IDLE:
 
-		pActor->SetIdle();
+		actor->SetIdle();
 		return;
 
 	// [Dusk]
 	case STATE_WOUND:
 
-		pNewState = pActor->FindState( NAME_Wound );
+		newState = actor->FindState( NAME_Wound );
 		break;
 	default:
 
-		CLIENT_PrintWarning( "client_SetThingState: Unknown state: %ld\n", lState );
-		return; 
+		CLIENT_PrintWarning( "client_SetThingState: Unknown state: %d\n", state );
+		return;
 	}
 
 	// [BB] We don't allow pNewState == NULL here. This function should set a state
 	// not destroy the thing, which happens if you call SetState with NULL as argument.
-	if( pNewState == NULL )
-		return;
-	// Set the angle.
-//	pActor->angle = Angle;
-	pActor->SetState( pNewState );
-//	pActor->SetStateNF( pNewState );
+	if ( newState )
+		actor->SetState( newState );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingTarget( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingTarget::Execute()
 {
-	AActor		*pActor;
-	AActor		*pTarget;
-	LONG		lID;
-	LONG		lTargetID;
-
-	// Read in the network ID for the object to have its target changed.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the new target.
-	lTargetID = NETWORK_ReadShort( pByteStream );
-
-	// Find the actor associated with the ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		// There should probably be the potential for a warning message here.
-		return;
-	}
-
-	// Find the target associated with the ID.
-	pTarget = CLIENT_FindThingByNetID( lTargetID );
-	if ( pTarget == NULL )
-	{
-		// There should probably be the potential for a warning message here.
-		return;
-	}
-
-	pActor->target = pTarget;
+	actor->target = target;
 }
 
 //*****************************************************************************
 //
-static void client_DestroyThing( BYTESTREAM_s *pByteStream )
+void ServerCommands::DestroyThing::Execute()
 {
-	AActor	*pActor;
-	LONG	lID;
-
-	// Read the actor's network ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Find the actor based on the net ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_DestroyThing: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
 	// [BB] If we spied the actor we are supposed to destory, reset our camera.
-	if ( pActor->CheckLocalView( consoleplayer ) )
+	if ( actor->CheckLocalView( consoleplayer ) )
 		CLIENT_ResetConsolePlayerCamera( );
 
 	// [BB] If we are destroying a player's body here, we must NULL the corresponding pointer.
-	if ( pActor->player && ( pActor->player->mo == pActor ) )
+	if ( actor->player && ( actor->player->mo == actor ) )
 	{
-		// [BB] We also have to stop all its associated CLIENTSIDE scripts. Otherwise 
+		// [BB] We also have to stop all its associated CLIENTSIDE scripts. Otherwise
 		// they would get disassociated and continue to run even if the player disconnects later.
 		if ( !( zacompatflags & ZACOMPATF_DONT_STOP_PLAYER_SCRIPTS_ON_DISCONNECT ) )
-			FBehavior::StaticStopMyScripts ( pActor->player->mo );
+			FBehavior::StaticStopMyScripts ( actor->player->mo );
 
-		pActor->player->mo = NULL;
+		actor->player->mo = NULL;
 	}
 
 	// Destroy the thing.
-	pActor->Destroy( );
+	actor->Destroy( );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingAngle( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingAngle::Execute()
 {
-	AActor		*pActor;
-	LONG		lID;
-	fixed_t		Angle;
-
-	// Read in the thing's network ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's new angle.
-	Angle = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-	// Now try to find the thing.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingAngle: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Finally, set the angle.
-	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
+	actor->Angles.Yaw = ANGLE2DBL ( angle );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingAngleExact( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingAngleExact::Execute()
 {
-	AActor		*pActor;
-	LONG		lID;
-	fixed_t		Angle;
-
-	// Read in the thing's network ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's new angle.
-	Angle = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the thing.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingAngleExact: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Finally, set the angle.
-	pActor->Angles.Yaw = ANGLE2DBL ( Angle );
+	actor->Angles.Yaw = ANGLE2DBL ( angle );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingWaterLevel( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingWaterLevel::Execute()
 {
-	LONG	lID;
-	AActor	*pActor;
-	LONG	lWaterLevel;
-
-	// Get the ID of the actor whose water level is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the water level.
-	lWaterLevel = NETWORK_ReadByte( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingWaterLevel: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	pActor->waterlevel = lWaterLevel;
+	actor->waterlevel = waterlevel;
 }
 
 //*****************************************************************************
 //
-static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingFlags::Execute()
 {
-	LONG	lID;
-	AActor	*pActor;
-	FlagSet flagset;
-	ULONG	ulFlags;
-
-	// Get the ID of the actor whose flags are being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the which flags are being updated.
-	flagset = static_cast<FlagSet>( NETWORK_ReadByte( pByteStream ) );
-
-	// Read in the flags.
-	ulFlags = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingFlags: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	switch ( flagset )
+	switch ( static_cast<FlagSet>( flagset ))
 	{
 	case FLAGSET_FLAGS:
 		{
 			// [BB/EP] Before changing MF_NOBLOCKMAP and MF_NOSECTOR, we have to unlink the actor from all blocks.
-			const bool relinkActor = ( ( ulFlags & ( MF_NOBLOCKMAP | MF_NOSECTOR ) ) ^ ( pActor->flags & ( MF_NOBLOCKMAP | MF_NOSECTOR ) ) ) != 0;
+			const bool relinkActor = ( ( flags & ( MF_NOBLOCKMAP | MF_NOSECTOR ) ) ^ ( actor->flags & ( MF_NOBLOCKMAP | MF_NOSECTOR ) ) ) != 0;
 			// [BB] Unlink based on the old flags.
 			if ( relinkActor )
-				pActor->UnlinkFromWorld ();
+				actor->UnlinkFromWorld ();
 
-			pActor->flags = ActorFlags::FromInt(ulFlags);
+			actor->flags = ActorFlags::FromInt(flags);
 
 			// [BB] Link based on the new flags.
 			if ( relinkActor )
-				pActor->LinkToWorld ();
+				actor->LinkToWorld ();
 		}
 		break;
 	case FLAGSET_FLAGS2:
 
-		pActor->flags2 = ActorFlags2::FromInt(ulFlags);;
+		actor->flags2 = ActorFlags2::FromInt(flags);;
 		break;
 	case FLAGSET_FLAGS3:
 
-		pActor->flags3 = ActorFlags3::FromInt(ulFlags);;
+		actor->flags3 = ActorFlags3::FromInt(flags);;
 		break;
 	case FLAGSET_FLAGS4:
 
-		pActor->flags4 = ActorFlags4::FromInt(ulFlags);;
+		actor->flags4 = ActorFlags4::FromInt(flags);;
 		break;
 	case FLAGSET_FLAGS5:
 
-		pActor->flags5 = ActorFlags5::FromInt(ulFlags);;
+		actor->flags5 = ActorFlags5::FromInt(flags);;
 		break;
 	case FLAGSET_FLAGS6:
 
-		pActor->flags6 = ActorFlags6::FromInt(ulFlags);;
+		actor->flags6 = ActorFlags6::FromInt(flags);;
 		break;
 	case FLAGSET_FLAGS7:
 
-		pActor->flags7 = ActorFlags7::FromInt(ulFlags);
+		actor->flags7 = ActorFlags7::FromInt(flags);
 		break;
 	case FLAGSET_FLAGSST:
 
-		pActor->ulSTFlags = ulFlags;
+		actor->ulSTFlags = flags;
 		break;
 	default:
 		CLIENT_PrintWarning( "client_SetThingFlags: Received an unknown flagset value: %d\n", static_cast<int>( flagset ) );
@@ -5806,329 +5528,150 @@ static void client_SetThingFlags( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetThingArguments( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingArguments::Execute()
 {
-	LONG lID = NETWORK_ReadShort( pByteStream );
-	AActor* pActor = CLIENT_FindThingByNetID( lID );
-
-	int args[5];
-	for ( unsigned int i = 0; i < countof( args ); ++i )
-		args[i] = NETWORK_ReadLong( pByteStream );
-
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingArguments: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	for ( unsigned int i = 0; i < countof( args ); ++i )
-		pActor->args[i] = args[i];
+	actor->args[0] = arg0;
+	actor->args[1] = arg1;
+	actor->args[2] = arg2;
+	actor->args[3] = arg3;
+	actor->args[4] = arg4;
 
 	// Gross hack for invisible bridges, since they set their height/radius
 	// based on their args the instant they're spawned.
 	// [WS] Added check for CustomBridge
-	if (( pActor->IsKindOf( PClass::FindClass( "InvisibleBridge" ) )) ||
-		( pActor->IsKindOf( PClass::FindClass( "AmbientSound" ) )) ||
-		( pActor->IsKindOf( PClass::FindClass( "CustomBridge" ) )))
+	if (( actor->IsKindOf( PClass::FindClass( "InvisibleBridge" ) )) ||
+		( actor->IsKindOf( PClass::FindClass( "AmbientSound" ) )) ||
+		( actor->IsKindOf( PClass::FindClass( "CustomBridge" ) )))
 	{
-		pActor->BeginPlay( );
+		actor->BeginPlay( );
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetThingTranslation( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingTranslation::Execute()
 {
-	LONG	lID;
-	LONG	lTranslation;
-	AActor	*pActor;
-
-	// Get the ID of the actor whose translation is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the actor's translation.
-	lTranslation = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingTranslation: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Finally, set the thing's translation.
-	pActor->Translation = lTranslation;
+	actor->Translation = translation;
 }
 
 //*****************************************************************************
 //
-static void client_SetThingProperty( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingProperty::Execute()
 {
-	LONG	lID;
-	ULONG	ulProperty;
-	ULONG	ulPropertyValue;
-	AActor	*pActor;
-
-	// Get the ID of the actor whose translation is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in which property is being updated.
-	ulProperty = NETWORK_ReadByte( pByteStream );
-
-	// Read in the actor's property.
-	ulPropertyValue = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingProperty: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
 	// Set one of the actor's properties, depending on what was read in.
-	switch ( ulProperty )
+	switch ( property )
 	{
 	case APROP_Speed:
-
-		pActor->Speed = FIXED2FLOAT ( ulPropertyValue );
+		actor->Speed = FIXED2FLOAT ( value );
 		break;
+
 	case APROP_Alpha:
-
-		pActor->Alpha = FIXED2FLOAT ( ulPropertyValue );
+		actor->Alpha = FIXED2FLOAT ( value );
 		break;
+
 	case APROP_RenderStyle:
-
-		pActor->RenderStyle.AsDWORD = ulPropertyValue;
+		actor->RenderStyle.AsDWORD = value;
 		break;
+
 	case APROP_JumpZ:
-
-		if ( pActor->IsKindOf( RUNTIME_CLASS( APlayerPawn )))
-			static_cast<APlayerPawn *>( pActor )->JumpZ = FIXED2FLOAT ( ulPropertyValue );
+		if ( actor->IsKindOf( RUNTIME_CLASS( APlayerPawn )))
+			static_cast<APlayerPawn *>( actor )->JumpZ = FIXED2FLOAT ( value );
 		break;
-	default:
 
-		CLIENT_PrintWarning( "client_SetThingProperty: Unknown property, %d!\n", static_cast<unsigned int> (ulProperty) );
+	default:
+		CLIENT_PrintWarning( "client_SetThingProperty: Unknown property, %d!\n", static_cast<unsigned int> (property) );
 		return;
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetThingSound( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingSound::Execute()
 {
-	LONG		lID;
-	ULONG		ulSound;
-	const char	*pszSound;
-	AActor		*pActor;
-
-	// Get the ID of the actor whose translation is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in which sound is being updated.
-	ulSound = NETWORK_ReadByte( pByteStream );
-
-	// Read in the actor's new sound.
-	pszSound = NETWORK_ReadString( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingSound: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
 	// Set one of the actor's sounds, depending on what was read in.
-	switch ( ulSound )
+	switch ( soundType )
 	{
 	case ACTORSOUND_SEESOUND:
-
-		pActor->SeeSound = pszSound;
+		actor->SeeSound = sound;
 		break;
+
 	case ACTORSOUND_ATTACKSOUND:
-
-		pActor->AttackSound = pszSound;
+		actor->AttackSound = sound;
 		break;
+
 	case ACTORSOUND_PAINSOUND:
-
-		pActor->PainSound = pszSound;
+		actor->PainSound = sound;
 		break;
+
 	case ACTORSOUND_DEATHSOUND:
-
-		pActor->DeathSound = pszSound;
+		actor->DeathSound = sound;
 		break;
+
 	case ACTORSOUND_ACTIVESOUND:
-
-		pActor->ActiveSound = pszSound;
+		actor->ActiveSound = sound;
 		break;
+
 	default:
-
-		CLIENT_PrintWarning( "client_SetThingSound: Unknown sound, %d!\n", static_cast<unsigned int> (ulSound) );
+		CLIENT_PrintWarning( "client_SetThingSound: Unknown sound, %d!\n", static_cast<unsigned int> (soundType) );
 		return;
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetThingSpawnPoint( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingSpawnPoint::Execute()
 {
-	// [BB] Get the ID of the actor whose SpawnPoint is being updated.
-	const LONG lID = NETWORK_ReadShort( pByteStream );
-
-	// [BB] Get the actor's SpawnPoint.
-	const LONG lSpawnPointX = NETWORK_ReadLong( pByteStream );
-	const LONG lSpawnPointY = NETWORK_ReadLong( pByteStream );
-	const LONG lSpawnPointZ = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the corresponding actor.
-	AActor *pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingSpawnPoint: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// [BB] Set the actor's SpawnPoint.
-	pActor->SpawnPoint[0] = FIXED2DBL ( lSpawnPointX );
-	pActor->SpawnPoint[1] = FIXED2DBL ( lSpawnPointY );
-	pActor->SpawnPoint[2] = FIXED2DBL ( lSpawnPointZ );
+	actor->SpawnPoint[0] = FIXED2DBL ( spawnPointX );
+	actor->SpawnPoint[1] = FIXED2DBL ( spawnPointY );
+	actor->SpawnPoint[2] = FIXED2DBL ( spawnPointZ );
 }
 
 //*****************************************************************************
 //
-static void client_SetThingSpecial1( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingSpecial1::Execute()
 {
-	LONG	lID;
-	LONG	lSpecial1;
-	AActor	*pActor;
-
-	// Get the ID of the actor whose special2 is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Get the actor's special2.
-	lSpecial1 = NETWORK_ReadShort( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingSpecial1: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Set one of the actor's special1.
-	pActor->special1 = lSpecial1;
+	actor->special1 = special1;
 }
 
 //*****************************************************************************
 //
-static void client_SetThingSpecial2( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingSpecial2::Execute()
 {
-	LONG	lID;
-	LONG	lSpecial2;
-	AActor	*pActor;
-
-	// Get the ID of the actor whose special2 is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Get the actor's special2.
-	lSpecial2 = NETWORK_ReadShort( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingSpecial2: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Set one of the actor's special2.
-	pActor->special2 = lSpecial2;
+	actor->special1 = special2;
 }
 
 //*****************************************************************************
 //
-static void client_SetThingTics( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingTics::Execute()
 {
-	AActor		*pActor;
-	LONG		lID;
-	LONG		lTics;
-
-	// Read in the thing's network ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's new tics.
-	lTics = NETWORK_ReadShort( pByteStream );
-
-	// Now try to find the thing.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingTics: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Finally, set the tics.
-	pActor->tics = lTics;
+	actor->tics = tics;
 }
 
 //*****************************************************************************
 //
-static void client_SetThingTID( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingTID::Execute()
 {
-	AActor		*pActor;
-	LONG		lID;
-	LONG		lTid;
-
-	// Read in the thing's network ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the thing's new TID.
-	lTid = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the thing.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
+	// [BB] Set the tid, but be careful doing so (cf. FUNC(LS_Thing_ChangeTID)).
+	if (!(actor->ObjectFlags & OF_EuthanizeMe))
 	{
-		CLIENT_PrintWarning( "client_SetThingTID: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// [BB] Finally, set the tid, but be careful doing so (cf. FUNC(LS_Thing_ChangeTID)).
-	if (!(pActor->ObjectFlags & OF_EuthanizeMe))
-	{
-		pActor->RemoveFromHash ();
-		pActor->tid = lTid;
-		pActor->AddToHash();
+		actor->RemoveFromHash();
+		actor->tid = tid;
+		actor->AddToHash();
 	}
 }
 
 //*****************************************************************************
 //
-static void client_SetThingGravity( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetThingReactionTime::Execute()
 {
-	LONG	lID;
-	LONG	lGravity;
-	AActor	*pActor;
+	actor->reactiontime = reactiontime;
+}
 
-	// Get the ID of the actor whose gravity is being updated.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Get the actor's gravity.
-	lGravity = NETWORK_ReadLong( pByteStream );
-
-	// Now try to find the corresponding actor.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetThingGravity: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// Set the actor's gravity.
-	pActor->Gravity = FIXED2FLOAT ( lGravity );
+//*****************************************************************************
+//
+void ServerCommands::SetThingGravity::Execute()
+{
+	actor->Gravity = FIXED2FLOAT ( gravity );
 }
 
 //*****************************************************************************
