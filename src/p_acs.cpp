@@ -913,31 +913,6 @@ void ACSStringPool::Dump() const
 
 //============================================================================
 //
-// ScriptPresentation
-//
-// Returns a presentable version of the script number.
-//
-//============================================================================
-
-static FString ScriptPresentation(int script)
-{
-	FString out = "script ";
-
-	if (script < 0)
-	{
-		FName scrname = FName(ENamedName(-script));
-		if (scrname.IsValidName())
-		{
-			out << '"' << scrname.GetChars() << '"';
-			return out;
-		}
-	}
-	out.AppendFormat("%d", script);
-	return out;
-}
-
-//============================================================================
-//
 // P_MarkWorldVarStrings
 //
 //============================================================================
@@ -996,6 +971,31 @@ CCMD(globstr)
 	GlobalACSStrings.Dump();
 }
 #endif
+
+//============================================================================
+//
+// ScriptPresentation
+//
+// Returns a presentable version of the script number.
+//
+//============================================================================
+
+static FString ScriptPresentation(int script)
+{
+	FString out = "script ";
+
+	if (script < 0)
+	{
+		FName scrname = FName(ENamedName(-script));
+		if (scrname.IsValidName())
+		{
+			out << '"' << scrname.GetChars() << '"';
+			return out;
+		}
+	}
+	out.AppendFormat("%d", script);
+	return out;
+}
 
 //============================================================================
 //
@@ -2046,6 +2046,7 @@ FBehavior::FBehavior()
 	memset (MapVarStore, 0, sizeof(MapVarStore));
 	ModuleName[0] = 0;
 	FunctionProfileData = NULL;
+
 }
 	
 	
@@ -2068,6 +2069,8 @@ bool FBehavior::Init(int lumpnum, FileReader * fr, int len)
 	//    adding it to the list.
 
 	if (fr == NULL) len = Wads.LumpLength (lumpnum);
+
+
 
 	// Any behaviors smaller than 32 bytes cannot possibly contain anything useful.
 	// (16 bytes for a completely empty behavior + 12 bytes for one script header
@@ -3756,6 +3759,7 @@ void DLevelScript::SetLineTexture (int lineid, int side, int position, int name)
 		default:
 			break;
 		}
+
 	}
 
 	// [BB] If we're the server, tell clients about this texture change.
@@ -4015,7 +4019,6 @@ showme:
 							fa1 = viewer->BlendA;
 						}
 					}
-
 					new DFlashFader (fr1, fg1, fb1, fa1, fr2, fg2, fb2, fa2, ftime, viewer->mo);
 				}
 			}
@@ -11069,7 +11072,6 @@ int P_StartScript (AActor *who, line_t *where, int script, const char *map, cons
 					return false;
 				}
 			}
-
 			DLevelScript *runningScript = P_GetScriptGoing (who, where, script,
 				scriptdata, module, args, argcount, flags);
 			if (runningScript != NULL)
