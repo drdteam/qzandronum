@@ -1391,14 +1391,14 @@ void SERVERCOMMANDS_KillThing( AActor *pActor, AActor *pSource, AActor *pInflict
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_SetThingState( AActor *pActor, ULONG ulState, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetThingState( AActor *pActor, NetworkActorState state, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( !EnsureActorHasNetID (pActor) )
 		return;
 
 	ServerCommands::SetThingState command;
 	command.SetActor( pActor );
-	command.SetState( ulState );
+	command.SetState( state );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

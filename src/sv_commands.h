@@ -144,7 +144,7 @@ void	SERVERCOMMANDS_SpawnThingExactNoNetID( AActor *pActor, ULONG ulPlayerExtra 
 void	SERVERCOMMANDS_MoveThing( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_MoveThingExact( AActor *pActor, ULONG ulBits, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_KillThing( AActor *pActor, AActor *pSource, AActor *pInflictor );
-void	SERVERCOMMANDS_SetThingState( AActor *pActor, ULONG ulState, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
+void	SERVERCOMMANDS_SetThingState( AActor *pActor, NetworkActorState state, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );
 void	SERVERCOMMANDS_SetThingTarget( AActor *pActor );
 void	SERVERCOMMANDS_DestroyThing( AActor *pActor );
 void	SERVERCOMMANDS_SetThingAngle( AActor *pActor, ULONG ulPlayerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 );

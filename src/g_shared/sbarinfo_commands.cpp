@@ -299,15 +299,9 @@ class CommandDrawImage : public SBarInfoCommandFlowControl
 			// [BB]
 			else if(type == RUNEICON)
 			{
-				AInventory *item = statusBar->CPlayer->mo->Inventory;
-				for(item = statusBar->CPlayer->mo->Inventory;item != NULL;item = item->Inventory)
-				{
-					if(item->Icon.isValid() && item->GetClass() != PClass::FindClass("Rune") && item->IsKindOf(PClass::FindClass("Rune")))
-					{
-						texture = TexMan[item->Icon];
-						break;
-					}
-				}
+				AInventory *item = statusBar->CPlayer->mo->Rune;
+				if( ( item != NULL ) && item->Icon.isValid() )
+					texture = TexMan[item->Icon];
 			}
 			else if(type == INVENTORYICON)
 				texture = TexMan[sprite];

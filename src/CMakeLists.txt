@@ -599,6 +599,8 @@ endif()
 
 if( MSVC )
 	set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DELAYLOAD:\"fmodex${X64}.dll\"" )
+	# [BB] Use object level parallelism for our main target.
+	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP" )
 endif( MSVC )
 
 # Check for functions that may or may not exist.

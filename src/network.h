@@ -122,18 +122,21 @@ typedef TFlags<ClientJumpUpdateFlag, unsigned int> ClientJumpUpdateFlags;
 DEFINE_TFLAGS_OPERATORS (ClientJumpUpdateFlags)
 
 // Identifying states (the cheap & easy way out)
-#define	STATE_SPAWN				1
-#define	STATE_SEE				2
-#define	STATE_PAIN				3
-#define	STATE_MELEE				4
-#define	STATE_MISSILE			5
-#define	STATE_DEATH				6
-#define	STATE_XDEATH			7
-#define	STATE_RAISE				8
-#define	STATE_HEAL				9
-#define	STATE_CRASH				10
-#define	STATE_IDLE				11
-#define	STATE_WOUND				12 // [Dusk]
+enum NetworkActorState
+{
+	STATE_SPAWN = 1,
+	STATE_SEE,
+	STATE_PAIN,
+	STATE_MELEE,
+	STATE_MISSILE,
+	STATE_DEATH,
+	STATE_XDEATH,
+	STATE_RAISE,
+	STATE_HEAL,
+	STATE_CRASH,
+	STATE_IDLE,
+	STATE_WOUND, // [Dusk]
+};
 
 // Identifying player states (again, cheap & easy)
 typedef enum
