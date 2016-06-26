@@ -47,20 +47,20 @@
 # ║ Angle              │    angle_t    │          4           │ a 32bit binary angle (angle_t)                ║
 # ║ AproxFixed         │    fixed_t    │          2           │ the 16 most significant bits of a fixed_t     ║
 # ║ AproxAngle         │    angle_t    │          2           │ the 16 most significant bits of a angle_t     ║
-# ║ Bool               │     bool      │          1           │ boolean value sent as 1 byte                  ║
-# ║ Bit                │     bool      │        1 bit         │ boolean value stored as 1 bit                 ║
+# ║ Bool               │     bool      │        1 bit         │ boolean value stored as 1 bit                 ║
 # ║ ShortByte<N>       │      int      │       N bits         │ an integer value of N bits, 1 ≤ N ≤ 8         ║
 # ║ Variable           │      int      │   At least 2 bits,   │ a 32-bit integer sent with as few bytes as    ║
 # ║                    │               │  at most 4 + 2 bits  │ possible, with 2 bits used to indicate length ║
 # ║ Actor<T>           │    AActor*    │          2           │ a game actor, sent with its net ID            ║
 # ║ Class<T>           │ const PClass* │          2           │ an object class, sent by its ID               ║
 # ║ Player             │   player_t*   │          1           │ a player index, sent as a player number       ║
+# ║ Struct             │    struct     │          ∑           │ all members of the structure                  ║
 # ╚════════════════════╧═══════════════╧══════════════════════╧═══════════════════════════════════════════════╝
 #
 # BIT PACKING
 # ───────────
 #
-# The Bit, ShortByte and Variable types use bit packing to provide finer control over the command packet. Each bit is
+# The Bool, ShortByte and Variable types use bit packing to provide finer control over the command packet. Each bit is
 # written into a control byte. The first bit written will allocate a byte for it and consequent bits, with the next bits
 # bitshifted into the same byte as long as there is enough room in the byte for the bits. If the control byte is full
 # and a new bit needs to be written, a new byte is allocated for it and subsequent bits.

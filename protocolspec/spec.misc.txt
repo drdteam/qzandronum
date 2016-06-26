@@ -6,6 +6,16 @@ Command ACSScriptExecute
 	Variable arg0
 	Variable arg1
 	Variable arg2
-	Bit backSide
-	Bit always
+	Bool backSide
+	Bool always
+EndCommand
+
+Struct JoinSlot
+	Byte player
+	Byte team
+EndStruct
+
+Command SyncJoinQueue
+	ExtendedCommand
+	Struct<JoinSlot>[] slots
 EndCommand

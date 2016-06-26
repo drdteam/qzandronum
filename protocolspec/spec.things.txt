@@ -294,9 +294,9 @@ Command TeleportThing
 	AproxFixed momz
 	Short reactiontime
 	Angle angle
-	Bit sourcefog
-	Bit destfog
-	Bit telezoom
+	Bool sourcefog
+	Bool destfog
+	Bool telezoom
 EndCommand
 
 Command ThingActivate

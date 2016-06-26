@@ -6,7 +6,7 @@ Command WeaponRailgun
 	Long color2
 	Float maxdiff
 	ShortByte<7> flags
-	Bit extended
+	Bool extended
 	If (extended)
 		Long angleoffset
 		Class spawnclass with NullAllowed

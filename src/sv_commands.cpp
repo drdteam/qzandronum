@@ -4327,16 +4327,17 @@ void SERVERCOMMANDS_Earthquake( AActor *pCenter, LONG lIntensity, LONG lDuration
 //
 void SERVERCOMMANDS_SyncJoinQueue( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC2_SYNCJOINQUEUE );
-	command.addByte( JOINQUEUE_GetSize() );
+	ServerCommands::SyncJoinQueue command;
+	TArray<ServerCommands::JoinSlot> joinSlots;
+	joinSlots.Reserve( JOINQUEUE_GetSize() );
 
 	for ( unsigned int i = 0; i < JOINQUEUE_GetSize(); ++i )
 	{
-		const JoinSlot& slot = JOINQUEUE_GetSlotAt( i );
-		command.addByte( slot.player );
-		command.addByte( slot.team );
+		joinSlots[i].player = JOINQUEUE_GetSlotAt( i ).player;
+		joinSlots[i].team = JOINQUEUE_GetSlotAt( i ).team;
 	}
 
+	command.SetSlots( joinSlots );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

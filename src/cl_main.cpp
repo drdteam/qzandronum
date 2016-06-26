@@ -1275,6 +1275,10 @@ void CLIENT_ParsePacket( BYTESTREAM_s *pByteStream, bool bSequencedPacket )
 		CLIENTDEMO_MarkCurrentPosition();
 		lCommand = NETWORK_ReadByte( pByteStream );
 
+		// [TP] Reset the bit reading buffer.
+		pByteStream->bitBuffer = NULL;
+		pByteStream->bitShift = -1;
+
 		// End of message.
 		if ( lCommand == -1 )
 			break;
@@ -2528,17 +2532,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 			case SVC2_SOUNDSECTOR:
 				client_SoundSector( pByteStream );
-				break;
-
-			case SVC2_SYNCJOINQUEUE:
-				JOINQUEUE_ClearList();
-
-				for ( int i = NETWORK_ReadByte( pByteStream ); i > 0; --i )
-				{
-					int player = NETWORK_ReadByte( pByteStream );
-					int team = NETWORK_ReadByte( pByteStream );
-					JOINQUEUE_AddPlayer( player, team );
-				}
 				break;
 
 			case SVC2_PUSHTOJOINQUEUE:
@@ -10540,6 +10533,16 @@ void APathFollower::InitFromStream ( BYTESTREAM_s *pByteStream )
 		CLIENT_PrintWarning( "APathFollower::InitFromStream: Couldn't find actor.\n" );
 		return;
 	}
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SyncJoinQueue::Execute()
+{
+	JOINQUEUE_ClearList();
+
+	for ( unsigned int i = 0; i < slots.Size(); ++i )
+		JOINQUEUE_AddPlayer( slots[i].player, slots[i].team );
 }
 
 //*****************************************************************************

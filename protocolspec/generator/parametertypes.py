@@ -36,13 +36,22 @@ passbyvalue = {'int', 'unsigned int', 'short', 'unsigned short', 'long', 'unsign
 			   'BYTE', 'SBYTE', 'WORD', 'SWORD', 'DWORD', 'SDWORD', 'QWORD', 'SQWORD',
 			   'FName', 'fixed_t', 'angle_t', 'size_t'}
 
+def getParameterClass(typename):
+	'''
+	Returns a class representing a the given parameter type
+	'''
+	from sys import modules
+	classname = capwords(typename.lower()) + 'Parameter'
+	return getattr(modules[__name__], classname)
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 class SpecParameter:
 	'''
 	Represents a parameter in a server command.
 	'''
-	def __init__(self, typename, name, specialization=None, attributes=None, isarray=False, condition=None):
+	def __init__(self, typename, name, specialization = None, attributes = None, isarray = False,
+	             condition = None, spec = None):
 		self.typename = typename
 		self.name = name
 		self.specialization = specialization
@@ -160,20 +169,6 @@ class FloatParameter(SpecParameter):
 # ----------------------------------------------------------------------------------------------------------------------
 
 class BoolParameter(SpecParameter):
-	def __init__(self, **args):
-		super().__init__(**args)
-		self.cxxtypename = 'bool'
-
-	def writeread(self, writer, command, parametername):
-		# Bool needs a little bit different treatment
-		writer.writeline('command.{parametername} = !!NETWORK_ReadByte( bytestream );'.format(**locals()))
-
-	def writesend(self, writer, command, parametername):
-		writer.writecontext('command.addByte( this->{parametername} );'.format(**locals()))
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-class BitParameter(SpecParameter):
 	def __init__(self, **args):
 		super().__init__(**args)
 		self.cxxtypename = 'bool'
@@ -396,15 +391,29 @@ class AproxangleParameter(AproxfixedParameter):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-class JoinslotParameter(SpecParameter):
+class StructParameter(SpecParameter):
+	'''
+		The struct parameter handles custom compound types. Can be used with arrays and to avoid code duplication.
+		The specification keeps track of struct registers. This class gets the struct definition from the spec,
+		and implements its send, read and check writing by delegating them to its members.
+	'''
 	def __init__(self, **args):
 		super().__init__(**args)
-		self.cxxtypename = 'JoinSlot'
+		self.cxxtypename = 'struct %s' % args['specialization']
+		self.struct = args['spec'].findStructByName(args['specialization'])
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername}.player = NETWORK_ReadByte( bytestream );'.format(**locals()))
-		writer.writeline('command.{parametername}.team = NETWORK_ReadByte( bytestream );'.format(**locals()))
+	def iterateMembers(self, parametername):
+		for member in self.struct['members'].values():
+			yield member, parametername + '.' + member.name
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addByte( this->{parametername}.player );'.format(**locals()))
-		writer.writeline('command.addByte( this->{parametername}.team );'.format(**locals()))
+	def writeread(self, parametername, **args):
+		for member, membername in self.iterateMembers(parametername):
+			member.writeread(parametername = membername, **args)
+
+	def writesend(self, parametername, **args):
+		for member, membername in self.iterateMembers(parametername):
+			member.writesend(parametername = membername, **args)
+
+	def writereadchecks(self, parametername, **args):
+		for member, membername in self.iterateMembers(parametername):
+			member.writereadchecks(parametername = membername, **args)

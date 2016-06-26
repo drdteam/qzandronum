@@ -270,7 +270,7 @@ class SourceWriter(SourceCodeWriter):
 
 			if not parameter.isarray:
 				# If it's not an array, just call the method
-				getattr(parameter, methodname)(self, command, parameter.name)
+				getattr(parameter, methodname)(writer = self, command = command, parametername = parameter.name)
 			else:
 				# Otherwise, we'll need to treat it a bit differently:
 				if self.writingsender:
@@ -293,11 +293,11 @@ class SourceWriter(SourceCodeWriter):
 					# Now use it to iterate the array for per-element code.
 					self.writeline('for ( unsigned int i = 0; i < %s; ++i )' % parameter.sizevariable)
 
-				# In any case, we have no written a for loop. Now, we begin a scope, and write the iteration.
+				# In any case, we have now written a for loop. Now, we begin a scope, and write the iteration.
 				# The parameter name gets "[i]" appended, so that it references the correct element, instead of the
 				# array itself.
 				self.startscope()
-				getattr(parameter, methodname)(self, command, parameter.name + '[i]')
+				getattr(parameter, methodname)(writer = self, command = command, parametername = parameter.name + '[i]')
 				self.endscope()
 
 		# If we're still in an if-block, close it now.
@@ -378,6 +378,20 @@ class HeaderWriter(SourceCodeWriter):
 		self.writeline('namespace ServerCommands')
 		self.startscope()
 
+		# Write down the defintions for all structures.
+		for struct in self.spec.protocols['GameServerToClient']['structs'].values():
+			self.writeline('struct %s' % struct['name'])
+			self.writeline('{')
+			self.indent()
+			for name, parameter in struct['members'].items():
+				self.writeline('{type} {name};'.format(
+					type = parameter.cxxtypename,
+					name = name,
+				))
+			self.unindent()
+			self.writeline('};')
+			self.writeline('')
+
 		# For each server command, create a class to represent it.
 		for command in self.getcommands('GameServerToClient'):
 			self.writeline('class %s' % command.name)
@@ -442,14 +456,14 @@ class HeaderWriter(SourceCodeWriter):
 			try:
 				assert int(parameter.specialization) in range(1, 8 + 1) # [1…8]
 			except:
-				raise Exception('Short bytes must be specialized to a number in range 1…8')
+				raise RuntimeError('Short bytes must be specialized to a number in range 1…8')
 
 		# Allow strings to be specialized into FNames
 		if definition == 'FString' and parameter.specialization:
 			if parameter.specialization == 'Name':
 				definition = 'FName'
 			else:
-				raise Exception('String parameters can only be specialized to Name')
+				raise RuntimeError('String parameters can only be specialized to Name')
 
 		# If this is an array, encapsulate it into a TArray.
 		if parameter.isarray:
@@ -478,13 +492,13 @@ def main():
 
 	try:
 		spec.loadfromfile(args.spec)
-	except Exception as error:
+	except RuntimeError as error:
 		# Got an error. Find out where it came from and print an IDE-friendly message to stderr.
 		from sys import stderr
 		print('{filename}:{linenumber}: error: {errormessage}'.format(
 			filename = spec.currentfilename,
 			linenumber = spec.linenumber,
-			errormessage = type(error) == Exception and str(error) or ('[%s] %s' % (type(error).__name__, error))
+			errormessage = str(error),
 		), file = stderr)
 		return 1
 	else:
