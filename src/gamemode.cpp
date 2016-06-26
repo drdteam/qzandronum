@@ -561,9 +561,9 @@ void GAMEMODE_RespawnDeadSpectatorsAndPopQueue( BYTE Playerstate )
 		}
 
 		// We don't want to respawn players as soon as the map starts; we only
-		// want to respawn dead spectators.
-		if (( players[ulIdx].mo ) &&
-			( players[ulIdx].mo->health > 0 ) &&
+		// [BB] respawn all dead players and dead spectators.
+		if ((( players[ulIdx].mo == NULL ) ||
+			( players[ulIdx].mo->health > 0 )) &&
 			( players[ulIdx].bDeadSpectator == false ))
 		{
 			continue;
