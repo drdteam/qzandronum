@@ -24,6 +24,8 @@ add_executable( master-97
 	${ZAN_DIR}/huffman/huffman.cpp
 )
 
+add_dependencies( master-97 revision_check )
+
 if( WIN32 )
 	target_link_libraries( master-97 ws2_32 winmm )
 endif( WIN32 )

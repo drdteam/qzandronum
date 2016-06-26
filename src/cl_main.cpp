@@ -4766,8 +4766,11 @@ void ServerCommands::SetConsolePlayer::Execute()
 		return;
 
 	// In a client demo, don't lose the userinfo we gave to our console player.
-	if ( CLIENTDEMO_IsPlaying( ))
-		memcpy( &players[playerNumber].userinfo, &players[consoleplayer].userinfo, sizeof( userinfo_t ));
+	if ( CLIENTDEMO_IsPlaying() && ( playerNumber != consoleplayer ))
+	{
+		players[playerNumber].userinfo.TransferFrom( players[consoleplayer].userinfo );
+		players[consoleplayer].userinfo.Reset();
+	}
 
 	// Otherwise, since it's valid, set our local player index to this.
 	consoleplayer = playerNumber;
