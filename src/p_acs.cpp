@@ -3771,6 +3771,13 @@ void DLevelScript::ReplaceTextures (int fromnamei, int tonamei, int flags)
 {
 	const char *fromname = FBehavior::StaticLookupString (fromnamei);
 	const char *toname = FBehavior::StaticLookupString (tonamei);
+	// [BB] Moved this to a new function the client can call.
+	DLevelScript::ReplaceTextures ( fromname, toname, flags );
+}
+
+// [BB]
+void DLevelScript::ReplaceTextures (const char *fromname, const char *toname, int flags)
+{
 	FTextureID picnum1, picnum2;
 
 	if (fromname == NULL)
@@ -3780,7 +3787,7 @@ void DLevelScript::ReplaceTextures (int fromnamei, int tonamei, int flags)
 	// arguments. This way the amount of nettraffic needed is fixed and doesn't depend of the number
 	// of lines or sectors that use the replaced texture.
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ))
-		SERVERCOMMANDS_ReplaceTextures ( fromnamei, tonamei, flags );
+		SERVERCOMMANDS_ReplaceTextures ( fromname, toname, flags );
 
 	if ((flags ^ (NOT_BOTTOM | NOT_MIDDLE | NOT_TOP)) != 0)
 	{

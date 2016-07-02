@@ -4486,11 +4486,11 @@ void SERVERCOMMANDS_CreateTranslation( ULONG ulTranslation, ULONG ulStart, ULONG
 
 //*****************************************************************************
 //
-void SERVERCOMMANDS_ReplaceTextures( int iFromname, int iToname, int iTexFlags, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_ReplaceTextures( const char *Fromname, const char *Toname, int iTexFlags, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	ServerCommands::ReplaceTextures command;
-	command.SetFromTexture( iFromname );
-	command.SetToTexture( iToname );
+	command.SetFromTexture( Fromname );
+	command.SetToTexture( Toname );
 	command.SetTextureFlags( iTexFlags );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
