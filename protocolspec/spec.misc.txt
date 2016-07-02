@@ -19,3 +19,9 @@ Command SyncJoinQueue
 	ExtendedCommand
 	Struct<JoinSlot>[] slots
 EndCommand
+
+Command ReplaceTextures
+	Long fromTexture
+	Long toTexture
+	Byte textureFlags
+EndCommand

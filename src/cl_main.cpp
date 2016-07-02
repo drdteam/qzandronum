@@ -345,12 +345,6 @@ static	void	client_CreateTranslation( BYTESTREAM_s *pByteStream, bool bIsTypeTwo
 static	void	client_DoPusher( BYTESTREAM_s *pByteStream );
 static	void	client_AdjustPusher( BYTESTREAM_s *pByteStream );
 
-class STClient {
-public:
-	// [BB] Needs to be encapsulated in STClient, because STClient is friend of DLevelScript.
-	static void ReplaceTextures( BYTESTREAM_s *pByteStream );
-};
-
 //*****************************************************************************
 //	VARIABLES
 
@@ -2015,10 +2009,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_CREATETRANSLATION2:
 
 		client_CreateTranslation( pByteStream, true );
-		break;
-	case SVC_REPLACETEXTURES:
-
-		STClient::ReplaceTextures( pByteStream );
 		break;
 
 	case SVC_DOPUSHER:
@@ -9779,13 +9769,9 @@ static void client_AdjustPusher( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-void STClient::ReplaceTextures( BYTESTREAM_s *pByteStream )
+void ServerCommands::ReplaceTextures::Execute()
 {
-	int iFromname = NETWORK_ReadLong( pByteStream );
-	int iToname = NETWORK_ReadLong( pByteStream );
-	int iTexFlags = NETWORK_ReadByte( pByteStream );
-
-	DLevelScript::ReplaceTextures ( iFromname, iToname, iTexFlags );
+	DLevelScript::ReplaceTextures( fromTexture, toTexture, textureFlags );
 }
 
 //*****************************************************************************

@@ -4488,10 +4488,10 @@ void SERVERCOMMANDS_CreateTranslation( ULONG ulTranslation, ULONG ulStart, ULONG
 //
 void SERVERCOMMANDS_ReplaceTextures( int iFromname, int iToname, int iTexFlags, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_REPLACETEXTURES );
-	command.addLong ( iFromname );
-	command.addLong ( iToname );
-	command.addByte ( iTexFlags );
+	ServerCommands::ReplaceTextures command;
+	command.SetFromTexture( iFromname );
+	command.SetToTexture( iToname );
+	command.SetTextureFlags( iTexFlags );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
