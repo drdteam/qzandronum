@@ -195,6 +195,9 @@ void DCeiling::Tick ()
 				if ( NETWORK_GetState() == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetSectorFlat( m_Sector - sectors );
 
+				// [BB] Also, mark this sector as having its flat changed.
+				m_Sector->bFlatChange = true;
+
 				// fall through
 			default:
 
@@ -268,6 +271,9 @@ void DCeiling::Tick ()
 				// [TP] If we're the server, tell the client to change the ceiling texture.
 				if ( NETWORK_GetState() == NETSTATE_SERVER )
 					SERVERCOMMANDS_SetSectorFlat( m_Sector - sectors );
+
+				// [BB] Also, mark this sector as having its flat changed.
+				m_Sector->bFlatChange = true;
 
 				// fall through
 			default:
