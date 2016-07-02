@@ -73,6 +73,7 @@ snes_spc/*.user
 # /sqlite/
 sqlite/*.c
 sqlite/*.h
+sqlite/sqlite-*.tar.gz
 
 # /src/
 src/gitinfo.h

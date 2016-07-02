@@ -241,10 +241,6 @@ static	void	client_SoundSector( BYTESTREAM_s *pByteStream );
 static	void	client_SoundPoint( BYTESTREAM_s *pByteStream );
 static	void	client_AnnouncerSound( BYTESTREAM_s *pByteSream );
 
-// Sector sequence commands.
-static	void	client_StartSectorSequence( BYTESTREAM_s *pByteStream );
-static	void	client_StopSectorSequence( BYTESTREAM_s *pByteStream );
-
 // Vote commands.
 static	void	client_CallVote( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerVote( BYTESTREAM_s *pByteStream );
@@ -1722,14 +1718,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_SOUNDPOINT:
 
 		client_SoundPoint( pByteStream );
-		break;
-	case SVC_STARTSECTORSEQUENCE:
-
-		client_StartSectorSequence( pByteStream );
-		break;
-	case SVC_STOPSECTORSEQUENCE:
-
-		client_StopSectorSequence( pByteStream );
 		break;
 	case SVC_CALLVOTE:
 
@@ -7461,52 +7449,18 @@ static void client_AnnouncerSound( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_StartSectorSequence( BYTESTREAM_s *pByteStream )
+void ServerCommands::StartSectorSequence::Execute()
 {
-	LONG		lSectorID;
-	const char	*pszSequence;
-	sector_t	*pSector;
-
-	// Read in the sector ID.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	const int channel = NETWORK_ReadByte( pByteStream );
-
-	// Read in the sound sequence to play.
-	pszSequence = NETWORK_ReadString( pByteStream );
-
-	const int modenum = NETWORK_ReadByte( pByteStream );
-
-	// Make sure the sector ID is valid.
-	if (( lSectorID >= 0 ) && ( lSectorID < numsectors ))
-		pSector = &sectors[lSectorID];
-	else
-		return;
-
-	// Finally, play the given sound sequence for this sector.
-	SN_StartSequence( pSector, channel, pszSequence, modenum );
+	SN_StartSequence( sector, channel, sequence.GetChars(), modeNum );
 }
 
 //*****************************************************************************
 //
-static void client_StopSectorSequence( BYTESTREAM_s *pByteStream )
+void ServerCommands::StopSectorSequence::Execute()
 {
-	LONG		lSectorID;
-	sector_t	*pSector;
-
-	// Read in the sector ID.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Make sure the sector ID is valid.
-	if (( lSectorID >= 0 ) && ( lSectorID < numsectors ))
-		pSector = &sectors[lSectorID];
-	else
-		return;
-
-	// Finally, stop the sound sequence for this sector.
 	// [BB] We don't know which channel is supposed to stop, so just stop floor and ceiling for now.
-	SN_StopSequence( pSector, CHAN_CEILING );
-	SN_StopSequence( pSector, CHAN_FLOOR );
+	SN_StopSequence( sector, CHAN_CEILING );
+	SN_StopSequence( sector, CHAN_FLOOR );
 }
 
 //*****************************************************************************

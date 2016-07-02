@@ -58,6 +58,7 @@
 -	- Fixed: Player start types were selected based on the CVARs deathmatch and teamgame instead of the GAMEMODE flags DEATHMATCH and TEAMGAME. [Torr Samaho]
 -	- Fixed: A titlemap run with gamemode cooperative and dead spectators was not started correctly. [Edward-san, Torr Samaho]
 -	- Fixed: The ACS function ReplaceTextures didn't show an effect for clients already in the game. [Torr Samaho]
+-	- Fixed: Certain code pointers like A_PlaySound didn't work on MorphFlash/UnMorphFlash online. [Torr Samaho]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]

@@ -3216,11 +3216,11 @@ void SERVERCOMMANDS_StartSectorSequence( sector_t *pSector, const int Channel, c
 	if (( lSectorID < 0 ) || ( lSectorID >= numsectors ))
 		return;
 
-	NetCommand command ( SVC_STARTSECTORSEQUENCE );
-	command.addShort ( lSectorID );
-	command.addByte ( Channel );
-	command.addString ( pszSequence );
-	command.addByte ( Modenum );
+	ServerCommands::StartSectorSequence command;
+	command.SetSector( pSector );
+	command.SetChannel( Channel );
+	command.SetSequence( pszSequence );
+	command.SetModeNum( Modenum );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3234,8 +3234,8 @@ void SERVERCOMMANDS_StopSectorSequence( sector_t *pSector, ULONG ulPlayerExtra, 
 	if (( lSectorID < 0 ) || ( lSectorID >= numsectors ))
 		return;
 
-	NetCommand command ( SVC_STOPSECTORSEQUENCE );
-	command.addShort ( lSectorID );
+	ServerCommands::StopSectorSequence command;
+	command.SetSector( pSector );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

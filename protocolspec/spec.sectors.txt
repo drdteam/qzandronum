@@ -136,3 +136,14 @@ EndCommand
 
 Command DestroyAllSectorMovers
 EndCommand
+
+Command StartSectorSequence
+	Sector sector
+	Byte channel
+	String sequence
+	Byte modeNum
+EndCommand
+
+Command StopSectorSequence
+	Sector sector
+EndCommand
