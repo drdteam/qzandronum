@@ -1094,6 +1094,7 @@ set( NOT_COMPILED_SOURCE_FILES
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.players.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.print.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.things.txt
+	${CMAKE_SOURCE_DIR}/protocolspec/spec.sectors.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.weapons.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.misc.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/generator/codegenerator.py

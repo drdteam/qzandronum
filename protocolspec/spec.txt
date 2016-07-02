@@ -54,6 +54,7 @@
 # ║ Actor<T>           │    AActor*    │          2           │ a game actor, sent with its net ID            ║
 # ║ Class<T>           │ const PClass* │          2           │ an object class, sent by its ID               ║
 # ║ Player             │   player_t*   │          1           │ a player index, sent as a player number       ║
+# ║ Sector             │   sector_t*   │          2           │ a sector, sent as a 2-byte sector number      ║
 # ║ Struct             │    struct     │          ∑           │ all members of the structure                  ║
 # ╚════════════════════╧═══════════════╧══════════════════════╧═══════════════════════════════════════════════╝
 #
@@ -150,6 +151,7 @@ Protocol GameServerToClient
 	Include "spec.players.txt"
 	Include "spec.print.txt"
 	Include "spec.things.txt"
+	Include "spec.sectors.txt"
 	Include "spec.weapons.txt"
 	Include "spec.misc.txt"
 EndProtocol

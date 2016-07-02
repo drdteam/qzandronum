@@ -391,6 +391,40 @@ class AproxangleParameter(AproxfixedParameter):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+class SectorParameter(SpecParameter):
+	def __init__(self, **args):
+		super().__init__(**args)
+		self.cxxtypename = 'sector_t *'
+
+	def writeread(self, writer, command, parametername):
+		# We first store a temporary variable containing the sector number, and then use CLIENT_FindSectorByID to
+		# get the sector parameter
+		sectorNum = next(writer.tempvar)
+		self.sectorNum = sectorNum
+		writer.declare('int', sectorNum)
+		writer.writeline('{sectorNum} = NETWORK_ReadShort( bytestream );'.format(**locals()))
+		writer.writeline('command.{parametername} = CLIENT_FindSectorByID( {sectorNum} );'.format(**locals()))
+
+	def writereadchecks(self, writer, command, parametername):
+		sectorNum = self.sectorNum
+
+		# If we don't allow the parameter to be NULL, write code to check whether it is valid.
+		if 'nullallowed' not in self.attributes:
+			writer.writeline('')
+			writer.writecontext('''
+				if ( command.{parametername} == NULL )
+				{{
+					CLIENT_PrintWarning( "{commandname}: unknown sector number for {parametername}: %d\\n", {sectorNum} );
+					return true;
+				}}
+
+				'''.format(commandname = command.name, **locals()))
+
+	def writesend(self, writer, command, parametername):
+		writer.writeline('command.addShort( this->{parametername} ? this->{parametername} - sectors : -1 );'.format(**locals()))
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 class StructParameter(SpecParameter):
 	'''
 		The struct parameter handles custom compound types. Can be used with arrays and to avoid code duplication.

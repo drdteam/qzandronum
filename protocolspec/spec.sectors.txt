@@ -1,0 +1,58 @@
+Command SetSectorFloorPlane
+	Sector sector
+	AproxFixed height
+EndCommand
+
+Command SetSectorCeilingPlane
+	Sector sector
+	AproxFixed height
+EndCommand
+
+Command SetSectorFloorPlaneSlope
+	Sector sector
+	AproxFixed a
+	AproxFixed b
+	AproxFixed c
+EndCommand
+
+Command SetSectorCeilingPlaneSlope
+	Sector sector
+	AproxFixed a
+	AproxFixed b
+	AproxFixed c
+EndCommand
+
+Command SetSectorLightLevel
+	Sector sector
+	Short lightLevel
+EndCommand
+
+Command SetSectorColor
+	Sector sector
+	Byte red
+	Byte green
+	Byte blue
+	Byte desaturate
+EndCommand
+
+Command SetSectorColorByTag
+	Short tag
+	Byte red
+	Byte green
+	Byte blue
+	Byte desaturate
+EndCommand
+
+Command SetSectorFade
+	Sector sector
+	Byte red
+	Byte green
+	Byte blue
+EndCommand
+
+Command SetSectorFadeByTag
+	Short tag
+	Byte red
+	Byte green
+	Byte blue
+EndCommand
