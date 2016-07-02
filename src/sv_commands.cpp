@@ -2033,9 +2033,9 @@ void SERVERCOMMANDS_SpawnPuff( AActor *pActor, ULONG ulState, bool bSendTranslat
 //
 void SERVERCOMMANDS_Print( const char *pszString, ULONG ulPrintLevel, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINT );
-	command.addByte( ulPrintLevel );
-	command.addString( pszString );
+	ServerCommands::Print command;
+	command.SetPrintlevel( ulPrintLevel );
+	command.SetMessage( pszString );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2043,9 +2043,9 @@ void SERVERCOMMANDS_Print( const char *pszString, ULONG ulPrintLevel, ULONG ulPl
 //
 void SERVERCOMMANDS_PrintMid( const char *pszString, bool bBold, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINTMID );
-	command.addString( pszString );
-	command.addByte( !!bBold );
+	ServerCommands::PrintMid command;
+	command.SetMessage( pszString );
+	command.SetBold( bBold );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2053,8 +2053,8 @@ void SERVERCOMMANDS_PrintMid( const char *pszString, bool bBold, ULONG ulPlayerE
 //
 void SERVERCOMMANDS_PrintMOTD( const char *pszString, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_PRINTMOTD );
-	command.addString ( pszString );
+	ServerCommands::PrintMOTD command;
+	command.SetMotd( pszString );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -2062,17 +2062,17 @@ void SERVERCOMMANDS_PrintMOTD( const char *pszString, ULONG ulPlayerExtra, Serve
 //
 void SERVERCOMMANDS_PrintHUDMessage( const char *pszString, float fX, float fY, LONG lHUDWidth, LONG lHUDHeight, LONG lColor, float fHoldTime, const char *pszFont, bool bLog, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINTHUDMESSAGE );
-	command.addString( pszString );
-	command.addFloat( fX );
-	command.addFloat( fY );
-	command.addShort( lHUDWidth );
-	command.addShort( lHUDHeight );
-	command.addByte( lColor );
-	command.addFloat( fHoldTime );
-	command.addString( pszFont );
-	command.addByte( !!bLog );
-	command.addLong( lID );
+	ServerCommands::PrintHUDMessage command;
+	command.SetMessage( pszString );
+	command.SetX( fX );
+	command.SetY( fY );
+	command.SetHudWidth( lHUDWidth );
+	command.SetHudHeight( lHUDHeight );
+	command.SetColor( lColor );
+	command.SetHoldTime( fHoldTime );
+	command.SetFontName( pszFont );
+	command.SetLog( bLog );
+	command.SetId( lID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2080,18 +2080,18 @@ void SERVERCOMMANDS_PrintHUDMessage( const char *pszString, float fX, float fY, 
 //
 void SERVERCOMMANDS_PrintHUDMessageFadeOut( const char *pszString, float fX, float fY, LONG lHUDWidth, LONG lHUDHeight, LONG lColor, float fHoldTime, float fFadeOutTime, const char *pszFont, bool bLog, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINTHUDMESSAGEFADEOUT );
-	command.addString( pszString );
-	command.addFloat( fX );
-	command.addFloat( fY );
-	command.addShort( lHUDWidth );
-	command.addShort( lHUDHeight );
-	command.addByte( lColor );
-	command.addFloat( fHoldTime );
-	command.addFloat( fFadeOutTime );
-	command.addString( pszFont );
-	command.addByte( !!bLog );
-	command.addLong( lID );
+	ServerCommands::PrintHUDMessageFadeOut command;
+	command.SetMessage( pszString );
+	command.SetX( fX );
+	command.SetY( fY );
+	command.SetHudWidth( lHUDWidth );
+	command.SetHudHeight( lHUDHeight );
+	command.SetColor( lColor );
+	command.SetHoldTime( fHoldTime );
+	command.SetFadeOutTime( fFadeOutTime );
+	command.SetFontName( pszFont );
+	command.SetLog( bLog );
+	command.SetId( lID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2099,19 +2099,19 @@ void SERVERCOMMANDS_PrintHUDMessageFadeOut( const char *pszString, float fX, flo
 //
 void SERVERCOMMANDS_PrintHUDMessageFadeInOut( const char *pszString, float fX, float fY, LONG lHUDWidth, LONG lHUDHeight, LONG lColor, float fHoldTime, float fFadeInTime, float fFadeOutTime, const char *pszFont, bool bLog, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINTHUDMESSAGEFADEINOUT );
-	command.addString( pszString );
-	command.addFloat( fX );
-	command.addFloat( fY );
-	command.addShort( lHUDWidth );
-	command.addShort( lHUDHeight );
-	command.addByte( lColor );
-	command.addFloat( fHoldTime );
-	command.addFloat( fFadeInTime );
-	command.addFloat( fFadeOutTime );
-	command.addString( pszFont );
-	command.addByte( !!bLog );
-	command.addLong( lID );
+	ServerCommands::PrintHUDMessageFadeInOut command;
+	command.SetMessage( pszString );
+	command.SetX( fX );
+	command.SetY( fY );
+	command.SetHudWidth( lHUDWidth );
+	command.SetHudHeight( lHUDHeight );
+	command.SetColor( lColor );
+	command.SetHoldTime( fHoldTime );
+	command.SetFadeInTime( fFadeInTime );
+	command.SetFadeOutTime( fFadeOutTime );
+	command.SetFontName( pszFont );
+	command.SetLog( bLog );
+	command.SetId( lID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2119,19 +2119,19 @@ void SERVERCOMMANDS_PrintHUDMessageFadeInOut( const char *pszString, float fX, f
 //
 void SERVERCOMMANDS_PrintHUDMessageTypeOnFadeOut( const char *pszString, float fX, float fY, LONG lHUDWidth, LONG lHUDHeight, LONG lColor, float fTypeTime, float fHoldTime, float fFadeOutTime, const char *pszFont, bool bLog, LONG lID, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_PRINTHUDMESSAGETYPEONFADEOUT );
-	command.addString( pszString );
-	command.addFloat( fX );
-	command.addFloat( fY );
-	command.addShort( lHUDWidth );
-	command.addShort( lHUDHeight );
-	command.addByte( lColor );
-	command.addFloat( fTypeTime );
-	command.addFloat( fHoldTime );
-	command.addFloat( fFadeOutTime );
-	command.addString( pszFont );
-	command.addByte( !!bLog );
-	command.addLong( lID );
+	ServerCommands::PrintHUDMessageTypeOnFadeOut command;
+	command.SetMessage( pszString );
+	command.SetX( fX );
+	command.SetY( fY );
+	command.SetHudWidth( lHUDWidth );
+	command.SetHudHeight( lHUDHeight );
+	command.SetColor( lColor );
+	command.SetTypeOnTime( fTypeTime );
+	command.SetHoldTime( fHoldTime );
+	command.SetFadeOutTime( fFadeOutTime );
+	command.SetFontName( pszFont );
+	command.SetLog( bLog );
+	command.SetId( lID );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

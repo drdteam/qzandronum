@@ -179,15 +179,6 @@ static	void	client_PlayerUseInventory( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerDropInventory( BYTESTREAM_s *pByteStream );
 static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
 
-// Print commands.
-static	void	client_Print( BYTESTREAM_s *pByteStream );
-static	void	client_PrintMid( BYTESTREAM_s *pByteStream );
-static	void	client_PrintMOTD( BYTESTREAM_s *pByteStream );
-static	void	client_PrintHUDMessage( BYTESTREAM_s *pByteStream );
-static	void	client_PrintHUDMessageFadeOut( BYTESTREAM_s *pByteStream );
-static	void	client_PrintHUDMessageFadeInOut( BYTESTREAM_s *pByteStream );
-static	void	client_PrintHUDMessageTypeOnFadeOut( BYTESTREAM_s *pByteStream );
-
 // Game commands.
 static	void	client_SetGameMode( BYTESTREAM_s *pByteStream );
 static	void	client_SetGameSkill( BYTESTREAM_s *pByteStream );
@@ -1574,34 +1565,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_PLAYERDROPINVENTORY:
 
 		client_PlayerDropInventory( pByteStream );
-		break;
-	case SVC_PRINT:
-
-		client_Print( pByteStream );
-		break;
-	case SVC_PRINTMID:
-
-		client_PrintMid( pByteStream );
-		break;
-	case SVC_PRINTMOTD:
-
-		client_PrintMOTD( pByteStream );
-		break;
-	case SVC_PRINTHUDMESSAGE:
-
-		client_PrintHUDMessage( pByteStream );
-		break;
-	case SVC_PRINTHUDMESSAGEFADEOUT:
-
-		client_PrintHUDMessageFadeOut( pByteStream );
-		break;
-	case SVC_PRINTHUDMESSAGEFADEINOUT:
-
-		client_PrintHUDMessageFadeInOut( pByteStream );
-		break;
-	case SVC_PRINTHUDMESSAGETYPEONFADEOUT:
-
-		client_PrintHUDMessageTypeOnFadeOut( pByteStream );
 		break;
 	case SVC_SETGAMEMODE:
 
@@ -3378,7 +3341,7 @@ LONG CLIENT_AdjustElevatorDirection( LONG lDirection )
 
 //*****************************************************************************
 //
-void CLIENT_LogHUDMessage( char *pszString, LONG lColor )
+void CLIENT_LogHUDMessage( const char *pszString, LONG lColor )
 {
 	static const char	szBar[] = TEXTCOLOR_ORANGE "\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36"
 "\36\36\36\36\36\36\36\36\36\36\36\36\37" TEXTCOLOR_NORMAL "\n";
@@ -5916,350 +5879,154 @@ void ServerCommands::SpawnPuff::Execute()
 
 //*****************************************************************************
 //
-static void client_Print( BYTESTREAM_s *pByteStream )
+void ServerCommands::Print::Execute()
 {
-	ULONG		ulPrintLevel;
-	const char	*pszString;
-
-	// Read in the print level.
-	ulPrintLevel = NETWORK_ReadByte( pByteStream );
-
-	// Read in the string to be printed.
-	pszString = NETWORK_ReadString( pByteStream );
-
-	// Print out the message.
-	Printf( ulPrintLevel, "%s", pszString );
+	Printf( printlevel, "%s", message.GetChars() );
 }
 
 //*****************************************************************************
 //
-static void client_PrintMid( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintMid::Execute()
 {
-	const char	*pszString;
-	bool		bBold;
-
-	// Read in the string that's supposed to be printed.
-	pszString = NETWORK_ReadString( pByteStream );
-
-	// Read in whether or not it's a bold message.
-	bBold = !!NETWORK_ReadByte( pByteStream );
-
-	// Print the message.
-	if ( bBold )
-		C_MidPrintBold( SmallFont, pszString );
+	if ( bold )
+		C_MidPrintBold( SmallFont, message );
 	else
-		C_MidPrint( SmallFont, pszString );
+		C_MidPrint( SmallFont, message );
 }
 
 //*****************************************************************************
 //
-static void client_PrintMOTD( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintMOTD::Execute()
 {
 	// Read in the MOTD, and display it later.
-	g_MOTD = NETWORK_ReadString( pByteStream );
+	g_MOTD = motd;
 	// [BB] Some cleaning of the string since we can't trust the server.
 	V_RemoveTrailingCrapFromFString ( g_MOTD );
 }
 
 //*****************************************************************************
 //
-static void client_PrintHUDMessage( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintHUDMessage::Execute()
 {
-	char		szString[MAX_NETWORK_STRING];
-	float		fX;
-	float		fY;
-	LONG		lHUDWidth;
-	LONG		lHUDHeight;
-	LONG		lColor;
-	float		fHoldTime;
-	const char	*pszFont;
-	bool		bLog;
-	LONG		lID;
-	DHUDMessage	*pMsg;
-
-	// Read in the string.
-	strncpy( szString, NETWORK_ReadString( pByteStream ), MAX_NETWORK_STRING );
-	szString[MAX_NETWORK_STRING - 1] = 0;
-
-	// Read in the XY.
-	fX = NETWORK_ReadFloat( pByteStream );
-	fY = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the HUD size.
-	lHUDWidth = NETWORK_ReadShort( pByteStream );
-	lHUDHeight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the color.
-	lColor = NETWORK_ReadByte( pByteStream );
-
-	// Read in the hold time.
-	fHoldTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the font being used.
-	pszFont = NETWORK_ReadString( pByteStream );
-
-	// Read in whether or not the message should be logged.
-	bLog = !!NETWORK_ReadByte( pByteStream );
-
-	// Read in the ID.
-	lID = NETWORK_ReadLong( pByteStream );
-
 	// We cannot create the message if there's no status bar to attach it to.
 	if ( StatusBar == NULL )
 		return;
 
 	// [BB] We can't create the message if the font doesn't exist.
-	FFont *font = V_GetFont( pszFont );
+	FFont *font = V_GetFont( fontName );
 	if ( font == NULL )
 		return;
 
 	// Create the message.
-	pMsg = new DHUDMessage( font, szString,
-		fX,
-		fY,
-		lHUDWidth,
-		lHUDHeight,
-		(EColorRange)lColor,
-		fHoldTime );
+	DHUDMessage *hudMessage = new DHUDMessage( font, message,
+		x,
+		y,
+		hudWidth,
+		hudHeight,
+		(EColorRange)color,
+		holdTime );
 
 	// Now attach the message.
-	StatusBar->AttachMessage( pMsg, lID );
+	StatusBar->AttachMessage( hudMessage, id );
 
 	// Log the message if desired.
-	if ( bLog )
-		CLIENT_LogHUDMessage( szString, lColor );
+	if ( log )
+		CLIENT_LogHUDMessage( message, color );
 }
 
 //*****************************************************************************
 //
-static void client_PrintHUDMessageFadeOut( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintHUDMessageFadeOut::Execute()
 {
-	char				szString[MAX_NETWORK_STRING];
-	float				fX;
-	float				fY;
-	LONG				lHUDWidth;
-	LONG				lHUDHeight;
-	LONG				lColor;
-	float				fHoldTime;
-	float				fFadeOutTime;
-	const char			*pszFont;
-	bool				bLog;
-	LONG				lID;
-	DHUDMessageFadeOut	*pMsg;
-
-	// Read in the string.
-	strncpy( szString, NETWORK_ReadString( pByteStream ), MAX_NETWORK_STRING );
-	szString[MAX_NETWORK_STRING - 1] = 0;
-
-	// Read in the XY.
-	fX = NETWORK_ReadFloat( pByteStream );
-	fY = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the HUD size.
-	lHUDWidth = NETWORK_ReadShort( pByteStream );
-	lHUDHeight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the color.
-	lColor = NETWORK_ReadByte( pByteStream );
-
-	// Read in the hold time.
-	fHoldTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the fade time.
-	fFadeOutTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the font being used.
-	pszFont = NETWORK_ReadString( pByteStream );
-
-	// Read in whether or not the message should be logged.
-	bLog = !!NETWORK_ReadByte( pByteStream );
-
-	// Read in the ID.
-	lID = NETWORK_ReadLong( pByteStream );
-
 	// We cannot create the message if there's no status bar to attach it to.
 	if ( StatusBar == NULL )
 		return;
 
 	// [BB] We can't create the message if the font doesn't exist.
-	FFont *font = V_GetFont( pszFont );
+	FFont *font = V_GetFont( fontName );
 	if ( font == NULL )
 		return;
 
 	// Create the message.
-	pMsg = new DHUDMessageFadeOut( font, szString,
-		fX,
-		fY,
-		lHUDWidth,
-		lHUDHeight,
-		(EColorRange)lColor,
-		fHoldTime,
-		fFadeOutTime );
+	DHUDMessageFadeOut *hudMessage = new DHUDMessageFadeOut( font, message,
+		x,
+		y,
+		hudWidth,
+		hudHeight,
+		(EColorRange)color,
+		holdTime,
+		fadeOutTime );
 
 	// Now attach the message.
-	StatusBar->AttachMessage( pMsg, lID );
+	StatusBar->AttachMessage( hudMessage, id );
 
 	// Log the message if desired.
-	if ( bLog )
-		CLIENT_LogHUDMessage( szString, lColor );
+	if ( log )
+		CLIENT_LogHUDMessage( message, color );
 }
 
 //*****************************************************************************
 //
-static void client_PrintHUDMessageFadeInOut( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintHUDMessageFadeInOut::Execute()
 {
-	char					szString[MAX_NETWORK_STRING];
-	float					fX;
-	float					fY;
-	LONG					lHUDWidth;
-	LONG					lHUDHeight;
-	LONG					lColor;
-	float					fHoldTime;
-	float					fFadeInTime;
-	float					fFadeOutTime;
-	const char				*pszFont;
-	bool					bLog;
-	LONG					lID;
-	DHUDMessageFadeInOut	*pMsg;
-
-	// Read in the string.
-	strncpy( szString, NETWORK_ReadString( pByteStream ), MAX_NETWORK_STRING );
-	szString[MAX_NETWORK_STRING - 1] = 0;
-
-	// Read in the XY.
-	fX = NETWORK_ReadFloat( pByteStream );
-	fY = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the HUD size.
-	lHUDWidth = NETWORK_ReadShort( pByteStream );
-	lHUDHeight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the color.
-	lColor = NETWORK_ReadByte( pByteStream );
-
-	// Read in the hold time.
-	fHoldTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the fade in time.
-	fFadeInTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the fade out time.
-	fFadeOutTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the font being used.
-	pszFont = NETWORK_ReadString( pByteStream );
-
-	// Read in whether or not the message should be logged.
-	bLog = !!NETWORK_ReadByte( pByteStream );
-
-	// Read in the ID.
-	lID = NETWORK_ReadLong( pByteStream );
-
 	// We cannot create the message if there's no status bar to attach it to.
 	if ( StatusBar == NULL )
 		return;
 
 	// [BB] We can't create the message if the font doesn't exist.
-	FFont *font = V_GetFont( pszFont );
+	FFont *font = V_GetFont( fontName );
 	if ( font == NULL )
 		return;
 
 	// Create the message.
-	pMsg = new DHUDMessageFadeInOut( font, szString,
-		fX,
-		fY,
-		lHUDWidth,
-		lHUDHeight,
-		(EColorRange)lColor,
-		fHoldTime,
-		fFadeInTime,
-		fFadeOutTime );
+	DHUDMessageFadeInOut *hudMessage = new DHUDMessageFadeInOut( font, message,
+		x,
+		y,
+		hudWidth,
+		hudHeight,
+		(EColorRange)color,
+		holdTime,
+		fadeInTime,
+		fadeOutTime );
 
 	// Now attach the message.
-	StatusBar->AttachMessage( pMsg, lID );
+	StatusBar->AttachMessage( hudMessage, id );
 
 	// Log the message if desired.
-	if ( bLog )
-		CLIENT_LogHUDMessage( szString, lColor );
+	if ( log )
+		CLIENT_LogHUDMessage( message, color );
 }
 
 //*****************************************************************************
 //
-static void client_PrintHUDMessageTypeOnFadeOut( BYTESTREAM_s *pByteStream )
+void ServerCommands::PrintHUDMessageTypeOnFadeOut::Execute()
 {
-	char						szString[MAX_NETWORK_STRING];
-	float						fX;
-	float						fY;
-	LONG						lHUDWidth;
-	LONG						lHUDHeight;
-	LONG						lColor;
-	float						fTypeOnTime;
-	float						fHoldTime;
-	float						fFadeOutTime;
-	const char					*pszFont;
-	bool						bLog;
-	LONG						lID;
-	DHUDMessageTypeOnFadeOut	*pMsg;
-
-	// Read in the string.
-	strncpy( szString, NETWORK_ReadString( pByteStream ), MAX_NETWORK_STRING );
-	szString[MAX_NETWORK_STRING - 1] = 0;
-
-	// Read in the XY.
-	fX = NETWORK_ReadFloat( pByteStream );
-	fY = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the HUD size.
-	lHUDWidth = NETWORK_ReadShort( pByteStream );
-	lHUDHeight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the color.
-	lColor = NETWORK_ReadByte( pByteStream );
-
-	// Read in the type on time.
-	fTypeOnTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the hold time.
-	fHoldTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the fade out time.
-	fFadeOutTime = NETWORK_ReadFloat( pByteStream );
-
-	// Read in the font being used.
-	pszFont = NETWORK_ReadString( pByteStream );
-
-	// Read in whether or not the message should be logged.
-	bLog = !!NETWORK_ReadByte( pByteStream );
-
-	// Read in the ID.
-	lID = NETWORK_ReadLong( pByteStream );
-
 	// We cannot create the message if there's no status bar to attach it to.
 	if ( StatusBar == NULL )
 		return;
 
 	// [BB] We can't create the message if the font doesn't exist.
-	FFont *font = V_GetFont( pszFont );
+	FFont *font = V_GetFont( fontName );
 	if ( font == NULL )
 		return;
 
 	// Create the message.
-	pMsg = new DHUDMessageTypeOnFadeOut( font, szString,
-		fX,
-		fY,
-		lHUDWidth,
-		lHUDHeight,
-		(EColorRange)lColor,
-		fTypeOnTime,
-		fHoldTime,
-		fFadeOutTime );
+	DHUDMessageTypeOnFadeOut *hudMessage = new DHUDMessageTypeOnFadeOut( font, message,
+		x,
+		y,
+		hudWidth,
+		hudHeight,
+		(EColorRange)color,
+		typeOnTime,
+		holdTime,
+		fadeOutTime );
 
 	// Now attach the message.
-	StatusBar->AttachMessage( pMsg, lID );
+	StatusBar->AttachMessage( hudMessage, id );
 
 	// Log the message if desired.
-	if ( bLog )
-		CLIENT_LogHUDMessage( szString, lColor );
+	if ( log )
+		CLIENT_LogHUDMessage( message, color );
 }
 
 //*****************************************************************************
