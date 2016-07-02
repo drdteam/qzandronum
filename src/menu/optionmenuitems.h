@@ -505,7 +505,13 @@ public:
 	FOptionMenuItemStaticText(const char *label, bool header)
 		: FOptionMenuItem(label, NAME_None, true)
 	{
-		mColor = header? OptionSettings.mFontColorHeader : OptionSettings.mFontColor;
+		mColor = header ? OptionSettings.mFontColorHeader : OptionSettings.mFontColor;
+	}
+
+	FOptionMenuItemStaticText(const char *label, EColorRange cr)
+		: FOptionMenuItem(label, NAME_None, true)
+	{
+		mColor = cr;
 	}
 
 	int Draw(FOptionMenuDescriptor *desc, int y, int indent, bool selected)
@@ -534,10 +540,10 @@ class FOptionMenuItemStaticTextSwitchable : public FOptionMenuItem
 	int mCurrent;
 
 public:
-	FOptionMenuItemStaticTextSwitchable(const char *label, const char *label2, FName action, bool header)
+	FOptionMenuItemStaticTextSwitchable(const char *label, const char *label2, FName action, EColorRange cr)
 		: FOptionMenuItem(label, action, true)
 	{
-		mColor = header? OptionSettings.mFontColorHeader : OptionSettings.mFontColor;
+		mColor = cr;
 		mAltText = label2;
 		mCurrent = 0;
 	}
