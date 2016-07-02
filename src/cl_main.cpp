@@ -217,14 +217,6 @@ static	void	client_MissileExplode( BYTESTREAM_s *pByteStream );
 static	void	client_WeaponSound( BYTESTREAM_s *pByteStream );
 static	void	client_WeaponChange( BYTESTREAM_s *pByteStream );
 
-// Sector commands.
-static	void	client_SetSectorAngleYOffset( BYTESTREAM_s *pByteStream );
-static	void	client_SetSectorGravity( BYTESTREAM_s *pByteStream );
-static	void	client_SetSectorReflection( BYTESTREAM_s *pByteStream );
-static	void	client_StopSectorLightEffect( BYTESTREAM_s *pByteStream );
-static	void	client_DestroyAllSectorMovers( BYTESTREAM_s *pByteStream );
-static	void	client_SetSectorLink( BYTESTREAM_s *pByteStream );
-
 // Sector light commands.
 static	void	client_DoSectorLightFireFlicker( BYTESTREAM_s *pByteStream );
 static	void	client_DoSectorLightFlicker( BYTESTREAM_s *pByteStream );
@@ -1673,26 +1665,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_WeaponChange( pByteStream );
 		break;
-	case SVC_SETSECTORANGLEYOFFSET:
-
-		client_SetSectorAngleYOffset( pByteStream );
-		break;
-	case SVC_SETSECTORGRAVITY:
-
-		client_SetSectorGravity( pByteStream );
-		break;
-	case SVC_SETSECTORREFLECTION:
-
-		client_SetSectorReflection( pByteStream );
-		break;
-	case SVC_STOPSECTORLIGHTEFFECT:
-
-		client_StopSectorLightEffect( pByteStream );
-		break;
-	case SVC_DESTROYALLSECTORMOVERS:
-
-		client_DestroyAllSectorMovers( pByteStream );
-		break;
 	case SVC_DOSECTORLIGHTFIREFLICKER:
 
 		client_DoSectorLightFireFlicker( pByteStream );
@@ -2047,11 +2019,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_REPLACETEXTURES:
 
 		STClient::ReplaceTextures( pByteStream );
-		break;
-
-	case SVC_SETSECTORLINK:
-
-		client_SetSectorLink( pByteStream );
 		break;
 
 	case SVC_DOPUSHER:
@@ -6867,118 +6834,39 @@ void ServerCommands::SetSectorFriction::Execute()
 
 //*****************************************************************************
 //
-static void client_SetSectorAngleYOffset( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetSectorAngleYOffset::Execute()
 {
-	LONG		lSectorID;
-	LONG		lCeilingAngle;
-	LONG		lCeilingYOffset;
-	LONG		lFloorAngle;
-	LONG		lFloorYOffset;
-	sector_t	*pSector;
-
-	// Read in the sector to have its friction altered.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's ceiling and floor angle and y-offset.
-	lCeilingAngle = NETWORK_ReadLong( pByteStream );
-	lCeilingYOffset = NETWORK_ReadLong( pByteStream );
-	lFloorAngle = NETWORK_ReadLong( pByteStream );
-	lFloorYOffset = NETWORK_ReadLong( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetSectorScale: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Set the sector's angle and y-offset.
-	pSector->planes[sector_t::ceiling].xform.baseAngle = ANGLE2DBL ( lCeilingAngle );
-	pSector->planes[sector_t::ceiling].xform.yOffs = FIXED2DBL ( lCeilingYOffset );
-	pSector->planes[sector_t::floor].xform.baseAngle = ANGLE2DBL ( lFloorAngle );
-	pSector->planes[sector_t::floor].xform.yOffs = FIXED2DBL ( lFloorYOffset );
+	sector->planes[sector_t::ceiling].xform.baseAngle = ANGLE2DBL ( ceilingBaseAngle );
+	sector->planes[sector_t::ceiling].xform.yOffs = FIXED2DBL ( ceilingBaseYOffset );
+	sector->planes[sector_t::floor].xform.baseAngle = ANGLE2DBL ( floorBaseAngle );
+	sector->planes[sector_t::floor].xform.yOffs = FIXED2DBL ( floorBaseYOffset );
 }
 
 //*****************************************************************************
 //
-static void client_SetSectorGravity( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetSectorGravity::Execute()
 {
-	LONG		lSectorID;
-	float		fGravity;
-	sector_t	*pSector;
-
-	// Read in the sector to have its friction altered.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's gravity.
-	fGravity = NETWORK_ReadFloat( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetSectorScale: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Set the sector's gravity.
-	pSector->gravity = fGravity;
+	sector->gravity = gravity;
 }
 
 //*****************************************************************************
 //
-static void client_SetSectorReflection( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetSectorReflection::Execute()
 {
-	LONG		lSectorID;
-	float		fCeilingReflect;
-	float		fFloorReflect;
-	sector_t	*pSector;
-
-	// Read in the sector to have its reflection altered.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's ceiling and floor reflection.
-	fCeilingReflect = NETWORK_ReadFloat( pByteStream );
-	fFloorReflect = NETWORK_ReadFloat( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetSectorScale: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Set the sector's reflection.
-	pSector->reflect[sector_t::ceiling] = fCeilingReflect;
-	pSector->reflect[sector_t::floor] = fFloorReflect;
+	sector->reflect[sector_t::ceiling] = ceilingReflection;
+	sector->reflect[sector_t::floor] = floorReflection;
 }
 
 //*****************************************************************************
 //
-static void client_StopSectorLightEffect( BYTESTREAM_s *pByteStream )
+void ServerCommands::StopSectorLightEffect::Execute()
 {
-	LONG							lSectorID;
-	sector_t						*pSector;
 	TThinkerIterator<DLighting>		Iterator;
 	DLighting						*pEffect;
 
-	// Read in the sector to have its light effect stopped.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_StopSectorLightEffect: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Finally, delete any effects this sector has.
 	while (( pEffect = Iterator.Next( )) != NULL )
 	{
-		if ( pEffect->GetSector( ) == pSector )
+		if ( pEffect->GetSector( ) == sector )
 		{
 			pEffect->Destroy( );
 			return;
@@ -6988,7 +6876,7 @@ static void client_StopSectorLightEffect( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_DestroyAllSectorMovers( BYTESTREAM_s *pByteStream )
+void ServerCommands::DestroyAllSectorMovers::Execute()
 {
 	ULONG	ulIdx;
 
@@ -7016,23 +6904,9 @@ static void client_DestroyAllSectorMovers( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SetSectorLink( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetSectorLink::Execute()
 {
-	// [BB] Read in the sector network ID.
-	ULONG ulSector = NETWORK_ReadShort( pByteStream );
-	int iArg1 = NETWORK_ReadShort( pByteStream );
-	int iArg2 = NETWORK_ReadByte( pByteStream );
-	int iArg3 = NETWORK_ReadByte( pByteStream );
-
-	// [BB] Find the sector associated with this network ID.
-	sector_t *pSector = CLIENT_FindSectorByID( ulSector );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetSectorLink: Couldn't find sector: %lu\n", ulSector );
-		return;
-	}
-
-	P_AddSectorLinks( pSector, iArg1, iArg2, iArg3);
+	P_AddSectorLinks( sector, tag, ceiling, moveType );
 }
 
 //*****************************************************************************

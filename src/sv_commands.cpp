@@ -2807,12 +2807,12 @@ void SERVERCOMMANDS_SetSectorAngleYOffset( ULONG ulSector, ULONG ulPlayerExtra, 
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_SETSECTORANGLEYOFFSET );
-	command.addShort( ulSector );
-	command.addLong( sectors[ulSector].planes[sector_t::ceiling].xform.baseAngle.BAMs() );
-	command.addLong( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::ceiling].xform.baseyOffs ) );
-	command.addLong( sectors[ulSector].planes[sector_t::floor].xform.baseAngle.BAMs() );
-	command.addLong( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::floor].xform.baseyOffs ) );
+	ServerCommands::SetSectorAngleYOffset command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetCeilingBaseAngle( sectors[ulSector].planes[sector_t::ceiling].xform.baseAngle.BAMs() );
+	command.SetCeilingBaseYOffset( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::ceiling].xform.baseyOffs ) );
+	command.SetFloorBaseAngle( sectors[ulSector].planes[sector_t::floor].xform.baseAngle.BAMs() );
+	command.SetFloorBaseYOffset( FLOAT2FIXED ( sectors[ulSector].planes[sector_t::floor].xform.baseyOffs ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2823,9 +2823,9 @@ void SERVERCOMMANDS_SetSectorGravity( ULONG ulSector, ULONG ulPlayerExtra, Serve
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_SETSECTORGRAVITY );
-	command.addShort( ulSector );
-	command.addFloat( sectors[ulSector].gravity );
+	ServerCommands::SetSectorGravity command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetGravity( sectors[ulSector].gravity );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2836,10 +2836,10 @@ void SERVERCOMMANDS_SetSectorReflection( ULONG ulSector, ULONG ulPlayerExtra, Se
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_SETSECTORREFLECTION );
-	command.addShort( ulSector );
-	command.addFloat( sectors[ulSector].reflect[sector_t::ceiling] );
-	command.addFloat( sectors[ulSector].reflect[sector_t::floor] );
+	ServerCommands::SetSectorReflection command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetCeilingReflection( sectors[ulSector].reflect[sector_t::ceiling] );
+	command.SetFloorReflection( sectors[ulSector].reflect[sector_t::floor] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2850,8 +2850,8 @@ void SERVERCOMMANDS_StopSectorLightEffect( ULONG ulSector, ULONG ulPlayerExtra, 
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_STOPSECTORLIGHTEFFECT );
-	command.addShort( ulSector );
+	ServerCommands::StopSectorLightEffect command;
+	command.SetSector( &sectors[ulSector] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2859,8 +2859,7 @@ void SERVERCOMMANDS_StopSectorLightEffect( ULONG ulSector, ULONG ulPlayerExtra, 
 //
 void SERVERCOMMANDS_DestroyAllSectorMovers( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_DESTROYALLSECTORMOVERS );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	ServerCommands::DestroyAllSectorMovers().sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
@@ -4500,11 +4499,11 @@ void SERVERCOMMANDS_ReplaceTextures( int iFromname, int iToname, int iTexFlags, 
 //
 void SERVERCOMMANDS_SetSectorLink( ULONG ulSector, int iArg1, int iArg2, int iArg3, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETSECTORLINK );
-	command.addShort ( ulSector );
-	command.addShort ( iArg1 );
-	command.addByte ( iArg2 );
-	command.addByte ( iArg3 );
+	ServerCommands::SetSectorLink command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetTag( iArg1 );
+	command.SetCeiling( iArg2 );
+	command.SetMoveType( iArg3 );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

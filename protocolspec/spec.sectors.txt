@@ -103,3 +103,36 @@ Command SetSectorFriction
 	Fixed friction
 	Fixed moveFactor
 EndCommand
+
+Command SetSectorAngleYOffset
+	Sector sector
+	Fixed ceilingBaseAngle
+	Fixed ceilingBaseYOffset
+	Fixed floorBaseAngle
+	Fixed floorBaseYOffset
+EndCommand
+
+Command SetSectorGravity
+	Sector sector
+	Float gravity
+EndCommand
+
+Command SetSectorReflection
+	Sector sector
+	Float ceilingReflection
+	Float floorReflection
+EndCommand
+
+Command SetSectorLink
+	Sector sector
+	Short tag
+	Byte ceiling
+	Byte moveType
+EndCommand
+
+Command StopSectorLightEffect
+	Sector sector
+EndCommand
+
+Command DestroyAllSectorMovers
+EndCommand
