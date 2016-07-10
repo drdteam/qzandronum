@@ -7878,3 +7878,4 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FaceMovementDirection)
 	}
 	ACTION_RETURN_BOOL(true);
 }
+
