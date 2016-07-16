@@ -2429,20 +2429,20 @@ void SERVERCOMMANDS_SpawnMissile( AActor *pMissile, ULONG ulPlayerExtra, ServerC
 	if ( pMissile == NULL )
 		return;
 
-	NetCommand command( SVC_SPAWNMISSILE );
-	command.addShort( FLOAT2FIXED ( pMissile->X() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pMissile->Y() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pMissile->Z() ) >> FRACBITS );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
-	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
-	command.addShort( pMissile->lNetID );
+	ServerCommands::SpawnMissile command;
+	command.SetX( FLOAT2FIXED ( pMissile->X() ) );
+	command.SetY( FLOAT2FIXED ( pMissile->Y() ) );
+	command.SetZ( FLOAT2FIXED ( pMissile->Z() ) );
+	command.SetVelX( FLOAT2FIXED ( pMissile->Vel.X ) );
+	command.SetVelY( FLOAT2FIXED ( pMissile->Vel.Y ) );
+	command.SetVelZ( FLOAT2FIXED ( pMissile->Vel.Z ) );
+	command.SetMissileType( pMissile->GetClass() );
+	command.SetNetID( pMissile->lNetID );
 
 	if ( pMissile->target )
-		command.addShort( pMissile->target->lNetID );
+		command.SetTargetNetID( pMissile->target->lNetID );
 	else
-		command.addShort( -1 );
+		command.SetTargetNetID( -1 );
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
@@ -2459,20 +2459,20 @@ void SERVERCOMMANDS_SpawnMissileExact( AActor *pMissile, ULONG ulPlayerExtra, Se
 	if ( pMissile == NULL )
 		return;
 
-	NetCommand command( SVC_SPAWNMISSILEEXACT );
-	command.addLong( FLOAT2FIXED ( pMissile->X() ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Y() ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Z() ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.X ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.Y ) );
-	command.addLong( FLOAT2FIXED ( pMissile->Vel.Z ) );
-	command.addShort( pMissile->GetClass()->getActorNetworkIndex() );
-	command.addShort( pMissile->lNetID );
+	ServerCommands::SpawnMissileExact command;
+	command.SetX( FLOAT2FIXED ( pMissile->X() ) );
+	command.SetY( FLOAT2FIXED ( pMissile->Y() ) );
+	command.SetZ( FLOAT2FIXED ( pMissile->Z() ) );
+	command.SetVelX( FLOAT2FIXED ( pMissile->Vel.X ) );
+	command.SetVelY( FLOAT2FIXED ( pMissile->Vel.Y ) );
+	command.SetVelZ( FLOAT2FIXED ( pMissile->Vel.Z ) );
+	command.SetMissileType( pMissile->GetClass() );
+	command.SetNetID( pMissile->lNetID );
 
 	if ( pMissile->target )
-		command.addShort( pMissile->target->lNetID );
+		command.SetTargetNetID( pMissile->target->lNetID );
 	else
-		command.addShort( -1 );
+		command.SetTargetNetID( -1 );
 
 	command.sendCommandToClients( ulPlayerExtra, flags );
 
@@ -2489,17 +2489,17 @@ void SERVERCOMMANDS_MissileExplode( AActor *pMissile, line_t *pLine, ULONG ulPla
 	if ( !EnsureActorHasNetID (pMissile) )
 		return;
 
-	NetCommand command( SVC_MISSILEEXPLODE );
-	command.addShort( pMissile->lNetID );
+	ServerCommands::MissileExplode command;
+	command.SetMissile( pMissile );
 
 	if ( pLine != NULL )
-		command.addShort( pLine - lines );
+		command.SetLineId( pLine - lines );
 	else
-		command.addShort( -1 );
+		command.SetLineId( -1 );
 
-	command.addShort( FLOAT2FIXED ( pMissile->X() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pMissile->Y() ) >> FRACBITS );
-	command.addShort( FLOAT2FIXED ( pMissile->Z() ) >> FRACBITS );
+	command.SetX( FLOAT2FIXED ( pMissile->X() ) );
+	command.SetY( FLOAT2FIXED ( pMissile->Y() ) );
+	command.SetZ( FLOAT2FIXED ( pMissile->Z() ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2511,9 +2511,9 @@ void SERVERCOMMANDS_WeaponSound( ULONG ulPlayer, const char *pszSound, ULONG ulP
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_WEAPONSOUND );
-	command.addByte( ulPlayer );
-	command.addString( pszSound );
+	ServerCommands::WeaponSound command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetSound( pszSound );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2524,9 +2524,9 @@ void SERVERCOMMANDS_WeaponChange( ULONG ulPlayer, ULONG ulPlayerExtra, ServerCom
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false || players[ulPlayer].ReadyWeapon == NULL )
 		return;
 
-	NetCommand command( SVC_WEAPONCHANGE );
-	command.addByte( ulPlayer );
-	command.addShort( players[ulPlayer].ReadyWeapon->GetClass()->getActorNetworkIndex() );
+	ServerCommands::WeaponChange command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetWeaponType( players[ulPlayer].ReadyWeapon->GetClass() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

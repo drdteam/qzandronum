@@ -1,3 +1,45 @@
+Command SpawnMissile
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+	Fixed velX
+	Fixed velY
+	Fixed velZ
+	Class<AActor> missileType
+	Short netID
+	Short targetNetID
+EndCommand
+
+Command SpawnMissileExact
+	Fixed x
+	Fixed y
+	Fixed z
+	Fixed velX
+	Fixed velY
+	Fixed velZ
+	Class<AActor> missileType
+	Short netID
+	Short targetNetID
+EndCommand
+
+Command MissileExplode
+	Actor missile
+	Short lineId
+	AproxFixed x
+	AproxFixed y
+	AproxFixed z
+EndCommand
+
+Command WeaponSound
+	Player player with MoTest
+	String sound
+EndCommand
+
+Command WeaponChange
+	Player player with MoTest
+	Class<AWeapon> weaponType
+EndCommand
+
 Command WeaponRailgun
 	Actor source
 	Vector3 start

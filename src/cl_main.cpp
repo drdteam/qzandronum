@@ -200,15 +200,6 @@ static	void	client_SetTeamReturnTicks( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagReturned( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagDropped( BYTESTREAM_s *pByteStream );
 
-// Missile commands.
-static	void	client_SpawnMissile( BYTESTREAM_s *pByteStream );
-static	void	client_SpawnMissileExact( BYTESTREAM_s *pByteStream );
-static	void	client_MissileExplode( BYTESTREAM_s *pByteStream );
-
-// Weapon commands.
-static	void	client_WeaponSound( BYTESTREAM_s *pByteStream );
-static	void	client_WeaponChange( BYTESTREAM_s *pByteStream );
-
 // Sector light commands.
 static	void	client_DoSectorLightFireFlicker( BYTESTREAM_s *pByteStream );
 static	void	client_DoSectorLightFlicker( BYTESTREAM_s *pByteStream );
@@ -1573,26 +1564,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_TEAMFLAGDROPPED:
 
 		client_TeamFlagDropped( pByteStream );
-		break;
-	case SVC_SPAWNMISSILE:
-
-		client_SpawnMissile( pByteStream );
-		break;
-	case SVC_SPAWNMISSILEEXACT:
-
-		client_SpawnMissileExact( pByteStream );
-		break;
-	case SVC_MISSILEEXPLODE:
-
-		client_MissileExplode( pByteStream );
-		break;
-	case SVC_WEAPONSOUND:
-
-		client_WeaponSound( pByteStream );
-		break;
-	case SVC_WEAPONCHANGE:
-
-		client_WeaponChange( pByteStream );
 		break;
 	case SVC_DOSECTORLIGHTFIREFLICKER:
 
@@ -6165,190 +6136,75 @@ static void client_TeamFlagDropped( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_SpawnMissile( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnMissile::Execute()
 {
-	USHORT				usActorNetworkIndex;
-	fixed_t				X;
-	fixed_t				Y;
-	fixed_t				Z;
-	fixed_t				VelX;
-	fixed_t				VelY;
-	fixed_t				VelZ;
-	LONG				lID;
-	LONG				lTargetID;
-
-	// Read in the XYZ location of the missile.
-	X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-	// Read in the XYZ velocity of the missile.
-	VelX = NETWORK_ReadLong( pByteStream );
-	VelY = NETWORK_ReadLong( pByteStream );
-	VelZ = NETWORK_ReadLong( pByteStream );
-
-	// Read in the identification of the missile.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the missile, and its target.
-	lID = NETWORK_ReadShort( pByteStream );
-	lTargetID = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the missile.
-	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, VelX, VelY, VelZ, lID, lTargetID );
+	CLIENT_SpawnMissile( missileType, x, y, z, velX, velY, velZ, netID, targetNetID );
 }
 
 //*****************************************************************************
 //
-static void client_SpawnMissileExact( BYTESTREAM_s *pByteStream )
+void ServerCommands::SpawnMissileExact::Execute()
 {
-	USHORT				usActorNetworkIndex;
-	fixed_t				X;
-	fixed_t				Y;
-	fixed_t				Z;
-	fixed_t				VelX;
-	fixed_t				VelY;
-	fixed_t				VelZ;
-	LONG				lID;
-	LONG				lTargetID;
-
-	// Read in the XYZ location of the missile.
-	X = NETWORK_ReadLong( pByteStream );
-	Y = NETWORK_ReadLong( pByteStream );
-	Z = NETWORK_ReadLong( pByteStream );
-
-	// Read in the XYZ velocity of the missile.
-	VelX = NETWORK_ReadLong( pByteStream );
-	VelY = NETWORK_ReadLong( pByteStream );
-	VelZ = NETWORK_ReadLong( pByteStream );
-
-	// Read in the identification of the missile.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Read in the network ID of the missile, and its target.
-	lID = NETWORK_ReadShort( pByteStream );
-	lTargetID = NETWORK_ReadShort( pByteStream );
-
-	// Finally, spawn the missile.
-	CLIENT_SpawnMissile( NETWORK_GetClassFromIdentification( usActorNetworkIndex ), X, Y, Z, VelX, VelY, VelZ, lID, lTargetID );
+	CLIENT_SpawnMissile( missileType, x, y, z, velX, velY, velZ, netID, targetNetID );
 }
 
 //*****************************************************************************
 //
-static void client_MissileExplode( BYTESTREAM_s *pByteStream )
+void ServerCommands::MissileExplode::Execute()
 {
-	AActor		*pActor;
-	LONG		lLine;
-	line_t		*pLine;
-	LONG		lID;
-	fixed_t		X;
-	fixed_t		Y;
-	fixed_t		Z;
+	line_t *line;
 
-	// Read in the network ID of the exploding missile.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the line that the missile struck.
-	lLine = NETWORK_ReadShort( pByteStream );
-	if ( lLine >= 0 && lLine < numlines )
-		pLine = &lines[lLine];
+	if ( lineId >= 0 && lineId < numlines )
+		line = &lines[lineId];
 	else
-		pLine = NULL;
-
-	// Read in the XYZ of the explosion point.
-	X = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Y = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-	Z = NETWORK_ReadShort( pByteStream ) << FRACBITS;
-
-	// Find the actor associated with the given network ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_MissileExplode: Couldn't find thing: %ld\n", lID );
-		return;
-	}
+		line = NULL;
 
 	// Move the new actor to the position.
-	CLIENT_MoveThing( pActor, X, Y, Z );
+	CLIENT_MoveThing( missile, x, y, z );
 
 	// Blow it up!
 	// [BB] Only if it's not already in its death state.
-	if ( pActor->InState ( NAME_Death ) == false )
-		P_ExplodeMissile( pActor, pLine, NULL );
+	if ( missile->InState ( NAME_Death ) == false )
+		P_ExplodeMissile( missile, line, NULL );
 }
 
 //*****************************************************************************
 //
-static void client_WeaponSound( BYTESTREAM_s *pByteStream )
+void ServerCommands::WeaponSound::Execute()
 {
-	ULONG		ulPlayer;
-	const char	*pszSound;
-
-	// Read in the player who's creating a weapon sound.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the sound that's being played.
-	pszSound = NETWORK_ReadString( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out. Also, don't
-	// play the sound if the console player is spying through this player's eyes.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) ||
-		( players[ulPlayer].mo == NULL ) ||
-		( players[ulPlayer].mo->CheckLocalView( consoleplayer )))
-	{
+	// Don't play the sound if the console player is spying through this player's eyes.
+	if ( player->mo->CheckLocalView( consoleplayer ) )
 		return;
-	}
 
-	// Finally, play the sound.
-	S_Sound( players[ulPlayer].mo, CHAN_WEAPON, pszSound, 1, ATTN_NORM );
+	S_Sound( player->mo, CHAN_WEAPON, sound, 1, ATTN_NORM );
 }
 
 //*****************************************************************************
 //
-static void client_WeaponChange( BYTESTREAM_s *pByteStream )
+void ServerCommands::WeaponChange::Execute()
 {
-	ULONG			ulPlayer;
-	USHORT			usActorNetworkIndex;
-	PClassActor	*pType;
-	AWeapon			*pWeapon;
-
-	// Read in the player whose info is about to be updated.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the identification of the weapon we're supposed to switch to.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// If the player doesn't exist, get out!
-	if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false )
-		return;
-
-	// If it's an invalid class, or not a weapon, don't switch.
-	pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
-	if (( pType == NULL ) || !( pType->IsDescendantOf( RUNTIME_CLASS( AWeapon ))))
-		return;
-
 	// If we dont have this weapon already, we do now!
-	pWeapon = static_cast<AWeapon *>( players[ulPlayer].mo->FindInventory( pType ));
-	if ( pWeapon == NULL )
-		pWeapon = static_cast<AWeapon *>( players[ulPlayer].mo->GiveInventoryType( pType ));
+	AWeapon *weapon = static_cast<AWeapon *>( player->mo->FindInventory( weaponType ));
+	if ( weapon == NULL )
+		weapon = static_cast<AWeapon *>( player->mo->GiveInventoryType( weaponType ));
 
 	// If he still doesn't have the object after trying to give it to him... then YIKES!
-	if ( pWeapon == NULL )
+	if ( weapon == NULL )
 	{
-		CLIENT_PrintWarning( "client_WeaponChange: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
+		CLIENT_PrintWarning( "client_WeaponChange: Failed to give inventory type, %s!\n", weaponType->TypeName.GetChars() );
 		return;
 	}
 
 	// Bring the weapon up if necessary.
-	if ( ( players[ulPlayer].ReadyWeapon != pWeapon ) || ( ( players[ulPlayer].PendingWeapon != WP_NOCHANGE ) && ( players[ulPlayer].PendingWeapon != pWeapon ) ) )
-		players[ulPlayer].PendingWeapon = pWeapon;
+	if ( ( player->ReadyWeapon != weapon ) || ( ( player->PendingWeapon != WP_NOCHANGE ) && ( player->PendingWeapon != weapon ) ) )
+		player->PendingWeapon = weapon;
 
 	// Confirm to the server that this is the weapon we're using.
-	CLIENT_UpdatePendingWeapon( &players[ulPlayer] );
+	CLIENT_UpdatePendingWeapon( player );
 
 	// [BB] Ensure that the weapon is brought up. Note: Needs to be done after calling
 	// CLIENT_UpdatePendingWeapon because P_BringUpWeapon clears PendingWeapon to WP_NOCHANGE.
-	P_BringUpWeapon (&players[ulPlayer]);
+	P_BringUpWeapon( player );
 }
 
 //*****************************************************************************
