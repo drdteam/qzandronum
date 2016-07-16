@@ -3943,12 +3943,12 @@ void ServerCommands::KillPlayer::Execute()
 	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
 		if (( playeringame[ulIdx] == false ) ||
-			( player->mo == NULL ))
+			( players[ulIdx].mo == NULL ))
 		{
 			continue;
 		}
 
-		if ( player->mo == source )
+		if ( players[ulIdx].mo == source )
 		{
 			ulSourcePlayer = ulIdx;
 			break;
