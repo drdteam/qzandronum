@@ -169,14 +169,6 @@ static	void	client_EndSnapshot( BYTESTREAM_s *pByteStream );
 // Player functions.
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
-static	void	client_GivePlayerMedal( BYTESTREAM_s *pByteStream );
-static	void	client_ResetAllPlayersFragcount( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerIsSpectator( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerSay( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerTaunt( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerRespawnInvulnerability( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerUseInventory( BYTESTREAM_s *pByteStream );
-static	void	client_PlayerDropInventory( BYTESTREAM_s *pByteStream );
 static	void	client_IgnorePlayer( BYTESTREAM_s *pByteStream );
 
 // Game commands.
@@ -1482,38 +1474,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		client_SetPlayerPieces( pByteStream );
 		break;
 	*/
-	case SVC_GIVEPLAYERMEDAL:
-
-		client_GivePlayerMedal( pByteStream );
-		break;
-	case SVC_RESETALLPLAYERSFRAGCOUNT:
-
-		client_ResetAllPlayersFragcount( pByteStream );
-		break;
-	case SVC_PLAYERISSPECTATOR:
-
-		client_PlayerIsSpectator( pByteStream );
-		break;
-	case SVC_PLAYERSAY:
-
-		client_PlayerSay( pByteStream );
-		break;
-	case SVC_PLAYERTAUNT:
-
-		client_PlayerTaunt( pByteStream );
-		break;
-	case SVC_PLAYERRESPAWNINVULNERABILITY:
-
-		client_PlayerRespawnInvulnerability( pByteStream );
-		break;
-	case SVC_PLAYERUSEINVENTORY:
-
-		client_PlayerUseInventory( pByteStream );
-		break;
-	case SVC_PLAYERDROPINVENTORY:
-
-		client_PlayerDropInventory( pByteStream );
-		break;
 	case SVC_SETGAMEMODE:
 
 		client_SetGameMode( pByteStream );
@@ -1998,53 +1958,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 					if ( pActor )
 						pActor->PlayBounceSound ( bOnfloor );
 				}
-				break;
-
-			case SVC2_GIVEWEAPONHOLDER:
-				{
-					const ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-					const int iPieceMask = NETWORK_ReadShort( pByteStream );
-					const USHORT usNetIndex = NETWORK_ReadShort( pByteStream );
-
-					if ( PLAYER_IsValidPlayerWithMo( ulPlayer ) == false )
-						break;
-
-					const PClass *pPieceWeapon = NETWORK_GetClassFromIdentification( usNetIndex );
-					if ( !pPieceWeapon ) break;
-
-					AWeaponHolder *holder = static_cast<AWeaponHolder *>( players[ulPlayer].mo->FindInventory( RUNTIME_CLASS( AWeaponHolder ) ) );
-					if ( holder == NULL )
-						holder = static_cast<AWeaponHolder *>( players[ulPlayer].mo->GiveInventoryType( RUNTIME_CLASS( AWeaponHolder ) ) );
-
-					if (!holder)
-					{
-						CLIENT_PrintWarning( "GIVEWEAPONHOLDER: Failed to give AWeaponHolder!\n");
-						break;
-					}
-
-					// Set the special fields. This is why this function exists in the first place.
-					holder->PieceMask = iPieceMask;
-					holder->PieceWeapon = pPieceWeapon;
-				}
-				break;
-
-			// [Dusk]
-			case SVC2_SETHEXENARMORSLOTS:
-				{
-					const ULONG ulPlayer = NETWORK_ReadByte( pByteStream );
-					AHexenArmor *aHXArmor = PLAYER_IsValidPlayerWithMo( ulPlayer ) ? static_cast<AHexenArmor *>( players[ulPlayer].mo->FindInventory( RUNTIME_CLASS (AHexenArmor ))) : NULL;
-
-					if ( aHXArmor == NULL )
-					{
-						// [BB] Even if we can't set the values, we still have to parse them.
-						for (int i = 0; i <= 4; i++) NETWORK_ReadLong( pByteStream );
-						break;
-					}
-					
-					for (int i = 0; i <= 4; i++)
-						aHXArmor->Slots[i] = NETWORK_ReadLong( pByteStream );
-				}
-
 				break;
 
 			case SVC2_SETTHINGREACTIONTIME:
@@ -4509,28 +4422,14 @@ void ServerCommands::ConsolePlayerKicked::Execute()
 
 //*****************************************************************************
 //
-static void client_GivePlayerMedal( BYTESTREAM_s *pByteStream )
+void ServerCommands::GivePlayerMedal::Execute()
 {
-	ULONG	ulPlayer;
-	ULONG	ulMedal;
-
-	// Read in the player to award the medal to.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-	
-	// Read in the medal to be awarded.
-	ulMedal = NETWORK_ReadByte( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// Award the medal.
-	MEDAL_GiveMedal( ulPlayer, ulMedal );
+	MEDAL_GiveMedal( player - players, medal );
 }
 
 //*****************************************************************************
 //
-static void client_ResetAllPlayersFragcount( BYTESTREAM_s *pByteStream )
+void ServerCommands::ResetAllPlayersFragcount::Execute()
 {
 	// This function pretty much takes care of everything we need to do!
 	PLAYER_ResetAllPlayersFragcount( );
@@ -4538,90 +4437,55 @@ static void client_ResetAllPlayersFragcount( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_PlayerIsSpectator( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerIsSpectator::Execute()
 {
-	ULONG	ulPlayer;
-	bool	bDeadSpectator;
-
-	// Read in the player who's going to be spectating.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in if he's becoming a dead spectator.
-	bDeadSpectator = !!NETWORK_ReadByte( pByteStream );
-
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
 	// [BB] If the player turns into a true spectator, create the disconnect particle effect.
 	// Note: We have to do this before the player is actually turned into a spectator, because
 	// the tiny height of a spectator's body would alter the effect.
-	if ( ( bDeadSpectator == false ) && players[ulPlayer].mo )
-		P_DisconnectEffect( players[ulPlayer].mo );
+	if ( ( deadSpectator == false ) && player->mo )
+		P_DisconnectEffect( player->mo );
 
 	// Make the player a spectator.
-	PLAYER_SetSpectator( &players[ulPlayer], false, bDeadSpectator );
+	PLAYER_SetSpectator( player, false, deadSpectator );
 
 	// If we were a spectator and looking through this player's eyes, revert them.
-	if ( players[ulPlayer].mo && players[ulPlayer].mo->CheckLocalView( consoleplayer ))
+	if ( player->mo && player->mo->CheckLocalView( consoleplayer ))
 	{
 		CLIENT_ResetConsolePlayerCamera();
 	}
 
 	// Don't lag anymore if we're a spectator.
-	if ( ulPlayer == static_cast<ULONG>(consoleplayer) )
+	if ( player == &players[consoleplayer] )
 		g_bClientLagging = false;
 }
 
 //*****************************************************************************
 //
-static void client_PlayerSay( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerSay::Execute()
 {
-	ULONG		ulPlayer;
-	ULONG		ulMode;
-	const char	*pszString;
-
-	// Read in the player who's supposed to be talking.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read in the chat mode. Could be global, team-only, etc.
-	ulMode = NETWORK_ReadByte( pByteStream );
-
-	// Read in the actual chat string.
-	pszString = NETWORK_ReadString( pByteStream );
-
-	// If ulPlayer == MAXPLAYERS, that means the server is talking.
-	if ( ulPlayer != MAXPLAYERS )
+	// If playerNumber == MAXPLAYERS, that means the server is talking.
+	if ( playerNumber != MAXPLAYERS )
 	{
 		// If this is an invalid player, break out.
-		if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
+		if ( PLAYER_IsValidPlayer( playerNumber ) == false )
 			return;
 	}
 
 	// Finally, print out the chat string.
-	CHAT_PrintChatString( ulPlayer, ulMode, pszString );
+	CHAT_PrintChatString( playerNumber, mode, message );
 }
 
 //*****************************************************************************
 //
-static void client_PlayerTaunt( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerTaunt::Execute()
 {
-	ULONG	ulPlayer;
-
-	// Read in the player index who's taunting.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
 	// Don't taunt if we're not in a level!
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	if (( players[ulPlayer].bSpectating ) ||
-		( players[ulPlayer].health <= 0 ) ||
-		( players[ulPlayer].mo == NULL ) ||
+	if (( player->bSpectating ) ||
+		( player->health <= 0 ) ||
+		( player->mo == NULL ) ||
 		( zacompatflags & ZACOMPATF_DISABLETAUNTS ))
 	{
 		return;
@@ -4629,94 +4493,59 @@ static void client_PlayerTaunt( BYTESTREAM_s *pByteStream )
 
 	// Play the taunt sound!
 	if ( cl_taunts )
-		S_Sound( players[ulPlayer].mo, CHAN_VOICE, "*taunt", 1, ATTN_NORM );
+		S_Sound( player->mo, CHAN_VOICE, "*taunt", 1, ATTN_NORM );
 }
 
 //*****************************************************************************
 //
-static void client_PlayerRespawnInvulnerability( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerRespawnInvulnerability::Execute()
 {
-	ULONG		ulPlayer;
-	AActor		*pActor;
-	AInventory	*pInventory;
-
-	// Read in the player index who has respawn invulnerability.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
 	// Don't taunt if we're not in a level!
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	// If this is an invalid player, break out.
-	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
-		return;
-
-	// We can't apply the effect to the player's body if the player's body doesn't exist!
-	pActor = players[ulPlayer].mo;
-	if ( pActor == NULL )
-		return;
-
 	// First, we need to adjust the blend color, so the player's screen doesn't go white.
-	pInventory = pActor->FindInventory( RUNTIME_CLASS( APowerInvulnerable ));
-	if ( pInventory == NULL )
+	APowerInvulnerable *invulnerability = player->mo->FindInventory<APowerInvulnerable>();
+
+	if ( invulnerability == NULL )
 		return;
 
-	static_cast<APowerup *>( pInventory )->BlendColor = 0;
+	invulnerability->BlendColor = 0;
 
 	// Apply respawn invulnerability effect.
 	switch ( cl_respawninvuleffect )
 	{
 	case 1:
-
-		pActor->RenderStyle = STYLE_Translucent;
-		pActor->effects |= FX_VISIBILITYFLICKER;
+		player->mo->RenderStyle = STYLE_Translucent;
+		player->mo->effects |= FX_VISIBILITYFLICKER;
 		break;
-	case 2:
 
-		pActor->effects |= FX_RESPAWNINVUL;
+	case 2:
+		player->mo->effects |= FX_RESPAWNINVUL;
 		break;
 	}
 }
 
 //*****************************************************************************
 //
-static void client_PlayerUseInventory( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerUseInventory::Execute()
 {
-	ULONG			ulPlayer;
-	USHORT			usActorNetworkIndex;
-	PClassActor	*pType;
-	AInventory		*pInventory;
-
-	// Read in the player using an inventory item.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read the name of the inventory item we shall use.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
-	pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
-	if ( pType == NULL )
-		return;
-
 	// Try to find this object within the player's personal inventory.
-	pInventory = players[ulPlayer].mo->FindInventory( pType );
+	AInventory *item = player->mo->FindInventory( itemType );
 
 	// If the player doesn't have this type, give it to him.
-	if ( pInventory == NULL )
-		pInventory = players[ulPlayer].mo->GiveInventoryType( pType );
+	if ( item == NULL )
+		item = player->mo->GiveInventoryType( itemType );
 
 	// If he still doesn't have the object after trying to give it to him... then YIKES!
-	if ( pInventory == NULL )
+	if ( item == NULL )
 	{
-		CLIENT_PrintWarning( "client_PlayerUseInventory: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
+		CLIENT_PrintWarning( "client_PlayerUseInventory: Failed to give inventory type, %s!\n", itemType->TypeName.GetChars() );
 		return;
 	}
 
 	// Finally, use the item.
-	const bool bSuccess = players[ulPlayer].mo->UseInventory( pInventory );
+	const bool success = player->mo->UseInventory( item );
 
 	// [BB] The server only instructs the client to use the item, if the use was successful.
 	// So using it on the client also should be successful. If it is not, something went wrong,
@@ -4725,54 +4554,75 @@ static void client_PlayerUseInventory( BYTESTREAM_s *pByteStream )
 	// client about the effects of the use before it tells the client to use the item, the use
 	// on the client will fail. In this case at least reduce the inventory amount according to a
 	// successful use.
-	if ( ( bSuccess == false ) && !( dmflags2 & DF2_INFINITE_INVENTORY ) )
+	if ( ( success == false ) && !( dmflags2 & DF2_INFINITE_INVENTORY ) )
 	{
-		if (--pInventory->Amount <= 0 && !(pInventory->ItemFlags & IF_KEEPDEPLETED))
+		if (--item->Amount <= 0 && !(item->ItemFlags & IF_KEEPDEPLETED))
 		{
-			pInventory->Destroy ();
+			item->Destroy ();
 		}
 	}
 }
 
 //*****************************************************************************
 //
-static void client_PlayerDropInventory( BYTESTREAM_s *pByteStream )
+void ServerCommands::PlayerDropInventory::Execute()
 {
-	ULONG			ulPlayer;
-	USHORT			usActorNetworkIndex;
-	PClassActor	*pType;
-	AInventory		*pInventory;
-
-	// Read in the player dropping an inventory item.
-	ulPlayer = NETWORK_ReadByte( pByteStream );
-
-	// Read the identification of the inventory item we shall drop.
-	usActorNetworkIndex = NETWORK_ReadShort( pByteStream );
-
-	// Check to make sure everything is valid. If not, break out.
-	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) || ( players[ulPlayer].mo == NULL ))
-		return;
-
-	pType = NETWORK_GetClassFromIdentification( usActorNetworkIndex );
-	if ( pType == NULL )
-		return;
-
 	// Try to find this object within the player's personal inventory.
-	pInventory = players[ulPlayer].mo->FindInventory( pType );
+	AInventory *item = player->mo->FindInventory( itemType );
 
 	// If the player doesn't have this type, give it to him.
-	if ( pInventory == NULL )
-		pInventory = players[ulPlayer].mo->GiveInventoryType( pType );
+	if ( item == NULL )
+		item = player->mo->GiveInventoryType( itemType );
 
 	// If he still doesn't have the object after trying to give it to him... then YIKES!
-	if ( pInventory == NULL )
+	if ( item == NULL )
 	{
-		CLIENT_PrintWarning( "client_PlayerDropInventory: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
+		CLIENT_PrintWarning( "client_PlayerDropInventory: Failed to give inventory type, %s!\n", itemType->TypeName.GetChars() );
 		return;
 	}
 
 	// Finally, drop the item.
-	players[ulPlayer].mo->DropInventory( pInventory );
+	player->mo->DropInventory( item );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::GiveWeaponHolder::Execute()
+{
+	AWeaponHolder *holder = player->mo->FindInventory<AWeaponHolder>();
+
+	if ( holder == NULL )
+		holder = static_cast<AWeaponHolder *>( player->mo->GiveInventoryType( RUNTIME_CLASS( AWeaponHolder ) ) );
+
+	if ( holder == NULL )
+	{
+		CLIENT_PrintWarning( "GiveWeaponHolder: Failed to give AWeaponHolder!\n" );
+		return;
+	}
+
+	// Set the special fields. This is why this function exists in the first place.
+	holder->PieceMask = pieceMask;
+	holder->PieceWeapon = pieceWeapon;
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SetHexenArmorSlots::Execute()
+{
+	AHexenArmor *hexenArmor = player->mo->FindInventory<AHexenArmor>();
+
+	if ( hexenArmor )
+	{
+		hexenArmor->Slots[0] = slot0;
+		hexenArmor->Slots[1] = slot1;
+		hexenArmor->Slots[2] = slot2;
+		hexenArmor->Slots[3] = slot3;
+		hexenArmor->Slots[4] = slot4;
+	}
+	else
+	{
+		CLIENT_PrintWarning( "SetHexenArmorSlots: Player %td does not have HexenArmor!\n", player - players );
+	}
 }
 
 //*****************************************************************************

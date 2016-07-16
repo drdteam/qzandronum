@@ -256,3 +256,57 @@ EndCommand
 
 Command ConsolePlayerKicked
 EndCommand
+
+Command GivePlayerMedal
+	Player player
+	Byte medal
+EndCommand
+
+Command ResetAllPlayersFragcount
+EndCommand
+
+Command PlayerIsSpectator
+	Player player
+	Bool deadSpectator
+EndCommand
+
+Command PlayerSay
+	Byte playerNumber
+	Byte mode
+	String message
+EndCommand
+
+Command PlayerTaunt
+	Player player with MoTest
+EndCommand
+
+Command PlayerRespawnInvulnerability
+	Player player with MoTest
+EndCommand
+
+Command PlayerUseInventory
+	Player player with MoTest
+	Class<AInventory> itemType
+EndCommand
+
+Command PlayerDropInventory
+	Player player with MoTest
+	Class<AInventory> itemType
+EndCommand
+
+Command GiveWeaponHolder
+	ExtendedCommand
+	Player player with MoTest
+	Short pieceMask
+	Class pieceWeapon
+EndCommand
+
+Command SetHexenArmorSlots
+	ExtendedCommand
+	Player player with MoTest
+	Long slot0
+	Long slot1
+	Long slot2
+	Long slot3
+	Long slot4
+EndCommand

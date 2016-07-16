@@ -1050,9 +1050,9 @@ void SERVERCOMMANDS_GivePlayerMedal( ULONG ulPlayer, ULONG ulMedal, ULONG ulPlay
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_GIVEPLAYERMEDAL );
-	command.addByte( ulPlayer );
-	command.addByte( ulMedal );
+	ServerCommands::GivePlayerMedal command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetMedal( ulMedal );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1060,8 +1060,7 @@ void SERVERCOMMANDS_GivePlayerMedal( ULONG ulPlayer, ULONG ulMedal, ULONG ulPlay
 //
 void SERVERCOMMANDS_ResetAllPlayersFragcount( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command( SVC_RESETALLPLAYERSFRAGCOUNT );
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	ServerCommands::ResetAllPlayersFragcount().sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
@@ -1071,9 +1070,9 @@ void SERVERCOMMANDS_PlayerIsSpectator( ULONG ulPlayer, ULONG ulPlayerExtra, Serv
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_PLAYERISSPECTATOR );
-	command.addByte( ulPlayer );
-	command.addByte( players[ulPlayer].bDeadSpectator );
+	ServerCommands::PlayerIsSpectator command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetDeadSpectator( players[ulPlayer].bDeadSpectator );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1084,10 +1083,10 @@ void SERVERCOMMANDS_PlayerSay( ULONG ulPlayer, const char *pszString, ULONG ulMo
 	if ( ulPlayer != MAXPLAYERS && PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_PLAYERSAY );
-	command.addByte( ulPlayer );
-	command.addByte( ulMode );
-	command.addString( pszString );
+	ServerCommands::PlayerSay command;
+	command.SetPlayerNumber( ulPlayer );
+	command.SetMode( ulMode );
+	command.SetMessage( pszString );
 
 	for ( ClientIterator it ( ulPlayerExtra, flags ); it.notAtEnd(); ++it )
 	{
@@ -1114,7 +1113,7 @@ void SERVERCOMMANDS_PlayerSay( ULONG ulPlayer, const char *pszString, ULONG ulMo
 				continue;
 		}
 
-		command.sendCommandToOneClient( *it );
+		command.sendCommandToClients( *it, SVCF_ONLYTHISCLIENT );
 	}
 }
 
@@ -1125,8 +1124,8 @@ void SERVERCOMMANDS_PlayerTaunt( ULONG ulPlayer, ULONG ulPlayerExtra, ServerComm
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_PLAYERTAUNT );
-	command.addByte( ulPlayer );
+	ServerCommands::PlayerTaunt command;
+	command.SetPlayer( &players[ulPlayer] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1137,8 +1136,8 @@ void SERVERCOMMANDS_PlayerRespawnInvulnerability( ULONG ulPlayer, ULONG ulPlayer
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_PLAYERRESPAWNINVULNERABILITY );
-	command.addByte( ulPlayer );
+	ServerCommands::PlayerRespawnInvulnerability command;
+	command.SetPlayer( &players[ulPlayer] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1146,21 +1145,15 @@ void SERVERCOMMANDS_PlayerRespawnInvulnerability( ULONG ulPlayer, ULONG ulPlayer
 //
 void SERVERCOMMANDS_PlayerUseInventory( ULONG ulPlayer, AInventory *pItem, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	USHORT		usActorNetworkIndex = 0;
-
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) ||
 		( pItem == NULL ))
 	{
 		return;
 	}
 
-	usActorNetworkIndex = pItem->GetClass( )->getActorNetworkIndex();
-	if ( NETWORK_GetClassNameFromIdentification ( usActorNetworkIndex ) == NULL )
-		return;
-
-	NetCommand command( SVC_PLAYERUSEINVENTORY );
-	command.addByte( ulPlayer );
-	command.addShort( usActorNetworkIndex );
+	ServerCommands::PlayerUseInventory command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetItemType( pItem->GetClass() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -1168,21 +1161,15 @@ void SERVERCOMMANDS_PlayerUseInventory( ULONG ulPlayer, AInventory *pItem, ULONG
 //
 void SERVERCOMMANDS_PlayerDropInventory( ULONG ulPlayer, AInventory *pItem, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	USHORT		usActorNetworkIndex = 0;
-
 	if (( PLAYER_IsValidPlayer( ulPlayer ) == false ) ||
 		( pItem == NULL ))
 	{
 		return;
 	}
 
-	usActorNetworkIndex = pItem->GetClass( )->getActorNetworkIndex();
-	if ( NETWORK_GetClassNameFromIdentification ( usActorNetworkIndex ) == NULL )
-		return;
-
-	NetCommand command( SVC_PLAYERDROPINVENTORY );
-	command.addByte( ulPlayer );
-	command.addShort( usActorNetworkIndex );
+	ServerCommands::PlayerDropInventory command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetItemType( pItem->GetClass() );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3539,10 +3526,11 @@ void SERVERCOMMANDS_GiveWeaponHolder( ULONG ulPlayer, AWeaponHolder *pHolder, UL
 	if ( pHolder->ulNetworkFlags & NETFL_SERVERSIDEONLY )
 		return;
 
-	NetCommand command( SVC2_GIVEWEAPONHOLDER );
-	command.addByte( ulPlayer );
-	command.addShort( pHolder->PieceMask );
-	command.addShort( pHolder->PieceWeapon->getActorNetworkIndex() );
+	ServerCommands::GiveWeaponHolder command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetPieceMask( pHolder->PieceMask );
+	// [BB] TODO: Remove this workaround by having SetPieceWeapon accept "const *PClass" as argument.
+	command.SetPieceWeapon( NETWORK_GetClassFromIdentification( pHolder->PieceWeapon->getActorNetworkIndex() ) );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3595,18 +3583,21 @@ void SERVERCOMMANDS_SetInventoryIcon( ULONG ulPlayer, AInventory *pInventory, UL
 
 //*****************************************************************************
 // [Dusk]
-void SERVERCOMMANDS_SetHexenArmorSlots( ULONG ulPlayer, AHexenArmor *aHXArmor, ULONG ulPlayerExtra, ServerCommandFlags flags )
+void SERVERCOMMANDS_SetHexenArmorSlots( ULONG ulPlayer, AHexenArmor *hexenArmor, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
-	if ( aHXArmor == NULL )
+	if ( hexenArmor == NULL )
 		return;
 
-	NetCommand command( SVC2_SETHEXENARMORSLOTS );
-	command.addByte( ulPlayer );
-	for (int i = 0; i <= 4; i++)
-		command.addLong( aHXArmor->Slots[i] );
+	ServerCommands::SetHexenArmorSlots command;
+	command.SetPlayer( &players[ulPlayer] );
+	command.SetSlot0( hexenArmor->Slots[0] );
+	command.SetSlot1( hexenArmor->Slots[1] );
+	command.SetSlot2( hexenArmor->Slots[2] );
+	command.SetSlot3( hexenArmor->Slots[3] );
+	command.SetSlot4( hexenArmor->Slots[4] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
