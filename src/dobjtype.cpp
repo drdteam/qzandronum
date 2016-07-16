@@ -1273,6 +1273,7 @@ void PFloat::WriteValue(FArchive &ar, const void *addr) const
 		{
 			ar.WriteByte(VAL_Float64);
 			ar << doubleprecision;
+			return;
 		}
 	}
 	else
