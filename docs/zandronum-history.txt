@@ -27,6 +27,7 @@
 +	- The internal server browser now automatically loads the wads of the selected server when joining. For this, all wads need to be in a place where they can be found with the '-file' command line option. In the browser menu, the left and right keys allow to scroll through the list of filtered servers. [Torr Samaho]
 +	- The 'Join the game' command key used by spectators is now customizable in the 'Customize Controls' menu. [Edward-san, Dusk]
 +	- The default 'authhostname' CVAR has been changed to the official zandronum game authentication server ( auth.zandronum.com:16666 ). [AlexMax, Edward-san]
++	- BOTINFO now allows to define more than 128 bots. [Torr Samaho]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]

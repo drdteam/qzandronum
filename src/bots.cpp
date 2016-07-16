@@ -98,7 +98,7 @@ static	FRandom		BotSpawn( "BotSpawn" );
 static	FRandom		BotRemove( "BotRemove" );
 static	FRandom		g_RandomBotAimSeed( "RandomBotAimSeed" );
 static	BOTSPAWN_t	g_BotSpawn[MAXPLAYERS];
-static	BOTINFO_s	*g_BotInfo[MAX_BOTINFO];
+static	TArray<BOTINFO_s>	g_BotInfo;
 static	cycle_t		g_BotCycles;
 static	bool		g_bBotIsInitialized[MAXPLAYERS];
 static	LONG		g_lLastHeader;
@@ -385,8 +385,7 @@ void BOTS_Construct( void )
 	/**************** EXTRA BOTS *****************/
 
 	// Initialize all botinfo pointers.
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
-		g_BotInfo[ulIdx] = NULL;
+	g_BotInfo.Clear();
 
 	// Initialize the botspawn table.
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
@@ -450,14 +449,7 @@ void BOTS_Destruct( void )
 	ULONG	ulIdx;
 
 	// First, go through and free all additional botinfo's.
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
-	{
-		if ( g_BotInfo[ulIdx] != NULL )
-		{
-			M_Free( g_BotInfo[ulIdx] );
-			g_BotInfo[ulIdx] = NULL;
-		}
-	}
+	g_BotInfo.Clear();
 
 	// Clear out any player's bot data.
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
@@ -478,42 +470,31 @@ void BOTS_Destruct( void )
 //
 bool BOTS_AddBotInfo( BOTINFO_s *pBotInfo )
 {
-	ULONG	ulIdx;
+	BOTINFO_s botInfo;
 
-	// First, find a free slot to add the botinfo.
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
-	{
-		if ( g_BotInfo[ulIdx] != NULL )
-			continue;
+	// Now copy all the data we passed in into this block.
+	botInfo.bRevealed						= pBotInfo->bRevealed;
+	botInfo.bRevealedByDefault			= pBotInfo->bRevealedByDefault;
+	botInfo.Accuracy						= pBotInfo->Accuracy;
+	botInfo.Anticipation					= pBotInfo->Anticipation;
+	botInfo.Evade							= pBotInfo->Evade;
+	botInfo.Intellect						= pBotInfo->Intellect;
+	botInfo.ulRailgunColor				= pBotInfo->ulRailgunColor;
+	botInfo.ulChatFrequency				= pBotInfo->ulChatFrequency;
+	botInfo.ReactionTime					= pBotInfo->ReactionTime;
+	botInfo.Perception					= pBotInfo->Perception;
+	sprintf( botInfo.szFavoriteWeapon,	"%s", pBotInfo->szFavoriteWeapon );
+	sprintf( botInfo.szClassName,			"%s", pBotInfo->szClassName );
+	sprintf( botInfo.szColor,				"%s", pBotInfo->szColor );
+	sprintf( botInfo.szGender,			"%s", pBotInfo->szGender );
+	sprintf( botInfo.szSkinName,			"%s", pBotInfo->szSkinName );
+	sprintf( botInfo.szName,				"%s", pBotInfo->szName );
+	sprintf( botInfo.szScriptName,		"%s", pBotInfo->szScriptName );
+	sprintf( botInfo.szChatFile,			"%s", pBotInfo->szChatFile );
+	sprintf( botInfo.szChatLump,			"%s", pBotInfo->szChatLump );
+	g_BotInfo.Push ( botInfo );
 
-		// Allocate some memory for this new block.
-		g_BotInfo[ulIdx] = (BOTINFO_s *)M_Malloc( sizeof( BOTINFO_s ));
-
-		// Now copy all the data we passed in into this block.
-		g_BotInfo[ulIdx]->bRevealed						= pBotInfo->bRevealed;
-		g_BotInfo[ulIdx]->bRevealedByDefault			= pBotInfo->bRevealedByDefault;
-		g_BotInfo[ulIdx]->Accuracy						= pBotInfo->Accuracy;
-		g_BotInfo[ulIdx]->Anticipation					= pBotInfo->Anticipation;
-		g_BotInfo[ulIdx]->Evade							= pBotInfo->Evade;
-		g_BotInfo[ulIdx]->Intellect						= pBotInfo->Intellect;
-		g_BotInfo[ulIdx]->ulRailgunColor				= pBotInfo->ulRailgunColor;
-		g_BotInfo[ulIdx]->ulChatFrequency				= pBotInfo->ulChatFrequency;
-		g_BotInfo[ulIdx]->ReactionTime					= pBotInfo->ReactionTime;
-		g_BotInfo[ulIdx]->Perception					= pBotInfo->Perception;
-		sprintf( g_BotInfo[ulIdx]->szFavoriteWeapon,	"%s", pBotInfo->szFavoriteWeapon );
-		sprintf( g_BotInfo[ulIdx]->szClassName,			"%s", pBotInfo->szClassName );
-		sprintf( g_BotInfo[ulIdx]->szColor,				"%s", pBotInfo->szColor );
-		sprintf( g_BotInfo[ulIdx]->szGender,			"%s", pBotInfo->szGender );
-		sprintf( g_BotInfo[ulIdx]->szSkinName,			"%s", pBotInfo->szSkinName );
-		sprintf( g_BotInfo[ulIdx]->szName,				"%s", pBotInfo->szName );
-		sprintf( g_BotInfo[ulIdx]->szScriptName,		"%s", pBotInfo->szScriptName );
-		sprintf( g_BotInfo[ulIdx]->szChatFile,			"%s", pBotInfo->szChatFile );
-		sprintf( g_BotInfo[ulIdx]->szChatLump,			"%s", pBotInfo->szChatLump );
-
-		return ( true );
-	}
-
-	return ( false );
+	return ( true );
 }
 
 //*****************************************************************************
@@ -546,12 +527,9 @@ bool BOTS_IsValidName( char *pszName )
 		char	szName[64];
 
 		// Search through the botinfo. If the given name matches one of the names, return true.
-		for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
+		for ( ulIdx = 0; ulIdx < g_BotInfo.Size(); ulIdx++ )
 		{
-			if ( g_BotInfo[ulIdx] == NULL )
-				continue;
-
-			sprintf( szName, "%s", g_BotInfo[ulIdx]->szName );
+			sprintf( szName, "%s", g_BotInfo[ulIdx].szName );
 			V_ColorizeString( szName );
 			V_RemoveColorCodes( szName );
 			if ( stricmp( szName, pszName ) == 0 )
@@ -812,16 +790,13 @@ void BOTS_ArchiveRevealedBotsAndSkins( FConfigFile *f )
 	ULONG	ulIdx;
 	char	szString[64];
 
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
+	for ( ulIdx = 0; ulIdx < g_BotInfo.Size(); ulIdx++ )
 	{
-		if ( g_BotInfo[ulIdx] == NULL )
-			continue;
-
 		// If this bot isn't revealed, or isn't revealed by default, don't archive it.
-		if (( g_BotInfo[ulIdx]->bRevealed == false ) || ( g_BotInfo[ulIdx]->bRevealedByDefault ))
+		if (( g_BotInfo[ulIdx].bRevealed == false ) || ( g_BotInfo[ulIdx].bRevealedByDefault ))
 			continue;
 
-		sprintf( szString, "\"%s\"", g_BotInfo[ulIdx]->szName );
+		sprintf( szString, "\"%s\"", g_BotInfo[ulIdx].szName );
 
 		V_ColorizeString( szString );
 		V_RemoveColorCodes( szString );
@@ -853,22 +828,19 @@ void BOTS_RestoreRevealedBotsAndSkins( FConfigFile &config )
 
 	while ( config.NextInSection ( pszKey, pszValue ))
 	{
-		for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
+		for ( ulIdx = 0; ulIdx < g_BotInfo.Size(); ulIdx++ )
 		{
-			if ( g_BotInfo[ulIdx] == NULL )
+			if ( g_BotInfo[ulIdx].bRevealed )
 				continue;
 
-			if ( g_BotInfo[ulIdx]->bRevealed )
-				continue;
-
-			sprintf( szBuffer, "%s", g_BotInfo[ulIdx]->szName );
+			sprintf( szBuffer, "%s", g_BotInfo[ulIdx].szName );
 			V_ColorizeString( szBuffer );
 			V_RemoveColorCodes( szBuffer );
 
 			if ( strnicmp( pszKey + 1, szBuffer, strlen( szBuffer )) != 0 )
 				continue;
 
-			g_BotInfo[ulIdx]->bRevealed = true;
+			g_BotInfo[ulIdx].bRevealed = true;
 		}
 
 		for ( ulIdx = 0; ulIdx < (ULONG)skins.Size(); ulIdx++ )
@@ -1298,185 +1270,177 @@ void bots_ParseBotInfoLump( FScanner &sc )
 //
 ULONG BOTINFO_GetNumBotInfos( void )
 {
-	ULONG	ulIdx;
-
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
-	{
-		if ( g_BotInfo[ulIdx] == NULL )
-			return ( ulIdx );
-	}
-
-	return ( ulIdx );
+	return ( g_BotInfo.Size() );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetName( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szName );
+	return ( g_BotInfo[ulIdx].szName );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetAccuracy( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->Accuracy );
+	return ( g_BotInfo[ulIdx].Accuracy );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetIntellect( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->Intellect );
+	return ( g_BotInfo[ulIdx].Intellect );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetEvade( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->Evade );
+	return ( g_BotInfo[ulIdx].Evade );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetAnticipation( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->Anticipation );
+	return ( g_BotInfo[ulIdx].Anticipation );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetReactionTime( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->ReactionTime );
+	return ( g_BotInfo[ulIdx].ReactionTime );
 }
 
 //*****************************************************************************
 //
 BOTSKILL_e BOTINFO_GetPerception( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( BOTSKILL_VERYPOOR );
 
-	return ( g_BotInfo[ulIdx]->Perception );
+	return ( g_BotInfo[ulIdx].Perception );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetFavoriteWeapon( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szFavoriteWeapon );
+	return ( g_BotInfo[ulIdx].szFavoriteWeapon );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetColor( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szColor );
+	return ( g_BotInfo[ulIdx].szColor );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetGender( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szGender );
+	return ( g_BotInfo[ulIdx].szGender );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetClass( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szClassName );
+	return ( g_BotInfo[ulIdx].szClassName );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetSkin( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szSkinName );
+	return ( g_BotInfo[ulIdx].szSkinName );
 }
 
 //*****************************************************************************
 //
 ULONG BOTINFO_GetRailgunColor( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( -1 );
 
-	return ( g_BotInfo[ulIdx]->ulRailgunColor );
+	return ( g_BotInfo[ulIdx].ulRailgunColor );
 }
 
 //*****************************************************************************
 //
 ULONG BOTINFO_GetChatFrequency( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( -1 );
 
-	return ( g_BotInfo[ulIdx]->ulChatFrequency );
+	return ( g_BotInfo[ulIdx].ulChatFrequency );
 }
 
 //*****************************************************************************
 //
 bool BOTINFO_GetRevealed( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( false );
 
-	return ( g_BotInfo[ulIdx]->bRevealed );
+	return ( g_BotInfo[ulIdx].bRevealed );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetChatFile( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szChatFile );
+	return ( g_BotInfo[ulIdx].szChatFile );
 }
 
 //*****************************************************************************
 //
 char *BOTINFO_GetChatLump( ULONG ulIdx )
 {
-	if (( ulIdx >= MAX_BOTINFO ) || ( g_BotInfo[ulIdx] == NULL ))
+	if ( ulIdx >= g_BotInfo.Size() )
 		return ( NULL );
 
-	return ( g_BotInfo[ulIdx]->szChatLump );
+	return ( g_BotInfo[ulIdx].szChatLump );
 }
 
 //*****************************************************************************
@@ -1613,7 +1577,7 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	m_posTarget.y = 0;
 	m_posTarget.z = 0;
 	m_pPlayer = NULL;
-	m_ulBotInfoIdx = MAX_BOTINFO;
+	m_ulBotInfoIdx = g_BotInfo.Size();
 	m_bHasScript = false;
 	m_lForwardMove = 0;
 	m_lSideMove = 0;
@@ -1660,25 +1624,22 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	{
 		char	szName[64];
 
-		for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
+		for ( ulIdx = 0; ulIdx < g_BotInfo.Size(); ulIdx++ )
 		{
-			if ( g_BotInfo[ulIdx] != NULL )
+			sprintf( szName, "%s", g_BotInfo[ulIdx].szName );
+			V_ColorizeString( szName );
+			V_RemoveColorCodes( szName );
+			if ( stricmp( szName, pszName ) == 0 )
 			{
-				sprintf( szName, "%s", g_BotInfo[ulIdx]->szName );
-				V_ColorizeString( szName );
-				V_RemoveColorCodes( szName );
-				if ( stricmp( szName, pszName ) == 0 )
+				// If the bot was hidden, reveal it!
+				if ( g_BotInfo[ulIdx].bRevealed == false )
 				{
-					// If the bot was hidden, reveal it!
-					if ( g_BotInfo[ulIdx]->bRevealed == false )
-					{
-						Printf( "Hidden bot \"%s\\c-\" has now been revealed!\n", g_BotInfo[ulIdx]->szName );
-						g_BotInfo[ulIdx]->bRevealed = true;
-					}
-
-					m_ulBotInfoIdx = ulIdx;
-					break;
+					Printf( "Hidden bot \"%s\\c-\" has now been revealed!\n", g_BotInfo[ulIdx].szName );
+					g_BotInfo[ulIdx].bRevealed = true;
 				}
+
+				m_ulBotInfoIdx = ulIdx;
+				break;
 			}
 		}
 		// We've already handled the "what if there's no match" exception.
@@ -1688,14 +1649,11 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	{
 		ULONG	ulRandom;
 
-		while ( m_ulBotInfoIdx == MAX_BOTINFO )
+		while ( m_ulBotInfoIdx == g_BotInfo.Size() )
 		{
-			ulRandom = ( BotSpawn( ) % MAX_BOTINFO );
-			if ( g_BotInfo[ulRandom] != NULL )
-			{
-				if ( g_BotInfo[ulRandom]->bRevealed )
-					m_ulBotInfoIdx = ulRandom;
-			}
+			ulRandom = ( BotSpawn( ) % g_BotInfo.Size() );
+			if ( g_BotInfo[ulRandom].bRevealed )
+				m_ulBotInfoIdx = ulRandom;
 		}
 	}
 
@@ -1712,18 +1670,18 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	// Setup the player's userinfo based on the bot's botinfo.
 	// [BB] First clear the userinfo.
 	m_pPlayer->userinfo.Reset();
-	FString botname = g_BotInfo[m_ulBotInfoIdx]->szName;
+	FString botname = g_BotInfo[m_ulBotInfoIdx].szName;
 	V_ColorizeString( botname );
 	m_pPlayer->userinfo.NameChanged ( botname );
 
-	m_pPlayer->userinfo.ColorChanged ( V_GetColorFromString( NULL, g_BotInfo[m_ulBotInfoIdx]->szColor ) );
+	m_pPlayer->userinfo.ColorChanged ( V_GetColorFromString( NULL, g_BotInfo[m_ulBotInfoIdx].szColor ) );
 
 	// Store the name of the skin the client gave us, so others can view the skin
 	// even if the server doesn't have the skin loaded.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-		strncpy( SERVER_GetClient( ulPlayerNum )->szSkin, g_BotInfo[m_ulBotInfoIdx]->szSkinName, MAX_SKIN_NAME + 1 );
+		strncpy( SERVER_GetClient( ulPlayerNum )->szSkin, g_BotInfo[m_ulBotInfoIdx].szSkinName, MAX_SKIN_NAME + 1 );
 
-	LONG lSkin = R_FindSkin( g_BotInfo[m_ulBotInfoIdx]->szSkinName, 0 );
+	LONG lSkin = R_FindSkin( g_BotInfo[m_ulBotInfoIdx].szSkinName, 0 );
 	m_pPlayer->userinfo.SkinNumChanged ( lSkin );
 
 	// If the skin was hidden, reveal it!
@@ -1736,15 +1694,15 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	// See if the given class name matches one in the global list.
 	for ( ulIdx = 0; ulIdx < PlayerClasses.Size( ); ulIdx++ )
 	{
-		if ( stricmp( g_BotInfo[m_ulBotInfoIdx]->szClassName, PlayerClasses[ulIdx].Type->DisplayName ) == 0 )
+		if ( stricmp( g_BotInfo[m_ulBotInfoIdx].szClassName, PlayerClasses[ulIdx].Type->DisplayName ) == 0 )
 		{
 			m_pPlayer->userinfo.PlayerClassNumChanged ( ulIdx );
 			break;
 		}
 	}
 
-	m_pPlayer->userinfo.RailColorChanged ( g_BotInfo[m_ulBotInfoIdx]->ulRailgunColor );
-	m_pPlayer->userinfo.GenderNumChanged ( D_GenderToInt( g_BotInfo[m_ulBotInfoIdx]->szGender ) );
+	m_pPlayer->userinfo.RailColorChanged ( g_BotInfo[m_ulBotInfoIdx].ulRailgunColor );
+	m_pPlayer->userinfo.GenderNumChanged ( D_GenderToInt( g_BotInfo[m_ulBotInfoIdx].szGender ) );
 	if ( pszTeamName )
 	{
 		// If we're in teamgame mode, put the bot on a defined team.
@@ -1782,7 +1740,7 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 	PLAYER_ResetSpecialCounters ( m_pPlayer );
 
 	// Load the bot's script. If he doesn't have a script, inform the user.
-	if ( g_BotInfo[m_ulBotInfoIdx]->szScriptName[0] )
+	if ( g_BotInfo[m_ulBotInfoIdx].szScriptName[0] )
 	{
 		ULONG		ulIdx;
 		ULONG		ulIdx2;
@@ -1791,7 +1749,7 @@ CSkullBot::CSkullBot( char *pszName, char *pszTeamName, ULONG ulPlayerNum )
 		m_bHasScript = true;
 
 		// Open the lump name specified.
-		m_ScriptData.RawData = Wads.OpenLumpName( g_BotInfo[m_ulBotInfoIdx]->szScriptName );
+		m_ScriptData.RawData = Wads.OpenLumpName( g_BotInfo[m_ulBotInfoIdx].szScriptName );
 		
 		m_ScriptData.lScriptPos = 0;
 		m_ScriptData.bExitingState = false;
@@ -3761,22 +3719,19 @@ CCMD( reveal )
 		return;
 	}
 
-	for ( ulIdx = 0; ulIdx < MAX_BOTINFO; ulIdx++ )
+	for ( ulIdx = 0; ulIdx < g_BotInfo.Size(); ulIdx++ )
 	{
-		if ( g_BotInfo[ulIdx] == NULL )
+		if ( g_BotInfo[ulIdx].bRevealed )
 			continue;
 
-		if ( g_BotInfo[ulIdx]->bRevealed )
-			continue;
-
-		sprintf( szBuffer, "%s", g_BotInfo[ulIdx]->szName );
+		sprintf( szBuffer, "%s", g_BotInfo[ulIdx].szName );
 		V_ColorizeString( szBuffer );
 		V_RemoveColorCodes( szBuffer );
 
 		if ( stricmp( argv[1], szBuffer ) == 0 )
 		{
-			Printf( "Hidden bot \"%s\\c-\" has now been revealed!\n", g_BotInfo[ulIdx]->szName );
-			g_BotInfo[ulIdx]->bRevealed = true;
+			Printf( "Hidden bot \"%s\\c-\" has now been revealed!\n", g_BotInfo[ulIdx].szName );
+			g_BotInfo[ulIdx].bRevealed = true;
 		}
 	}
 

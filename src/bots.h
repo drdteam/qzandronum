@@ -67,9 +67,6 @@
 // Maximum number of variables on the bot evaluation stack.
 #define	BOTSCRIPT_STACK_SIZE		8
 
-// Maximum number of botinto structures that can be defines.
-#define	MAX_BOTINFO					128
-
 // Maximum number of states that can appear in a script.
 #define	MAX_NUM_STATES				256
 

@@ -479,6 +479,10 @@ void CLIENTDEMO_ReadPacket( void )
 	{  
 		lCommand = NETWORK_ReadByte( &g_ByteStream );
 
+		// [TP/BB] Reset the bit reading buffer.
+		g_ByteStream.bitBuffer = NULL;
+		g_ByteStream.bitShift = -1;
+
 		// End of message.
 		if ( lCommand == -1 )
 		{
