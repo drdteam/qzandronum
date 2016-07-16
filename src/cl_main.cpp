@@ -234,13 +234,6 @@ static	void	client_SetSomeLineFlags( BYTESTREAM_s *pByteStream );
 // Side commands.
 static	void	client_SetSideFlags( BYTESTREAM_s *pByteStream );
 
-// Sound commands.
-static	void	client_Sound( BYTESTREAM_s *pByteStream );
-static	void	client_SoundActor( BYTESTREAM_s *pByteStream, bool bRespectActorPlayingSomething = false );
-static	void	client_SoundSector( BYTESTREAM_s *pByteStream );
-static	void	client_SoundPoint( BYTESTREAM_s *pByteStream );
-static	void	client_AnnouncerSound( BYTESTREAM_s *pByteSream );
-
 // Vote commands.
 static	void	client_CallVote( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerVote( BYTESTREAM_s *pByteStream );
@@ -1703,22 +1696,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_SetSideFlags( pByteStream );
 		break;
-	case SVC_SOUND:
-
-		client_Sound( pByteStream );
-		break;
-	case SVC_SOUNDACTOR:
-
-		client_SoundActor( pByteStream );
-		break;
-	case SVC_SOUNDACTORIFNOTPLAYING:
-
-		client_SoundActor( pByteStream, true );
-		break;
-	case SVC_SOUNDPOINT:
-
-		client_SoundPoint( pByteStream );
-		break;
 	case SVC_CALLVOTE:
 
 		client_CallVote( pByteStream );
@@ -2012,11 +1989,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_IGNOREPLAYER:
 
 		client_IgnorePlayer( pByteStream );
-		break;
-
-	case SVC_ANNOUNCERSOUND:
-
-		client_AnnouncerSound( pByteStream );
 		break;
 
 	case SVC_EXTENDEDCOMMAND:
@@ -2359,10 +2331,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 						StatusBar->SetMugShotState( statename );
 					}
 				}
-				break;
-
-			case SVC2_SOUNDSECTOR:
-				client_SoundSector( pByteStream );
 				break;
 
 			case SVC2_PUSHTOJOINQUEUE:
@@ -7305,146 +7273,69 @@ void ServerCommands::ACSScriptExecute::Execute()
 
 //*****************************************************************************
 //
-static void client_Sound( BYTESTREAM_s *pByteStream )
+void ServerCommands::Sound::Execute()
 {
-	const char	*pszSoundString;
-	LONG		lChannel;
-	LONG		lVolume;
-	LONG		lAttenuation;
-
-	// Read in the channel.
-	lChannel = NETWORK_ReadByte( pByteStream );
-
-	// Read in the name of the sound to play.
-	pszSoundString = NETWORK_ReadString( pByteStream );
-
-	// Read in the volume.
-	lVolume = NETWORK_ReadByte( pByteStream );
-	if ( lVolume > 127 )
-		lVolume = 127;
-
-	// Read in the attenuation.
-	lAttenuation = NETWORK_ReadByte( pByteStream );
-
-	// Finally, play the sound.
-	S_Sound( lChannel, pszSoundString, (float)lVolume / 127.f, NETWORK_AttenuationIntToFloat ( lAttenuation ) );
-}
-
-//*****************************************************************************
-//
-static void client_SoundActor( BYTESTREAM_s *pByteStream, bool bRespectActorPlayingSomething )
-{
-	LONG		lID;
-	const char	*pszSoundString;
-	LONG		lChannel;
-	LONG		lVolume;
-	LONG		lAttenuation;
-	AActor		*pActor;
-
-	// Read in the spot ID.
-	lID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the channel.
-	lChannel = NETWORK_ReadShort( pByteStream );
-
-	// Read in the name of the sound to play.
-	pszSoundString = NETWORK_ReadString( pByteStream );
-
-	// Read in the volume.
-	lVolume = NETWORK_ReadByte( pByteStream );
-	if ( lVolume > 127 )
-		lVolume = 127;
-
-	// Read in the attenuation.
-	lAttenuation = NETWORK_ReadByte( pByteStream );
-
-	// Find the actor from the ID.
-	pActor = CLIENT_FindThingByNetID( lID );
-	if ( pActor == NULL )
-	{
-		CLIENT_PrintWarning( "client_SoundActor: Couldn't find thing: %ld\n", lID );
-		return;
-	}
-
-	// [BB] If instructed to, check whether the actor is already playing something.
-	// Note: The checking may not include CHAN_LOOP.
-	if ( bRespectActorPlayingSomething && S_IsActorPlayingSomething (pActor, lChannel & (~CHAN_LOOP), S_FindSound ( pszSoundString ) ) )
-		return;
-
-	// Finally, play the sound.
-	S_Sound( pActor, lChannel, pszSoundString, (float)lVolume / 127.f, NETWORK_AttenuationIntToFloat ( lAttenuation ) );
-}
-
-//*****************************************************************************
-//
-static void client_SoundSector( BYTESTREAM_s *pByteStream )
-{
-	// Read in the spot ID.
-	int sectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the channel.
-	int channel = NETWORK_ReadShort( pByteStream );
-
-	// Read in the name of the sound to play.
-	const char *soundString = NETWORK_ReadString( pByteStream );
-
-	// Read in the volume.
-	int volume = NETWORK_ReadByte( pByteStream );
 	if ( volume > 127 )
 		volume = 127;
 
-	// Read in the attenuation.
-	int attenuation = NETWORK_ReadByte( pByteStream );
+	S_Sound( channel, sound, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
+}
 
-	// Make sure the sector ID is valid.
-	if (( sectorID < 0 ) && ( sectorID >= numsectors ))
+//*****************************************************************************
+//
+void ServerCommands::SoundActor::Execute()
+{
+	if ( volume > 127 )
+		volume = 127;
+
+	S_Sound( actor, channel, sound, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SoundActorIfNotPlaying::Execute()
+{
+	if ( volume > 127 )
+		volume = 127;
+
+	// [BB] Check whether the actor is already playing something.
+	// Note: The checking may not include CHAN_LOOP.
+	if ( S_IsActorPlayingSomething (actor, channel & (~CHAN_LOOP), S_FindSound ( sound ) ) )
 		return;
 
-	// Finally, play the sound.
-	S_Sound( &sectors[sectorID], channel, soundString, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
+	S_Sound( actor, channel, sound, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
 }
 
 //*****************************************************************************
 //
-static void client_SoundPoint( BYTESTREAM_s *pByteStream )
+void ServerCommands::SoundSector::Execute()
 {
-	const char	*pszSoundString;
-	LONG		lChannel;
-	LONG		lVolume;
-	LONG		lAttenuation;
+	if ( volume > 127 )
+		volume = 127;
+
+	S_Sound( sector, channel, sound, (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::SoundPoint::Execute()
+{
+	if ( volume > 127 )
+		volume = 127;
 	DVector3	pos;
-
-	// Read in the XY of the sound.
-	pos.X = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-	pos.Y = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-	pos.Z = FIXED2DBL ( NETWORK_ReadShort( pByteStream ) << FRACBITS );
-
-	// Read in the channel.
-	lChannel = NETWORK_ReadByte( pByteStream );
-
-	// Read in the name of the sound to play.
-	pszSoundString = NETWORK_ReadString( pByteStream );
-
-	// Read in the volume.
-	lVolume = NETWORK_ReadByte( pByteStream );
-	if ( lVolume > 127 )
-		lVolume = 127;
-
-	// Read in the attenuation.
-	lAttenuation = NETWORK_ReadByte( pByteStream );
+	pos.X = FIXED2DBL ( x );
+	pos.Y = FIXED2DBL ( y );
+	pos.Z = FIXED2DBL ( z );
 
 	// Finally, play the sound.
-	S_Sound ( pos, lChannel, S_FindSound(pszSoundString), (float)lVolume / 127.f, NETWORK_AttenuationIntToFloat ( lAttenuation ) );
+	S_Sound( pos, channel, S_FindSound(sound), (float)volume / 127.f, NETWORK_AttenuationIntToFloat ( attenuation ) );
 }
 
 //*****************************************************************************
 //
-static void client_AnnouncerSound( BYTESTREAM_s *pByteStream )
+void ServerCommands::AnnouncerSound::Execute()
 {
-	const char	*pszEntry;
-
-	pszEntry = NETWORK_ReadString( pByteStream );
-	ANNOUNCER_PlayEntry ( cl_announcer, pszEntry );
+	ANNOUNCER_PlayEntry( cl_announcer, sound );
 }
 
 //*****************************************************************************

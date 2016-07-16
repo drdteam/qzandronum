@@ -3132,11 +3132,11 @@ void SERVERCOMMANDS_SetSideFlags( ULONG ulSide, ULONG ulPlayerExtra, ServerComma
 //
 void SERVERCOMMANDS_Sound( LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SOUND );
-	command.addByte ( lChannel );
-	command.addString ( pszSound );
-	command.addByte ( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
-	command.addByte ( NETWORK_AttenuationFloatToInt ( fAttenuation ) );
+	ServerCommands::Sound command;
+	command.SetChannel( lChannel );
+	command.SetSound( pszSound );
+	command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
+	command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ) );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3154,13 +3154,27 @@ void SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSo
 		return;
 	}
 
-	NetCommand command ( bRespectActorPlayingSomething ? SVC_SOUNDACTORIFNOTPLAYING : SVC_SOUNDACTOR );
-	command.addShort( pActor->lNetID );
-	command.addShort( lChannel );
-	command.addString( pszSound );
-	command.addByte( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
-	command.addByte( NETWORK_AttenuationFloatToInt ( fAttenuation ));
-	command.sendCommandToClients( ulPlayerExtra, flags );
+	// [TP] TODO: Make ServerCommands::SoundActorIfNotPlaying actually inherit from SoundActor to remove the code duplication.
+	if ( bRespectActorPlayingSomething )
+	{
+		ServerCommands::SoundActorIfNotPlaying command;
+		command.SetActor( pActor );
+		command.SetChannel( lChannel );
+		command.SetSound( pszSound );
+		command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
+		command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ));
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
+	else
+	{
+		ServerCommands::SoundActor command;
+		command.SetActor( pActor );
+		command.SetChannel( lChannel );
+		command.SetSound( pszSound );
+		command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
+		command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ));
+		command.sendCommandToClients( ulPlayerExtra, flags );
+	}
 }
 
 //*****************************************************************************
@@ -3174,12 +3188,12 @@ void SERVERCOMMANDS_SoundSector( sector_t *sector, int channel, const char *soun
 	if (( sectorID < 0 ) || ( sectorID >= numsectors ))
 		return;
 
-	NetCommand command( SVC2_SOUNDSECTOR );
-	command.addShort( sectorID );
-	command.addShort( channel );
-	command.addString( sound );
-	command.addByte( LONG ( clamp( volume, 0.0f, 2.0f ) * 127 ) );
-	command.addByte( NETWORK_AttenuationFloatToInt ( attenuation ));
+	ServerCommands::SoundSector command;
+	command.SetSector( sector );
+	command.SetChannel( channel );
+	command.SetSound( sound );
+	command.SetVolume( LONG ( clamp( volume, 0.0f, 2.0f ) * 127 ) );
+	command.SetAttenuation( NETWORK_AttenuationFloatToInt ( attenuation ));
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -3187,14 +3201,14 @@ void SERVERCOMMANDS_SoundSector( sector_t *sector, int channel, const char *soun
 //
 void SERVERCOMMANDS_SoundPoint( LONG lX, LONG lY, LONG lZ, LONG lChannel, const char *pszSound, float fVolume, float fAttenuation, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SOUNDPOINT );
-	command.addShort ( lX>>FRACBITS );
-	command.addShort ( lY>>FRACBITS );
-	command.addShort ( lZ>>FRACBITS );
-	command.addByte ( lChannel );
-	command.addString ( pszSound );
-	command.addByte ( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
-	command.addByte ( NETWORK_AttenuationFloatToInt ( fAttenuation ) );
+	ServerCommands::SoundPoint command;
+	command.SetX( lX );
+	command.SetY( lY );
+	command.SetZ( lZ );
+	command.SetChannel( lChannel );
+	command.SetSound( pszSound );
+	command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
+	command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ) );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3202,8 +3216,8 @@ void SERVERCOMMANDS_SoundPoint( LONG lX, LONG lY, LONG lZ, LONG lChannel, const 
 //
 void SERVERCOMMANDS_AnnouncerSound( const char *pszSound, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_ANNOUNCERSOUND );
-	command.addString ( pszSound );
+	ServerCommands::AnnouncerSound command;
+	command.SetSound( pszSound );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
