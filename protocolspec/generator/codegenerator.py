@@ -155,12 +155,12 @@ class SourceWriter(SourceCodeWriter):
 				self.writecontext('''
 					void ServerCommands::{commandname}::{setter}( {typename} value )
 					{{
-						this->{parametername} = value;
+						this->{reference} = value;
 						this->_verifyTable[{i}] = true;
 					}}'''.format(commandname = command.name,
 							     setter = parameter.setter,
 							     typename = parameter.constreference,
-							     parametername = parameter.name,
+							     reference = parameter.name,
 							     i = i))
 
 			# Write the condition check methods. The items must be sorted first or the methods will be written in a
@@ -191,9 +191,6 @@ class SourceWriter(SourceCodeWriter):
 		self.writeline('\treturn false;')
 		self.writeline('}')
 		self.endscope()
-
-	def writeparameter(self, command, parameter, parametername):
-		parameter.type.writeread(self, command, parameter, parametername)
 
 	def writecommandreader(self, command):
 		'''
@@ -237,15 +234,15 @@ class SourceWriter(SourceCodeWriter):
 		self.unindent()
 		self.writeline('')
 
-	def handleparameters(self, command, methodname):
+	def handleparameters(self, command, methodname, **args):
 		'''
 			Writes code to handle a parameter.
 			The method is expected to take the arguments:
 				- writer (this object)
 				- command
-				- parametername -- this is a reference to the actual parameter object (makes a difference with arrays).
+				- reference -- this is an expression string that refers to the actual parameter reference.
 			The method is expected to be a method of a SpecParameter subclass, and is expected to write code handling
-			recievement or sending of the parameter in question.
+			recievement or sending of the parameter in question. Any extra parameters are also passed to the parameters.
 		'''
 		for parameter in command:
 			# If the condition for this parameter changed, we need to handle that:
@@ -268,37 +265,8 @@ class SourceWriter(SourceCodeWriter):
 				# Mark down what our current condition is.
 				self.activecondition = parameter.condition
 
-			if not parameter.isarray:
-				# If it's not an array, just call the method
-				getattr(parameter, methodname)(writer = self, command = command, parametername = parameter.name)
-			else:
-				# Otherwise, we'll need to treat it a bit differently:
-				if self.writingsender:
-					# If we're writing the sending code, write array's size into the command, and use it to loop over
-					# the elements.
-					self.writeline('command.addByte( %s.Size() );' % parameter.name)
-					self.writeline('for ( unsigned int i = 0; i < %s.Size(); ++i )' % parameter.name)
-				else:
-					# If we're writing the reading code, use a size variable.
-					if not hasattr(parameter, 'sizevariable'):
-						# If it doesn't exist yet, create it now.
-						parameter.sizevariable = next(self.tempvar)
-						self.declare('unsigned int', parameter.sizevariable)
-
-						# Since we're initializing the size variable, read in its value, and use it to allocate
-						# the array.
-						self.writeline('%s = NETWORK_ReadByte( bytestream );' % parameter.sizevariable)
-						self.writeline('command.%s.Reserve( %s );' % (parameter.name, parameter.sizevariable))
-
-					# Now use it to iterate the array for per-element code.
-					self.writeline('for ( unsigned int i = 0; i < %s; ++i )' % parameter.sizevariable)
-
-				# In any case, we have now written a for loop. Now, we begin a scope, and write the iteration.
-				# The parameter name gets "[i]" appended, so that it references the correct element, instead of the
-				# array itself.
-				self.startscope()
-				getattr(parameter, methodname)(writer = self, command = command, parametername = parameter.name + '[i]')
-				self.endscope()
+			# Now call the appropriate method.
+			getattr(parameter, methodname)(writer = self, command = command, reference = parameter.name, **args)
 
 		# If we're still in an if-block, close it now.
 		if self.activecondition:
@@ -464,10 +432,6 @@ class HeaderWriter(SourceCodeWriter):
 				definition = 'FName'
 			else:
 				raise RuntimeError('String parameters can only be specialized to Name')
-
-		# If this is an array, encapsulate it into a TArray.
-		if parameter.isarray:
-			definition = 'TArray<%s>' % definition
 
 		# Add a space, unless this is a pointer or reference type
 		if not definition.endswith(' *'):

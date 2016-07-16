@@ -126,7 +126,7 @@ class NetworkSpec:
 			return
 
 		# Check for a command definition
-		match = re.search(r'^command\s+(\w+)$', line, re.IGNORECASE)
+		match = re.search(r'^command\s+(\w+)(?:\s+\:\s+(\w+))?$', line, re.IGNORECASE)
 		if match:
 			if self.currentcommand:
 				raise RuntimeError('Missing EndCommand before new command definition')
@@ -135,11 +135,22 @@ class NetworkSpec:
 				raise RuntimeError('Missing Protocol before command definition')
 
 			commandname = match.group(1)
+			basecommand = match.group(2)
 
-			if commandname in self.currentprotocol['commands'].keys():
+			if commandname in self.currentprotocol['commands']:
 				raise RuntimeError('Tried to define command %s twice' % commandname)
 
-			self.currentcommand = SpecCommand(commandname)
+			if basecommand:
+				if basecommand == commandname:
+					raise RuntimeError('Cannot inherit command %s from itself' % commandname)
+				if basecommand not in self.currentprotocol['commands']:
+					raise RuntimeError('Cannot inherit %s from non-existent command %s' % (commandname, basecommand))
+				from copy import deepcopy
+				self.currentcommand = deepcopy(self.currentprotocol['commands'][basecommand])
+				self.currentcommand.name = commandname
+			else:
+				self.currentcommand = SpecCommand(commandname)
+
 			self.currentprotocol['commands'][commandname] = self.currentcommand
 			return
 
@@ -210,7 +221,13 @@ class NetworkSpec:
 
 			# Build the parameter object and add it to the command.
 			parm = classtype(typename = typename, name = name, specialization = specialization, attributes = attributes,
-					isarray = bool(arraybrackets), condition = self.activecondition, spec = self)
+					condition = self.activecondition, spec = self)
+
+			# If this is an array, wrap the parameter into an Array type.
+			if arraybrackets:
+				element = parm
+				parm = parametertypes.ArrayParameter(typename = typename, name = name, condition = self.activecondition,
+					spec = self, element = element)
 
 			# Add this parameter to the members dictionary.
 			members[name] = parm

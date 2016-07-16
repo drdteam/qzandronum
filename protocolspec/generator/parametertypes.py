@@ -32,6 +32,7 @@
 
 from string import capwords
 
+# These types are passed by value.
 passbyvalue = {'int', 'unsigned int', 'short', 'unsigned short', 'long', 'unsigned long', 'bool', 'float', 'double',
 			   'BYTE', 'SBYTE', 'WORD', 'SWORD', 'DWORD', 'SDWORD', 'QWORD', 'SQWORD',
 			   'FName', 'fixed_t', 'angle_t', 'size_t'}
@@ -50,30 +51,25 @@ class SpecParameter:
 	'''
 	Represents a parameter in a server command.
 	'''
-	def __init__(self, typename, name, specialization = None, attributes = None, isarray = False,
-	             condition = None, spec = None):
+	def __init__(self, typename, name, specialization = None, attributes = None, condition = None, spec = None):
 		self.typename = typename
 		self.name = name
 		self.specialization = specialization
 		self.attributes = attributes or set()
-		self.isarray = isarray
 		self.condition = condition and condition.strip()
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, **args):
 		raise Exception('BUG: %s does not define writeread!' % type(self).__name__)
 
-	def writesend(self, writer, command, parametername):
+	def writesend(self, **args):
 		raise Exception('BUG: %s does not define writesend!' % type(self).__name__)
 
-	def writereadchecks(self, writer, command, parametername):
+	def writereadchecks(self, **args):
 		pass
 
 	@property
 	def constreference(self):
-		if self.isarray:
-			# Pass arrays as const references
-			return 'const TArray<%s> &' % self.cxxtypename
-		elif self.cxxtypename.endswith('*') or self.cxxtypename in passbyvalue:
+		if self.cxxtypename.endswith('*') or self.cxxtypename in passbyvalue:
 			# Pass pointers and known types by value
 			return self.cxxtypename
 		else:
@@ -90,14 +86,14 @@ class ByteParameter(SpecParameter):
 			raise Exception('Integer types may not be specialized')
 
 	# Writes code to read in this parameter.
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference):
 		readfunction = 'NETWORK_Read' + self.methodname()
-		writer.writeline('command.{parametername} = {readfunction}( bytestream );'.format(**locals()))
+		writer.writeline('command.{reference} = {readfunction}( bytestream );'.format(**locals()))
 
 	# Writes code to write this parameter to a NetCommand.
-	def writesend(self, writer, command, parametername):
+	def writesend(self, writer, command, reference):
 		sendmethod = 'command.add' + capwords(self.methodname())
-		writer.writeline('{sendmethod}( this->{parametername} );'.format(**locals()))
+		writer.writeline('{sendmethod}( this->{reference} );'.format(**locals()))
 
 	# Returns the C++ type name for this parameter
 	@property
@@ -147,11 +143,11 @@ class StringParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'FString'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadString( bytestream );'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadString( bytestream );'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addString( this->{parametername} );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addString( this->{reference} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -160,11 +156,11 @@ class FloatParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'float'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadFloat( bytestream );'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadFloat( bytestream );'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addFloat( this->{parametername} );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addFloat( this->{reference} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -173,11 +169,11 @@ class BoolParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'bool'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadBit( bytestream );'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadBit( bytestream );'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writecontext('command.addBit( this->{parametername} );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writecontext('command.addBit( this->{reference} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -186,11 +182,11 @@ class VariableParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'int'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadVariable( bytestream );'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadVariable( bytestream );'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writecontext('command.addVariable( this->{parametername} );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writecontext('command.addVariable( this->{reference} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -199,12 +195,12 @@ class ShortbyteParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'int'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadShortByte( bytestream, {specialization} );'.format(specialization=self.specialization, **locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadShortByte( bytestream, {specialization} );'.format(specialization=self.specialization, **locals()))
 
-	def writesend(self, writer, command, parametername):
+	def writesend(self, writer, command, reference, **args):
 		specialization = self.specialization
-		writer.writecontext('command.addShortByte( this->{parametername}, {specialization} );'.format(**locals()))
+		writer.writecontext('command.addShortByte( this->{reference}, {specialization} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -219,7 +215,7 @@ class ActorParameter(SpecParameter):
 		else:
 			return 'AActor *'
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference, **args):
 		# To read in an actor we'll first read in a short integer to represent the network id.
 		# Then, we resolve this to the actor pointer.
 		# If the actor pointer is specialized, we try to downcast it. If downcasting is not possible, the
@@ -233,12 +229,12 @@ class ActorParameter(SpecParameter):
 		writer.declare('int', netid)
 		writer.writeline('{netid} = NETWORK_ReadShort( bytestream );'.format(**locals()))
 
-	def writereadchecks(self, writer, command, parametername):
+	def writereadchecks(self, writer, command, reference, **args):
 		netid = self.readnetid
 		writer.writecontext('''
 			if ( CLIENT_ReadActorFromNetID( {netid}, RUNTIME_CLASS( {specialization} ), {allownull},
-											reinterpret_cast<AActor *&>( command.{parametername} ),
-											"{commandname}", "{parametername}" ) == false )
+											reinterpret_cast<AActor *&>( command.{reference} ),
+											"{commandname}", "{reference}" ) == false )
 			{{
 				return true;
 			}}
@@ -246,8 +242,8 @@ class ActorParameter(SpecParameter):
 			'''.format(commandname=command.name, specialization=self.specialization or 'AActor',
 					   allownull=('nullallowed' in self.attributes) and 'true' or 'false', **locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addShort( this->{parametername} ? this->{parametername}->lNetID : -1 );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addShort( this->{reference} ? this->{reference}->lNetID : -1 );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -256,42 +252,42 @@ class ClassParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'PClassActor *'
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference, **args):
 		# To read in a class we'll first write code to read in the identification number, and then
 		# use NETWORK_GetClassFromIdentification to turn it into the class parameter.
 		netid = next(writer.tempvar)
 		self.readnetid = netid
 		writer.declare('int', netid)
 		writer.writeline('{netid} = NETWORK_ReadShort( bytestream );'.format(**locals()))
-		writer.writeline('command.{parametername} = NETWORK_GetClassFromIdentification( {netid} );'.format(**locals()))
+		writer.writeline('command.{reference} = NETWORK_GetClassFromIdentification( {netid} );'.format(**locals()))
 
 		# If the class parameter is specialized, ensure that it is a descendant of the specified class.
 		# If not, NULL the parameter
 		if self.specialization:
 			writer.writeline('')
 			writer.writecontext('''
-				if ( command.{parametername}->IsDescendantOf( RUNTIME_CLASS( {specialization} )) == false )
-					command.{parametername} = NULL;
+				if ( command.{reference}->IsDescendantOf( RUNTIME_CLASS( {specialization} )) == false )
+					command.{reference} = NULL;
 
-				'''.format(parametername=parametername, specialization=self.specialization))
+				'''.format(reference=reference, specialization=self.specialization))
 
-	def writereadchecks(self, writer, command, parametername):
+	def writereadchecks(self, writer, command, reference, **args):
 		netid = self.readnetid
 
 		# If we don't allow the parameter to be NULL, write code to check whether it is valid.
 		if 'nullallowed' not in self.attributes:
 			writer.writeline('')
 			writer.writecontext('''
-				if ( command.{parametername} == NULL )
+				if ( command.{reference} == NULL )
 				{{
-					CLIENT_PrintWarning( "{commandname}: unknown class ID for {parametername}: %d\\n", {netid} );
+					CLIENT_PrintWarning( "{commandname}: unknown class ID for {reference}: %d\\n", {netid} );
 					return true;
 				}}
 
 				'''.format(commandname = command.name, **locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addShort( this->{parametername} ? this->{parametername}->getActorNetworkIndex() : -1 );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addShort( this->{reference} ? this->{reference}->getActorNetworkIndex() : -1 );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -300,14 +296,14 @@ class PlayerParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'player_t *'
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference, **args):
 		# Player self. We store both the index and a pointer to the player structure.
-		writer.writeline('command.{parametername} = &players[NETWORK_ReadByte( bytestream )];'.format(**locals()))
+		writer.writeline('command.{reference} = &players[NETWORK_ReadByte( bytestream )];'.format(**locals()))
 
-	def writereadchecks(self, writer, command, parametername):
+	def writereadchecks(self, writer, command, reference, **args):
 		playernumber = next(writer.tempvar)
 		writer.declare('int', playernumber)
-		writer.writeline('{playernumber} = command.{parametername} - players;'.format(**locals()))
+		writer.writeline('{playernumber} = command.{reference} - players;'.format(**locals()))
 		writer.writeline('')
 		if 'indextestonly' in self.attributes:
 			writer.writeline('if (( {playernumber} < 0 ) || ( {playernumber} >= MAXPLAYERS ))'.format(**locals()))
@@ -323,12 +319,12 @@ class PlayerParameter(SpecParameter):
 		# Allow for a check for the player's body
 		if 'motest' in self.attributes:
 			writer.writeline('')
-			writer.writeline('if ( command.{parametername}->mo == NULL )'.format(**locals()))
+			writer.writeline('if ( command.{reference}->mo == NULL )'.format(**locals()))
 			writer.writeline('\treturn true;')
 			writer.writeline('')
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addByte( this->{parametername} - players );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addByte( this->{reference} - players );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -337,17 +333,17 @@ class Vector3Parameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'TVector3<double>'
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference, **args):
 		writer.writecontext('''
-			command.{parametername}.X = NETWORK_ReadFloat( bytestream );
-			command.{parametername}.Y = NETWORK_ReadFloat( bytestream );
-			command.{parametername}.Z = NETWORK_ReadFloat( bytestream );'''.format(**locals()))
+			command.{reference}.X = NETWORK_ReadFloat( bytestream );
+			command.{reference}.Y = NETWORK_ReadFloat( bytestream );
+			command.{reference}.Z = NETWORK_ReadFloat( bytestream );'''.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
+	def writesend(self, writer, command, reference, **args):
 		writer.writecontext('''
-			command.addFloat( this->{parametername}.X );
-			command.addFloat( this->{parametername}.Y );
-			command.addFloat( this->{parametername}.Z );'''.format(**locals()))
+			command.addFloat( this->{reference}.X );
+			command.addFloat( this->{reference}.Y );
+			command.addFloat( this->{reference}.Z );'''.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -356,11 +352,11 @@ class FixedParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'fixed_t'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadLong( bytestream );'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadLong( bytestream );'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addLong( this->{parametername} );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addLong( this->{reference} );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -369,11 +365,11 @@ class AproxfixedParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'fixed_t'
 
-	def writeread(self, writer, command, parametername):
-		writer.writeline('command.{parametername} = NETWORK_ReadShort( bytestream ) << FRACBITS;'.format(**locals()))
+	def writeread(self, writer, command, reference, **args):
+		writer.writeline('command.{reference} = NETWORK_ReadShort( bytestream ) << FRACBITS;'.format(**locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addShort( this->{parametername} >> FRACBITS );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addShort( this->{reference} >> FRACBITS );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -396,32 +392,32 @@ class SectorParameter(SpecParameter):
 		super().__init__(**args)
 		self.cxxtypename = 'sector_t *'
 
-	def writeread(self, writer, command, parametername):
+	def writeread(self, writer, command, reference, **args):
 		# We first store a temporary variable containing the sector number, and then use CLIENT_FindSectorByID to
 		# get the sector parameter
 		sectorNum = next(writer.tempvar)
 		self.sectorNum = sectorNum
 		writer.declare('int', sectorNum)
 		writer.writeline('{sectorNum} = NETWORK_ReadShort( bytestream );'.format(**locals()))
-		writer.writeline('command.{parametername} = CLIENT_FindSectorByID( {sectorNum} );'.format(**locals()))
+		writer.writeline('command.{reference} = CLIENT_FindSectorByID( {sectorNum} );'.format(**locals()))
 
-	def writereadchecks(self, writer, command, parametername):
+	def writereadchecks(self, writer, command, reference, **args):
 		sectorNum = self.sectorNum
 
 		# If we don't allow the parameter to be NULL, write code to check whether it is valid.
 		if 'nullallowed' not in self.attributes:
 			writer.writeline('')
 			writer.writecontext('''
-				if ( command.{parametername} == NULL )
+				if ( command.{reference} == NULL )
 				{{
-					CLIENT_PrintWarning( "{commandname}: unknown sector number for {parametername}: %d\\n", {sectorNum} );
+					CLIENT_PrintWarning( "{commandname}: unknown sector number for {reference}: %d\\n", {sectorNum} );
 					return true;
 				}}
 
 				'''.format(commandname = command.name, **locals()))
 
-	def writesend(self, writer, command, parametername):
-		writer.writeline('command.addShort( this->{parametername} ? this->{parametername} - sectors : -1 );'.format(**locals()))
+	def writesend(self, writer, command, reference, **args):
+		writer.writeline('command.addShort( this->{reference} ? this->{reference} - sectors : -1 );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -436,18 +432,57 @@ class StructParameter(SpecParameter):
 		self.cxxtypename = 'struct %s' % args['specialization']
 		self.struct = args['spec'].findStructByName(args['specialization'])
 
-	def iterateMembers(self, parametername):
+	def iterateMembers(self, reference):
 		for member in self.struct['members'].values():
-			yield member, parametername + '.' + member.name
+			yield member, reference + '.' + member.name
 
-	def writeread(self, parametername, **args):
-		for member, membername in self.iterateMembers(parametername):
-			member.writeread(parametername = membername, **args)
+	def writeread(self, reference, **args):
+		for member, membername in self.iterateMembers(reference):
+			member.writeread(reference = membername, **args)
 
-	def writesend(self, parametername, **args):
-		for member, membername in self.iterateMembers(parametername):
-			member.writesend(parametername = membername, **args)
+	def writesend(self, reference, **args):
+		for member, membername in self.iterateMembers(reference):
+			member.writesend(reference = membername, **args)
 
-	def writereadchecks(self, parametername, **args):
-		for member, membername in self.iterateMembers(parametername):
-			member.writereadchecks(parametername = membername, **args)
+	def writereadchecks(self, reference, **args):
+		for member, membername in self.iterateMembers(reference):
+			member.writereadchecks(reference = membername, **args)
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+class ArrayParameter(SpecParameter):
+	def __init__(self, element, **args):
+		super().__init__(**args)
+		self.elementType = element
+		self.cxxtypename = 'TArray<%s>' % self.elementType.cxxtypename
+
+	def writeread(self, writer, reference, **args):
+		# Use a size variable to store the size of this array.
+		sizevariable = next(writer.tempvar)
+		writer.declare('unsigned int', sizevariable)
+		writer.writeline('%s = NETWORK_ReadByte( bytestream );' % sizevariable)
+
+		# Allocate the array using the size we read.
+		writer.writeline('command.%s.Reserve( %s );' % (reference, sizevariable))
+
+		# Now iterate the array's elements, and write the reading code.
+		writer.writeline('for ( unsigned int i = 0; i < %s; ++i )' % sizevariable)
+		writer.startscope()
+		self.elementType.writeread(writer = writer, reference = reference + '[i]', **args)
+		writer.endscope()
+
+	def writesend(self, writer, reference, **args):
+		# If we're writing the sending code, write array's size into the command, and use it to loop over
+		# the elements.
+		writer.writeline('command.addByte( %s.Size() );' % reference)
+		writer.writeline('for ( unsigned int i = 0; i < %s.Size(); ++i )' % reference)
+		writer.startscope()
+		self.elementType.writesend(writer = writer, reference = reference + '[i]', **args)
+		writer.endscope()
+
+	def writereadchecks(self, writer, reference, **args):
+		# Iterate the array's elements and write read checks for all of them.
+		writer.writeline('for ( unsigned int i = 0; i < command.%s.Size(); ++i )' % reference)
+		writer.startscope()
+		self.elementType.writereadchecks(writer = writer, reference = reference + '[i]', **args)
+		writer.endscope()
