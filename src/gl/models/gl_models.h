@@ -16,9 +16,12 @@ enum { VX, VZ, VY };
 #define DMD_MAGIC			0x4D444D44
 #define MD3_MAGIC			0x33504449
 #define NUMVERTEXNORMALS	162
+#define MD3_MAX_SURFACES	32
 
 FTextureID LoadSkin(const char * path, const char * fn);
 
+// [JM] Necessary forward declaration
+typedef struct FSpriteModelFrame FSpriteModelFrame;
 
 class FModel
 {
@@ -41,6 +44,10 @@ public:
 		mVBuf = NULL;
 	}
 	virtual float getAspectFactor() { return 1.f; }
+
+	const FSpriteModelFrame *curSpriteMDLFrame;
+	int curMDLIndex;
+	void PushSpriteMDLFrame(const FSpriteModelFrame *smf, int index) { curSpriteMDLFrame = smf; curMDLIndex = index; };
 
 	FModelVertexBuffer *mVBuf;
 	FString mFileName;
@@ -338,17 +345,19 @@ enum
 	MDL_ROTATING					= 4,
 	MDL_INTERPOLATEDOUBLEDFRAMES	= 8,
 	MDL_NOINTERPOLATION				= 16,
-	MDL_INHERITACTORPITCH			= 32,
-	MDL_INHERITACTORROLL			= 64, // useless for now
-	MDL_ALIGNANGLE					= 128,
-	MDL_ALIGNPITCH					= 256,
-	MDL_ROLLAGAINSTANGLE			= 512,
+	MDL_USEACTORPITCH				= 32,
+	MDL_USEACTORROLL				= 64,
+	MDL_BADROTATION					= 128,
+	MDL_ALIGNANGLE					= 256,
+	MDL_ALIGNPITCH					= 512,
+	MDL_ROLLAGAINSTANGLE			= 1024,
 };
 
 struct FSpriteModelFrame
 {
 	int modelIDs[MAX_MODELS_PER_FRAME];
 	FTextureID skinIDs[MAX_MODELS_PER_FRAME];
+	FTextureID surfaceskinIDs[MAX_MODELS_PER_FRAME][MD3_MAX_SURFACES];
 	int modelframes[MAX_MODELS_PER_FRAME];
 	float xscale, yscale, zscale;
 	// [BB] Added zoffset, rotation parameters and flags.
