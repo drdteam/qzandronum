@@ -1100,6 +1100,7 @@ set( NOT_COMPILED_SOURCE_FILES
 
 	# [TP] Make the protocol specification and the code generator show up in IDEs
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.txt
+	${CMAKE_SOURCE_DIR}/protocolspec/spec.map.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.players.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.print.txt
 	${CMAKE_SOURCE_DIR}/protocolspec/spec.things.txt

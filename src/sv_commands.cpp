@@ -3296,8 +3296,8 @@ void SERVERCOMMANDS_VoteEnded( bool bVotePassed, ULONG ulPlayerExtra, ServerComm
 //
 void SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_MAPLOAD );
-	command.addString ( level.MapName );
+	ServerCommands::MapLoad command;
+	command.SetMapName( level.MapName );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3305,8 +3305,8 @@ void SERVERCOMMANDS_MapLoad( ULONG ulPlayerExtra, ServerCommandFlags flags )
 //
 void SERVERCOMMANDS_MapNew( const char *pszMapName, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_MAPNEW );
-	command.addString ( pszMapName );
+	ServerCommands::MapNew command;
+	command.SetMapName( pszMapName );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3317,9 +3317,9 @@ void SERVERCOMMANDS_MapExit( LONG lPosition, const char *pszNextMap, ULONG ulPla
 	if ( pszNextMap == NULL )
 		return;
 
-	NetCommand command ( SVC_MAPEXIT );
-	command.addByte ( lPosition );
-	command.addString ( pszNextMap );
+	ServerCommands::MapExit command;
+	command.SetPosition( lPosition );
+	command.SetNextMap( pszNextMap );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 
 	// [BB] The clients who are authenticated, but still didn't finish loading
@@ -3335,8 +3335,8 @@ void SERVERCOMMANDS_MapExit( LONG lPosition, const char *pszNextMap, ULONG ulPla
 //
 void SERVERCOMMANDS_MapAuthenticate( const char *pszMapName, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_MAPAUTHENTICATE );
-	command.addString ( pszMapName );
+	ServerCommands::MapAuthenticate command;
+	command.SetMapName( pszMapName );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3344,8 +3344,8 @@ void SERVERCOMMANDS_MapAuthenticate( const char *pszMapName, ULONG ulPlayerExtra
 //
 void SERVERCOMMANDS_SetMapTime( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPTIME );
-	command.addLong ( level.time );
+	ServerCommands::SetMapTime command;
+	command.SetTime( level.time );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3353,8 +3353,8 @@ void SERVERCOMMANDS_SetMapTime( ULONG ulPlayerExtra, ServerCommandFlags flags )
 //
 void SERVERCOMMANDS_SetMapNumKilledMonsters( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPNUMKILLEDMONSTERS );
-	command.addShort ( level.killed_monsters );
+	ServerCommands::SetMapNumKilledMonsters command;
+	command.SetKilledMonsters( level.killed_monsters );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3362,8 +3362,8 @@ void SERVERCOMMANDS_SetMapNumKilledMonsters( ULONG ulPlayerExtra, ServerCommandF
 //
 void SERVERCOMMANDS_SetMapNumFoundItems( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPNUMFOUNDITEMS );
-	command.addShort ( level.found_items );
+	ServerCommands::SetMapNumFoundItems command;
+	command.SetFoundItems( level.found_items );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3371,8 +3371,8 @@ void SERVERCOMMANDS_SetMapNumFoundItems( ULONG ulPlayerExtra, ServerCommandFlags
 //
 void SERVERCOMMANDS_SetMapNumFoundSecrets( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPNUMFOUNDSECRETS );
-	command.addShort ( level.found_secrets );
+	ServerCommands::SetMapNumFoundSecrets command;
+	command.SetFoundSecrets( level.found_secrets );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3380,8 +3380,8 @@ void SERVERCOMMANDS_SetMapNumFoundSecrets( ULONG ulPlayerExtra, ServerCommandFla
 //
 void SERVERCOMMANDS_SetMapNumTotalMonsters( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPNUMTOTALMONSTERS );
-	command.addShort ( level.total_monsters );
+	ServerCommands::SetMapNumTotalMonsters command;
+	command.SetTotalMonsters( level.total_monsters );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3389,8 +3389,8 @@ void SERVERCOMMANDS_SetMapNumTotalMonsters( ULONG ulPlayerExtra, ServerCommandFl
 //
 void SERVERCOMMANDS_SetMapNumTotalItems( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPNUMTOTALITEMS );
-	command.addShort ( level.total_items );
+	ServerCommands::SetMapNumTotalItems command;
+	command.SetTotalItems( level.total_items );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3398,8 +3398,8 @@ void SERVERCOMMANDS_SetMapNumTotalItems( ULONG ulPlayerExtra, ServerCommandFlags
 //
 void SERVERCOMMANDS_SetMapNumTotalSecrets( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC2_SETMAPNUMTOTALSECRETS );
-	command.addShort ( level.total_secrets );
+	ServerCommands::SetMapNumTotalSecrets command;
+	command.SetTotalSecrets( level.total_secrets );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3407,9 +3407,9 @@ void SERVERCOMMANDS_SetMapNumTotalSecrets( ULONG ulPlayerExtra, ServerCommandFla
 //
 void SERVERCOMMANDS_SetMapMusic( const char *pszMusic, int track, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPMUSIC );
-	command.addString ( pszMusic );
-	command.addByte ( track );
+	ServerCommands::SetMapMusic command;
+	command.SetMusic( pszMusic );
+	command.SetOrder( track );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
@@ -3417,9 +3417,9 @@ void SERVERCOMMANDS_SetMapMusic( const char *pszMusic, int track, ULONG ulPlayer
 //
 void SERVERCOMMANDS_SetMapSky( ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	NetCommand command ( SVC_SETMAPSKY );
-	command.addString ( TexMan( level.skytexture1 )->Name );
-	command.addString ( TexMan( level.skytexture2 )->Name );
+	ServerCommands::SetMapSky command;
+	command.SetSky1( TexMan( level.skytexture1 )->Name );
+	command.SetSky2( TexMan( level.skytexture2 )->Name );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 
