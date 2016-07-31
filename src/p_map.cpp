@@ -4722,6 +4722,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 	{
 		return NULL;
 	}
+	bool nointeract = !!(flags & LAF_NOINTERACT);
 	DVector3 direction;
 	double shootz;
 	FTraceResults trace;
@@ -4814,7 +4815,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 	}
 
 	int tflags;
-	if (puffDefaults != NULL && puffDefaults->flags6 & MF6_NOTRIGGER) tflags = TRACE_NoSky;
+	if (nointeract || (puffDefaults && puffDefaults->flags6 & MF6_NOTRIGGER)) tflags = TRACE_NoSky;
 	else tflags = TRACE_NoSky | TRACE_Impact;
 
 	// [Spleen]
@@ -4831,10 +4832,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 		if ( NETWORK_InClientMode() && CLIENT_ShouldPredictPuffs( ) == false )
 			return NULL;
 
-		if (puffDefaults == NULL)
-		{
-		}
-		else if (puffDefaults->ActiveSound)
+		if (!nointeract && puffDefaults && puffDefaults->ActiveSound)
 		{ // Play miss sound
 			S_Sound(t1, CHAN_WEAPON, puffDefaults->ActiveSound, 1, ATTN_NORM);
 
@@ -4842,7 +4840,11 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_SoundActor( t1, CHAN_WEAPON, S_GetName( puffDefaults->ActiveSound ), 1, ATTN_NORM );
 		}
-		if (puffDefaults != NULL && puffDefaults->flags3 & MF3_ALWAYSPUFF)
+
+		// [MC] LAF_NOINTERACT guarantees puff spawning and returns it directly to the calling function.
+		// No damage caused, no sounds played, no blood splatters.
+
+		if (nointeract || (puffDefaults && puffDefaults->flags3 & MF3_ALWAYSPUFF))
 		{ // Spawn the puff anyway
 			puff = P_SpawnPuff(t1, pufftype, trace.HitPos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget, 2, puffFlags);
 
@@ -4850,10 +4852,15 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 			// client predicting. The client would be done regardless.
 			if ( NETWORK_InClientMode() )
 				return NULL;
+
+			if (nointeract)
+			{
+				return puff;
+			}
 		}
 		else
 		{
-			return NULL;
+			return nullptr;
 		}
 	}
 	else
@@ -4865,12 +4872,17 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 			if ( ( NETWORK_InClientMode() == false ) || CLIENT_ShouldPredictPuffs( ) )
 			{
 				// position a bit closer for puffs
-				if (trace.HitType != TRACE_HitWall || ((trace.Line->special != Line_Horizon) || spawnSky))
+				if (nointeract || trace.HitType != TRACE_HitWall || ((trace.Line->special != Line_Horizon) || spawnSky))
 				{
 					DVector2 pos = P_GetOffsetPosition(trace.HitPos.X, trace.HitPos.Y, -trace.HitVector.X * 4, -trace.HitVector.Y * 4);
 					puff = P_SpawnPuff(t1, pufftype, DVector3(pos, trace.HitPos.Z - trace.HitVector.Z * 4), trace.SrcAngleFromTarget,
 						trace.SrcAngleFromTarget - 90, 0, puffFlags);
 					puff->radius = 1/65536.;
+
+				if (nointeract)
+				{
+					return puff;
+				}
 				}
 			}
 
@@ -4936,14 +4948,6 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 					&& cl_hitscandecalhack == false )
 				return NULL;
 
-			bool bloodsplatter = (t1->flags5 & MF5_BLOODSPLATTER) ||
-				(t1->player != NULL &&	t1->player->ReadyWeapon != NULL &&
-				(t1->player->ReadyWeapon->WeaponFlags & WIF_AXEBLOOD));
-
-			bool axeBlood = (t1->player != NULL &&
-				t1->player->ReadyWeapon != NULL &&
-				(t1->player->ReadyWeapon->WeaponFlags & WIF_AXEBLOOD));
-
 			// Hit a thing, so it could be either a puff or blood
 			DVector3 bleedpos = trace.HitPos;
 			// position a bit closer for puffs/blood if using compatibility mode.
@@ -4962,7 +4966,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 
 			// Spawn bullet puffs or blood spots, depending on target type.
 			// [CK] We don't want to enter here unless we're predicting puffs.
-			if (((puffDefaults != NULL && puffDefaults->flags3 & MF3_PUFFONACTORS) ||
+			if ((nointeract || (puffDefaults && puffDefaults->flags3 & MF3_PUFFONACTORS) ||
 				(trace.Actor->flags & MF_NOBLOOD) ||
 				(trace.Actor->flags2 & (MF2_INVULNERABLE | MF2_DORMANT)))
 				&& ( NETWORK_InClientMode() == false || CLIENT_ShouldPredictPuffs( ) ) )
@@ -4972,6 +4976,11 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 
 				// We must pass the unreplaced puff type here 
 				puff = P_SpawnPuff(t1, pufftype, bleedpos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget - 90, 2, puffFlags | PF_HITTHING, trace.Actor);
+
+				if (nointeract)
+				{
+					return puff;
+				}
 			}
 
 			// [CK] The client by this point has predicted their desired
@@ -5018,6 +5027,14 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 			}
 			if (!(puffDefaults != NULL && puffDefaults->flags3&MF3_BLOODLESSIMPACT))
 			{
+				bool bloodsplatter = (t1->flags5 & MF5_BLOODSPLATTER) ||
+					(t1->player != nullptr &&	t1->player->ReadyWeapon != nullptr &&
+						(t1->player->ReadyWeapon->WeaponFlags & WIF_AXEBLOOD));
+
+				bool axeBlood = (t1->player != nullptr &&
+					t1->player->ReadyWeapon != nullptr &&
+					(t1->player->ReadyWeapon->WeaponFlags & WIF_AXEBLOOD));
+
 				// [CK] Do not perform if we are a client.
 				if (!bloodsplatter && !axeBlood &&
 					!(trace.Actor->flags & MF_NOBLOOD) &&

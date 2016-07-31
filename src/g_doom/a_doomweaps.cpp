@@ -109,6 +109,9 @@ int A_CustomFireBullets( AActor *self,
 						  const char *AttackSound = NULL,
 						  int Flags = 1,
 						  double Range = 0,
+						  PClassActor * missile = nullptr,
+						  double Spawnheight = 0,
+						  double Spawnofs_xy = 0,
 						  const bool pPlayAttacking = true );
 
 DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
@@ -116,7 +119,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FirePistol)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FirePistol is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/pistol", true, 0, false );
+	A_CustomFireBullets( self, 5.6, 0., 1, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/pistol", true, 0, nullptr, 0, 0, false );
 	A_GunFlash ( self );
 /*
 	bool accurate;
@@ -400,7 +403,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FireShotgun is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 5.6, 0., 7, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/shotgf", true, 0, false );
+	A_CustomFireBullets( self, 5.6, 0., 7, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/shotgf", true, 0, nullptr, 0, 0, false );
 	A_GunFlash ( self );
 /*
 	int i;
@@ -482,7 +485,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_FireShotgun2)
 	PARAM_ACTION_PROLOGUE;
 
 	// [BB] A_FireShotgun2 is only kept to stay compatible with Dehacked.
-	A_CustomFireBullets( self, 11.2, 7.1, 20, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/sshotf", true, 0, false );
+	A_CustomFireBullets( self, 11.2, 7.1, 20, 5, PClass::FindActor("BulletPuff"), ACTION_CALL_FROM_PSPRITE(), "weapons/sshotf", true, 0, nullptr, 0, 0, false );
 	A_GunFlash ( self );
 /*
 	int 		i;
