@@ -257,6 +257,8 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG(MF7, LAXTELEFRAGDMG, AActor, flags7),
 	DEFINE_FLAG(MF7, ICESHATTER, AActor, flags7),
 	DEFINE_FLAG(MF7, ALLOWTHRUFLAGS, AActor, flags7),
+	DEFINE_FLAG(MF7, USEKILLSCRIPTS, AActor, flags7),
+	DEFINE_FLAG(MF7, NOKILLSCRIPTS, AActor, flags7),
 
 	// [BC] New DECORATE flag defines here.
 	DEFINE_FLAG(STFL, BLUETEAM, AActor, ulSTFlags),
@@ -387,6 +389,9 @@ static FFlagDef WeaponFlagDefs[] =
 	DEFINE_FLAG(WIF, NO_AUTO_SWITCH, AWeapon, WeaponFlags),
 	DEFINE_FLAG(WIF, AMMO_CHECKBOTH, AWeapon, WeaponFlags),
 	DEFINE_FLAG(WIF, NOAUTOAIM, AWeapon, WeaponFlags),
+	DEFINE_FLAG(WIF, NODEATHDESELECT, AWeapon, WeaponFlags),
+	DEFINE_FLAG(WIF, NODEATHINPUT, AWeapon, WeaponFlags),
+	
 	DEFINE_FLAG(WIF, ALLOW_WITH_RESPAWN_INVUL, AWeapon, WeaponFlags), // [BB] Marks weapons that can be used while respawn invulnerability is active.
 	DEFINE_FLAG(WIF, NOLMS, AWeapon, WeaponFlags), // [BB] Marks weapons that are not given to the player in LMS.
 	DEFINE_FLAG(WIF, ALT_USES_BOTH, AWeapon, WeaponFlags),

@@ -70,7 +70,7 @@ EXTERN_CVAR( Int, handicap )
 FPlayerNameBox::FPlayerNameBox(int x, int y, int height, int frameofs, const char *text, FFont *font, EColorRange color, FName action)
 : FListMenuItemSelectable(x, y, height, action)
 {
-	mText = copystring(text);
+	mText = text;
 	mFont = font;
 	mFontColor = color;
 	mFrameSize = frameofs;
@@ -80,7 +80,6 @@ FPlayerNameBox::FPlayerNameBox(int x, int y, int height, int frameofs, const cha
 
 FPlayerNameBox::~FPlayerNameBox()
 {
-	if (mText != NULL) delete [] mText;
 }
 
 //=============================================================================
@@ -227,7 +226,7 @@ bool FPlayerNameBox::MenuEvent(int mkey, bool fromcontroller)
 FValueTextItem::FValueTextItem(int x, int y, int height, const char *text, FFont *font, EColorRange color, EColorRange valuecolor, FName action, FName values)
 : FListMenuItemSelectable(x, y, height, action)
 {
-	mText = copystring(text);
+	mText = text;
 	mFont = font;
 	mFontColor = color;
 	mFontColor2 = valuecolor;
@@ -247,7 +246,6 @@ FValueTextItem::FValueTextItem(int x, int y, int height, const char *text, FFont
 
 FValueTextItem::~FValueTextItem()
 {
-	if (mText != NULL) delete [] mText;
 }
 
 //=============================================================================
@@ -348,7 +346,7 @@ void FValueTextItem::Drawer(bool selected)
 FSliderItem::FSliderItem(int x, int y, int height, const char *text, FFont *font, EColorRange color, FName action, int min, int max, int step)
 : FListMenuItemSelectable(x, y, height, action)
 {
-	mText = copystring(text);
+	mText = text;
 	mFont = font;
 	mFontColor = color;
 	mSelection = 0;
@@ -359,7 +357,6 @@ FSliderItem::FSliderItem(int x, int y, int height, const char *text, FFont *font
 
 FSliderItem::~FSliderItem()
 {
-	if (mText != NULL) delete [] mText;
 }
 
 //=============================================================================
