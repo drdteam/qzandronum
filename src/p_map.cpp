@@ -5453,6 +5453,12 @@ void P_RailAttack(FRailParams *p)
 		}
 	}
 
+	int puffflags = 0;
+	if (p->flags & RAF_NORANDOMPUFFZ)
+	{
+		puffflags |= PF_NORANDOMZ;
+	}
+
 	DVector2 xy = source->Vec2Angle(p->offset_xy, angle - 90.);
 
 	RailData rail_data;
@@ -5513,7 +5519,7 @@ void P_RailAttack(FRailParams *p)
 			bool spawnpuff;
 			bool bleed = false;
 
-			int puffflags = PF_HITTHING;
+			int actorpuffflags = puffflags | PF_HITTHING;
 			AActor *hitactor = rail_data.RailHits[i].HitActor;
 			DVector3 &hitpos = rail_data.RailHits[i].HitPos;
 			DAngle hitangle = rail_data.RailHits[i].HitAngle;
@@ -5526,7 +5532,7 @@ void P_RailAttack(FRailParams *p)
 			else
 			{
 				spawnpuff = (puffclass != NULL && puffDefaults->flags3 & MF3_ALWAYSPUFF);
-				puffflags |= PF_HITTHINGBLEED; // [XA] Allow for puffs to jump to XDeath state.
+				actorpuffflags |= PF_HITTHINGBLEED; // [XA] Allow for puffs to jump to XDeath state.
 				if (!(puffDefaults->flags3 & MF3_BLOODLESSIMPACT))
 				{
 					bleed = true;
@@ -5534,7 +5540,7 @@ void P_RailAttack(FRailParams *p)
 			}
 			if (spawnpuff)
 			{
-				P_SpawnPuff(source, puffclass, hitpos, hitangle, hitangle - 90, 1, puffflags, hitactor);
+				P_SpawnPuff(source, puffclass, hitpos, hitangle, hitangle - 90, 1, actorpuffflags, hitactor);
 			}
 		
 			// [BC] Damage is server side.
@@ -5607,7 +5613,7 @@ void P_RailAttack(FRailParams *p)
 
 		if (puffclass != NULL && puffDefaults->flags3 & MF3_ALWAYSPUFF)
 		{
-			puff = P_SpawnPuff(source, puffclass, trace.HitPos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget - 90, 1, 0);
+			puff = P_SpawnPuff(source, puffclass, trace.HitPos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget - 90, 1, puffflags);
 			if (puff && (trace.Line != NULL) && (trace.Line->special == Line_Horizon) && !(puff->flags3 & MF3_SKYEXPLODE))
 				puff->Destroy();
 		}
@@ -5622,7 +5628,7 @@ void P_RailAttack(FRailParams *p)
 		AActor* puff = NULL;
 		if (puffclass != NULL && puffDefaults->flags3 & MF3_ALWAYSPUFF)
 		{
-			puff = P_SpawnPuff(source, puffclass, trace.HitPos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget - 90, 1, 0);
+			puff = P_SpawnPuff(source, puffclass, trace.HitPos, trace.SrcAngleFromTarget, trace.SrcAngleFromTarget - 90, 1, puffflags);
 			if (puff && !(puff->flags3 & MF3_SKYEXPLODE) &&
 				(((trace.HitType == TRACE_HitFloor) && (puff->floorpic == skyflatnum)) ||
 				((trace.HitType == TRACE_HitCeiling) && (puff->ceilingpic == skyflatnum))))
