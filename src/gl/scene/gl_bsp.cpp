@@ -80,6 +80,7 @@ static void UnclipSubsector(subsector_t *sub)
 		if (startAngle-endAngle >= ANGLE_180)  
 		{
 			clipper.SafeRemoveClipRange(startAngle, endAngle);
+			clipper.SetBlocked(false);
 		}
 		seg++;
 	}
@@ -445,6 +446,7 @@ static void DoSubsector(subsector_t * sub)
 		// range this subsector spans before going on.
 		UnclipSubsector(sub);
 	}
+	if (clipper.IsBlocked()) return;	// if we are inside a stacked sector portal which hasn't unclipped anything yet.
 
 	fakesector=gl_FakeFlat(sector, &fake, false);
 
