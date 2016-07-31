@@ -19,9 +19,17 @@ OptionValue "FilterModes"
 	0, "$OPTVAL_NONE"
 	1, "$OPTVAL_NONENEARESTMIPMAP"
 	5, "$OPTVAL_NONELINEARMIPMAP"
+	6, "$OPTVAL_NONETRILINEAR"
 	2, "$OPTVAL_LINEAR"
 	3, "$OPTVAL_BILINEAR"
 	4, "$OPTVAL_TRILINEAR"
+}
+
+OptionValue "HWGammaModes"
+{
+	0, "$OPTVAL_ON"
+	1, "$OPTVAL_OFF"
+	2, "$OPTVAL_FULLSCREENONLY"
 }
 
 OptionValue "TextureFormats"

@@ -365,7 +365,7 @@ void I_RestoreWindowedPos ()
 
 extern int NewWidth, NewHeight, NewBits, DisplayBits;
 
-CUSTOM_CVAR (Bool, fullscreen, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
+CUSTOM_CVAR (Bool, fullscreen, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
 {
 	// [BB] The server doesn't have a screen.
 	if ( NETWORK_GetState( ) == NETSTATE_SERVER )

@@ -2369,6 +2369,7 @@ OPTVAL_SINC					= "Sinc";
 OPTVAL_NOTEONOFFONLY		= "Note on/off only";
 OPTVAL_FULLRAMPING			= "Full ramping";
 OPTVAL_ALLUNACKNOWLEDGED	= "All unacknowledged";
+OPTVAL_FULLSCREENONLY		= "Fullscreen only";
 // Colors
 C_BRICK					= "\cabrick";
 C_TAN					= "\cbtan";
@@ -2650,6 +2651,7 @@ MUSIC_DM2INT = "dm2int";
 DSPLYMNU_GLOPT		= "OpenGL Options";
 DSPLYMNU_GAMMA		= "Gamma correction";
 DSPLYMNU_CONTRAST 	="Contrast";
+DSPLYMNU_HWGAMMA	= "Hardware Gamma";
 
 // OpenGL Options
 GLMNU_TITLE		= "OPENGL OPTIONS";
@@ -2713,6 +2715,7 @@ OPTVAL_INFRAREDANDTORCH 	= "Infrared and torch";
 OPTVAL_ANYFIXEDCOLORMAP 	= "Any fixed colormap";
 OPTVAL_NONENEARESTMIPMAP 	= "None (nearest mipmap)";
 OPTVAL_NONELINEARMIPMAP 	= "None (linear mipmap)";
+OPTVAL_NONETRILINEAR		= "None (trilinear)";
 OPTVAL_BILINEAR 			= "Bilinear";
 OPTVAL_TRILINEAR 			= "Trilinear";
 OPTVAL_RGBA8 				= "RGBA8";

@@ -351,10 +351,7 @@ SDLGLFB::~SDLGLFB ()
 {
 	if (Screen)
 	{
-		if (m_supportsGamma)
-		{
-			SDL_SetWindowGammaRamp(Screen, m_origGamma[0], m_origGamma[1], m_origGamma[2]);
-		}
+		ResetGammaTable();
 
 		if (GLContext)
 		{
@@ -388,7 +385,18 @@ bool SDLGLFB::CanUpdate ()
 
 void SDLGLFB::SetGammaTable(WORD *tbl)
 {
-	SDL_SetWindowGammaRamp(Screen, &tbl[0], &tbl[256], &tbl[512]);
+	if (m_supportsGamma)
+	{
+		SDL_SetWindowGammaRamp(Screen, &tbl[0], &tbl[256], &tbl[512]);
+	}
+}
+
+void SDLGLFB::ResetGammaTable()
+{
+	if (m_supportsGamma)
+	{
+		SDL_SetWindowGammaRamp(Screen, m_origGamma[0], m_origGamma[1], m_origGamma[2]);
+	}
 }
 
 bool SDLGLFB::Lock(bool buffered)
@@ -446,6 +454,20 @@ void SDLGLFB::NewRefreshRate ()
 void SDLGLFB::SwapBuffers()
 {
 	SDL_GL_SwapWindow (Screen);
+}
+
+int SDLGLFB::GetClientWidth()
+{
+	int width = 0;
+	SDL_GL_GetDrawableSize(Screen, &width, nullptr);
+	return width;
+}
+
+int SDLGLFB::GetClientHeight()
+{
+	int height = 0;
+	SDL_GL_GetDrawableSize(Screen, nullptr, &height);
+	return height;
 }
 
 #endif
