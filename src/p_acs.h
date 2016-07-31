@@ -339,6 +339,7 @@ enum
 	APROP_DamageMultiplier=43,
 	APROP_MaxStepHeight	= 44,
 	APROP_MaxDropOffHeight= 45,
+	APROP_DamageType	= 46,
 };	
 
 // [Dusk] Enumeration for GetTeamProperty
