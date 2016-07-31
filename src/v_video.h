@@ -423,8 +423,6 @@ public:
 	virtual bool Is8BitMode() = 0;
 #endif
 
-	virtual void SetSmoothPicture(bool smooth) {}
-
 protected:
 	void DrawRateStuff ();
 	void CopyFromBuff (BYTE *src, int srcPitch, int width, int height, BYTE *dest);
