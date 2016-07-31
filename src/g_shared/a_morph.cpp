@@ -83,6 +83,10 @@ bool P_MorphPlayer (player_t *activator, player_t *p, PClassPlayerPawn *spawntyp
 	morphed = static_cast<APlayerPawn *>(Spawn (spawntype, actor->Pos(), NO_REPLACE));
 	EndAllPowerupEffects(actor->Inventory);
 	DObject::StaticPointerSubstitution (actor, morphed);
+	if ((style & MORPH_TRANSFERTRANSLATION) && !(morphed->flags2 & MF2_DONTTRANSLATE))
+	{
+		morphed->Translation = actor->Translation;
+	}
 	if ((actor->tid != 0) && (style & MORPH_NEWTIDBEHAVIOUR))
 	{
 		morphed->tid = actor->tid;
@@ -427,6 +431,10 @@ bool P_MorphMonster (AActor *actor, PClassActor *spawntype, int duration, int st
 		SERVERCOMMANDS_DestroyThing( actor );
 
 	DObject::StaticPointerSubstitution (actor, morphed);
+	if ((style & MORPH_TRANSFERTRANSLATION) && !(morphed->flags2 & MF2_DONTTRANSLATE))
+	{
+		morphed->Translation = actor->Translation;
+	}
 	morphed->tid = actor->tid;
 	morphed->Angles.Yaw = actor->Angles.Yaw;
 	morphed->UnmorphedMe = actor;
