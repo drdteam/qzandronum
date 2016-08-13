@@ -893,6 +893,7 @@ sector_t * FGLRenderer::RenderViewpoint (AActor * camera, GL_IRECT * bounds, flo
 			if (FGLRenderBuffers::IsEnabled()) mBuffers->BlitSceneToTexture();
 			BloomScene();
 			TonemapScene();
+			LensDistortScene();
 		}
 		mDrawingScene2D = false;
 		eye->TearDown();

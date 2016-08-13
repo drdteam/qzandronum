@@ -1225,6 +1225,7 @@ set( FASTMATH_SOURCES
 	sound/music_pseudo_mididevice.cpp
 	wildmidi/wildmidi_lib.cpp
 	${GL_SOURCES}
+	gl/shaders/gl_lensshader.cpp
 )
 
 set (PCH_SOURCES
