@@ -136,6 +136,7 @@ enum NetworkActorState
 	STATE_CRASH,
 	STATE_IDLE,
 	STATE_WOUND, // [Dusk]
+	STATE_ARCHVILE_HEAL, // [EP]
 };
 
 // Identifying player states (again, cheap & easy)

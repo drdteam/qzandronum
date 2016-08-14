@@ -3061,8 +3061,9 @@ static bool P_CheckForResurrection(AActor *self, bool usevilestates)
 				self->target = temp;
 
 				// [BC] If we are the server, tell clients about the state change.
-				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-					SERVERCOMMANDS_SetThingState( self, STATE_HEAL );
+				// [EP/BB] Handle also A_VileChase which requires the archvile's states.
+				if ( NETWORK_GetState() == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetThingState( self, usevilestates ? STATE_ARCHVILE_HEAL : STATE_HEAL );
 
 				// Make the state the monster enters customizable.
 				FState * state = self->FindState(NAME_Heal);
