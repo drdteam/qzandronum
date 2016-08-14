@@ -704,31 +704,38 @@ void DPlat::Stop ()
 	m_Status = in_stasis;
 }
 
-void EV_StopPlat (int tag)
+void EV_StopPlat (int tag, bool remove)
 {
 	DPlat *scan;
 	TThinkerIterator<DPlat> iterator;
 
-	while ( (scan = iterator.Next ()) )
+	scan = iterator.Next();
+	while (scan != nullptr)
 	{
+		DPlat *next = iterator.Next();
 		if (scan->m_Status != DPlat::in_stasis && scan->m_Tag == tag)
 		{
-			scan->Stop ();
-
-			// [BC] If we're the server, tell clients that that status is changing.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			if (!remove)
 			{
-				SERVERCOMMANDS_ChangePlatStatus( scan->m_lPlatID, scan->m_Status );
+				scan->Stop();
 
-				// [BC] If the sector has stopped, then this is probably a good time
-				// to verify all the clients have the correct floor/ceiling height for
-				// this sector.
-				if ( scan->m_Sector->floorOrCeiling == 0 )
-					SERVERCOMMANDS_SetSectorFloorPlane( ULONG( scan->m_Sector - sectors ));
-				else
-					SERVERCOMMANDS_SetSectorCeilingPlane( ULONG( scan->m_Sector - sectors ));
+				// [BC] If we're the server, tell clients that that status is changing.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					SERVERCOMMANDS_ChangePlatStatus( scan->m_lPlatID, scan->m_Status );
+
+					// [BC] If the sector has stopped, then this is probably a good time
+					// to verify all the clients have the correct floor/ceiling height for
+					// this sector.
+					if ( scan->m_Sector->floorOrCeiling == 0 )
+						SERVERCOMMANDS_SetSectorFloorPlane( ULONG( scan->m_Sector - sectors ));
+					else
+						SERVERCOMMANDS_SetSectorCeilingPlane( ULONG( scan->m_Sector - sectors ));
+				}
 			}
+			else scan->Destroy();
 		}
+		scan = next;
 	}
 }
 

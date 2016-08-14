@@ -762,38 +762,48 @@ void P_ActivateInStasisCeiling (int tag)
 //
 //============================================================================
 
-bool EV_CeilingCrushStop (int tag)
+bool EV_CeilingCrushStop (int tag, bool remove)
 {
 	bool rtn = false;
 	DCeiling *scan;
 	TThinkerIterator<DCeiling> iterator;
 
-	while ( (scan = iterator.Next ()) )
+	scan = iterator.Next();
+	while (scan != nullptr)
 	{
+		DCeiling *next = iterator.Next();
 		if (scan->m_Tag == tag && scan->m_Direction != 0)
 		{
-			// [BC] If we're stopping, this is probably a good time to verify all the clients
-			// have the correct floor/ceiling height for this sector.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			if (!remove)
 			{
-				if ( scan->m_Sector->floorOrCeiling == 0 )
-					SERVERCOMMANDS_SetSectorFloorPlane( ULONG( scan->m_Sector - sectors ));
-				else
-					SERVERCOMMANDS_SetSectorCeilingPlane( ULONG( scan->m_Sector - sectors ));
+				// [BC] If we're stopping, this is probably a good time to verify all the clients
+				// have the correct floor/ceiling height for this sector.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					if ( scan->m_Sector->floorOrCeiling == 0 )
+						SERVERCOMMANDS_SetSectorFloorPlane( ULONG( scan->m_Sector - sectors ));
+					else
+						SERVERCOMMANDS_SetSectorCeilingPlane( ULONG( scan->m_Sector - sectors ));
 
-				// Tell clients to stop the floor's sound sequence.
-				SERVERCOMMANDS_StopSectorSequence( scan->m_Sector );
+					// Tell clients to stop the floor's sound sequence.
+					SERVERCOMMANDS_StopSectorSequence( scan->m_Sector );
+				}
+
+				SN_StopSequence(scan->m_Sector, CHAN_CEILING);
+				scan->m_OldDirection = scan->m_Direction;
+				scan->m_Direction = 0;		// in-stasis;
 			}
-
-			SN_StopSequence (scan->m_Sector, CHAN_CEILING);
-			scan->m_OldDirection = scan->m_Direction;
-			scan->m_Direction = 0;		// in-stasis;
+			else
+			{
+				scan->Destroy();
+			}
 			rtn = true;
 
 			// [BB] Also tell the updated direction to the clients.
 			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 				SERVERCOMMANDS_ChangeCeilingDirection( scan->GetID( ), scan->GetDirection( ));
 		}
+		scan = next;
 	}
 
 	return rtn;
