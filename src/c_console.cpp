@@ -177,6 +177,12 @@ CVAR (Float, con_notifytime, 3.f, CVAR_ARCHIVE)
 CVAR (Bool, con_centernotify, false, CVAR_ARCHIVE)
 // [BC] con_scaletext is back to being a bool.
 CVAR (Bool, con_scaletext, 0, CVAR_ARCHIVE)		// Scale text at high resolutions?
+/* [BB] Zandronum handles con_scaletext differently
+{
+	if (self < 0) self = 0;
+	if (self > 3) self = 3;
+}
+*/
 
 CUSTOM_CVAR(Float, con_alpha, 0.75f, CVAR_ARCHIVE)
 {
@@ -580,6 +586,16 @@ void C_AddNotifyString (int printlevel, const char *source)
 		width = con_virtualwidth;
 	else
 		width = DisplayWidth;
+	/* [BB] Zandronum handles con_scaletext differently
+	switch (con_scaletext)
+	{
+	default:
+	case 0: width = DisplayWidth; break;
+	case 1: width = DisplayWidth / CleanXfac; break;
+	case 2: width = DisplayWidth / 2; break;
+	case 3: width = DisplayWidth / 4; break;
+	}
+	*/
 
 	if (addtype == APPENDLINE && NotifyStrings[NUMNOTIFIES-1].PrintLevel == printlevel)
 	{
@@ -940,18 +956,69 @@ static void C_DrawNotifyText ()
 			else
 				color = PrintColors[NotifyStrings[i].PrintLevel];
 
+			/* [BB] Zandronum handles con_scaletext differently
+			if (con_scaletext == 1)
+			{
+				if (!center)
+					screen->DrawText (SmallFont, color, 0, line, NotifyStrings[i].Text,
+						DTA_CleanNoMove, true, DTA_AlphaF, alpha, TAG_DONE);
+				else
+					screen->DrawText (SmallFont, color, (SCREENWIDTH -
+						SmallFont->StringWidth (NotifyStrings[i].Text)*CleanXfac)/2,
+						line, NotifyStrings[i].Text, DTA_CleanNoMove, true,
+						DTA_AlphaF, alpha, TAG_DONE);
+			}
+			else if (con_scaletext == 0)
+			*/
+			{
 			// [BC] If we want scaling, handle that here.
-			if (!center)
-				screen->DrawText (SmallFont, color, 0, line, NotifyStrings[i].Text,
-					DTA_UseVirtualScreen, bScale, // [BB]
-					DTA_AlphaF, alpha, TAG_DONE);
+				if (!center)
+					screen->DrawText (SmallFont, color, 0, line, NotifyStrings[i].Text,
+						DTA_UseVirtualScreen, bScale, // [BB]
+						DTA_AlphaF, alpha, TAG_DONE);
+				else
+					screen->DrawText (SmallFont, color, ( ( bScale ? ValWidth.Int : SCREENWIDTH ) -
+						SmallFont->StringWidth (NotifyStrings[i].Text))/2,
+						line, NotifyStrings[i].Text,
+						DTA_UseVirtualScreen, bScale, // [BB]
+						DTA_AlphaF, alpha, TAG_DONE);
+			}
+			/* [BB] Zandronum handles con_scaletext differently
+			else if (con_scaletext == 3)
+			{
+				if (!center)
+					screen->DrawText (SmallFont, color, 0, line, NotifyStrings[i].Text,
+						DTA_VirtualWidth, screen->GetWidth() / 4, 
+						DTA_VirtualHeight, screen->GetHeight() / 4,
+						DTA_KeepRatio, true,
+						DTA_AlphaF, alpha, TAG_DONE);
+				else
+					screen->DrawText (SmallFont, color, (screen->GetWidth() / 4 -
+						SmallFont->StringWidth (NotifyStrings[i].Text))/4,
+						line, NotifyStrings[i].Text,
+						DTA_VirtualWidth, screen->GetWidth() / 4, 
+						DTA_VirtualHeight, screen->GetHeight() / 4,
+						DTA_KeepRatio, true,
+						DTA_AlphaF, alpha, TAG_DONE);
+			}
 			else
-				screen->DrawText (SmallFont, color, ( ( bScale ? ValWidth.Int : SCREENWIDTH ) -
-					SmallFont->StringWidth (NotifyStrings[i].Text))/2,
-					line, NotifyStrings[i].Text,
-					DTA_UseVirtualScreen, bScale, // [BB]
-					DTA_AlphaF, alpha, TAG_DONE);
-
+			{
+				if (!center)
+					screen->DrawText (SmallFont, color, 0, line, NotifyStrings[i].Text,
+						DTA_VirtualWidth, screen->GetWidth() / 2, 
+						DTA_VirtualHeight, screen->GetHeight() / 2,
+						DTA_KeepRatio, true,
+						DTA_AlphaF, alpha, TAG_DONE);
+				else
+					screen->DrawText (SmallFont, color, (screen->GetWidth() / 2 -
+						SmallFont->StringWidth (NotifyStrings[i].Text))/2,
+						line, NotifyStrings[i].Text,
+						DTA_VirtualWidth, screen->GetWidth() / 2, 
+						DTA_VirtualHeight, screen->GetHeight() / 2,
+						DTA_KeepRatio, true,
+						DTA_AlphaF, alpha, TAG_DONE);
+			}
+			*/
 			line += lineadv;
 			canskip = false;
 		}

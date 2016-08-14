@@ -8127,6 +8127,7 @@ void AActor::Revive()
 	flags5 = info->flags5;
 	flags6 = info->flags6;
 	flags7 = info->flags7;
+	if (SpawnFlags & MTF_FRIENDLY) flags |= MF_FRIENDLY;
 
 	// [BC] Apply new ST flags as well.
 	// [BB] The STFL_LEVELSPAWNED flag may not be removed by the default flags.

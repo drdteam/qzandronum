@@ -828,7 +828,7 @@ OptionMenu "HUDOptions"
 	Option "$HUDMNU_GROWCROSSHAIR",			"crosshairgrow", "OnOff"
 	ColorPicker "$HUDMNU_CROSSHAIRCOLOR", 	"crosshaircolor"
 	Option "$HUDMNU_CROSSHAIRHEALTH",		"crosshairhealth", "OnOff"
-	Option "$HUDMNU_CROSSHAIRSCALE",		"crosshairscale", "OnOff"
+	Slider "$HUDMNU_CROSSHAIRSCALE",		"crosshairscale", 0.0, 2.0, 0.05, 2
 	Option "Voting display",			"cl_showfullscreenvote", "ZA_VotingDisplay"
 	Option "Fullscreen HUD",			"cl_stfullscreenhud", "ZA_FullscreenHUD"
 	StaticText " "
@@ -863,6 +863,7 @@ OptionValue "AltHUDScale"
 	0, "$OPTVAL_OFF"
 	1, "$OPTVAL_SCALETO640X400"
 	2, "$OPTVAL_PIXELDOUBLE"
+	3, "$OPTVAL_PIXELQUADRUPLE"
 }
 
 OptionValue "AltHUDAmmo"
@@ -1179,6 +1180,7 @@ OptionValue ScaleValues
 	0, "$OPTVAL_OFF"
 	1, "$OPTVAL_ON"
 	2, "$OPTVAL_DOUBLE"
+	3, "$OPTVAL_QUADRUPLE"
 }
 
 OptionValue MessageLevels
