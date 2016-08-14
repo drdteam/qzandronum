@@ -661,6 +661,7 @@ xx(DecoCallLineSpecial)
 xx(DecoNameToClass)
 xx(DecoFindMultiNameState)
 xx(DecoFindSingleNameState)
+xx(DecoHandleRuntimeState)
 xx(Damage)
 
 // basic type names

@@ -720,7 +720,7 @@ CUSTOM_CVAR(Int, compatmode, 0, CVAR_ARCHIVE|CVAR_NOINITCALL)
 
 	case 4: // Old ZDoom compat mode
 		v = COMPATF_SOUNDTARGET | COMPATF_LIGHT;
-		w = COMPATF2_MULTIEXIT;
+		w = COMPATF2_MULTIEXIT | COMPATF2_TELEPORT;
 		break;
 
 	case 5: // MBF compat mode
@@ -776,6 +776,7 @@ CVAR (Flag, compat_floormove,			compatflags2, COMPATF2_FLOORMOVE);
 CVAR (Flag, compat_soundcutoff,			compatflags2, COMPATF2_SOUNDCUTOFF);
 CVAR (Flag, compat_pointonline,			compatflags2, COMPATF2_POINTONLINE);
 CVAR (Flag, compat_multiexit,			compatflags2, COMPATF2_MULTIEXIT);
+CVAR (Flag, compat_teleport,			compatflags2, COMPATF2_TELEPORT);
 // [BB] Skulltag compat flags.
 CVAR (Flag, compat_limited_airmovement, zacompatflags, ZACOMPATF_LIMITED_AIRMOVEMENT);
 CVAR (Flag, compat_plasmabump,	zacompatflags, ZACOMPATF_PLASMA_BUMP_BUG);
