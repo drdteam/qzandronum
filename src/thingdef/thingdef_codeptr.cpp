@@ -5556,6 +5556,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_RaiseMaster)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_BOOL_OPT(copy)	{ copy = false; }
 
+	// [EP] This is handled by the server.
+	if ( NETWORK_InClientMode() )
+		return 0;
+
 	if (self->master != NULL)
 	{
 		P_Thing_Raise(self->master, copy ? self : NULL);
@@ -5572,6 +5576,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_RaiseChildren)
 {
 	PARAM_ACTION_PROLOGUE;
 	PARAM_BOOL_OPT(copy)	{ copy = false; }
+
+	// [EP] This is handled by the server.
+	if ( NETWORK_InClientMode() )
+		return 0;
 
 	TThinkerIterator<AActor> it;
 	AActor *mo;
@@ -5595,6 +5603,10 @@ DEFINE_ACTION_FUNCTION(AActor, A_RaiseSiblings)
 {
 	PARAM_ACTION_PROLOGUE;
 	PARAM_BOOL_OPT(copy)	{ copy = false; }
+
+	// [EP] This is handled by the server.
+	if ( NETWORK_InClientMode() )
+		return 0;
 
 	TThinkerIterator<AActor> it;
 	AActor *mo;
