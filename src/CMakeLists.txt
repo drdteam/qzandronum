@@ -901,6 +901,7 @@ if( NOT NO_GL )
 		gl/renderer/gl_renderbuffers.cpp
 		gl/renderer/gl_lightdata.cpp
 		gl/renderer/gl_postprocess.cpp
+		gl/renderer/gl_postprocessstate.cpp
 		gl/hqnx/init.cpp
 		gl/hqnx/hq2x.cpp
 		gl/hqnx/hq3x.cpp
@@ -948,6 +949,7 @@ if( NOT NO_GL )
 		gl/shaders/gl_bloomshader.cpp
 		gl/shaders/gl_blurshader.cpp
 		gl/shaders/gl_tonemapshader.cpp
+		gl/shaders/gl_lensshader.cpp
 		gl/system/gl_interface.cpp
 		gl/system/gl_framebuffer.cpp
 		gl/system/gl_menu.cpp
@@ -1225,7 +1227,6 @@ set( FASTMATH_SOURCES
 	sound/music_pseudo_mididevice.cpp
 	wildmidi/wildmidi_lib.cpp
 	${GL_SOURCES}
-	gl/shaders/gl_lensshader.cpp
 )
 
 set (PCH_SOURCES
