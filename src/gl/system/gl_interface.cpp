@@ -316,6 +316,7 @@ void gl_LoadExtensions()
 	FUDGE_FUNC(glDeleteRenderbuffers, EXT);
 	FUDGE_FUNC(glRenderbufferStorage, EXT);
 	FUDGE_FUNC(glBindRenderbuffer, EXT);
+	FUDGE_FUNC(glCheckFramebufferStatus, EXT);
 	gl_PatchMenu();
 }
 
