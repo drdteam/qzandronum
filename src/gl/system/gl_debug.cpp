@@ -43,12 +43,20 @@
 #include "gl/system/gl_interface.h"
 #include "gl/system/gl_debug.h"
 #include <set>
+#include <string>
 
 #ifndef _MSC_VER
 #include <signal.h>
 #endif
 
-CVAR(Int, gl_debug_level, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
+CUSTOM_CVAR(Int, gl_debug_level, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
+{
+	if (!FGLDebug::HasDebugApi())
+	{
+		Printf("No OpenGL debug support detected.\n");
+	}
+}
+
 CVAR(Bool, gl_debug_breakpoint, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 
 //-----------------------------------------------------------------------------
@@ -59,6 +67,9 @@ CVAR(Bool, gl_debug_breakpoint, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 
 void FGLDebug::Update()
 {
+	if (!HasDebugApi())
+		return;
+
 	SetupBreakpointMode();
 	UpdateLoggingLevel();
 	OutputMessageLog();
@@ -73,7 +84,7 @@ void FGLDebug::Update()
 
 void FGLDebug::LabelObject(GLenum type, GLuint handle, const FString &name)
 {
-	if (gl_debug_level != 0)
+	if (HasDebugApi() && gl_debug_level != 0)
 	{
 		glObjectLabel(type, handle, (GLsizei)name.Len(), name.GetChars());
 	}
@@ -81,7 +92,7 @@ void FGLDebug::LabelObject(GLenum type, GLuint handle, const FString &name)
 
 void FGLDebug::LabelObjectPtr(void *ptr, const FString &name)
 {
-	if (gl_debug_level != 0)
+	if (HasDebugApi() && gl_debug_level != 0)
 	{
 		glObjectPtrLabel(ptr, (GLsizei)name.Len(), name.GetChars());
 	}
@@ -96,7 +107,7 @@ void FGLDebug::LabelObjectPtr(void *ptr, const FString &name)
 
 void FGLDebug::PushGroup(const FString &name)
 {
-	if (gl_debug_level != 0)
+	if (HasDebugApi() && gl_debug_level != 0)
 	{
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, (GLsizei)name.Len(), name.GetChars());
 	}
@@ -104,7 +115,7 @@ void FGLDebug::PushGroup(const FString &name)
 
 void FGLDebug::PopGroup()
 {
-	if (gl_debug_level != 0)
+	if (HasDebugApi() && gl_debug_level != 0)
 	{
 		glPopDebugGroup();
 	}
