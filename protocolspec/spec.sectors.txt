@@ -193,3 +193,27 @@ Command DoSectorLightPhased
 	Short baseLevel
 	Byte phase
 EndCommand
+
+Command SetLineAlpha
+	Line line
+	Fixed alpha
+EndCommand
+
+Command SetLineTexture
+	Line line
+	String textureName
+	Bool side
+	Byte position
+EndCommand
+
+Command SetLineTextureByID
+	Short lineID
+	String textureName
+	Bool side
+	Byte position
+EndCommand
+
+Command SetSomeLineFlags
+	Line line
+	Long blockFlags
+EndCommand

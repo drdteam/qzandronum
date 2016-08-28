@@ -198,11 +198,6 @@ static	void	client_SetTeamReturnTicks( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagReturned( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagDropped( BYTESTREAM_s *pByteStream );
 
-// Line commands.
-static	void	client_SetLineAlpha( BYTESTREAM_s *pByteStream );
-static	void	client_SetLineTexture( BYTESTREAM_s *pByteStream, bool bIdentifyLinesByID = false );
-static	void	client_SetSomeLineFlags( BYTESTREAM_s *pByteStream );
-
 // Side commands.
 static	void	client_SetSideFlags( BYTESTREAM_s *pByteStream );
 
@@ -1537,22 +1532,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_TEAMFLAGDROPPED:
 
 		client_TeamFlagDropped( pByteStream );
-		break;
-	case SVC_SETLINEALPHA:
-
-		client_SetLineAlpha( pByteStream );
-		break;
-	case SVC_SETLINETEXTURE:
-
-		client_SetLineTexture( pByteStream );
-		break;
-	case SVC_SETLINETEXTUREBYID:
-
-		client_SetLineTexture( pByteStream, true );
-		break;
-	case SVC_SETSOMELINEFLAGS:
-
-		client_SetSomeLineFlags( pByteStream );
 		break;
 	case SVC_SETSIDEFLAGS:
 
@@ -6357,44 +6336,15 @@ void ServerCommands::DoSectorLightPhased::Execute()
 
 //*****************************************************************************
 //
-static void client_SetLineAlpha( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetLineAlpha::Execute()
 {
-	line_t	*pLine;
-	ULONG	ulLineIdx;
-	fixed_t	alpha;
-
-	// Read in the line to have its alpha altered.
-	ulLineIdx = NETWORK_ReadShort( pByteStream );
-
-	// Read in the new alpha.
-	alpha = NETWORK_ReadLong( pByteStream );
-
-	pLine = &lines[ulLineIdx];
-	if (( pLine == NULL ) || ( ulLineIdx >= static_cast<ULONG>(numlines) ))
-	{
-		CLIENT_PrintWarning( "client_SetLineAlpha: Couldn't find line: %lu\n", ulLineIdx );
-		return;
-	}
-
-	// Finally, set the alpha.
-	pLine->alpha = FIXED2DBL ( alpha );
+	line->alpha = FIXED2DBL ( alpha );
 }
 
 //*****************************************************************************
 //
-static void client_SetLineTextureHelper ( ULONG ulLineIdx, ULONG ulSide, ULONG ulPosition, FTextureID texture )
+static void client_SetLineTextureHelper ( line_t *pLine, ULONG ulSide, ULONG ulPosition, FTextureID texture )
 {
-	line_t *pLine = NULL;
-
-	if ( ulLineIdx < static_cast<ULONG>(numlines) )
-		pLine = &lines[ulLineIdx];
-
-	if ( pLine == NULL )
-	{
-		CLIENT_PrintWarning( "client_SetLineTexture: Couldn't find line: %lu\n", ulLineIdx );
-		return;
-	}
-
 	if ( pLine->sidedef[ulSide] == NULL )
 		return;
 
@@ -6419,66 +6369,41 @@ static void client_SetLineTextureHelper ( ULONG ulLineIdx, ULONG ulSide, ULONG u
 		break;
 	}
 }
-
 //*****************************************************************************
 //
-static void client_SetLineTexture( BYTESTREAM_s *pByteStream, bool bIdentifyLinesByID )
+void ServerCommands::SetLineTexture::Execute()
 {
-	ULONG		ulLineIdx;
-	const char	*pszTextureName;
-	ULONG		ulSide;
-	ULONG		ulPosition;
-	FTextureID	texture;
+	FTextureID texture = TexMan.GetTexture( textureName, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
 
-	// Read in the line to have its alpha altered.
-	ulLineIdx = NETWORK_ReadShort( pByteStream );
-
-	// Read in the new texture name.
-	pszTextureName = NETWORK_ReadString( pByteStream );
-
-	// Read in the side.
-	ulSide = !!NETWORK_ReadByte( pByteStream );
-
-	// Read in the position.
-	ulPosition = NETWORK_ReadByte( pByteStream );
-
-	texture = TexMan.GetTexture( pszTextureName, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
-
-	if ( !texture.Exists() )
-		return;
-
-	if ( bIdentifyLinesByID )
-	{
-		int linenum = -1;
-		FLineIdIterator itr(ulLineIdx);
-		while ((linenum = itr.Next()) >= 0)
-			client_SetLineTextureHelper ( linenum, ulSide, ulPosition, texture );
-	}
+	if ( texture.Exists() )
+		client_SetLineTextureHelper( line, side, position, texture );
 	else
-	{
-		client_SetLineTextureHelper ( ulLineIdx, ulSide, ulPosition, texture );
-	}
+		CLIENT_PrintWarning( "SetLineTexture: unknown texture: %s\n", textureName.GetChars() );
 }
 
 //*****************************************************************************
 //
-static void client_SetSomeLineFlags( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetLineTextureByID::Execute()
 {
-	LONG	lLine;
-	LONG	lBlockFlags;
+	FTextureID texture = TexMan.GetTexture( textureName, FTexture::TEX_Wall, FTextureManager::TEXMAN_Overridable );
 
-	// Read in the line ID.
-	lLine = NETWORK_ReadShort( pByteStream );
+	if ( texture.Exists() )
+	{
+		int linenum = -1;
+		FLineIdIterator itr(lineID);
+		while ((linenum = itr.Next()) >= 0)
+			client_SetLineTextureHelper( &lines[linenum], side, position, texture );
+	}
+	else
+		CLIENT_PrintWarning( "SetLineTextureByID: unknown texture: %s\n", textureName.GetChars() );
+}
 
-	// Read in the blocking flags.
-	lBlockFlags = NETWORK_ReadLong( pByteStream );
-
-	// Invalid line ID.
-	if (( lLine >= numlines ) || ( lLine < 0 ))
-		return;
-
-	lines[lLine].flags &= ~(ML_BLOCKING|ML_BLOCK_PLAYERS|ML_BLOCKEVERYTHING|ML_RAILING|ML_ADDTRANS);
-	lines[lLine].flags |= lBlockFlags;
+//*****************************************************************************
+//
+void ServerCommands::SetSomeLineFlags::Execute()
+{
+	line->flags &= ~(ML_BLOCKING|ML_BLOCK_PLAYERS|ML_BLOCKEVERYTHING|ML_RAILING|ML_ADDTRANS);
+	line->flags |= blockFlags;
 }
 
 //*****************************************************************************
