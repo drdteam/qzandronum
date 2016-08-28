@@ -1438,24 +1438,8 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			CLIENT_QuitNetworkGame( szErrorString );
 		}
 		return;
-	case SVC_HEADER:
-
-		client_Header( pByteStream );
-		break;
-	case SVC_PING:
-
-		client_Ping( pByteStream );
-		break;
 	case SVC_NOTHING:
 
-		break;
-	case SVC_BEGINSNAPSHOT:
-
-		client_BeginSnapshot( pByteStream );
-		break;
-	case SVC_ENDSNAPSHOT:
-
-		client_EndSnapshot( pByteStream );
 		break;
 	/* [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 	case SVC_SETPLAYERPIECES:
@@ -1860,17 +1844,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 			case SVC2_SETINVENTORYICON:
 
 				client_SetInventoryIcon( pByteStream );
-				break;
-
-			case SVC2_FULLUPDATECOMPLETED:
-
-				// [BB] The server doesn't send any info with this packet, it's just there to allow us
-				// keeping track of the current time so that we don't think we are lagging immediately after receiving a full update.
-				g_ulEndFullUpdateTic = gametic;
-				g_bClientLagging = false;
-				// [BB] Tell the server that we received the full update.
-				CLIENTCOMMANDS_FullUpdateReceived();
-
 				break;
 
 			case SVC2_SETIGNOREWEAPONSELECT:
@@ -3095,14 +3068,10 @@ bool CLIENT_ReadActorFromNetID( int netid, const PClass *subclass, bool allowNul
 //*****************************************************************************
 //*****************************************************************************
 //
-static void client_Header( BYTESTREAM_s *pByteStream )
+void ServerCommands::Header::Execute()
 {
-	LONG	lSequence;
-
-	// Read in the sequence. This is the # of the packet the server has sent us.
-	// This function shouldn't ever be called since the packet header is parsed seperately.
-	lSequence = NETWORK_ReadLong( pByteStream );
-//	Printf( "client_Header: Received packet %d\n", lSequence );
+	// This is the # of the packet the server has sent us.
+    // This function shouldn't ever be called since the packet header is parsed seperately.
 }
 //*****************************************************************************
 //
@@ -3115,21 +3084,16 @@ static void client_ResetSequence( BYTESTREAM_s *pByteStream )
 */
 //*****************************************************************************
 //
-static void client_Ping( BYTESTREAM_s *pByteStream )
+void ServerCommands::Ping::Execute()
 {
-	ULONG	ulTime;
-
-	// Read in the time on the server end. We send this back to them, and then the server can
-	// tell how many milliseconds passed since it sent the ping message to us.
-	ulTime = NETWORK_ReadLong( pByteStream );
-
-	// Send back the server's time.
-	CLIENTCOMMANDS_Pong( ulTime );
+	// We send the time back to the server, so that it can tell how many milliseconds passed since it sent the
+	// ping message to us.
+	CLIENTCOMMANDS_Pong( time );
 }
 
 //*****************************************************************************
 //
-static void client_BeginSnapshot( BYTESTREAM_s *pByteStream )
+void ServerCommands::BeginSnapshot::Execute()
 {
 	// Display in the console that we're receiving a snapshot.
 	Printf( "Receiving snapshot...\n" );
@@ -3143,7 +3107,7 @@ static void client_BeginSnapshot( BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-static void client_EndSnapshot( BYTESTREAM_s *pByteStream )
+void ServerCommands::EndSnapshot::Execute()
 {
 	// We're all done! Set the new client connection state to active.
 	CLIENT_SetConnectionState( CTS_ACTIVE );
@@ -3202,6 +3166,18 @@ static void client_EndSnapshot( BYTESTREAM_s *pByteStream )
 
 	// Display the message of the day.
 	CLIENT_DisplayMOTD( );
+}
+
+//*****************************************************************************
+//
+void ServerCommands::FullUpdateCompleted::Execute()
+{
+	// [BB] The server doesn't send any info with this packet, it's just there to allow us
+	// keeping track of the current time so that we don't think we are lagging immediately after receiving a full update.
+	g_ulEndFullUpdateTic = gametic;
+	g_bClientLagging = false;
+	// [BB] Tell the server that we received the full update.
+	CLIENTCOMMANDS_FullUpdateReceived();
 }
 
 //*****************************************************************************

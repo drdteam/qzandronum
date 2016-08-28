@@ -194,9 +194,8 @@ void CheckPositionReuse( AActor *pActor, ULONG &ulBits )
 //
 void SERVERCOMMANDS_Ping( ULONG ulTime )
 {
-	NetCommand command( SVC_PING );
-	command.addLong( ulTime );
-	command.setUnreliable( true );
+	ServerCommands::Ping command;
+	command.SetTime( ulTime );
 	command.sendCommandToClients();
 }
 
@@ -219,8 +218,7 @@ void SERVERCOMMANDS_BeginSnapshot( ULONG ulPlayer )
 	if ( SERVER_IsValidClient( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_BEGINSNAPSHOT );
-	command.sendCommandToOneClient( ulPlayer );
+	ServerCommands::BeginSnapshot().sendCommandToClients( ulPlayer, SVCF_ONLYTHISCLIENT );
 }
 
 //*****************************************************************************
@@ -230,8 +228,7 @@ void SERVERCOMMANDS_EndSnapshot( ULONG ulPlayer )
 	if ( SERVER_IsValidClient( ulPlayer ) == false )
 		return;
 
-	NetCommand command( SVC_ENDSNAPSHOT );
-	command.sendCommandToOneClient( ulPlayer );
+	ServerCommands::EndSnapshot().sendCommandToClients( ulPlayer, SVCF_ONLYTHISCLIENT );
 }
 
 //*****************************************************************************
@@ -3504,8 +3501,7 @@ void SERVERCOMMANDS_FlashStealthMonster( AActor* pActor, ULONG ulPlayerExtra, Se
 //
 void SERVERCOMMANDS_FullUpdateCompleted( ULONG ulClient )
 {
-	NetCommand command ( SVC2_FULLUPDATECOMPLETED );
-	command.sendCommandToOneClient( ulClient );
+	ServerCommands::FullUpdateCompleted().sendCommandToClients( ulClient, SVCF_ONLYTHISCLIENT );
 }
 
 //*****************************************************************************
