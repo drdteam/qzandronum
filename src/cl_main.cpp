@@ -2588,13 +2588,21 @@ void CLIENT_MoveThing( AActor *pActor, fixed_t X, fixed_t Y, fixed_t Z )
 	{
 		// [BB] Unfortunately, P_OldAdjustFloorCeil messes up the floorz value under some circumstances.
 		// Save the old value, so that we can restore it if necessary.
+		// [EP] It seems it messes also with the ceilingz value.
 		double oldfloorz = pActor->floorz;
+		double oldceilingz = pActor->ceilingz;
 		P_OldAdjustFloorCeil( pActor );
 		// [BB] An actor can't be below its floorz, if the value is correct.
 		// In this case, P_OldAdjustFloorCeil apparently didn't work, so revert to the old value.
 		// [BB] But don't do this for the console player, it messes up the prediction.
-		if ( ( NETWORK_IsConsolePlayer ( pActor ) == false ) && ( pActor->floorz > pActor->Z() ) )
-			pActor->floorz = oldfloorz;
+		// [EP] Ditto for ceilingz.
+		if ( NETWORK_IsConsolePlayer ( pActor ) == false )
+		{
+			if ( pActor->floorz > pActor->Z() )
+				pActor->floorz = oldfloorz;
+			if ( pActor->ceilingz < pActor->Z() + pActor->Height )
+				pActor->ceilingz = oldceilingz;
+		}
 	}
 }
 
