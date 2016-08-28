@@ -373,8 +373,18 @@ void ChatBuffer::BeginNewMessage()
 	// Only begin a new message if we don't already have a cleared message buffer.
 	if ( GetMessage().IsNotEmpty() )
 	{
-		// Put a new empty string to be our current message.
-		Messages.Push( "" );
+		// If we re-sent something from the archive, store it into the current chat line. This way it is copied and becomes the most recent
+		// message again.
+		if ( &GetMessage() != &Messages.Last() )
+			Messages.Last() = GetMessage();
+
+		// Put a new empty string to be our current message, but avoid side-by-side duplicate entries in history: if the current buffer is
+		// the same as the most recent entry in history (Messages[Messages.Size() - 2]), then we just clear the input buffer and don't push
+		// anything.
+		if (( Messages.Size() >= 2 ) && ( Messages.Last().CompareNoCase( Messages[Messages.Size() - 2] ) == 0 ))
+			Messages.Last() = "";
+		else
+			Messages.Push( "" );
 
 		// If there now are too many messages, drop some from the archive.
 		while ( Messages.Size() > MaxMessages )
