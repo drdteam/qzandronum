@@ -2662,10 +2662,10 @@ void SERVERCOMMANDS_DoSectorLightFireFlicker( ULONG ulSector, LONG lMaxLight, LO
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTFIREFLICKER );
-	command.addShort( ulSector );
-	command.addShort( lMaxLight );
-	command.addShort( lMinLight );
+	ServerCommands::DoSectorLightFireFlicker command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetMaxLight( lMaxLight );
+	command.SetMinLight( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2676,10 +2676,10 @@ void SERVERCOMMANDS_DoSectorLightFlicker( ULONG ulSector, LONG lMaxLight, LONG l
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTFLICKER );
-	command.addShort( ulSector );
-	command.addShort( lMaxLight );
-	command.addShort( lMinLight );
+	ServerCommands::DoSectorLightFireFlicker command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetMaxLight( lMaxLight );
+	command.SetMinLight( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2690,10 +2690,10 @@ void SERVERCOMMANDS_DoSectorLightLightFlash( ULONG ulSector, LONG lMaxLight, LON
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTLIGHTFLASH );
-	command.addShort( ulSector );
-	command.addShort( lMaxLight );
-	command.addShort( lMinLight );
+	ServerCommands::DoSectorLightLightFlash command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetMaxLight( lMaxLight );
+	command.SetMinLight( lMinLight );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2704,13 +2704,13 @@ void SERVERCOMMANDS_DoSectorLightStrobe( ULONG ulSector, LONG lDarkTime, LONG lB
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTSTROBE );
-	command.addShort( ulSector );
-	command.addShort( lDarkTime );
-	command.addShort( lBrightTime );
-	command.addShort( lMaxLight );
-	command.addShort( lMinLight );
-	command.addByte( lCount );
+	ServerCommands::DoSectorLightStrobe command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetDarkTime( lDarkTime );
+	command.SetBrightTime( lBrightTime );
+	command.SetMaxLight( lMaxLight );
+	command.SetMinLight( lMinLight );
+	command.SetCount( lCount );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2721,8 +2721,8 @@ void SERVERCOMMANDS_DoSectorLightGlow( ULONG ulSector, ULONG ulPlayerExtra, Serv
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTGLOW );
-	command.addShort( ulSector );
+	ServerCommands::DoSectorLightGlow command;
+	command.SetSector( &sectors[ulSector] );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2733,13 +2733,13 @@ void SERVERCOMMANDS_DoSectorLightGlow2( ULONG ulSector, LONG lStart, LONG lEnd, 
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command( SVC_DOSECTORLIGHTGLOW2 );
-	command.addShort( ulSector );
-	command.addShort( lStart );
-	command.addShort( lEnd );
-	command.addShort( lTics );
-	command.addShort( lMaxTics );
-	command.addByte( bOneShot );
+	ServerCommands::DoSectorLightGlow2 command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetStartLight( lStart );
+	command.SetEndLight( lEnd );
+	command.SetTics( lTics );
+	command.SetMaxTics( lMaxTics );
+	command.SetOneShot( bOneShot );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
@@ -2750,10 +2750,10 @@ void SERVERCOMMANDS_DoSectorLightPhased( ULONG ulSector, LONG lBaseLevel, LONG l
 	if ( ulSector >= (ULONG)numsectors )
 		return;
 
-	NetCommand command ( SVC_DOSECTORLIGHTPHASED );
-	command.addShort ( ulSector );
-	command.addShort ( lBaseLevel );
-	command.addByte ( lPhase );
+	ServerCommands::DoSectorLightPhased command;
+	command.SetSector( &sectors[ulSector] );
+	command.SetBaseLevel( lBaseLevel );
+	command.SetPhase( lPhase );
 	command.sendCommandToClients ( ulPlayerExtra, flags );
 }
 

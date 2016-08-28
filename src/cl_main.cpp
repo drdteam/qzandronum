@@ -198,15 +198,6 @@ static	void	client_SetTeamReturnTicks( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagReturned( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagDropped( BYTESTREAM_s *pByteStream );
 
-// Sector light commands.
-static	void	client_DoSectorLightFireFlicker( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightFlicker( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightLightFlash( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightStrobe( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightGlow( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightGlow2( BYTESTREAM_s *pByteStream );
-static	void	client_DoSectorLightPhased( BYTESTREAM_s *pByteStream );
-
 // Line commands.
 static	void	client_SetLineAlpha( BYTESTREAM_s *pByteStream );
 static	void	client_SetLineTexture( BYTESTREAM_s *pByteStream, bool bIdentifyLinesByID = false );
@@ -1546,34 +1537,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 	case SVC_TEAMFLAGDROPPED:
 
 		client_TeamFlagDropped( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTFIREFLICKER:
-
-		client_DoSectorLightFireFlicker( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTFLICKER:
-
-		client_DoSectorLightFlicker( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTLIGHTFLASH:
-
-		client_DoSectorLightLightFlash( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTSTROBE:
-
-		client_DoSectorLightStrobe( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTGLOW:
-
-		client_DoSectorLightGlow( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTGLOW2:
-
-		client_DoSectorLightGlow2( pByteStream );
-		break;
-	case SVC_DOSECTORLIGHTPHASED:
-
-		client_DoSectorLightPhased( pByteStream );
 		break;
 	case SVC_SETLINEALPHA:
 
@@ -6332,238 +6295,54 @@ void ServerCommands::SetSectorLink::Execute()
 
 //*****************************************************************************
 //
-static void client_DoSectorLightFireFlicker( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightFireFlicker::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lMaxLight;
-	LONG			lMinLight;
-	DFireFlicker	*pFireFlicker;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its bright phase.
-	lMaxLight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its dark phase.
-	lMinLight = NETWORK_ReadShort( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightFireFlicker: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pFireFlicker = new DFireFlicker( pSector, lMaxLight, lMinLight );
+	new DFireFlicker( sector, maxLight, minLight );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightFlicker( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightFlicker::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lMaxLight;
-	LONG			lMinLight;
-	DFlicker		*pFlicker;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its bright phase.
-	lMaxLight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its dark phase.
-	lMinLight = NETWORK_ReadShort( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightFireFlicker: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pFlicker = new DFlicker( pSector, lMaxLight, lMinLight );
+	new DFlicker( sector, maxLight, minLight );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightLightFlash( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightLightFlash::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lMaxLight;
-	LONG			lMinLight;
-	DLightFlash		*pLightFlash;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its bright phase.
-	lMaxLight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its dark phase.
-	lMinLight = NETWORK_ReadShort( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightLightFlash: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pLightFlash = new DLightFlash( pSector, lMinLight, lMaxLight );
+	new DLightFlash( sector, minLight, maxLight );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightStrobe( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightStrobe::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lDarkTime;
-	LONG			lBrightTime;
-	LONG			lMaxLight;
-	LONG			lMinLight;
-	LONG			lCount;
-	DStrobe			*pStrobe;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in how long the effect stays in its dark phase.
-	lDarkTime = NETWORK_ReadShort( pByteStream );
-
-	// Read in how long the effect stays in its bright phase.
-	lBrightTime = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its bright phase.
-	lMaxLight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's light level when the light effect is in its dark phase.
-	lMinLight = NETWORK_ReadShort( pByteStream );
-
-	// Read in the amount of time left until the light changes from bright to dark, or vice
-	// versa.
-	lCount = NETWORK_ReadByte( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightStrobe: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pStrobe = new DStrobe( pSector, lMaxLight, lMinLight, lBrightTime, lDarkTime );
-	pStrobe->SetCount( lCount );
+	DStrobe *strobe = new DStrobe( sector, maxLight, minLight, brightTime, darkTime );
+	strobe->SetCount( count );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightGlow( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightGlow::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	DGlow			*pGlow;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightGlow: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pGlow = new DGlow( pSector );
+	new DGlow( sector );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightGlow2( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightGlow2::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lStart;
-	LONG			lEnd;
-	LONG			lTics;
-	LONG			lMaxTics;
-	bool			bOneShot;
-	DGlow2			*pGlow2;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the start light level of the effect.
-	lStart = NETWORK_ReadShort( pByteStream );
-
-	// Read in the end light level of the effect.
-	lEnd = NETWORK_ReadShort( pByteStream );
-
-	// Read in the current progression of the effect.
-	lTics = NETWORK_ReadShort( pByteStream );
-
-	// Read in how many tics it takes to get from start to end.
-	lMaxTics = NETWORK_ReadShort( pByteStream );
-
-	// Read in whether or not the glow loops, or ends after one shot.
-	bOneShot = !!NETWORK_ReadByte( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightStrobe: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
 	// Create the light effect.
-	pGlow2 = new DGlow2( pSector, lStart, lEnd, lMaxTics, bOneShot );
-	pGlow2->SetTics( lTics );
+	DGlow2 *glow2 = new DGlow2( sector, startLight, endLight, maxTics, oneShot );
+	glow2->SetTics( tics );
 }
 
 //*****************************************************************************
 //
-static void client_DoSectorLightPhased( BYTESTREAM_s *pByteStream )
+void ServerCommands::DoSectorLightPhased::Execute()
 {
-	LONG			lSectorID;
-	sector_t		*pSector;
-	LONG			lBaseLevel;
-	LONG			lPhase;
-	DPhased			*pPhased;
-
-	// Read in the sector the light effect is attached to.
-	lSectorID = NETWORK_ReadShort( pByteStream );
-
-	// Read in the effect's base level parameter.
-	lBaseLevel = NETWORK_ReadShort( pByteStream );
-
-	// Read in the sector's phase parameter.
-	lPhase = NETWORK_ReadByte( pByteStream );
-
-	// Now find the sector.
-	pSector = CLIENT_FindSectorByID( lSectorID );
-	if ( pSector == NULL )
-	{
-		CLIENT_PrintWarning( "client_DoSectorLightFireFlicker: Cannot find sector: %ld\n", lSectorID );
-		return; 
-	}
-
-	// Create the light effect.
-	pPhased = new DPhased( pSector, lBaseLevel, lPhase );
+	new DPhased( sector, baseLevel, phase );
 }
 
 //*****************************************************************************

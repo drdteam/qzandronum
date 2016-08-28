@@ -147,3 +147,49 @@ EndCommand
 Command StopSectorSequence
 	Sector sector
 EndCommand
+
+Command DoSectorLightFireFlicker
+	Sector sector
+	Short maxLight
+	Short minLight
+EndCommand
+
+Command DoSectorLightFlicker
+	Sector sector
+	Short maxLight
+	Short minLight
+EndCommand
+
+Command DoSectorLightLightFlash
+	Sector sector
+	Short maxLight
+	Short minLight
+EndCommand
+
+Command DoSectorLightStrobe
+	Sector sector
+	Short darkTime
+	Short brightTime
+	Short maxLight
+	Short minLight
+	Byte count
+EndCommand
+
+Command DoSectorLightGlow
+	Sector sector
+EndCommand
+
+Command DoSectorLightGlow2
+	Sector sector
+	Short startLight
+	Short endLight
+	Short tics
+	Short maxTics
+	Bool oneShot
+EndCommand
+
+Command DoSectorLightPhased
+	Sector sector
+	Short baseLevel
+	Byte phase
+EndCommand
