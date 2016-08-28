@@ -5240,8 +5240,6 @@ void G_DoPlayDemo (void)
 {
 	FString mapname;
 	int demolump;
-	// [BC] For saving the output of ReadLong().
-	int	i;
 
 	gameaction = ga_nothing;
 
@@ -5277,7 +5275,7 @@ void G_DoPlayDemo (void)
 
 	C_BackupCVars ();		// [RH] Save cvars that might be affected by demo
 
-	if (( i = ReadLong (&demo_p)) != FORM_ID)
+	if (ReadLong (&demo_p) != FORM_ID)
 	{
 		const char *eek = "Cannot play non-" GAMENAME " demos.\n";
 
