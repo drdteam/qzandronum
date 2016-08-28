@@ -243,14 +243,14 @@ EndCommand
 
 Command SetThingFrame
 	Actor actor
-	String statename
-	Byte offset
+	Class<AActor> stateOwner
+	Short offset
 EndCommand
 
 Command SetThingFrameNF
 	Actor actor
-	String statename
-	Byte offset
+	Class<AActor> stateOwner
+	Short offset
 EndCommand
 
 Command SetWeaponAmmoGive

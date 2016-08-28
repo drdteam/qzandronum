@@ -128,107 +128,6 @@ void RemoveUnnecessaryPositionUpdateFlags( AActor *pActor, ULONG &ulBits )
 		ulBits  &= ~CM_MOVEDIR;
 }
 
-
-//*****************************************************************************
-//
-// [BB] Try to find the state label and the correspoding offset belonging to the target state.
-// [Dusk] Pretty much rewrote this based on dumpstates code, this now recurses through state
-// children now to check them as well. This is needed to find stuff like custom pain states.
-
-bool FindStateAddressRecursor( AActor *pActor, FState *pState, FString prefix, FStateLabels *list, FString &label, LONG &lOffset )
-{
-	for ( int i = 0; i < list->NumLabels; ++i ) {
-		if ( list->Labels[i].State != NULL ) {
-			unsigned int offset;
-			if ( pActor->InState( list->Labels[i].State, &offset, pState ) && ( offset <= 255 ) ) {
-				// Found it!
-				label = prefix + list->Labels[i].Label.GetChars();
-				lOffset = static_cast<LONG>( offset );
-				return true;
-			}
-		}
-
-		// Not in there, check the children
-		if ( list->Labels[i].Children != NULL ) {
-			FString newprefix = prefix + list->Labels[i].Label.GetChars() + '.';
-			bool found = FindStateAddressRecursor( pActor, pState, newprefix, list->Labels[i].Children, label, lOffset );
-			if ( found == true )
-				return true;
-		}
-	}
-
-	return false;
-}
-
-void FindStateLabelAndOffset( AActor *pActor, FState *pState, FString &stateLabel, LONG &lOffset, const bool bSuppressWarning = false )
-{
-	stateLabel = "";
-	lOffset = 0;
-	FStateLabels *pStateList = pActor->GetClass()->StateList;
-
-	bool found = FindStateAddressRecursor( pActor, pState, "", pStateList, stateLabel, lOffset );
-	if ( found == false && sv_showwarnings && ( bSuppressWarning == false ) )
-		Printf ("FindStateLabelAndOffset: Couldn't find state!\n");
-}
-
-//*****************************************************************************
-//
-// [BB]
-bool ClassOwnsState( const PClass *pClass, const FState *pState )
-{
-	if ( ( pState == NULL ) || ( pClass == NULL ) )
-		return false;
-
-	const PClass *pStateOwnerClass = FState::StaticFindStateOwner ( pState );
-
-	if ( pStateOwnerClass == NULL )
-		return false;
-
-	if ( pStateOwnerClass == pClass )
-		return true;
-
-	return false;
-}
-
-// [BB]
-bool ActorOwnsState( const AActor *pActor, const FState *pState )
-{
-	if ( pActor == NULL )
-		return false;
-
-	return ClassOwnsState( pActor->GetClass(), pState );
-}
-
-//*****************************************************************************
-//
-// [BB] Helper function for SERVERCOMMANDS_SetThingFrame.
-bool OffsetAndStateOwnershipValidityCheck ( const LONG lOffset, const PClass *pClass, const FState *pState )
-{
-	// [BB] The offset is out of range.
-	if (( lOffset < 0 ) || ( lOffset > 255 ) )
-		return false;
-
-	// [BB] If the offset is zero, it doesn't matter whether the actor owns the state.
-	if ( lOffset == 0 )
-		return true;
-
-	if ( ClassOwnsState( pClass, pState ) )
-		return true;
-
-	// [BB] A non-zero but otherwise valid offset can only be used of the actor owns the state.
-	return false;
-}
-
-//*****************************************************************************
-//
-// [BB] Helper function for SERVERCOMMANDS_SetThingFrame.
-bool OffsetAndStateOwnershipValidityCheck ( const LONG lOffset, const AActor *pActor, const FState *pState )
-{
-	if ( pActor == NULL )
-		return false;
-
-	return OffsetAndStateOwnershipValidityCheck ( lOffset, pActor->GetClass(), pState );
-}
 //*****************************************************************************
 //
 // [BB] Mark the actor as updated according to ulBits.
@@ -817,14 +716,13 @@ void SERVERCOMMANDS_SetPlayerPieces( ULONG ulPlayer, ULONG ulPlayerExtra, Server
 //
 void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, PSPLayers layer, ULONG ulPlayerExtra, ServerCommandFlags flags )
 {
-	FString			stateLabel;
-	LONG			lOffset;
-
 	if ( PLAYER_IsValidPlayer( ulPlayer ) == false )
 		return;
 
 	if ( players[ulPlayer].ReadyWeapon == NULL )
 		return;
+
+	PClassActor *stateOwner = FState::StaticFindStateOwner( pState );
 
 	int position = 0;
 	if ( layer == PSP_WEAPON )
@@ -838,39 +736,16 @@ void SERVERCOMMANDS_SetPlayerPSprite( ULONG ulPlayer, FState *pState, PSPLayers 
 		return;
 	}
 
-	// [BB] Try to find the state label and the correspoding offset belonging to the target state.
-	FindStateLabelAndOffset( players[ulPlayer].ReadyWeapon, pState, stateLabel, lOffset, true );
 
-	// Couldn't find the state, so just try to go based off the spawn state.
-	if ( stateLabel.IsEmpty() )
+	if ( stateOwner && stateOwner->OwnsState( pState ))
 	{
-		lOffset = LONG( pState - players[ulPlayer].ReadyWeapon->GetReadyState( ));
-		// [BB] Spawn state didn't work either, try flash state.
-		if ( OffsetAndStateOwnershipValidityCheck ( lOffset, players[ulPlayer].ReadyWeapon, players[ulPlayer].ReadyWeapon->GetReadyState( ) ) == false )
-		{
-			const FState *pFlashState = players[ulPlayer].ReadyWeapon->FindState(NAME_Flash);
-			lOffset = LONG( pState - pFlashState );
-			if ( OffsetAndStateOwnershipValidityCheck ( lOffset, players[ulPlayer].ReadyWeapon, pFlashState ) == false )
-			{
-				// [BB] If we still couldn't find the state, show a warning.
-				if ( sv_showwarnings )
-					Printf ( "SERVERCOMMANDS_SetPlayerPSprite: Couldn't find state!\n" );
-
-				return;
-			}
-			else
-				stateLabel = ":F";
-		}
-		else
-			stateLabel = ":R";
+		ServerCommands::SetPlayerPSprite command;
+		command.SetPlayer( &players[ulPlayer] );
+		command.SetStateOwner( stateOwner );
+		command.SetOffset( pState - stateOwner->OwnedStates );
+		command.SetPosition( position );
+		command.sendCommandToClients( ulPlayerExtra, flags );
 	}
-
-	ServerCommands::SetPlayerPSprite command;
-	command.SetPlayer( &players[ulPlayer] );
-	command.SetState( stateLabel );
-	command.SetOffset( lOffset );
-	command.SetPosition( position );
-	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
@@ -1711,9 +1586,6 @@ void SERVERCOMMANDS_SetThingGravity( AActor *pActor, ULONG ulPlayerExtra, Server
 //
 void SERVERCOMMANDS_SetThingFrame( AActor *pActor, FState *pState, ULONG ulPlayerExtra, ServerCommandFlags flags, bool bCallStateFunction )
 {
-	FString stateLabel;
-	LONG		lOffset = 0;
-
 	if ( !EnsureActorHasNetID (pActor) || (pState == NULL) )
 		return;
 
@@ -1746,92 +1618,28 @@ void SERVERCOMMANDS_SetThingFrame( AActor *pActor, FState *pState, ULONG ulPlaye
 		}
 	}
 
-	// [BB] Try to find the state label and the correspoding offset belonging to the target state.
-	FindStateLabelAndOffset( pActor, pState, stateLabel, lOffset, true );
+	PClassActor *stateOwner = FState::StaticFindStateOwner( pState );
 
-	// Couldn't find the state, so just try to go based off one of the standard states.
-	// [BB] This is a workaround. Therefore let the name of the state string begin
-	// with ':' so that the client can handle this differently.
-	// [BB] Because of inheritance it's not sufficient to only try the SpawnState.
-	if ( stateLabel.IsEmpty() )
+	if ( stateOwner && stateOwner->OwnsState( pState ))
 	{
-		lOffset = LONG( pState - pActor->SpawnState );
-		if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pActor, pActor->SpawnState ) == false )
-		{
-			// [BB] SpawnState doesn't work. Try MissileState.
-			lOffset = LONG( pState - pActor->MissileState );
-			if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pActor, pActor->MissileState ) == false )
-			{
-				// [BB] Try SeeState.
-				lOffset = LONG( pState - pActor->SeeState );
-				if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pActor, pActor->SeeState ) == false )
-				{
-					// [BB] Try MeleeState.
-					lOffset = LONG( pState - pActor->MeleeState );
-					if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pActor, pActor->MeleeState ) == false )
-					{
-						// [BB] Apparently pActor doesn't own the state. Find out who does.
-						PClassActor *pStateOwnerClass = FState::StaticFindStateOwner ( pState );
-						const AActor *pStateOwner = ( pStateOwnerClass != NULL ) ? GetDefaultByType ( pStateOwnerClass ) : NULL;
-						if ( pStateOwner )
-						{
-							lOffset = LONG( pState - pStateOwner->SpawnState );
-							if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pStateOwnerClass, pStateOwner->SpawnState ) == false )
-							{
-								lOffset = LONG( pState - pStateOwnerClass->FindState(NAME_Death) );
-								if ( OffsetAndStateOwnershipValidityCheck ( lOffset, pStateOwnerClass, pStateOwnerClass->FindState(NAME_Death) ) == false )
-								{
-									if ( sv_showwarnings )
-										Printf ( "Warning: SERVERCOMMANDS_SetThingFrame failed to set the frame for actor %s.\n", pActor->GetClass()->TypeName.GetChars() );
-									return;
-								}
-								{
-									stateLabel = "+";
-									stateLabel += pStateOwnerClass->TypeName;
-								}
-							}
-							else
-							{
-								stateLabel = ";";
-								stateLabel += pStateOwnerClass->TypeName;
-							}
+		int offset = pState - stateOwner->OwnedStates;
 
-						}
-						else
-						{
-							if ( sv_showwarnings )
-								Printf ( "Warning: SERVERCOMMANDS_SetThingFrame failed to set the frame for actor %s (can't find state owner).\n", pActor->GetClass()->TypeName.GetChars() );
-							return;
-						}
-					}
-					else
-						stateLabel = ":N";
-				}
-				else
-					stateLabel = ":T";
-			}
-			else
-				stateLabel = ":M";
+		if ( bCallStateFunction )
+		{
+			ServerCommands::SetThingFrame command;
+			command.SetActor( pActor );
+			command.SetStateOwner( stateOwner );
+			command.SetOffset( offset );
+			command.sendCommandToClients( ulPlayerExtra, flags );
 		}
 		else
-			stateLabel = ":S";
-	}
-
-	if ( bCallStateFunction )
-	{
-		ServerCommands::SetThingFrame command;
-		command.SetActor( pActor );
-		command.SetStatename( stateLabel );
-		command.SetOffset( lOffset );
-		command.sendCommandToClients( ulPlayerExtra, flags );
-	}
-	else
-	{
-		ServerCommands::SetThingFrameNF command;
-		command.SetActor( pActor );
-		command.SetStatename( stateLabel );
-		command.SetOffset( lOffset );
-		command.sendCommandToClients( ulPlayerExtra, flags );
+		{
+			ServerCommands::SetThingFrameNF command;
+			command.SetActor( pActor );
+			command.SetStateOwner( stateOwner );
+			command.SetOffset( offset );
+			command.sendCommandToClients( ulPlayerExtra, flags );
+		}
 	}
 }
 

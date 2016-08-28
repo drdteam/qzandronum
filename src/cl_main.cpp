@@ -130,8 +130,6 @@ void	ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 void	P_CrouchMove(player_t * player, int direction);
 extern	bool	SpawningMapThing;
 extern FILE *Logfile;
-bool	ClassOwnsState( const PClass *pClass, const FState *pState );
-bool	ActorOwnsState( const AActor *pActor, const FState *pState );
 void	D_ErrorCleanup ();
 extern const AInventory *SendItemUse;
 int A_RestoreSpecialPosition ( AActor *self );
@@ -4133,8 +4131,6 @@ static void client_SetPlayerPieces( BYTESTREAM_s *pByteStream )
 //
 void ServerCommands::SetPlayerPSprite::Execute()
 {
-	FState			*pNewState;
-
 	PSPLayers layer = PSP_WEAPON;
 	if ( position == 0 )
 		layer = PSP_WEAPON;
@@ -4150,60 +4146,20 @@ void ServerCommands::SetPlayerPSprite::Execute()
 	if ( player->ReadyWeapon == NULL )
 		return;
 
-	// [BB] In this case lOffset is just the offset from the ready state.
-	// Handle this accordingly.
-	if ( stricmp( state, ":R" ) == 0 )
+	if ( stateOwner == NULL )
+		return;
+
+	FState *pNewState = stateOwner->OwnedStates + offset;
+
+	// [BB] The offset is only guaranteed to work if the actor owns the state.
+	if ( stateOwner->OwnsState( pNewState ))
 	{
-		pNewState = player->ReadyWeapon->GetReadyState( );
-	}
-	// [BB] In this case lOffset is just the offset from the flash state.
-	else if ( stricmp( state, ":F" ) == 0 )
-	{
-		pNewState = player->ReadyWeapon->FindState(NAME_Flash);
+		P_SetPsprite( player, layer, pNewState + offset );
 	}
 	else
 	{
-		// Build the state name list.
-		TArray<FName> &StateList = MakeStateNameList( state );
-
-		// [BB] Obviously, we can't access StateList[0] if StateList is empty.
-		if ( StateList.Size( ) == 0 )
-			return;
-
-		pNewState = player->ReadyWeapon->GetClass( )->FindState( StateList.Size( ), &StateList[0] );
-
-		// [BB] The offset was calculated by FindStateLabelAndOffset using GetNextState(),
-		// so we have to use this here, too, to propely find the target state.
-		// Note: The same loop is used in client_SetThingFrame and could be moved to a new function.
-		for ( int i = 0; i < offset; i++ )
-		{
-			if ( pNewState != NULL )
-				pNewState = pNewState->GetNextState( );
-		}
-
-		if ( pNewState == NULL )
-			return;
-
-		P_SetPsprite( player, layer, pNewState );
-		return;
-	}
-	if ( pNewState )
-	{
-		// [BB] The offset is only guaranteed to work if the actor owns the state.
-		if ( offset != 0 )
-		{
-			if ( ActorOwnsState ( player->ReadyWeapon, pNewState ) == false )
-			{
-				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s\n", player->ReadyWeapon->GetClass()->TypeName.GetChars(), state.GetChars() );
-				return;
-			}
-			if ( ActorOwnsState ( player->ReadyWeapon, pNewState + offset ) == false )
-			{
-				CLIENT_PrintWarning( "client_SetPlayerPSprite: %s doesn't own %s + %d\n", player->ReadyWeapon->GetClass()->TypeName.GetChars(), state.GetChars(), offset );
-				return;
-			}
-		}
-		P_SetPsprite( player, layer, pNewState + offset );
+		CLIENT_PrintWarning( "SetPlayerPSprite: %s does not own its state at offset %d\n",
+		                     stateOwner->TypeName.GetChars(), offset );
 	}
 }
 
@@ -5126,111 +5082,27 @@ void ServerCommands::SetThingGravity::Execute()
 
 //*****************************************************************************
 //
-static void client_SetThingFrame( AActor* pActor, const char *pszState, int lOffset, bool bCallStateFunction )
+static void client_SetThingFrame( AActor* pActor, PClassActor *stateOwner, int offset, bool bCallStateFunction )
 {
 	// Not in a level; nothing to do (shouldn't happen!)
 	if ( gamestate != GS_LEVEL )
 		return;
 
-	FState *pNewState = NULL;
-
-	// [BB] In this case lOffset is just the offset from one of the default states of the actor or the state owner.
-	// Handle this accordingly.
-	if ( pszState[0] == ':' || pszState[0] == ';' || pszState[0] == '+' )
-	{
-		FState* pBaseState = NULL;
-
-		if ( pszState[0] == ':' )
-		{
-			switch ( pszState[1] )
-			{
-			case 'S':
-				pBaseState = pActor->SpawnState;
-
-				break;
-			case 'M':
-				pBaseState = pActor->MissileState;
-
-				break;
-			case 'T':
-				pBaseState = pActor->SeeState;
-
-				break;
-			case 'N':
-				pBaseState = pActor->MeleeState;
-
-				break;
-			default:
-				// [BB] Unknown base state specified. We can't do anythig.
-				return;
-			}
-			// [BB] The offset is only guaranteed to work if the actor owns the state.
-			if ( ( lOffset != 0 ) && ( ( ActorOwnsState ( pActor, pBaseState ) == false ) || ( ActorOwnsState ( pActor, pBaseState + lOffset ) == false ) ) )
-			{
-				if ( cl_showwarnings )
-				{
-					if ( ActorOwnsState ( pActor, pBaseState ) == false )
-						CLIENT_PrintWarning( "client_SetThingFrame: %s doesn't own %s\n", pActor->GetClass()->TypeName.GetChars(), pszState );
-					if ( ActorOwnsState ( pActor, pBaseState + lOffset ) == false )
-						CLIENT_PrintWarning( "client_SetThingFrame: %s doesn't own %s + %d\n", pActor->GetClass()->TypeName.GetChars(), pszState, lOffset );
-				}
-				return;
-			}
-		}
-		else if ( pszState[0] == ';' || pszState[0] == '+' )
-		{
-			PClassActor *pStateOwnerClass = PClass::FindActor ( pszState+1 );
-			const AActor *pStateOwner = ( pStateOwnerClass != NULL ) ? GetDefaultByType ( pStateOwnerClass ) : NULL;
-			if ( pStateOwner )
-			{
-				if ( pszState[0] == ';' )
-					pBaseState = pStateOwner->SpawnState;
-				else
-					pBaseState = pStateOwnerClass->FindState(NAME_Death);
-				// [BB] The offset is only guaranteed to work if the actor owns the state and pBaseState.
-				// Note: Looks like one can't call GetClass() on an actor pointer obtained by GetDefaultByType.
-				if ( ( lOffset != 0 ) && ( ( ClassOwnsState ( pStateOwnerClass, pBaseState ) == false ) || ( ClassOwnsState ( pStateOwnerClass, pBaseState + lOffset ) == false ) ) )
-				{
-					CLIENT_PrintWarning( "client_SetThingFrame: %s doesn't own %s + %d\n", pStateOwnerClass->TypeName.GetChars(), pszState, lOffset );
-					return;
-				}
-			}
-		}
-
-		// [BB] We can only set the state, if the actor has pBaseState. But unless the server
-		// is sending us garbage or this client has altered actor defintions, this check
-		// should always succeed.
-		if ( pBaseState )
-		{
-			if ( bCallStateFunction )
-				pActor->SetState( pBaseState + lOffset );
-			else
-				pActor->SetState( pBaseState + lOffset, true );
-		}
+	if ( stateOwner == NULL )
 		return;
-	}
 
-	// Build the state name list.
-	TArray<FName> &StateList = MakeStateNameList( pszState );
+	FState *state = stateOwner->OwnedStates + offset;
 
-	pNewState = pActor->FindState( StateList.Size( ), &StateList[0] );
-	if ( pNewState )
+	// [BB] The offset is only guaranteed to work if the actor owns the state.
+	if ( stateOwner->OwnsState( state ))
 	{
-		// [BB] The offset was calculated by SERVERCOMMANDS_SetThingFrame using GetNextState(),
-		// so we have to use this here, too, to propely find the target state.
-		for ( int i = 0; i < lOffset; i++ )
-		{
-			if ( pNewState != NULL )
-				pNewState = pNewState->GetNextState( );
-		}
-
-		if ( pNewState == NULL )
-			return;
-
-		if ( bCallStateFunction )
-			pActor->SetState( pNewState );
-		else
-			pActor->SetState( pNewState, true );
+		pActor->SetState( state, ( bCallStateFunction == false ));
+	}
+	else
+	{
+		CLIENT_PrintWarning( "client_SetThingFrame: %s does not own its state at offset %d\n",
+		                     stateOwner->TypeName.GetChars(), offset );
+		return;
 	}
 }
 
@@ -5238,14 +5110,14 @@ static void client_SetThingFrame( AActor* pActor, const char *pszState, int lOff
 //
 void ServerCommands::SetThingFrame::Execute()
 {
-	client_SetThingFrame( actor, statename, offset, true );
+	client_SetThingFrame( actor, stateOwner, offset, true );
 }
 
 //*****************************************************************************
 //
 void ServerCommands::SetThingFrameNF::Execute()
 {
-	client_SetThingFrame( actor, statename, offset, true );
+	client_SetThingFrame( actor, stateOwner, offset, true );
 }
 
 //*****************************************************************************

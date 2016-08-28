@@ -188,8 +188,8 @@ EndCommand
 
 Command SetPlayerPSprite
 	Player player
-	String state
-	Byte offset
+	Class<AActor> stateOwner
+	Short offset
 	Byte position
 EndCommand
 
