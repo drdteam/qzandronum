@@ -65,10 +65,10 @@ EndCommand
 
 Command SetSectorPanning
 	Sector sector
-	Short ceilingXOffset
-	Short ceilingYOffset
-	Short floorXOffset
-	Short floorYOffset
+	Float ceilingXOffset
+	Float ceilingYOffset
+	Float floorXOffset
+	Float floorYOffset
 EndCommand
 
 Command SetSectorRotation
@@ -87,10 +87,10 @@ EndCommand
 
 Command SetSectorScale
 	Sector sector
-	Short ceilingXScale
-	Short ceilingYScale
-	Short floorXScale
-	Short floorYScale
+	Float ceilingXScale
+	Float ceilingYScale
+	Float floorXScale
+	Float floorYScale
 EndCommand
 
 Command SetSectorSpecial
