@@ -33,6 +33,7 @@
 +	- Chat now remembers the ten previously sent messages that can be brought up with up/down arrow keys. [Dusk]
 +	- Chat can now tab complete player names. [Dusk]
 +	- Clients' account names are now visible in the output of CCMD "playerinfo", unless the player hides it with the new CVar cl_hideaccount. The server can always see the accountname from playerinfo. [Dusk]
++	- Added a mechanism to safe login credentials under Windows using the Windows Credential Manager aka Windows Vault. The credentials can be stored using the new CCMD 'login_add'. A default user name can be specified with the new CVAR 'login_default_user'. [Torr Samaho]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]

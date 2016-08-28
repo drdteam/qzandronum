@@ -141,7 +141,7 @@
 #define	MAX_STORED_QUERY_IPS		512
 
 //*****************************************************************************
-typedef enum
+enum CLIENTSTATE_e
 {
 	// Client slot can be used for a new connection.
 	CLS_FREE,
@@ -165,10 +165,10 @@ typedef enum
 	// Client is in the game.
 	CLS_SPAWNED,
 
-} CLIENTSTATE_e;
+};
 
 //*****************************************************************************
-typedef struct
+struct STORED_QUERY_IP_s
 {
 	// Address of the person who queried us.
 	NETADDRESS_s	Address;
@@ -176,7 +176,7 @@ typedef struct
 	// Gametic when we allow another query.
 	LONG			lNextAllowedGametic;
 
-} STORED_QUERY_IP_s;
+};
 
 //*****************************************************************************
 struct CLIENT_MOVE_COMMAND_s
@@ -212,7 +212,7 @@ public:
 };
 
 //*****************************************************************************
-typedef struct
+struct CLIENT_s
 {
 	// The network address of this client.
 	NETADDRESS_s	Address;
@@ -337,10 +337,10 @@ typedef struct
 	LONG			lLastServerGametic;
 
 	FString GetAccountName() const;
-} CLIENT_s;
+};
 
 //*****************************************************************************
-typedef struct
+struct EDITEDTRANSLATION_s
 {
 	// Which index in the list of translations is this?
 	ULONG			ulIdx;
@@ -365,10 +365,10 @@ typedef struct
 	ULONG			ulB2;
 
 
-} EDITEDTRANSLATION_s;
+};
 
 //*****************************************************************************
-typedef struct
+struct SECTORLINK_s
 {
 	// [BB] Which sector is linked?
 	ULONG			ulSector;
@@ -378,7 +378,7 @@ typedef struct
 	int				iArg2;
 	int				iArg3;
 
-} SECTORLINK_s;
+};
 
 //*****************************************************************************
 //	PROTOTYPES

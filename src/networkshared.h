@@ -75,12 +75,12 @@
 // #define CREATE_PACKET_LOG
 
 //*****************************************************************************
-typedef enum
+enum BUFFERTYPE_e
 {
 	BUFFERTYPE_READ,
 	BUFFERTYPE_WRITE,
 
-} BUFFERTYPE_e;
+};
 
 //*****************************************************************************
 enum
@@ -214,7 +214,7 @@ private:
 };
 
 //*****************************************************************************
-typedef struct
+struct IPADDRESSBAN_s
 {
 	// The IP address in char form (can be a number or a wildcard).
 	char		szIP[4][4];
@@ -225,7 +225,7 @@ typedef struct
 	// [RC] Time that the ban expires, or NULL for an infinite ban.
 	time_t		tExpirationDate;
 
-} IPADDRESSBAN_s;
+};
 
 //*****************************************************************************
 struct BYTESTREAM_s
@@ -254,7 +254,7 @@ struct BYTESTREAM_s
 
 
 //*****************************************************************************
-typedef struct
+struct NETBUFFER_s
 {
 	// This is the data in our packet.
 	BYTE			*pbData;
@@ -272,7 +272,7 @@ typedef struct
 	// Is this a buffer that we write to, or read from?
 	BUFFERTYPE_e	BufferType;
 
-} NETBUFFER_s;
+};
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------
 //-- PROTOTYPES ------------------------------------------------------------------------------------------------------------------------------------
@@ -415,7 +415,7 @@ private:
 class QueryIPQueue
 {
 	//*************************************************************************
-	typedef struct 
+	struct STORED_QUERY_IP_t
 	{
 		// The IP address.
 		NETADDRESS_s		Address;
@@ -423,7 +423,7 @@ class QueryIPQueue
 		// Expiration date.
 		long				lNextAllowedTime;
 
-	} STORED_QUERY_IP_t;
+	};
 
 	// The maximum number of entries that we can store.
 	static const unsigned int	MAX_QUERY_IPS = 512;

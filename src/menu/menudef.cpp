@@ -1480,6 +1480,7 @@ static void InitBotsList()
 
 		pair.Value = double ( i );
 		pair.Text = BOTINFO_GetName( i );
+		V_ColorizeString( pair.Text );
 		( *opt )->mValues.Push( pair );
 	}
 }

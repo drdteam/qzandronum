@@ -340,7 +340,6 @@ static void M_StartSkirmishGame()
 			{
 				unsigned int teamId = i / MAX_BOTS_PER_TEAM;
 				FString botName = BOTINFO_GetName( botId );
-				V_ColorizeString( botName );
 				V_RemoveColorCodes( botName );
 
 				if ( teamId < teams.Size() )
@@ -360,7 +359,6 @@ static void M_StartSkirmishGame()
 			if ( BOTINFO_GetRevealed( botId ) && ( BOTINFO_GetName( botId ) != NULL ))
 			{
 				FString botName = BOTINFO_GetName( botId );
-				V_ColorizeString( botName );
 				V_RemoveColorCodes( botName );
 				BOTSPAWN_AddToTable( botName, NULL );
 			}

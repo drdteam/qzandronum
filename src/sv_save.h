@@ -56,7 +56,7 @@
 //*****************************************************************************
 //	STRUCTURES
 
-typedef struct
+struct PLAYERSAVEDINFO_t
 {
 	// Name of the player.
 	char			szName[MAXPLAYERNAME+1];
@@ -79,7 +79,7 @@ typedef struct
 	// [RC] Time in game.
 	ULONG			ulTime;
 
-} PLAYERSAVEDINFO_t;
+};
 
 //*****************************************************************************
 //	PROTOTYPES

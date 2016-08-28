@@ -62,7 +62,7 @@
 #define	GAMESTATE_RESEND_TIME		( 3 * TICRATE )
 
 //*****************************************************************************
-typedef enum 
+enum CONNECTIONSTATE_e
 {
 	// Full screen console with no connection.
 	CTS_DISCONNECTED,
@@ -84,7 +84,7 @@ typedef enum
     // Snapshot is finished! Everything is done, fully in the level.
 	CTS_ACTIVE,
 
-} CONNECTIONSTATE_e;
+};
 
 //[BB] Client connect flags.
 enum
@@ -97,7 +97,7 @@ enum
 //*****************************************************************************
 //	STRUCTURES
 
-typedef struct
+struct PACKETBUFFER_s
 {
 	// This array of bytes is the storage for the packet data.
 	BYTE	abData[MAX_UDP_PACKET * PACKET_BUFFER_SIZE];
@@ -105,7 +105,7 @@ typedef struct
 	// This is the number of bytes in paData.
 	LONG	lMaxSize;
 
-} PACKETBUFFER_s;
+};
 
 //*****************************************************************************
 //	PROTOTYPES

@@ -140,14 +140,14 @@ enum NetworkActorState
 };
 
 // Identifying player states (again, cheap & easy)
-typedef enum
+enum PLAYERSTATE_e
 {
 	STATE_PLAYER_IDLE,
 	STATE_PLAYER_SEE,
 	STATE_PLAYER_ATTACK,
 	STATE_PLAYER_ATTACK2,
 	STATE_PLAYER_ATTACK_ALTFIRE,
-} PLAYERSTATE_e;
+};
 
 // HUD message types.
 #define	HUDMESSAGETYPE_NORMAL			1

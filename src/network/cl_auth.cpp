@@ -45,6 +45,12 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef _WIN32
+#include <windows.h>
+#include <wincred.h>
+#define USE_WINDOWS_DWORD
+#endif
+
 #include "c_dispatch.h"
 #include "cl_main.h"
 #include "cl_commands.h"
@@ -52,6 +58,8 @@
 #include "cl_auth.h"
 #include "srp.h"
 #include "network_enums.h"
+#include "gameconfigfile.h"
+#include "version.h"
 
 //*****************************************************************************
 //	VARIABLES
@@ -65,11 +73,64 @@ CUSTOM_CVAR( Bool, cl_hideaccount, false, CVAR_ARCHIVE )
 		CLIENTCOMMANDS_SetWantHideAccount( self );
 }
 
+#ifdef _WIN32
+CVAR( String, login_default_user, "", CVAR_ARCHIVE )
+#endif
+
 //*****************************************************************************
 //	PROTOTYPES
 
 //*****************************************************************************
 //	FUNCTIONS
+
+#ifdef _WIN32
+//*****************************************************************************
+//
+bool client_SaveCredentials ( const FString &Username, const FString &Password )
+{
+	FString targetName = FString ( GAMENAME ) + "/" + Username;
+	FString usernameCopy = Username;
+	FString passwordCopy = Password;
+
+	CREDENTIAL cred = { 0 };
+	cred.Type = CRED_TYPE_GENERIC;
+	cred.TargetName = targetName.LockBuffer();
+	cred.CredentialBlobSize = passwordCopy.Len() + 1;
+	cred.CredentialBlob = reinterpret_cast<BYTE*> ( passwordCopy.LockBuffer() );
+	cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
+	cred.UserName = usernameCopy.LockBuffer();
+
+	BOOL ok = CredWrite (&cred, 0);
+	if ( ok != TRUE )
+		Printf ( "CredWrite() failed - errno %d\n", ::GetLastError () );
+	targetName.UnlockBuffer();
+	usernameCopy.UnlockBuffer();
+	passwordCopy.UnlockBuffer();
+
+	return ( ok == TRUE );
+}
+
+//*****************************************************************************
+//
+bool client_RetrieveCredentials ( const FString &Username, FString &Password )
+{
+	FString targetName = FString ( GAMENAME ) + "/" + Username;
+	PCREDENTIAL pcred;
+	BOOL ok = CredRead (targetName.GetChars(), CRED_TYPE_GENERIC, 0, &pcred);
+	if ( ok != TRUE )
+		Printf ( "CredRead() failed - errno %d\n", ::GetLastError () );
+	else
+	{
+		if ( Username.Compare ( pcred->UserName ) != 0 )
+			Printf ( "client_RetrieveCredentials username error\n" );
+		else
+			Password = reinterpret_cast<char *> ( pcred->CredentialBlob );
+	}
+
+	CredFree (pcred);
+	return ( ok == TRUE );
+}
+#endif
 
 //*****************************************************************************
 //
@@ -185,8 +246,44 @@ CCMD( login )
 	if ( NETWORK_GetState( ) != NETSTATE_CLIENT )
 		return;
 
+#ifdef _WIN32
+	if (argv.argc () <= 2)
+	{
+		FString username;
+		if ( argv.argc () == 1 )
+		{
+			if ( strlen ( login_default_user ) == 0 )
+			{
+				Printf ( "No default username set. Use the variable login_default_user to set one.\n" );
+				return;
+			}
+			else
+				username = login_default_user;
+		}
+		else
+			username = argv[1];
+
+		FString password;
+		if ( client_RetrieveCredentials ( username, password ) )
+			client_RequestLogin ( username.GetChars(), password.GetChars() );
+		else
+			Printf ( "No password saved for user %s. Use login_add to save a password.\n", username.GetChars() );
+		return;
+	}
+#endif
+
 	if ( argv.argc() == 3 )
 		client_RequestLogin ( argv[1], argv[2] );
 	else
 		Printf ("Usage: login <username> <password>\n");
 }
+
+#ifdef _WIN32
+CCMD( login_add )
+{
+	if ( argv.argc() == 3 )
+		client_SaveCredentials ( argv[1], argv[2] );
+	else
+		Printf ("Usage: login_add <username> <password>\n");
+}
+#endif
