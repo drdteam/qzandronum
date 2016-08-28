@@ -190,7 +190,7 @@ bool	P_Thing_Move (int tid, AActor *source, int mapspot, bool fog);
 int		P_Thing_Damage (int tid, AActor *whofor0, int amount, FName type);
 void	P_Thing_SetVelocity(AActor *actor, const DVector3 &vec, bool add, bool setbob);
 void P_RemoveThing(AActor * actor);
-bool P_Thing_Raise(AActor *thing, AActor *raiser, bool bIgnorePositionCheck = false); // [BB] Added bIgnorePositionCheck.
+bool P_Thing_Raise(AActor *thing, AActor *raiser, bool byClient = false); // [BB/EP] Added 'byClient'.
 bool P_Thing_CanRaise(AActor *thing);
 PClassActor *P_GetSpawnableType(int spawnnum);
 void InitSpawnablesFromMapinfo();

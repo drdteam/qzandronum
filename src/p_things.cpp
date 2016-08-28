@@ -515,13 +515,15 @@ void P_RemoveThing(AActor * actor)
 
 }
 
-// [BB] Added bIgnorePositionCheck: If the server instructs the client to raise
+// [BB] Added byClient: If the server instructs the client to raise
 // a thing with SERVERCOMMANDS_SetThingState, the client has to ignore the
 // P_CheckPosition check. For example this is relevant if an Archvile raised
 // the thing.
-bool P_Thing_Raise(AActor *thing, AActor *raiser, bool bIgnorePositionCheck)
+// [EP] Ignore also the checks in AActor::GetRaiseState (in particular the
+// 'tics != -1' one, because the client might get the wrong value).
+bool P_Thing_Raise(AActor *thing, AActor *raiser, bool byClient)
 {
-	FState * RaiseState = thing->GetRaiseState();
+	FState * RaiseState = byClient ? thing->FindState(NAME_Raise) : thing->GetRaiseState();	// [EP]
 	if (RaiseState == NULL)
 	{
 		return true;	// monster doesn't have a raise state
@@ -539,7 +541,7 @@ bool P_Thing_Raise(AActor *thing, AActor *raiser, bool bIgnorePositionCheck)
 	thing->flags |= MF_SOLID;
 	thing->Height = info->Height;	// [RH] Use real height
 	thing->radius = info->radius;	// [RH] Use real radius
-	if (!P_CheckPosition (thing, thing->Pos()) && !bIgnorePositionCheck)
+	if (!P_CheckPosition (thing, thing->Pos()) && !byClient)
 	{
 		thing->flags = oldflags;
 		thing->radius = oldradius;
