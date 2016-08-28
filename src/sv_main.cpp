@@ -430,22 +430,22 @@ void SERVER_Construct( void )
 	for ( ULONG ulIdx = 0; ulIdx < MAXPLAYERS; ++ulIdx )
 		playeringame[ulIdx] = false;
 
-	NETWORK_InitBuffer( &g_PacketLossBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_PacketLossBuffer );
+	g_PacketLossBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_PacketLossBuffer.Clear();
 
 	// Initialize clients.
 	g_ulMaxPacketSize = sv_maxpacketsize;
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
     {
-		NETWORK_InitBuffer( &g_aClients[ulIdx].PacketBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-		NETWORK_ClearBuffer( &g_aClients[ulIdx].PacketBuffer );
+		g_aClients[ulIdx].PacketBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+		g_aClients[ulIdx].PacketBuffer.Clear();
 
 		// Initialize the saved packet buffer.
 		g_aClients[ulIdx].SavedPackets.Initialize( g_ulMaxPacketSize );
 
 		// Initialize the unreliable packet buffer.
-		NETWORK_InitBuffer( &g_aClients[ulIdx].UnreliablePacketBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-		NETWORK_ClearBuffer( &g_aClients[ulIdx].UnreliablePacketBuffer );
+		g_aClients[ulIdx].UnreliablePacketBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+		g_aClients[ulIdx].UnreliablePacketBuffer.Clear();
 
 		// This is currently an open slot.
 		g_aClients[ulIdx].State = CLS_FREE;
@@ -522,7 +522,7 @@ void SERVER_Destruct( void )
 	ULONG	ulIdx;
 
 	// Free the packet loss buffer.
-	NETWORK_FreeBuffer( &g_PacketLossBuffer );
+	g_PacketLossBuffer.Free();
 
 	// Free the clients' buffers.
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
@@ -534,8 +534,8 @@ void SERVER_Destruct( void )
 			NETWORK_LaunchPacket( &SERVER_GetClient( ulIdx )->PacketBuffer, SERVER_GetClient( ulIdx )->Address );
 		}
 
-		NETWORK_FreeBuffer( &g_aClients[ulIdx].PacketBuffer );
-		NETWORK_FreeBuffer( &g_aClients[ulIdx].UnreliablePacketBuffer );
+		g_aClients[ulIdx].PacketBuffer.Free();
+		g_aClients[ulIdx].UnreliablePacketBuffer.Free();
 		g_aClients[ulIdx].SavedPackets.Free();
 	}
 
@@ -783,10 +783,10 @@ void SERVER_SendOutPackets( void )
 		if ( SERVER_IsValidClient( ulIdx ) == false )
 			continue;
 
-		if ( NETWORK_CalcBufferSize( &g_aClients[ulIdx].PacketBuffer ) > 0 )
+		if ( g_aClients[ulIdx].PacketBuffer.CalcSize() > 0 )
 			SERVER_SendClientPacket( ulIdx, true );
 
-		if ( NETWORK_CalcBufferSize( &g_aClients[ulIdx].UnreliablePacketBuffer ) > 0 )
+		if ( g_aClients[ulIdx].UnreliablePacketBuffer.CalcSize() > 0 )
 			SERVER_SendClientPacket( ulIdx, false );
 	}
 }
@@ -816,7 +816,7 @@ void SERVER_SendClientPacket( ULONG ulClient, bool bReliable )
 	else
 		pBuffer = &pClient->UnreliablePacketBuffer;
 
-	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
+	pBuffer->ulCurrentSize = pBuffer->CalcSize();
 	if ( bReliable )
 	{
 		int sequenceNumber = pClient->SavedPackets.StorePacket( *pBuffer );
@@ -838,7 +838,7 @@ void SERVER_SendClientPacket( ULONG ulClient, bool bReliable )
 
 	// Finally, send the packet, and clear the buffer.
 	NETWORK_LaunchPacket( &TempBuffer, pClient->Address );
-	NETWORK_ClearBuffer( pBuffer );
+	pBuffer->Clear();
 }
 
 //*****************************************************************************
@@ -1170,7 +1170,7 @@ void SERVER_SendChatMessage( ULONG ulPlayer, ULONG ulMode, const char *pszString
 //
 void SERVER_RequestClientToAuthenticate( ULONG ulClient )
 {
-	NETWORK_ClearBuffer( &g_aClients[ulClient].PacketBuffer );
+	g_aClients[ulClient].PacketBuffer.Clear();
 	NETWORK_WriteByte( &g_aClients[ulClient].PacketBuffer.ByteStream, SVCC_AUTHENTICATE );
 	NETWORK_WriteString( &g_aClients[ulClient].PacketBuffer.ByteStream, level.MapName );
 	// [CK] This lets the client start off with a reasonable gametic. In case
@@ -1200,7 +1200,7 @@ void SERVER_AuthenticateClientLevel( BYTESTREAM_s *pByteStream )
 		g_aClients[g_lCurrentClient].State = CLS_AUTHENTICATED;
 
 	// Tell the client his level was authenticated.
-	NETWORK_ClearBuffer( &g_aClients[g_lCurrentClient].PacketBuffer );
+	g_aClients[g_lCurrentClient].PacketBuffer.Clear();
 	NETWORK_WriteByte( &g_aClients[g_lCurrentClient].PacketBuffer.ByteStream, SVCC_MAPLOAD );
 	// [BB] Also tell him the game mode, otherwise the client can't decide whether 3D floors should be spawned or not.
 	NETWORK_WriteByte( &g_aClients[g_lCurrentClient].PacketBuffer.ByteStream, GAMEMODE_GetCurrentMode( ) );
@@ -1340,7 +1340,7 @@ void SERVER_ConnectNewPlayer( BYTESTREAM_s *pByteStream )
 	g_aClients[g_lCurrentClient].ulLastCommandTic = gametic;
 
 	// Clear out the client's netbuffer.
-	NETWORK_ClearBuffer( &g_aClients[g_lCurrentClient].PacketBuffer );
+	g_aClients[g_lCurrentClient].PacketBuffer.Clear();
 
 	// Tell the client that we're about to send him a snapshot of the level.
 	SERVERCOMMANDS_BeginSnapshot( g_lCurrentClient );
@@ -1771,8 +1771,8 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 			{
 				NETBUFFER_s	TempBuffer;
 
-				NETWORK_InitBuffer( &TempBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-				NETWORK_ClearBuffer( &TempBuffer );
+				TempBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+				TempBuffer.Clear();
 
 				// Make sure the packet has a packet header. The client is expecting this!
 				NETWORK_WriteHeader( &TempBuffer.ByteStream, 0 /* = SVC_HEADER in 97d-beta4.3 */ );
@@ -1785,7 +1785,7 @@ void SERVER_DetermineConnectionType( BYTESTREAM_s *pByteStream )
 				NETWORK_WriteString( &TempBuffer.ByteStream, versionStringMessage.GetChars() );
 
 				NETWORK_LaunchPacket( &TempBuffer, NETWORK_GetFromAddress( ) );
-				NETWORK_FreeBuffer( &TempBuffer );
+				TempBuffer.Free();
 			}
 
 			return;
@@ -1914,8 +1914,8 @@ void SERVER_SetupNewConnection( BYTESTREAM_s *pByteStream, bool bNewPlayer )
 	lClientNetworkGameVersion = NETWORK_ReadByte( pByteStream );
 
 	g_aClients[lClient].SavedPackets.Clear();
-	NETWORK_ClearBuffer( &g_aClients[lClient].PacketBuffer );
-	NETWORK_ClearBuffer( &g_aClients[lClient].UnreliablePacketBuffer );
+	g_aClients[lClient].PacketBuffer.Clear();
+	g_aClients[lClient].UnreliablePacketBuffer.Clear();
 
 	// Who is connecting?
 	Printf( "Connect (v%s): %s\n", clientVersion.GetChars(), NETWORK_GetFromAddress().ToString() );
@@ -2243,8 +2243,8 @@ void SERVER_ConnectionError( NETADDRESS_s Address, const char *pszMessage, ULONG
 {
 	NETBUFFER_s	TempBuffer;
 
-	NETWORK_InitBuffer( &TempBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &TempBuffer );
+	TempBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	TempBuffer.Clear();
 
 	// Display error message locally in the console.
 	Printf( "Denied connection for %s: %s\n", Address.ToString(), pszMessage );
@@ -2258,7 +2258,7 @@ void SERVER_ConnectionError( NETADDRESS_s Address, const char *pszMessage, ULONG
 
 //	NETWORK_LaunchPacket( TempBuffer, Address, true );
 	NETWORK_LaunchPacket( &TempBuffer, Address );
-	NETWORK_FreeBuffer( &TempBuffer );
+	TempBuffer.Free();
 }
 
 //*****************************************************************************
@@ -2986,8 +2986,8 @@ void SERVER_DisconnectClient( ULONG ulClient, bool bBroadcast, bool bSaveInfo )
 	SERVER_RCON_UpdateInfo( SVRCU_PLAYERDATA );
 
 	// Clear the client's buffers.
-	NETWORK_ClearBuffer( &g_aClients[ulClient].PacketBuffer );
-	NETWORK_ClearBuffer( &g_aClients[ulClient].UnreliablePacketBuffer );
+	g_aClients[ulClient].PacketBuffer.Clear();
+	g_aClients[ulClient].UnreliablePacketBuffer.Clear();
 	g_aClients[ulClient].SavedPackets.Clear();
 
 	// Tell the join queue module that a player has left the game.
@@ -5325,7 +5325,7 @@ static bool server_MissingPacket( BYTESTREAM_s *pByteStream )
 
 		// Now that we've found the missed packet that we need to send to the client,
 		// send it.
-		NETWORK_ClearBuffer( &g_PacketLossBuffer );
+		g_PacketLossBuffer.Clear();
 		NETWORK_WriteHeader( &g_PacketLossBuffer.ByteStream, SVC_HEADER );
 		NETWORK_WriteLong( &g_PacketLossBuffer.ByteStream, lPacket );
 		if ( packetSize > 0 )

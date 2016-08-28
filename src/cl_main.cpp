@@ -422,8 +422,8 @@ void CLIENT_Construct( void )
 	// Set up a socket and network message buffer.
 	NETWORK_Construct( usPort, true );
 
-	NETWORK_InitBuffer( &g_LocalBuffer, MAX_UDP_PACKET * 8, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_LocalBuffer );
+	g_LocalBuffer.Init( MAX_UDP_PACKET * 8, BUFFERTYPE_WRITE );
+	g_LocalBuffer.Clear();
 
 	// Initialize the stored packets buffer.
 	g_ReceivedPacketBuffer.lMaxSize = MAX_UDP_PACKET * PACKET_BUFFER_SIZE;
@@ -484,7 +484,7 @@ void CLIENT_Destruct( void )
 		CLIENT_QuitNetworkGame( NULL );
 
 	// Free our local buffer.
-	NETWORK_FreeBuffer( &g_LocalBuffer );
+	g_LocalBuffer.Free();
 }
 
 //*****************************************************************************
@@ -563,7 +563,7 @@ void CLIENT_EndTick( void )
 	}
 
 	// If there's any data in our packet, send it to the server.
-	if ( NETWORK_CalcBufferSize( &g_LocalBuffer ) > 0 )
+	if ( g_LocalBuffer.CalcSize() > 0 )
 		CLIENT_SendServerPacket( );
 }
 
@@ -760,11 +760,11 @@ const FString &CLIENT_GetPlayerAccountName( int player )
 void CLIENT_SendServerPacket( void )
 {
 	// Add the size of the packet to the number of bytes sent.
-	CLIENTSTATISTICS_AddToBytesSent( NETWORK_CalcBufferSize( &g_LocalBuffer ));
+	CLIENTSTATISTICS_AddToBytesSent( g_LocalBuffer.CalcSize());
 
 	// Launch the packet, and clear out the buffer.
 	NETWORK_LaunchPacket( &g_LocalBuffer, g_AddressServer );
-	NETWORK_ClearBuffer( &g_LocalBuffer );
+	g_LocalBuffer.Clear();
 }
 
 //*****************************************************************************
@@ -784,7 +784,7 @@ void CLIENT_AttemptConnection( void )
 	Printf( "Connecting to %s\n", g_AddressServer.ToString() );
 
 	// Reset a bunch of stuff.
-	NETWORK_ClearBuffer( &g_LocalBuffer );
+	g_LocalBuffer.Clear();
 	memset( g_ReceivedPacketBuffer.abData, 0, MAX_UDP_PACKET * 32 );
 	for ( ulIdx = 0; ulIdx < PACKET_BUFFER_SIZE; ulIdx++ )
 	{
@@ -1148,17 +1148,17 @@ bool CLIENT_ReadPacketHeader( BYTESTREAM_s *pByteStream )
 	}
 
 	// The end of the buffer has been reached.
-	if (( g_lCurrentPosition + ( NETWORK_CalcBufferSize( NETWORK_GetNetworkMessageBuffer( )))) >= g_ReceivedPacketBuffer.lMaxSize )
+	if (( g_lCurrentPosition + ( NETWORK_GetNetworkMessageBuffer( )->CalcSize())) >= g_ReceivedPacketBuffer.lMaxSize )
 		g_lCurrentPosition = 0;
 
 	// Save a bunch of information about this incoming packet.
 	g_lPacketBeginning[g_bPacketNum] = g_lCurrentPosition;
-	g_lPacketSize[g_bPacketNum] = NETWORK_CalcBufferSize( NETWORK_GetNetworkMessageBuffer( ));
+	g_lPacketSize[g_bPacketNum] = NETWORK_GetNetworkMessageBuffer( )->CalcSize();
 	g_lPacketSequence[g_bPacketNum] = lSequence;
 
 	// Save the received packet.
-	memcpy( g_ReceivedPacketBuffer.abData + g_lPacketBeginning[g_bPacketNum], NETWORK_GetNetworkMessageBuffer( )->ByteStream.pbStream, NETWORK_CalcBufferSize( NETWORK_GetNetworkMessageBuffer( )));
-	g_lCurrentPosition += NETWORK_CalcBufferSize( NETWORK_GetNetworkMessageBuffer( ));
+	memcpy( g_ReceivedPacketBuffer.abData + g_lPacketBeginning[g_bPacketNum], NETWORK_GetNetworkMessageBuffer( )->ByteStream.pbStream, NETWORK_GetNetworkMessageBuffer( )->CalcSize());
+	g_lCurrentPosition += NETWORK_GetNetworkMessageBuffer( )->CalcSize();
 
 	if ( lSequence > g_lHighestReceivedSequence )
 		g_lHighestReceivedSequence = lSequence;
@@ -6658,7 +6658,7 @@ void ServerCommands::MapNew::Execute()
 	}
 
 	// Clear out our local buffer.
-	NETWORK_ClearBuffer( &g_LocalBuffer );
+	g_LocalBuffer.Clear();
 
 	// Back to the full console.
 	gameaction = ga_fullconsole;
@@ -8932,7 +8932,7 @@ CCMD( timeout )
 		if ( g_lBytesSent > g_lMaxBytesSent )
 			g_lMaxBytesSent = g_lBytesSent;
 		NETWORK_LaunchPacket( g_LocalBuffer, g_AddressServer );
-		NETWORK_ClearBuffer( &g_LocalBuffer );
+		g_LocalBuffer.Clear();
 	}
 */
 	// Clear out our copy of the server address.

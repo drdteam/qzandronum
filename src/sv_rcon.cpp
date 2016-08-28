@@ -100,8 +100,8 @@ static	LONG							server_rcon_FindCandidate( NETADDRESS_s Address );
 //
 void SERVER_RCON_Construct( )
 {
-	NETWORK_InitBuffer( &g_MessageBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_MessageBuffer );
+	g_MessageBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_MessageBuffer.Clear();
 	
 	// Call SERVER_RCON_Destruct() when Skulltag closes.
 	atterm( SERVER_RCON_Destruct );
@@ -112,7 +112,7 @@ void SERVER_RCON_Construct( )
 void SERVER_RCON_Destruct( )
 {
 	// Free our local buffer.
-	NETWORK_FreeBuffer( &g_MessageBuffer );
+	g_MessageBuffer.Free();
 }
 
 //*****************************************************************************
@@ -204,7 +204,7 @@ void SERVER_RCON_ParseMessage( NETADDRESS_s Address, LONG lMessage, BYTESTREAM_s
 		{
 			const char* part = NETWORK_ReadString( pByteStream );
 			TArray<FString> list = C_GetTabCompletes( part );
-			NETWORK_ClearBuffer( &g_MessageBuffer );
+			g_MessageBuffer.Clear();
 
 			// [TP] Let's not send too many of these though
 			if ( list.Size() < 50 )
@@ -239,7 +239,7 @@ void SERVER_RCON_Print( const char *pszString )
 {
 	for ( unsigned int i = 0; i < g_AuthedClients.Size( ); i++ )
 	{
-		NETWORK_ClearBuffer( &g_MessageBuffer );
+		g_MessageBuffer.Clear();
 		NETWORK_WriteByte( &g_MessageBuffer.ByteStream, SVRC_MESSAGE );
 		NETWORK_WriteString( &g_MessageBuffer.ByteStream, pszString );
 		NETWORK_LaunchPacket( &g_MessageBuffer, g_AuthedClients[i].Address );
@@ -278,7 +278,7 @@ void SERVER_RCON_UpdateInfo( int iUpdateType )
 
 	for ( unsigned int i = 0; i < g_AuthedClients.Size( ); i++ )
 	{	
-		NETWORK_ClearBuffer( &g_MessageBuffer );
+		g_MessageBuffer.Clear();
 		NETWORK_WriteByte( &g_MessageBuffer.ByteStream, SVRC_UPDATE );		
 		server_WriteUpdateInfo( &g_MessageBuffer.ByteStream, iUpdateType );
 		NETWORK_LaunchPacket( &g_MessageBuffer, g_AuthedClients[i].Address );
@@ -374,7 +374,7 @@ static void server_rcon_HandleNewConnection( NETADDRESS_s Address,  int iProtoco
 	server_rcon_CreateSalt( Candidate.szSalt );
 	g_Candidates.Push( Candidate );
 
-	NETWORK_ClearBuffer( &g_MessageBuffer );
+	g_MessageBuffer.Clear();
 	NETWORK_WriteByte( &g_MessageBuffer.ByteStream, SVRC_SALT );
 	NETWORK_WriteString( &g_MessageBuffer.ByteStream, Candidate.szSalt );
 	NETWORK_LaunchPacket( &g_MessageBuffer, Address );
@@ -401,7 +401,7 @@ static void server_rcon_HandleLogin( int iCandidateIndex, const char *pszHash )
 
 	// Compare that to what he sent us.
 	// Printf("Mine: %s\nTheirs: %s\n", fsCorrectHash, pszHash );
-	NETWORK_ClearBuffer( &g_MessageBuffer );
+	g_MessageBuffer.Clear();
 	// [BB] Do not allow the server to let anybody use RCON in case sv_rconpassword is empty.
 	if ( fsCorrectHash.Compare( pszHash ) || ( strlen( sv_rconpassword.GetGenericRep(CVAR_String).String ) == 0 ) )
 	{
@@ -427,7 +427,7 @@ static void server_rcon_HandleLogin( int iCandidateIndex, const char *pszHash )
 		Client.iLastMessageTic = gametic;
 		g_AuthedClients.Push( Client );
 
-		NETWORK_ClearBuffer( &g_MessageBuffer );
+		g_MessageBuffer.Clear();
 		NETWORK_WriteByte( &g_MessageBuffer.ByteStream, SVRC_LOGGEDIN );
 
 		// Tell him some info about the server.

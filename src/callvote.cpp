@@ -939,7 +939,7 @@ CCMD( callvote )
 		g_lMaxBytesSent = g_lBytesSent;
 */
 	NETWORK_LaunchPacket( CLIENT_GetLocalBuffer( ), CLIENT_GetServerAddress( ));
-	NETWORK_ClearBuffer( CLIENT_GetLocalBuffer( ));
+	CLIENT_GetLocalBuffer( )->Clear();
 }
 
 //*****************************************************************************
@@ -962,7 +962,7 @@ CCMD( vote_yes )
 		g_lMaxBytesSent = g_lBytesSent;
 */
 	NETWORK_LaunchPacket( CLIENT_GetLocalBuffer( ), CLIENT_GetServerAddress( ));
-	NETWORK_ClearBuffer( CLIENT_GetLocalBuffer( ));
+	CLIENT_GetLocalBuffer( )->Clear();
 }
 
 //*****************************************************************************
@@ -985,7 +985,7 @@ CCMD( vote_no )
 		g_lMaxBytesSent = g_lBytesSent;
 */
 	NETWORK_LaunchPacket( CLIENT_GetLocalBuffer( ), CLIENT_GetServerAddress( ));
-	NETWORK_ClearBuffer( CLIENT_GetLocalBuffer( ));
+	CLIENT_GetLocalBuffer( )->Clear();
 }
 
 //*****************************************************************************
@@ -1009,7 +1009,7 @@ CCMD ( cancelvote )
 		{
 			CLIENTCOMMANDS_VoteNo( );
 			NETWORK_LaunchPacket( CLIENT_GetLocalBuffer( ), CLIENT_GetServerAddress( ));
-			NETWORK_ClearBuffer( CLIENT_GetLocalBuffer( ));
+			CLIENT_GetLocalBuffer( )->Clear();
 		}
 	}
 }

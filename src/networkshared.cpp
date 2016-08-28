@@ -65,50 +65,77 @@ static	int		g_OutboundBytesMeasured = 0;
 
 //*****************************************************************************
 //
-void NETWORK_InitBuffer( NETBUFFER_s *pBuffer, ULONG ulLength, BUFFERTYPE_e BufferType )
+NETBUFFER_s::NETBUFFER_s ( )
 {
-	memset( pBuffer, 0, sizeof( *pBuffer ));
-	pBuffer->ulMaxSize = ulLength;
-	pBuffer->pbData = new BYTE[ulLength];
-	pBuffer->BufferType = BufferType;
+	this->pbData = NULL;
+	this->ulMaxSize = 0;
+	this->BufferType = (BUFFERTYPE_e)0;
+	Clear();
 }
 
 //*****************************************************************************
 //
-void NETWORK_FreeBuffer( NETBUFFER_s *pBuffer )
+NETBUFFER_s::NETBUFFER_s ( const NETBUFFER_s &Buffer )
 {
-	if ( pBuffer->pbData )
+	Init ( Buffer.ulMaxSize, Buffer.BufferType );
+	Clear();
+
+	memcpy( this->pbData, Buffer.pbData, Buffer.ulMaxSize );
+	this->ByteStream.pbStream = this->pbData + ( Buffer.ByteStream.pbStream - Buffer.pbData );
+	this->ByteStream.pbStreamEnd = this->pbData + ( Buffer.ByteStream.pbStreamEnd - Buffer.pbData );
+	this->ByteStream.bitShift = Buffer.ByteStream.bitShift;
+	if ( Buffer.ByteStream.bitBuffer != NULL )
+		this->ByteStream.bitBuffer = this->ByteStream.pbStream + ( Buffer.ByteStream.bitBuffer - Buffer.ByteStream.pbStream );
+
+	this->ulCurrentSize = Buffer.ulCurrentSize;
+}
+
+//*****************************************************************************
+//
+void NETBUFFER_s::Init( ULONG ulLength, BUFFERTYPE_e BufferType )
+{
+	memset( this, 0, sizeof( *this ));
+	this->ulMaxSize = ulLength;
+	this->pbData = new BYTE[ulLength];
+	this->BufferType = BufferType;
+}
+
+//*****************************************************************************
+//
+void NETBUFFER_s::Free()
+{
+	if ( this->pbData )
 	{
-		delete[] ( pBuffer->pbData );
-		pBuffer->pbData = NULL;
+		delete[] ( this->pbData );
+		this->pbData = NULL;
 	}
 
-	pBuffer->ulMaxSize = 0;
-	pBuffer->BufferType = (BUFFERTYPE_e)0;
+	this->ulMaxSize = 0;
+	this->BufferType = (BUFFERTYPE_e)0;
 }
 
 //*****************************************************************************
 //
-void NETWORK_ClearBuffer( NETBUFFER_s *pBuffer )
+void NETBUFFER_s::Clear()
 {
-	pBuffer->ulCurrentSize = 0;
-	pBuffer->ByteStream.pbStream = pBuffer->pbData;
-	pBuffer->ByteStream.bitBuffer = NULL;
-	pBuffer->ByteStream.bitShift = -1;
-	if ( pBuffer->BufferType == BUFFERTYPE_READ )
-		pBuffer->ByteStream.pbStreamEnd = pBuffer->ByteStream.pbStream;
+	this->ulCurrentSize = 0;
+	this->ByteStream.pbStream = this->pbData;
+	this->ByteStream.bitBuffer = NULL;
+	this->ByteStream.bitShift = -1;
+	if ( this->BufferType == BUFFERTYPE_READ )
+		this->ByteStream.pbStreamEnd = this->ByteStream.pbStream;
 	else
-		pBuffer->ByteStream.pbStreamEnd = pBuffer->ByteStream.pbStream + pBuffer->ulMaxSize;
+		this->ByteStream.pbStreamEnd = this->ByteStream.pbStream + this->ulMaxSize;
 }
 
 //*****************************************************************************
 //
-LONG NETWORK_CalcBufferSize( NETBUFFER_s *pBuffer )
+LONG NETBUFFER_s::CalcSize() const
 {
-	if ( pBuffer->BufferType == BUFFERTYPE_READ )
-		return ( LONG( pBuffer->ByteStream.pbStreamEnd - pBuffer->ByteStream.pbStream ));
+	if ( this->BufferType == BUFFERTYPE_READ )
+		return ( LONG( this->ByteStream.pbStreamEnd - this->ByteStream.pbStream ));
 	else
-		return ( LONG( pBuffer->ByteStream.pbStream - pBuffer->pbData ));
+		return ( LONG( this->ByteStream.pbStream - this->pbData ));
 }
 
 //*****************************************************************************

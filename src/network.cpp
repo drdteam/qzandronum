@@ -289,8 +289,8 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 	// and it turns into 8 bits when it's decompressed. Thus we need to allocate a buffer that
 	// can hold the biggest possible size we may get after decompressing (aka Huffman decoding)
 	// the incoming UDP packet.
-	NETWORK_InitBuffer( &g_NetworkMessage, ((MAX_UDP_PACKET * 8) / 3 + 1), BUFFERTYPE_READ );
-	NETWORK_ClearBuffer( &g_NetworkMessage );
+	g_NetworkMessage.Init( ((MAX_UDP_PACKET * 8) / 3 + 1), BUFFERTYPE_READ );
+	g_NetworkMessage.Clear();
 
 	// If hosting, update the server GUI.
 	if( NETWORK_GetState() == NETSTATE_SERVER )
@@ -506,7 +506,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 void NETWORK_Destruct( void )
 {
 	// Free the network message buffer.
-	NETWORK_FreeBuffer( &g_NetworkMessage );
+	g_NetworkMessage.Free();
 
 	// [BB] Delete the GeoIP database.
 	GeoIP_delete ( g_GeoIPDB );
@@ -710,7 +710,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 	LONG				lNumBytes;
 	INT					iNumBytesOut = sizeof(g_ucHuffmanBuffer);
 
-	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
+	pBuffer->ulCurrentSize = pBuffer->CalcSize();
 
 	// Nothing to do.
 	if ( pBuffer->ulCurrentSize == 0 )
@@ -1592,7 +1592,7 @@ void NETWORK_FillBufferWithShit( BYTESTREAM_s *pByteStream, ULONG ulSize )
 	for ( ulIdx = 0; ulIdx < ulSize; ulIdx++ )
 		NETWORK_WriteByte( pByteStream, M_Random( ));
 
-//	NETWORK_ClearBuffer( &g_NetworkMessage );
+//	g_NetworkMessage.Clear();
 }
 
 CCMD( fillbufferwithshit )
@@ -1606,7 +1606,7 @@ CCMD( fillbufferwithshit )
 	for ( ulIdx = 0; ulIdx < 1024; ulIdx++ )
 		NETWORK_WriteByte( &g_NetworkMessage, M_Random( ));
 
-//	NETWORK_ClearBuffer( &g_NetworkMessage );
+//	g_NetworkMessage.Clear();
 */
 }
 

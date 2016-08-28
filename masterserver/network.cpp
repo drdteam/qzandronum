@@ -175,8 +175,8 @@ void NETWORK_Construct( USHORT usPort, const char *pszIPAddress )
 	// and it turns into 8 bits when it's decompressed. Thus we need to allocate a buffer that
 	// can hold the biggest possible size we may get after decompressing (aka Huffman decoding)
 	// the incoming UDP packet.
-	NETWORK_InitBuffer( &g_NetworkMessage, ((MAX_UDP_PACKET * 8) / 3 + 1), BUFFERTYPE_READ );
-	NETWORK_ClearBuffer( &g_NetworkMessage );
+	g_NetworkMessage.Init( ((MAX_UDP_PACKET * 8) / 3 + 1), BUFFERTYPE_READ );
+	g_NetworkMessage.Clear();
 
 	// [BB] Get and save our local IP.
 	if ( ( ulInAddr == INADDR_ANY ) || ( pszIPAddress == NULL ) )
@@ -278,7 +278,7 @@ void NETWORK_LaunchPacket( NETBUFFER_s *pBuffer, NETADDRESS_s Address )
 	LONG				lNumBytes;
 	INT					iNumBytesOut = sizeof(g_ucHuffmanBuffer);
 
-	pBuffer->ulCurrentSize = NETWORK_CalcBufferSize( pBuffer );
+	pBuffer->ulCurrentSize = pBuffer->CalcSize();
 
 	// Nothing to do.
 	if ( pBuffer->ulCurrentSize == 0 )

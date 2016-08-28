@@ -126,8 +126,8 @@ CVAR( String, authhostname, "auth.zandronum.com:16666", CVAR_ARCHIVE|CVAR_GLOBAL
 
 void NETWORK_AUTH_Construct( void )
 {
-	NETWORK_InitBuffer( &g_AuthServerBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_AuthServerBuffer );
+	g_AuthServerBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_AuthServerBuffer.Clear();
 
 	g_AuthServerAddress = NETWORK_AUTH_GetServerAddress();
 
@@ -138,7 +138,7 @@ void NETWORK_AUTH_Construct( void )
 //
 void NETWORK_AUTH_Destruct( void )
 {
-	NETWORK_FreeBuffer( &g_AuthServerBuffer );
+	g_AuthServerBuffer.Free();
 }
 
 //*****************************************************************************
@@ -232,7 +232,7 @@ void SERVER_InitClientSRPData ( const ULONG ulClient )
 //
 void SERVER_AUTH_Negotiate ( const char *Username, const unsigned int ClientSessionID )
 {
-	NETWORK_ClearBuffer( &g_AuthServerBuffer );
+	g_AuthServerBuffer.Clear();
 	NETWORK_WriteLong( &g_AuthServerBuffer.ByteStream, SERVER_AUTH_NEGOTIATE );
 	NETWORK_WriteByte( &g_AuthServerBuffer.ByteStream, AUTH_PROTOCOL_VERSION );
 	NETWORK_WriteLong( &g_AuthServerBuffer.ByteStream, ClientSessionID);
@@ -244,7 +244,7 @@ void SERVER_AUTH_Negotiate ( const char *Username, const unsigned int ClientSess
 //
 void SERVER_AUTH_SRPMessage ( const int MagicNumber, const int SessionID, const TArray<unsigned char> &Bytes )
 {
-	NETWORK_ClearBuffer( &g_AuthServerBuffer );
+	g_AuthServerBuffer.Clear();
 	NETWORK_WriteLong( &g_AuthServerBuffer.ByteStream, MagicNumber );
 	NETWORK_WriteLong( &g_AuthServerBuffer.ByteStream, SessionID );
 	NETWORK_WriteShort( &g_AuthServerBuffer.ByteStream, Bytes.Size() );

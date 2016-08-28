@@ -101,12 +101,12 @@ void BROWSER_Construct( void )
 	g_bWaitingForMasterResponse = false;
 
 	// Setup our master server message buffer.
-	NETWORK_InitBuffer( &g_MasterServerBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_MasterServerBuffer );
+	g_MasterServerBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_MasterServerBuffer.Clear();
 
 	// Setup our server message buffer.
-	NETWORK_InitBuffer( &g_ServerBuffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &g_ServerBuffer );
+	g_ServerBuffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	g_ServerBuffer.Clear();
 
 	// Allow the user to specify which port the master server is on.
 	pszPort = Args->CheckValue( "-masterport" );
@@ -130,8 +130,8 @@ void BROWSER_Construct( void )
 void BROWSER_Destruct( void )
 {
 	// Free our local buffers.
-	NETWORK_FreeBuffer( &g_MasterServerBuffer );
-	NETWORK_FreeBuffer( &g_ServerBuffer );
+	g_MasterServerBuffer.Free();
+	g_ServerBuffer.Free();
 }
 
 //*****************************************************************************
@@ -756,7 +756,7 @@ void BROWSER_QueryMasterServer( void )
 	g_AddressMasterServer.SetPort( g_usMasterPort );
 
 	// Clear out the buffer, and write out launcher challenge.
-	NETWORK_ClearBuffer( &g_MasterServerBuffer );
+	g_MasterServerBuffer.Clear();
 	NETWORK_WriteLong( &g_MasterServerBuffer.ByteStream, LAUNCHER_MASTER_CHALLENGE );
 	NETWORK_WriteShort( &g_MasterServerBuffer.ByteStream, MASTER_SERVER_VERSION );
 
@@ -845,7 +845,7 @@ static void browser_QueryServer( ULONG ulServer )
 	}
 
 	// Clear out the buffer, and write out launcher challenge.
-	NETWORK_ClearBuffer( &g_ServerBuffer );
+	g_ServerBuffer.Clear();
 	NETWORK_WriteLong( &g_ServerBuffer.ByteStream, LAUNCHER_SERVER_CHALLENGE );
 	NETWORK_WriteLong( &g_ServerBuffer.ByteStream, SQF_NAME|SQF_URL|SQF_EMAIL|SQF_MAPNAME|SQF_MAXCLIENTS|SQF_PWADS|SQF_GAMETYPE|SQF_IWAD|SQF_NUMPLAYERS|SQF_PLAYERDATA );
 	NETWORK_WriteLong( &g_ServerBuffer.ByteStream, I_MSTime( ));

@@ -105,8 +105,8 @@ ULONG ClientIterator::operator++ ( ) {
 NetCommand::NetCommand ( const SVC Header ) :
 	_unreliable( false )
 {
-	NETWORK_InitBuffer( &_buffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &_buffer );
+	_buffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	_buffer.Clear();
 	addByte( Header );
 }
 
@@ -115,8 +115,8 @@ NetCommand::NetCommand ( const SVC Header ) :
 NetCommand::NetCommand ( const SVC2 Header2 ) :
 	_unreliable( false )
 {
-	NETWORK_InitBuffer( &_buffer, MAX_UDP_PACKET, BUFFERTYPE_WRITE );
-	NETWORK_ClearBuffer( &_buffer );
+	_buffer.Init( MAX_UDP_PACKET, BUFFERTYPE_WRITE );
+	_buffer.Clear();
 	addByte( SVC_EXTENDEDCOMMAND );
 	addByte( Header2 );
 }
@@ -125,7 +125,7 @@ NetCommand::NetCommand ( const SVC2 Header2 ) :
 //
 NetCommand::~NetCommand ( )
 {
-	NETWORK_FreeBuffer ( &_buffer );
+	_buffer.Free();
 }
 
 //*****************************************************************************
@@ -153,7 +153,7 @@ void NetCommand::addInteger( const int IntValue, const int Size )
 		_buffer.ByteStream.pbStream[i] = ( IntValue >> ( 8*i ) ) & 0xff;
 
 	_buffer.ByteStream.pbStream += Size;
-	_buffer.ulCurrentSize = NETWORK_CalcBufferSize ( &_buffer );
+	_buffer.ulCurrentSize = _buffer.CalcSize();
 }
 
 //*****************************************************************************
@@ -195,7 +195,7 @@ void NetCommand::addFloat ( const float FloatValue )
 void NetCommand::addBit( const bool value )
 {
 	NETWORK_WriteBit( &_buffer.ByteStream, value );
-	_buffer.ulCurrentSize = NETWORK_CalcBufferSize ( &_buffer );
+	_buffer.ulCurrentSize = _buffer.CalcSize();
 }
 
 //*****************************************************************************
@@ -203,7 +203,7 @@ void NetCommand::addBit( const bool value )
 void NetCommand::addVariable( const int value )
 {
 	NETWORK_WriteVariable( &_buffer.ByteStream, value );
-	_buffer.ulCurrentSize = NETWORK_CalcBufferSize ( &_buffer );
+	_buffer.ulCurrentSize = _buffer.CalcSize();
 }
 
 //*****************************************************************************
@@ -212,7 +212,7 @@ void NetCommand::addVariable( const int value )
 void NetCommand::addShortByte ( int value, int bits )
 {
 	NETWORK_WriteShortByte( &_buffer.ByteStream, value, bits );
-	_buffer.ulCurrentSize = NETWORK_CalcBufferSize ( &_buffer );
+	_buffer.ulCurrentSize = _buffer.CalcSize();
 }
 
 //*****************************************************************************

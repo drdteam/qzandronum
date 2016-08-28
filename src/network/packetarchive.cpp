@@ -72,7 +72,7 @@ void PacketArchive::Initialize( size_t maxPacketSize )
 {
 	if ( _initialized == false )
 	{
-		NETWORK_InitBuffer( &_packetData, maxPacketSize * PACKET_BUFFER_SIZE, BUFFERTYPE_WRITE );
+		_packetData.Init( maxPacketSize * PACKET_BUFFER_SIZE, BUFFERTYPE_WRITE );
 		Clear();
 		_initialized = true;
 	}
@@ -84,7 +84,7 @@ void PacketArchive::Free()
 {
 	if ( _initialized )
 	{
-		NETWORK_FreeBuffer( &_packetData );
+		_packetData.Free();
 		_initialized = false;
 	}
 }
@@ -96,7 +96,7 @@ unsigned int PacketArchive::StorePacket( const NETBUFFER_s& packet )
 	if ( _initialized == false )
 		return 0;
 
-	_packetData.ulCurrentSize = NETWORK_CalcBufferSize( &_packetData );
+	_packetData.ulCurrentSize = _packetData.CalcSize();
 
 	// If we've reached the end of our reliable packets buffer, start writing at the beginning.
 	if (( _packetData.ulCurrentSize + packet.ulCurrentSize ) >= _packetData.ulMaxSize )
@@ -125,7 +125,7 @@ unsigned int PacketArchive::StorePacket( const NETBUFFER_s& packet )
 void PacketArchive::Clear()
 {
 	if ( _initialized )
-		NETWORK_ClearBuffer( &_packetData );
+		_packetData.Clear();
 
 	_sequenceNumber = 0;
 
