@@ -5089,6 +5089,7 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 				return NULL;
 			if (puff == NULL)
 			{ // Spawn puff just to get a mass for the splash
+				// [TP] Parameters to vict and bTellClientToSpawn were added here.
 				puff = P_SpawnPuff(t1, pufftype, trace.HitPos, 0., 0., 2, puffFlags | PF_HITTHING | PF_TEMPORARY, NULL, false);
 				killPuff = true;
 			}

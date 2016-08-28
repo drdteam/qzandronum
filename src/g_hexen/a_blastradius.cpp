@@ -81,7 +81,7 @@ void BlastActor (AActor *victim, double strength, double speed, AActor *Owner, P
 	{
 		SERVERCOMMANDS_MoveThingExact( victim, CM_VELX|CM_VELY|CM_VELZ );
 		// [BB] Non-players got the blasted flag above.
-		if ( victim->player == false )
+		if ( victim->player == NULL )
 			SERVERCOMMANDS_SetThingFlags( victim, FLAGSET_FLAGS2 );
 		// [BB] Spawn the blast effect if necessary.
 		if ( mo )

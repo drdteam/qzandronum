@@ -266,7 +266,7 @@ void DPusher::Tick ()
 			AActor *thing = cres.thing;
 
 			// [BB] While predicting, only handle the body of the predicted player.
-			if ( CLIENT_PREDICT_IsPredicting() && ( ( thing->player == false ) || ( static_cast<int>( thing->player - players ) != consoleplayer ) ) )
+			if ( CLIENT_PREDICT_IsPredicting() && ( ( thing->player == NULL ) || ( static_cast<int>( thing->player - players ) != consoleplayer ) ) )
 				continue;
 
 			// [BB] Don't affect spectators.
@@ -313,7 +313,7 @@ void DPusher::Tick ()
 			continue;
 
 		// [BB] While predicting, only handle the body of the predicted player.
-		if ( CLIENT_PREDICT_IsPredicting() && ( ( thing->player == false ) || ( static_cast<int>( thing->player - players ) != consoleplayer ) ) )
+		if ( CLIENT_PREDICT_IsPredicting() && ( ( thing->player == NULL ) || ( static_cast<int>( thing->player - players ) != consoleplayer ) ) )
 			continue;
 
 		// [BB] Don't affect spectators.

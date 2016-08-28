@@ -2559,9 +2559,9 @@ static void botcmd_ACS_Execute( CSkullBot *pBot )
 {
 	LONG			lScript;
 	LONG			lMap;
-	LONG			lArg1;
-	LONG			lArg2;
-	LONG			lArg3;
+	int				lArg1;
+	int				lArg2;
+	int				lArg3;
 	level_info_t	*pLevelInfo;
 
 	lArg3 = pBot->m_ScriptData.alStack[pBot->m_ScriptData.lStackPosition - 1];
@@ -2580,7 +2580,7 @@ static void botcmd_ACS_Execute( CSkullBot *pBot )
 	pBot->PopStack( );
 
 	int arg[3] = { lArg1, lArg2, lArg3 };
-	if (( lMap == 0 ) || (( pLevelInfo = FindLevelByNum( lMap )) == false ))
+	if (( lMap == 0 ) || (( pLevelInfo = FindLevelByNum( lMap )) == NULL ))
 		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, level.MapName, arg, 3, 0 );
 	else
 		P_StartScript( pBot->GetPlayer( )->mo, NULL, lScript, pLevelInfo->MapName, arg, 3, 0 );

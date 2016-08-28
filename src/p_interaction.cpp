@@ -1722,7 +1722,7 @@ int P_DamageMobj (AActor *target, AActor *inflictor, AActor *source, int damage,
 	if ( source && source->player && source->player->cheats & CF_DRAIN && !(target->flags5 & MF5_DONTDRAIN) &&
 		( NETWORK_InClientMode() == false ))
 	{
-		if (( target->player == false ) || ( target->player != source->player ))
+		if (( target->player == NULL ) || ( target->player != source->player ))
 		{
 			if ( P_GiveBody( source, MIN( (int)lOldTargetHealth, damage ) / 2 ))
 			{

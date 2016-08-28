@@ -259,9 +259,9 @@ void SERVER_AUTH_ParsePacket( BYTESTREAM_s *pByteStream )
 {
 	while ( 1 )	 
 	{  
-		const int commandNum = NETWORK_ReadLong( pByteStream );
+		const unsigned int commandNum = NETWORK_ReadLong( pByteStream );
 
-		if ( commandNum == -1 )
+		if ( commandNum == -1u )
 			break;
 
 		switch ( commandNum )

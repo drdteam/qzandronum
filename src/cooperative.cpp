@@ -259,7 +259,7 @@ void COOP_PotentiallyStoreUVDPickup ( const PClass *pType )
 		return;
 
 	const FName pickupName = pType->TypeName.GetChars();
-	if ( UVDpickupMap.CheckKey( pickupName ) == false )
+	if ( UVDpickupMap.CheckKey( pickupName ) == NULL )
 		UVDpickupMap.Insert( pickupName, 1 );
 }
 
