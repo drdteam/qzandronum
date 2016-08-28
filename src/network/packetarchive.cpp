@@ -99,23 +99,21 @@ unsigned int PacketArchive::StorePacket( const NETBUFFER_s& packet )
 	_packetData.ulCurrentSize = _packetData.CalcSize();
 
 	// If we've reached the end of our reliable packets buffer, start writing at the beginning.
-	if (( _packetData.ulCurrentSize + packet.ulCurrentSize ) >= _packetData.ulMaxSize )
+	if (( _packetData.ulCurrentSize + packet.CalcSize() ) >= _packetData.ulMaxSize )
 	{
 		_packetData.ByteStream.pbStream = _packetData.pbData;
 		_packetData.ulCurrentSize = 0;
 	}
 
-	// Save where the beginning is and the size of each packet within the reliable packets
+	// Save where the beginning is of each packet within the reliable packets
 	// buffer.
 	unsigned int i = _sequenceNumber % PACKET_BUFFER_SIZE;
 	_records[i].position = _packetData.ulCurrentSize;
-	_records[i].size = packet.ulCurrentSize;
 	_records[i].sequenceNumber = _sequenceNumber;
 
 	// Write what we want to send out to our reliable packets buffer, so that it can be
-	// retransmitted later if necessary.
-	if ( packet.ulCurrentSize )
-		NETWORK_WriteBuffer( &_packetData.ByteStream, packet.pbData, packet.ulCurrentSize );
+	// retransmitted later if necessary. Also save the size.
+	_records[i].size = packet.WriteTo( _packetData.ByteStream );
 
 	return _sequenceNumber++;
 }
@@ -139,6 +137,18 @@ bool PacketArchive::FindPacket( unsigned int packetNumber, const BYTE*& data, si
 {
 	if ( _initialized == false )
 		return false;
+
+	// [BB] We know the internal index the packet should have.
+	size_t index = packetNumber % PACKET_BUFFER_SIZE;
+	if ( _records[index].sequenceNumber == packetNumber )
+	{
+		data = _packetData.pbData + _records[index].position;
+		size = _records[index].size;
+		return true;
+	}
+	// [BB] If we still have it, we should have found the packet above.
+	// Nevertheless, to guarantee consistency with the old behaviort, look
+	// through all packets.
 
 	// Search through all PACKET_BUFFER_SIZE of the stored packets. We're looking for the packet that
 	// that we want to send to the client by matching the sequences.

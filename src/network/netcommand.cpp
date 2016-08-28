@@ -252,7 +252,7 @@ void NetCommand::addName ( FName name )
 void NetCommand::writeCommandToStream ( BYTESTREAM_s &ByteStream ) const
 {
 	// [BB] This also handles the traffic counting (NETWORK_StartTrafficMeasurement/NETWORK_StopTrafficMeasurement).
-	NETWORK_WriteBuffer( &ByteStream, _buffer.pbData, _buffer.ulCurrentSize );
+	_buffer.WriteTo ( ByteStream );
 }
 
 //*****************************************************************************

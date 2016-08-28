@@ -832,9 +832,7 @@ void SERVER_SendClientPacket( ULONG ulClient, bool bReliable )
 	}
 
 	// Write the body of the message to our temporary buffer.
-	pBuffer->ulCurrentSize = pBuffer->ByteStream.pbStream - pBuffer->pbData;
-	if ( pBuffer->ulCurrentSize != 0 )
-		NETWORK_WriteBuffer( &TempBuffer.ByteStream, pBuffer->pbData, pBuffer->ulCurrentSize );
+	pBuffer->WriteTo ( TempBuffer.ByteStream );
 
 	// Finally, send the packet, and clear the buffer.
 	NETWORK_LaunchPacket( &TempBuffer, pClient->Address );

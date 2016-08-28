@@ -279,6 +279,7 @@ struct NETBUFFER_s
 	void			Free();
 	void			Clear();
 	LONG			CalcSize() const;
+	LONG			WriteTo( BYTESTREAM_s &ByteStream ) const;
 };
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------

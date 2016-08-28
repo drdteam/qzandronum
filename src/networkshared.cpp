@@ -140,6 +140,16 @@ LONG NETBUFFER_s::CalcSize() const
 
 //*****************************************************************************
 //
+LONG NETBUFFER_s::WriteTo( BYTESTREAM_s &ByteStream ) const
+{
+	LONG bufferSize = CalcSize();
+	if ( bufferSize > 0 )
+		NETWORK_WriteBuffer( &ByteStream, this->pbData, bufferSize );
+	return bufferSize;
+}
+
+//*****************************************************************************
+//
 void NETWORK_AdvanceByteStreamPointer( BYTESTREAM_s *pByteStream, const int NumBytes, const bool OutboundTraffic )
 {
 	pByteStream->pbStream += NumBytes;
