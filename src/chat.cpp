@@ -80,12 +80,53 @@
 #include "p_acs.h"
 
 //*****************************************************************************
+//
+// [TP] ChatBuffer
+//
+// Encapsulates the storage for the message in the chat input line.
+//
+class ChatBuffer
+{
+public:
+	enum { MaxMessages = 10 + 1 };
+	ChatBuffer();
+
+	void BeginNewMessage();
+	void Clear();
+	FString &GetEditableMessage();
+	const FString &GetMessage() const;
+	int GetPosition() const;
+	int Length() const;
+	void Insert( char character );
+	void Insert( const char *text );
+	bool IsInArchive() const;
+	void MoveCursor( int offset );
+	void MoveCursorTo( int position );
+	void MoveInArchive( int offset );
+	void RemoveCharacter( bool forward );
+	void RemoveRange( int start, int end );
+	void ResetTabCompletion();
+	void PasteChat( const char *clip );
+	void SetCurrentMessage( int position );
+	void TabComplete();
+
+	const char &operator[]( int position ) const;
+
+private:
+	TArray<FString> Messages; // List of messages stored. Last one is the current message being edited.
+	int MessagePosition; // Index in Messages that the user is currently using.
+	int CursorPosition; // Position of the cursor within the message.
+	int TabCompletionPlayerOffset; // Player the tab completion routine should look at.
+	int TabCompletionStart; // Position of the message where current tab completion begins.
+	bool IsInTabCompletion; // Is tab completion routine currently active?
+	FString TabCompletionWord; // The word being tab completed.
+};
+
+//*****************************************************************************
 //	VARIABLES
 
+static	ChatBuffer g_ChatBuffer;
 static	ULONG	g_ulChatMode;
-static	char	g_szChatBuffer[MAX_CHATBUFFER_LENGTH];
-static	LONG	g_lStringLength;
-static	const char	*g_pszChatPrompt = "SAY: ";
 
 //*****************************************************************************
 //	CONSOLE VARIABLES
@@ -128,20 +169,188 @@ FStringCVar	*g_ChatMacros[10] =
 
 void	chat_SetChatMode( ULONG ulMode );
 void	chat_SendMessage( ULONG ulMode, const char *pszString );
-void	chat_ClearChatMessage( void );
-void	chat_AddChar( char cChar );
-void	chat_DeleteChar( void );
 void	chat_GetIgnoredPlayers( FString &Destination ); // [RC]
 void	chat_DoSubstitution( FString &Input ); // [CW]
 
-// [BB] From ZDoom
-//===========================================================================
-//
-// CT_PasteChat
-//
-//===========================================================================
+//*****************************************************************************
+//	FUNCTIONS
+ChatBuffer::ChatBuffer() :
+    MessagePosition( 0 ),
+    CursorPosition( 0 ),
+    TabCompletionPlayerOffset( 0 ),
+    TabCompletionStart( 0 )
+{
+	Messages.Push( "" );
+}
 
-void CT_PasteChat(const char *clip)
+//*****************************************************************************
+//
+// [TP] Returns the message the user is currently looking at, for viewing purposes.
+//
+const FString &ChatBuffer::GetMessage() const
+{
+	return Messages[MessagePosition];
+}
+
+//*****************************************************************************
+//
+// [TP] Returns the current message to be edited. Only edit the current chat message through this function,
+//      as it ensures the user sends the message he intends to, and that the archive won't be edited!
+//      Never edit the elements of Messages directly! If you do not intend to edit this string, use
+//      GetMessage() instead, as this has the side effect of unwinding the archive.
+//
+FString &ChatBuffer::GetEditableMessage()
+{
+	// We're about to edit the message, so tab completion needs to reset, unless tab completion is causing the edit.
+	if ( IsInTabCompletion == false )
+		ResetTabCompletion();
+
+	if ( IsInArchive() )
+	{
+		// If we're not already using the newest message, make the current message the newest, and then use it.
+		Messages.Last() = GetMessage();
+		MessagePosition = Messages.Size() - 1;
+		CursorPosition = clamp( CursorPosition, 0, static_cast<signed>( GetMessage().Len() ));
+	}
+
+	// The user should be out of the archive now.
+	assert( &GetMessage() == &Messages.Last() );
+	return Messages.Last();
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::Insert( char character )
+{
+	char text[2] = { character, '\0' };
+	Insert( text );
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::Insert( const char *text )
+{
+	FString &message = GetEditableMessage();
+	message.Insert( GetPosition(), text );
+
+	if ( message.Len() > MAX_CHATBUFFER_LENGTH )
+		message.Truncate( MAX_CHATBUFFER_LENGTH );
+
+	MoveCursor( strlen( text ));
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::RemoveCharacter( bool forward )
+{
+	int deletePosition = GetPosition();
+	FString &message = GetEditableMessage();
+
+	if ( forward == false )
+		deletePosition--;
+
+	if ( message.IsNotEmpty() && ( deletePosition >= 0 ) && ( deletePosition < Length() ))
+	{
+		char *messageBuffer = message.LockBuffer();
+
+		// Move all characters from the cursor position to the end of string back by one.
+		for ( int i = deletePosition; i < Length() - 1; ++i )
+			messageBuffer[i] = messageBuffer[i + 1];
+
+		// Remove the last character.
+		message.UnlockBuffer();
+		message.Truncate( Length() - 1 );
+
+		if ( forward == false )
+			MoveCursor( -1 );
+	}
+}
+
+//*****************************************************************************
+//
+// [TP] Removes all characters from 'start' to 'end', including 'start' but not 'end'.
+//
+void ChatBuffer::RemoveRange( int start, int end )
+{
+	FString &message = GetEditableMessage();
+	message = message.Mid( 0, start ) + message.Mid( end );
+
+	// Move the cursor if appropriate.
+	if ( CursorPosition >= start )
+	{
+		CursorPosition -= end - start;
+
+		// Don't move it in front of 'start', though, in case the cursor is inside the range.
+		CursorPosition = MAX( CursorPosition, start );
+	}
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::Clear()
+{
+	MessagePosition = Messages.Size() - 1;
+	MoveCursorTo( 0 );
+	GetEditableMessage() = "";
+}
+
+//*****************************************************************************
+//
+int ChatBuffer::Length() const
+{
+	return GetMessage().Len();
+}
+
+//*****************************************************************************
+//
+const char &ChatBuffer::operator[]( int position ) const
+{
+	return GetMessage()[position];
+}
+
+//*****************************************************************************
+//
+int ChatBuffer::GetPosition() const
+{
+	return CursorPosition;
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::MoveCursor( int offset )
+{
+	MoveCursorTo( GetPosition() + offset );
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::MoveCursorTo( int position )
+{
+	CursorPosition = clamp( position, 0, Length() );
+
+	if ( IsInTabCompletion == false )
+		ResetTabCompletion();
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::MoveInArchive( int offset )
+{
+	SetCurrentMessage( MessagePosition + offset );
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::SetCurrentMessage( int position )
+{
+	MessagePosition = clamp( position, 0, static_cast<signed>( Messages.Size() - 1 ));
+	MoveCursorTo( GetMessage().Len() );
+}
+
+//*****************************************************************************
+//
+// [BB] From ZDoom
+void ChatBuffer::PasteChat(const char *clip)
 {
 	if (clip != NULL && *clip != '\0')
 	{
@@ -152,21 +361,117 @@ void CT_PasteChat(const char *clip)
 			{
 				break;
 			}
-			chat_AddChar (*clip++);
+			Insert( *clip++ );
 		}
 	}
 }
 
 //*****************************************************************************
-//	FUNCTIONS
+//
+void ChatBuffer::BeginNewMessage()
+{
+	// Only begin a new message if we don't already have a cleared message buffer.
+	if ( GetMessage().IsNotEmpty() )
+	{
+		// Put a new empty string to be our current message.
+		Messages.Push( "" );
 
+		// If there now are too many messages, drop some from the archive.
+		while ( Messages.Size() > MaxMessages )
+			Messages.Delete( 0 );
+
+		// Select the newly created message.
+		MessagePosition = Messages.Size() - 1;
+		MoveCursorTo( 0 );
+		ResetTabCompletion();
+	}
+}
+
+//*****************************************************************************
+//
+bool ChatBuffer::IsInArchive() const
+{
+	return &GetMessage() != &Messages.Last();
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::TabComplete()
+{
+	IsInTabCompletion = true;
+	FString message = GetMessage();
+
+	// If we do not yet have a word to tab complete, then find one now.
+	// Only consider doing tab completion if there is no graphic character in front of the cursor.
+	if ( TabCompletionWord.IsEmpty() && ( isgraph( message[GetPosition()] ) == false ))
+	{
+		TabCompletionStart = GetPosition();
+
+		// Where's the beginning of the word?
+		while (( TabCompletionStart > 0 ) && ( isspace( message[TabCompletionStart - 1] ) == false ))
+			TabCompletionStart--;
+
+		TabCompletionPlayerOffset = 0;
+		TabCompletionWord = message.Mid( TabCompletionStart, CursorPosition - TabCompletionStart );
+	}
+
+	// If we now have a word to tab complete, proceed to try to complete it.
+	if ( TabCompletionWord.IsNotEmpty() )
+	{
+		// Go through each player, and compare our string with their names.
+		for ( int i = 0; i < MAXPLAYERS; ++i )
+		{
+			player_t &player = players[( i + TabCompletionPlayerOffset ) % MAXPLAYERS];
+
+			if ( PLAYER_IsValidPlayer( &player - players ))
+			{
+				FString name = player.userinfo.GetName();
+				V_RemoveColorCodes( name );
+
+				// See if this player's name begins with our tab completion word.
+				if ( strnicmp( name, TabCompletionWord, TabCompletionWord.Len() ) == 0 )
+				{
+					// Do the completion.
+					RemoveRange( TabCompletionStart, GetPosition() );
+					Insert( name );
+
+					// Remove any whitespace from in front of the cursor.
+					while ( isspace( GetMessage()[GetPosition()] ))
+						RemoveCharacter( true );
+
+					// Now add the suffix.
+					Insert(( TabCompletionStart == 0 ) ? ": " : " " );
+
+					// Mark down where to start looking next time. This allows us to cycle through player names.
+					TabCompletionPlayerOffset = ( &player - players ) + 1;
+					TabCompletionPlayerOffset %= MAXPLAYERS;
+					break;
+				}
+			}
+		}
+	}
+
+	IsInTabCompletion = false;
+}
+
+//*****************************************************************************
+//
+void ChatBuffer::ResetTabCompletion()
+{
+	TabCompletionPlayerOffset = 0;
+	TabCompletionStart = 0;
+	TabCompletionWord = "";
+}
+
+//*****************************************************************************
+//
 void CHAT_Construct( void )
 {
 	// Initialize the chat mode.
 	g_ulChatMode = CHATMODE_NONE;
 
 	// Clear out the chat buffer.
-	chat_ClearChatMessage( );
+	g_ChatBuffer.Clear();
 }
 
 //*****************************************************************************
@@ -213,7 +518,7 @@ bool CHAT_Input( event_t *pEvent )
 		{
 			if ( pEvent->data1 == '\r' )
 			{
-				chat_SendMessage( g_ulChatMode, g_szChatBuffer );
+				chat_SendMessage( g_ulChatMode, g_ChatBuffer.GetMessage() );
 				chat_SetChatMode( CHATMODE_NONE );
 				return ( true );
 			}
@@ -224,19 +529,63 @@ bool CHAT_Input( event_t *pEvent )
 			}
 			else if ( pEvent->data1 == '\b' )
 			{
-				chat_DeleteChar( );
+				g_ChatBuffer.RemoveCharacter( false );
+				return ( true );
+			}
+			else if ( pEvent->data1 == GK_DEL )
+			{
+				g_ChatBuffer.RemoveCharacter( true );
 				return ( true );
 			}
 			// Ctrl+C. 
 			else if ( pEvent->data1 == 'C' && ( pEvent->data3 & GKM_CTRL ))
 			{
-				I_PutInClipboard(g_szChatBuffer );
+				I_PutInClipboard( g_ChatBuffer.GetMessage() );
 				return ( true );
 			}
 			// Ctrl+V.
 			else if ( pEvent->data1 == 'V' && ( pEvent->data3 & GKM_CTRL ))
 			{
-				CT_PasteChat(I_GetFromClipboard(false));
+				g_ChatBuffer.PasteChat( I_GetFromClipboard( false ));
+				return ( true );
+			}
+			// Arrow keys
+			else if ( pEvent->data1 == GK_LEFT )
+			{
+				g_ChatBuffer.MoveCursor( -1 );
+				return ( true );
+			}
+			else if ( pEvent->data1 == GK_RIGHT )
+			{
+				g_ChatBuffer.MoveCursor( 1 );
+				return ( true );
+			}
+			else if ( pEvent->data1 == GK_UP )
+			{
+				g_ChatBuffer.MoveInArchive( -1 );
+				return ( true );
+			}
+			else if ( pEvent->data1 == GK_DOWN )
+			{
+				g_ChatBuffer.MoveInArchive( 1 );
+				return ( true );
+			}
+			// Home
+			else if ( pEvent->data1 == GK_HOME )
+			{
+				g_ChatBuffer.MoveCursorTo( 0 );
+				return ( true );
+			}
+			// End
+			else if ( pEvent->data1 == GK_END )
+			{
+				g_ChatBuffer.MoveCursorTo( g_ChatBuffer.Length() );
+				return ( true );
+			}
+			else if ( pEvent->data1 == '\t' )
+			{
+				g_ChatBuffer.TabComplete();
+				return ( true );
 			}
 		}
 		else if ( pEvent->subtype == EV_GUI_Char )
@@ -248,14 +597,14 @@ bool CHAT_Input( event_t *pEvent )
 				chat_SetChatMode( CHATMODE_NONE );
 			}
 			else
-				chat_AddChar( pEvent->data1 );
+				g_ChatBuffer.Insert( pEvent->data1 );
 
 			return ( true );
 		}
 #ifdef unix
 		else if (pEvent->subtype == EV_GUI_MButtonDown)
 		{
-			CT_PasteChat(I_GetFromClipboard(true));
+			g_ChatBuffer.PasteChat( I_GetFromClipboard( true ));
 		}
 #endif
 	}
@@ -267,101 +616,90 @@ bool CHAT_Input( event_t *pEvent )
 //
 void CHAT_Render( void )
 {
-	UCVarValue	ValWidth;
-	UCVarValue	ValHeight;
-	bool		bScale;
-	float		fXScale;
-	float		fYScale;
-	ULONG		ulYPos;
-	LONG		lIdx;
-	LONG		lX;
-	char		szString[64];
+	static const char *prompt = "SAY: ";
+	static const char *cursor = gameinfo.gametype == GAME_Doom ? "_" : "[";
+	bool scale = ( con_scaletext ) && ( con_virtualwidth > 0 ) && ( con_virtualheight > 0 );
+	float scaleX = 1.0f;
+	float scaleY = 1.0f;
+	int positionY = ( gamestate == GS_INTERMISSION ) ? SCREENHEIGHT : ST_Y;
 
 	if ( g_ulChatMode == CHATMODE_NONE )
 		return;
 
-	ValWidth = con_virtualwidth.GetGenericRep( CVAR_Int );
-	ValHeight = con_virtualheight.GetGenericRep( CVAR_Int );
-
-	// Initialization.
-	if (( con_scaletext ) && ( con_virtualwidth > 0 ) && ( con_virtualheight > 0 ))
+	if ( scale )
 	{
-		fXScale = (float)ValWidth.Int / SCREENWIDTH;
-		fYScale = (float)ValHeight.Int / SCREENHEIGHT;
-		bScale = true;
-
-		ulYPos = (( gamestate == GS_INTERMISSION ) ? SCREENHEIGHT : ST_Y ) - ( Scale( SCREENHEIGHT, SmallFont->GetHeight( ) + 1, ValHeight.Int )) + 1;
-
+		scaleX = static_cast<float>( *con_virtualwidth ) / SCREENWIDTH;
+		scaleY = static_cast<float>( *con_virtualheight ) / SCREENHEIGHT;
+		positionY = positionY - Scale( SCREENHEIGHT, SmallFont->GetHeight() + 1, con_virtualheight ) + 1;
+		positionY *= scaleY;
 	}
 	else
 	{
-		fXScale = 1.0f;
-		fYScale = 1.0f;
-		bScale = false;
-
-		ulYPos = (( gamestate == GS_INTERMISSION ) ? SCREENHEIGHT : ST_Y ) - SmallFont->GetHeight( ) + 1;
+		positionY = positionY - SmallFont->GetHeight() + 1;
 	}
-	
-	lX = static_cast<LONG>(SmallFont->GetCharWidth( '_' ) * fXScale * 2 + SmallFont->StringWidth( g_pszChatPrompt ));
 
-	// figure out if the text is wider than the screen->
-	// if so, only draw the right-most portion of it.
-	for ( lIdx = g_lStringLength - 1; (( lIdx >= 0 ) && ( lX < ( (float)SCREENWIDTH * fXScale ))); lIdx-- )
+	int chatWidth = SCREENWIDTH * scaleX;
+	chatWidth -= round( SmallFont->GetCharWidth( '_' ) * scaleX * 2 + SmallFont->StringWidth( prompt ));
+
+	// Build the message that we will display to clients.
+	FString displayString = g_ChatBuffer.GetMessage();
+	// Insert the cursor string into the message.
+	displayString = displayString.Mid( 0, g_ChatBuffer.GetPosition() ) + cursor + displayString.Mid( g_ChatBuffer.GetPosition() );
+	EColorRange promptColor = CR_GREEN;
+	EColorRange messageColor = CR_GRAY;
+
+	// Use different colors in team chat.
+	if ( g_ulChatMode == CHATMODE_TEAM )
 	{
-		lX += SmallFont->GetCharWidth( g_szChatBuffer[lIdx] & 0x7f );
+		promptColor = CR_GREY;
+		messageColor = static_cast<EColorRange>( TEAM_GetTextColor( players[consoleplayer].ulTeam ));
 	}
 
-	// If lIdx is >= 0, then this chat string goes beyond the edge of the screen.
-	if ( lIdx >= 0 )
-		lIdx++;
+	// [TP] If we're currently viewing the archive, use a different color
+	if ( g_ChatBuffer.IsInArchive() )
+		messageColor = CR_DARKGRAY;
+
+	// Render the chat string.
+	HUD_DrawText( SmallFont, promptColor, 0, positionY, prompt );
+
+	if ( SmallFont->StringWidth( displayString ) > chatWidth )
+	{
+		// Break it onto multiple lines, if necessary.
+		const BYTE *bytes = reinterpret_cast<const BYTE*>( displayString.GetChars() );
+		FBrokenLines *lines = V_BreakLines( SmallFont, chatWidth, bytes );
+		int messageY = positionY;
+
+		for ( int i = 0; lines[i].Width != -1; ++i )
+		{
+			HUD_DrawText( SmallFont, messageColor, SmallFont->StringWidth( prompt ), messageY, lines[i].Text );
+			messageY += SmallFont->GetHeight();
+		}
+
+		V_FreeBrokenLines( lines );
+	}
 	else
-		lIdx = 0;
-
-	// Temporarily h4x0r the chat buffer string to include the cursor.
-	g_szChatBuffer[g_lStringLength] = gameinfo.gametype == GAME_Doom ? '_' : '[';
-	g_szChatBuffer[g_lStringLength+1] = 0;
-	if ( g_ulChatMode == CHATMODE_GLOBAL )
 	{
-		HUD_DrawText( SmallFont, CR_GREEN,
-			0,
-			(LONG)( ulYPos * fYScale ),
-			g_pszChatPrompt );
-
-		HUD_DrawText( SmallFont, CR_GRAY,
-			SmallFont->StringWidth( g_pszChatPrompt ),
-			(LONG)( ulYPos * fYScale ),
-			g_szChatBuffer + lIdx );
-	}
-	else
-	{
-		HUD_DrawText( SmallFont, CR_GREY,
-			0,
-			(LONG)( ulYPos * fYScale ),
-			g_pszChatPrompt );
-
-		HUD_DrawText( SmallFont, (TEAM_GetTextColor (players[consoleplayer].ulTeam)),
-			SmallFont->StringWidth( g_pszChatPrompt ),
-			(LONG)( ulYPos * fYScale ),
-			g_szChatBuffer + lIdx );
+		HUD_DrawText( SmallFont, messageColor, SmallFont->StringWidth( prompt ), positionY, displayString );
 	}
 
 	// [RC] Tell chatters about the iron curtain of LMS chat.
 	if ( GAMEMODE_AreSpectatorsFordiddenToChatToPlayers() )
 	{
+		FString note;
+
 		// Is this the spectator talking?
 		if ( players[consoleplayer].bSpectating )
-			sprintf( szString, "\\cdNOTE: \\ccPlayers cannot hear you chat" );
+			note = "\\cdNOTE: \\ccPlayers cannot hear you chat";
 		else
-			sprintf( szString, "\\cdNOTE: \\ccSpectators cannot talk to you" );
+			note = "\\cdNOTE: \\ccSpectators cannot talk to you";
 
-		V_ColorizeString( szString );
+		V_ColorizeString( note );
 		HUD_DrawText( SmallFont, CR_UNTRANSLATED,
-			(LONG)(( ( bScale ? ValWidth.Int : SCREENWIDTH )/ 2 ) - ( SmallFont->StringWidth( szString ) / 2 )),
-			(LONG)(( ulYPos * fYScale ) - ( SmallFont->GetHeight( ) * 2 ) + 1 ),
-			szString );
+			(LONG)(( ( scale ? *con_virtualwidth : SCREENWIDTH )/ 2 ) - ( SmallFont->StringWidth( note ) / 2 )),
+			(LONG)(( positionY * scaleY ) - ( SmallFont->GetHeight( ) * 2 ) + 1 ),
+			note );
 	}
 
-	g_szChatBuffer[g_lStringLength] = 0;
 	BorderTopRefresh = screen->GetPageCount( );
 }
 
@@ -542,50 +880,20 @@ void chat_SendMessage( ULONG ulMode, const char *pszString )
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 	{
 		CLIENTCOMMANDS_Say( ulMode, ChatMessage.GetChars( ));
-		return;
 	}
-
-	if ( demorecording )
+	else if ( demorecording )
 	{
 		Net_WriteByte( DEM_SAY );
 		Net_WriteByte( ulMode );
 		Net_WriteString( ChatMessage.GetChars( ));
 	}
 	else
+	{
 		CHAT_PrintChatString( consoleplayer, ulMode, ChatMessage.GetChars( ));
-}
+	}
 
-//*****************************************************************************
-//
-void chat_ClearChatMessage( void )
-{
-	ULONG	ulIdx;
-
-	// Clear out the chat string buffer.
-	for ( ulIdx = 0; ulIdx < MAX_CHATBUFFER_LENGTH; ulIdx++ )
-		g_szChatBuffer[ulIdx] = 0;
-
-	// String buffer is of zero length.
-	g_lStringLength = 0;
-}
-
-//*****************************************************************************
-//
-void chat_AddChar( char cChar )
-{
-	if ( g_lStringLength >= ( MAX_CHATBUFFER_LENGTH - 2 ))
-		return;
-
-	g_szChatBuffer[g_lStringLength++] = cChar;
-	g_szChatBuffer[g_lStringLength] = 0;
-}
-
-//*****************************************************************************
-//
-void chat_DeleteChar( void )
-{
-	if ( g_lStringLength )
-		g_szChatBuffer[--g_lStringLength] = 0;
+	// [TP] The message has been sent. Start creating a new one.
+	g_ChatBuffer.BeginNewMessage();
 }
 
 //*****************************************************************************
@@ -742,7 +1050,7 @@ CCMD( say )
 		C_HideConsole( );
 
 		// Clear out the chat buffer.
-		chat_ClearChatMessage( );
+		g_ChatBuffer.Clear();
 	}
 	else
 	{
@@ -804,7 +1112,7 @@ CCMD( say_team )
 		C_HideConsole( );
 
 		// Clear out the chat buffer.
-		chat_ClearChatMessage( );
+		g_ChatBuffer.Clear();
 	}
 	else
 	{
@@ -950,7 +1258,7 @@ CCMD( messagemode )
 	{
 		chat_SetChatMode( CHATMODE_GLOBAL );
 		C_HideConsole( );
-		chat_ClearChatMessage( );
+		g_ChatBuffer.Clear();
 	}
 }
 
@@ -961,7 +1269,7 @@ CCMD( messagemode2 )
 	{
 		chat_SetChatMode( CHATMODE_TEAM );
 		C_HideConsole( );
-		chat_ClearChatMessage( );
+		g_ChatBuffer.Clear();
 	}
 }
 
