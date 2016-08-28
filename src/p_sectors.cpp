@@ -1021,7 +1021,8 @@ double sector_t::NextLowestFloorAt(double x, double y, double z, int flags, doub
 				double ffz = ff->top.plane->ZatPoint(x, y);
 				double ffb = ff->bottom.plane->ZatPoint(x, y);
 
-				if (ffz > realfloor && (z >= ffz || (!(flags & FFCF_3DRESTRICT) && (ffb < z && ffz < z + steph))))
+				// [BB] Added FFCF_INCLUDE3DFLOORS as workaround for client side spawning.
+				if (ffz > realfloor && (z >= ffz || ( (!(flags & FFCF_3DRESTRICT) || ( flags & FFCF_INCLUDE3DFLOORS ) ) && (ffb < z && ffz < z + steph))))
 				{ // This floor is beneath our feet.
 					if (resultsec) *resultsec = sec;
 					if (resultffloor) *resultffloor = ff;

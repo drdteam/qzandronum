@@ -342,6 +342,7 @@ enum
 	FFCF_NOCEILING = 64,
 	FFCF_RESTRICTEDPORTAL = 128,	// current values in the iterator's return are through a restricted portal type (i.e. some features are blocked.)
 	FFCF_NODROPOFF = 256,			// Caller does not need a dropoff (saves some time when checking portals)
+	FFCF_INCLUDE3DFLOORS = 512,	// [BB] Includes 3D floors even if FFCF_3DRESTRICT is set. Workaround for client side spawning.
 };
 void	P_FindFloorCeiling (AActor *actor, int flags=0);
 
