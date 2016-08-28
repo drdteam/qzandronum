@@ -1634,7 +1634,7 @@ void FWadCollection::LumpIsMandatory( int lumpnum )
 	}
 
 	Files[wadnum]->IsOptional = false;
-	DPrintf( "%s is mandatory because of lump %d (%s)\n",
+	DPrintf( DMSG_NOTIFY, "%s is mandatory because of lump %d (%s)\n",
 		Files[wadnum]->Filename, lumpnum, GetLumpFullName( lumpnum ));
 }
 

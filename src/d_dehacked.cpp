@@ -457,7 +457,7 @@ int FindStyle (const char *namestr)
 	{
 		if (!stricmp(StyleNames[i].Name, namestr)) return StyleNames[i].Num;
 	}
-	DPrintf("Unknown render style %s\n", namestr);
+	DPrintf(DMSG_ERROR, "Unknown render style %s\n", namestr);
 	return -1;
 }
 
@@ -868,7 +868,7 @@ static int PatchThing (int thingy)
 	}
 	else
 	{
-		DPrintf ("Thing %d\n", thingy);
+		DPrintf (DMSG_SPAMMY, "Thing %d\n", thingy);
 		if (thingy > 0)
 		{
 			type = InfoNames[thingy - 1];
@@ -1093,7 +1093,7 @@ static int PatchThing (int thingy)
 						}
 						if (i == BitNames.Size())
 						{
-							DPrintf("Unknown bit mnemonic %s\n", strval);
+							DPrintf(DMSG_ERROR, "Unknown bit mnemonic %s\n", strval);
 						}
 					}
 				}
@@ -1249,7 +1249,7 @@ static int PatchThing (int thingy)
 					else
 						info->renderflags &= ~RF_INVISIBLE;
 				}
-				DPrintf ("Bits: %d,%d (0x%08x,0x%08x)\n", info->flags.GetValue(), info->flags2.GetValue(),
+				DPrintf (DMSG_SPAMMY, "Bits: %d,%d (0x%08x,0x%08x)\n", info->flags.GetValue(), info->flags2.GetValue(),
 													      info->flags.GetValue(), info->flags2.GetValue());
 			}
 			else if (stricmp (Line1, "ID #") == 0)
@@ -1335,7 +1335,7 @@ static int PatchSound (int soundNum)
 {
 	int result;
 
-	DPrintf ("Sound %d (no longer supported)\n", soundNum);
+	//DPrintf ("Sound %d (no longer supported)\n", soundNum);
 /*
 	sfxinfo_t *info, dummy;
 	int offset = 0;
@@ -1392,7 +1392,7 @@ static int PatchFrame (int frameNum)
 	info = FindState (frameNum);
 	if (info)
 	{
-		DPrintf ("Frame %d\n", frameNum);
+		DPrintf (DMSG_SPAMMY, "Frame %d\n", frameNum);
 		if (frameNum == 47)
 		{ // Use original tics for S_DSGUNFLASH1
 			tics = 5;
@@ -1494,7 +1494,7 @@ static int PatchSprite (int sprNum)
 
 	if ((unsigned)sprNum < OrgSprNames.Size())
 	{
-		DPrintf ("Sprite %d\n", sprNum);
+		DPrintf (DMSG_SPAMMY, "Sprite %d\n", sprNum);
 	}
 	else
 	{
@@ -1541,7 +1541,7 @@ static int PatchAmmo (int ammoNum)
 
 	if (ammoNum >= 0 && ammoNum < 4 && (unsigned)ammoNum <= AmmoNames.Size())
 	{
-		DPrintf ("Ammo %d.\n", ammoNum);
+		DPrintf (DMSG_SPAMMY, "Ammo %d.\n", ammoNum);
 		ammoType = AmmoNames[ammoNum];
 		if (ammoType != NULL)
 		{
@@ -1624,7 +1624,7 @@ static int PatchWeapon (int weapNum)
 		if (type != NULL)
 		{
 			info = (AWeapon *)GetDefaultByType (type);
-			DPrintf ("Weapon %d\n", weapNum);
+			DPrintf (DMSG_SPAMMY, "Weapon %d\n", weapNum);
 		}
 	}
 
@@ -1764,7 +1764,7 @@ static int PatchPointer (int ptrNum)
 		{
 			if (CodePConv[ptrNum] == indexnum) break;
 		}
-		DPrintf("Final ptrNum: %i\n", ptrNum);
+		DPrintf(DMSG_SPAMMY, "Final ptrNum: %i\n", ptrNum);
 	}
 	// End of hack.
 
@@ -1772,7 +1772,7 @@ static int PatchPointer (int ptrNum)
 	// Better to just use the size of the array rather than a hardcoded value.
 	if (ptrNum >= 0 && (unsigned int) ptrNum < CodePConv.Size())
 	{
-		DPrintf ("Pointer %d\n", ptrNum);
+		DPrintf (DMSG_SPAMMY, "Pointer %d\n", ptrNum);
 	}
 	else
 	{
@@ -1796,7 +1796,7 @@ static int PatchPointer (int ptrNum)
 				{
 					SetPointer(state, Actions[index], CodePConv[ptrNum]);
 				}
-				DPrintf("%s has a hacked state for pointer num %i with index %i\nLine1=%s, Line2=%s\n", 
+				DPrintf(DMSG_SPAMMY, "%s has a hacked state for pointer num %i with index %i\nLine1=%s, Line2=%s\n", 
 					state->StaticFindStateOwner(state)->TypeName.GetChars(), ptrNum, index, Line1, Line2);
 			}
 			else
@@ -1813,7 +1813,7 @@ static int PatchCheats (int dummy)
 {
 	int result;
 
-	DPrintf ("Cheats (support removed by request)\n");
+	DPrintf (DMSG_NOTIFY, "Dehacked cheats support removed by request\n");
 
 	while ((result = GetLine ()) == 1)
 	{
@@ -1843,7 +1843,7 @@ static int PatchMisc (int dummy)
 	};
 	int result;
 
-	DPrintf ("Misc\n");
+	DPrintf (DMSG_SPAMMY, "Misc\n");
 
 	while ((result = GetLine()) == 1)
 	{
@@ -2024,7 +2024,7 @@ static int PatchPars (int dummy)
 	level_info_t *info;
 	int result, par;
 
-	DPrintf ("[Pars]\n");
+	DPrintf (DMSG_SPAMMY, "[Pars]\n");
 
 	while ( (result = GetLine()) ) {
 		// Argh! .bex doesn't follow the same rules as .deh
@@ -2065,7 +2065,7 @@ static int PatchPars (int dummy)
 		}
 
 		info->partime = par;
-		DPrintf ("Par for %s changed to %d\n", mapname, par);
+		DPrintf (DMSG_SPAMMY, "Par for %s changed to %d\n", mapname, par);
 	}
 	return result;
 }
@@ -2074,7 +2074,7 @@ static int PatchCodePtrs (int dummy)
 {
 	int result;
 
-	DPrintf ("[CodePtr]\n");
+	DPrintf (DMSG_SPAMMY, "[CodePtr]\n");
 
 	while ((result = GetLine()) == 1)
 	{
@@ -2139,7 +2139,7 @@ static int PatchMusic (int dummy)
 {
 	int result;
 
-	DPrintf ("[Music]\n");
+	DPrintf (DMSG_SPAMMY, "[Music]\n");
 
 	while ((result = GetLine()) == 1)
 	{
@@ -2149,7 +2149,7 @@ static int PatchMusic (int dummy)
 		keystring << "MUSIC_" << Line1;
 
 		GStrings.SetString (keystring, newname);
-		DPrintf ("Music %s set to:\n%s\n", keystring.GetChars(), newname);
+		DPrintf (DMSG_SPAMMY, "Music %s set to:\n%s\n", keystring.GetChars(), newname);
 	}
 
 	return result;
@@ -2205,7 +2205,7 @@ static int PatchText (int oldSize)
 		goto donewithtext;
 	}
 
-	DPrintf ("Searching for text:\n%s\n", oldStr);
+	DPrintf (DMSG_SPAMMY, "Searching for text:\n%s\n", oldStr);
 	good = false;
 
 	// Search through sprite names; they are always 4 chars
@@ -2271,7 +2271,7 @@ static int PatchText (int oldSize)
 
 	if (!good)
 	{
-		DPrintf ("   (Unmatched)\n");
+		DPrintf (DMSG_SPAMMY, "   (Unmatched)\n");
 	}
 		
 donewithtext:
@@ -2291,7 +2291,7 @@ static int PatchStrings (int dummy)
 {
 	int result;
 
-	DPrintf ("[Strings]\n");
+	DPrintf (DMSG_SPAMMY, "[Strings]\n");
 
 	while ((result = GetLine()) == 1)
 	{
@@ -2317,7 +2317,7 @@ static int PatchStrings (int dummy)
 		const char *ll = Line1;
 		if (!stricmp(ll, "GOTREDSKULL")) ll = "GOTREDSKUL";
 		GStrings.SetString (ll, holdstring);
-		DPrintf ("%s set to:\n%s\n", Line1, holdstring.GetChars());
+		DPrintf (DMSG_SPAMMY, "%s set to:\n%s\n", Line1, holdstring.GetChars());
 	}
 
 	return result;
@@ -2357,7 +2357,7 @@ static int DoInclude (int dummy)
 	else
 	{
 		data = Line2;
-		DPrintf ("Including %s\n", data);
+		DPrintf (DMSG_SPAMMY, "Including %s\n", data);
 		savepatchname = PatchName;
 		savepatchfile = PatchFile;
 		savepatchpt = PatchPt;
@@ -2391,7 +2391,7 @@ static int DoInclude (int dummy)
 			delete[] path;
 		}
 
-		DPrintf ("Done with include\n");
+		DPrintf (DMSG_SPAMMY, "Done with include\n");
 		PatchName = savepatchname;
 		PatchFile = savepatchfile;
 		PatchPt = savepatchpt;
@@ -2557,7 +2557,7 @@ static bool DoDehPatch()
 	}
 	else
 	{
-		DPrintf ("Patch does not have DeHackEd signature. Assuming .bex\n");
+		DPrintf (DMSG_WARNING, "Patch does not have DeHackEd signature. Assuming .bex\n");
 		dversion = 19;
 		pversion = 6;
 		PatchPt = PatchFile;
@@ -3048,7 +3048,7 @@ void FinishDehPatch ()
 			subclass->Replacement = old_replacement;
 		}
 
-		DPrintf ("%s replaces %s\n", subclass->TypeName.GetChars(), type->TypeName.GetChars());
+		DPrintf (DMSG_NOTIFY, "%s replaces %s\n", subclass->TypeName.GetChars(), type->TypeName.GetChars());
 	}
 
 	// Now that all Dehacked patches have been processed, it's okay to free StateMap.
