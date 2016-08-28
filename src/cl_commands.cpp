@@ -665,3 +665,11 @@ void CLIENTCOMMANDS_SpecialCheat( int special, const TArray<int> &args )
 	for ( unsigned int i = 0; i < args.Size(); ++i )
 		NETWORK_WriteLong( &CLIENT_GetLocalBuffer( )->ByteStream, args[i] );
 }
+
+//*****************************************************************************
+// [TP]
+void CLIENTCOMMANDS_SetWantHideAccount( bool wantHideAccount )
+{
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, CLC_SETWANTHIDEACCOUNT );
+	NETWORK_WriteByte( &CLIENT_GetLocalBuffer( )->ByteStream, wantHideAccount );
+}

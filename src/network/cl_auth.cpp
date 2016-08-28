@@ -47,6 +47,7 @@
 
 #include "c_dispatch.h"
 #include "cl_main.h"
+#include "cl_commands.h"
 #include "network.h"
 #include "cl_auth.h"
 #include "srp.h"
@@ -57,6 +58,12 @@
 
 static struct SRPUser* g_usr = NULL;
 static FString g_password;
+
+CUSTOM_CVAR( Bool, cl_hideaccount, false, CVAR_ARCHIVE )
+{
+	if ( NETWORK_GetState() == NETSTATE_CLIENT )
+		CLIENTCOMMANDS_SetWantHideAccount( self );
+}
 
 //*****************************************************************************
 //	PROTOTYPES

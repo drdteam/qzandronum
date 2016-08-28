@@ -135,6 +135,7 @@ bool				CLIENT_GetAllowSendingOfUserInfo( void );
 void				CLIENT_SetAllowSendingOfUserInfo( bool bAllow );
 int					CLIENT_GetLatestServerGametic( void );
 void				CLIENT_SetLatestServerGametic( LONG latestServerGametic );
+const FString		&CLIENT_GetPlayerAccountName( int player );
 
 // Functions necessary to carry out client-side operations.
 void				CLIENT_SendServerPacket( void );

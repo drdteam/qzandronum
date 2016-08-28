@@ -1553,6 +1553,16 @@ CCMD (playerinfo)
 			ui->GetPlayerClassNum() == -1 ? "Random" : ui->GetPlayerClassType()->DisplayName.GetChars(),
 			ui->GetPlayerClassNum());
 
+		// [TP] Show account name
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+		{
+			Printf( "%20s: %s\n", "Account", SERVER_GetClient( i )->GetAccountName().GetChars() );
+		}
+		else if ( NETWORK_InClientMode() )
+		{
+			Printf( "%20s: %s\n", "Account", CLIENT_GetPlayerAccountName( i ).GetChars() );
+		}
+
 		// Print generic info
 		TMapIterator<FName, FBaseCVar *> it(*ui);
 		TMap<FName, FBaseCVar *>::Pair *pair;

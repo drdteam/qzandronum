@@ -502,6 +502,13 @@ void SERVERCOMMANDS_SetPlayerUserInfo( ULONG ulPlayer, ULONG ulUserInfoFlags, UL
 	command.SetTicsPerUpdate( players[ulPlayer].userinfo.GetTicsPerUpdate() );
 	command.SetConnectionType( players[ulPlayer].userinfo.GetConnectionType() );
 	command.SetClientFlags( players[ulPlayer].userinfo.GetClientFlags() );
+
+	// [TP] Redact the account name if the player so wishes.
+	if ( SERVER_GetClient( ulPlayer )->WantHideAccount )
+		command.SetAccountName( "" );
+	else
+		command.SetAccountName( SERVER_GetClient( ulPlayer )->GetAccountName() );
+
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

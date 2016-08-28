@@ -113,6 +113,10 @@ Command SetPlayerUserInfo
 	If (flags & USERINFO_CLIENTFLAGS)
 		Byte clientFlags
 	EndIf
+
+	If (flags & USERINFO_ACCOUNTNAME)
+		String accountName
+	EndIf
 EndCommand
 
 Command SetPlayerFrags

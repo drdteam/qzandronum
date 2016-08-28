@@ -32,6 +32,7 @@
 +	- Chat preview is now rendered on multiple lines, if necessary. [Dusk]
 +	- Chat now remembers the ten previously sent messages that can be brought up with up/down arrow keys. [Dusk]
 +	- Chat can now tab complete player names. [Dusk]
++	- Clients' account names are now visible in the output of CCMD "playerinfo", unless the player hides it with the new CVar cl_hideaccount. The server can always see the accountname from playerinfo. [Dusk]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]

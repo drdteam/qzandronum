@@ -199,11 +199,8 @@ enum ActorScaleFlag
 #define	USERINFO_TICSPERUPDATE		256
 #define	USERINFO_CONNECTIONTYPE		512
 #define	USERINFO_CLIENTFLAGS		1024
-
-#define	USERINFO_ALL				( USERINFO_NAME | USERINFO_GENDER | USERINFO_COLOR | \
-									USERINFO_AIMDISTANCE | USERINFO_SKIN | USERINFO_RAILCOLOR | \
-									USERINFO_HANDICAP | USERINFO_PLAYERCLASS | USERINFO_TICSPERUPDATE | \
-									USERINFO_CONNECTIONTYPE | USERINFO_CLIENTFLAGS )
+#define	USERINFO_ACCOUNTNAME		2048
+#define	USERINFO_ALL				( 4096 - 1 )
 
 // [BB]: Some optimization. For some actors that are sent in bunches, to reduce the size,
 // just send some key letter that identifies the actor, instead of the full name.

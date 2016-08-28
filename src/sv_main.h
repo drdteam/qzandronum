@@ -255,6 +255,9 @@ typedef struct
 	// [BB] Client doesn't want his country to be revealed to the other players.
 	bool			bWantHideCountry;
 
+	// [TP] Client doesn't want his account to be revealed to the other players.
+	bool			WantHideAccount;
+
 	// [BB] Did the client not yet acknowledge receiving the last full update?
 	bool			bFullUpdateIncomplete;
 
@@ -332,6 +335,8 @@ typedef struct
 
 	// [CK] The client communicates back to us with the last gametic from the server it saw
 	LONG			lLastServerGametic;
+
+	FString GetAccountName() const;
 } CLIENT_s;
 
 //*****************************************************************************

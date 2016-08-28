@@ -6816,11 +6816,7 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				// [BB] If the sanity checks fail, we'll return an empty string.
 				if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && SERVER_IsValidClient ( ulPlayer ) )
 				{
-					if ( SERVER_GetClient ( ulPlayer )->loggedIn )
-						work = SERVER_GetClient ( ulPlayer )->username;
-					// Anonymous players get an account name based on their player slot.
-					else
-						work.AppendFormat ( "%d@localhost", static_cast<int>(ulPlayer) );
+					work = SERVER_GetClient( ulPlayer )->GetAccountName();
 				}
 				return ACS_PushAndReturnDynamicString ( work );
 			}

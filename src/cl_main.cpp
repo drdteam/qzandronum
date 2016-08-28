@@ -144,6 +144,7 @@ EXTERN_CVAR( Bool, cl_oldfreelooklimit )
 EXTERN_CVAR( Float, turbo )
 EXTERN_CVAR( Float, sv_gravity )
 EXTERN_CVAR( Float, sv_aircontrol )
+EXTERN_CVAR( Bool, cl_hideaccount )
 
 //*****************************************************************************
 //	CONSOLE COMMANDS/VARIABLES
@@ -366,6 +367,9 @@ static	LONG				g_lLastCmd;
 
 // [CK] The most up-to-date server gametic
 static	int				g_lLatestServerGametic = 0;
+
+// [TP] Client's understanding of the account names of players.
+static FString				g_PlayerAccountNames[MAXPLAYERS];
 
 //*****************************************************************************
 //	FUNCTIONS
@@ -739,6 +743,20 @@ void CLIENT_SetLatestServerGametic( int latestServerGametic )
 		g_lLatestServerGametic = latestServerGametic;
 }
 
+//*****************************************************************************
+//
+const FString &CLIENT_GetPlayerAccountName( int player )
+{
+	static FString empty;
+
+	if ( static_cast<unsigned>( player ) < countof( g_PlayerAccountNames ))
+		return g_PlayerAccountNames[player];
+	else
+		return empty;
+}
+
+//*****************************************************************************
+//
 void CLIENT_SendServerPacket( void )
 {
 	// Add the size of the packet to the number of bytes sent.
@@ -791,6 +809,7 @@ void CLIENT_AttemptConnection( void )
 	NETWORK_WriteString( &g_LocalBuffer.ByteStream, DOTVERSIONSTR );
 	NETWORK_WriteString( &g_LocalBuffer.ByteStream, cl_password );
 	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, cl_connect_flags );
+	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, cl_hideaccount );
 	NETWORK_WriteByte( &g_LocalBuffer.ByteStream, NETGAMEVERSION );
 	NETWORK_WriteString( &g_LocalBuffer.ByteStream, g_lumpsAuthenticationChecksum.GetChars() );
 }
@@ -3865,6 +3884,10 @@ void ServerCommands::SetPlayerUserInfo::Execute()
 	// [CK] We do compressed bitfields now.
 	if ( ContainsClientFlags() )
 		player->userinfo.ClientFlagsChanged ( clientFlags );
+
+	// [TP] Store the account name of this player.
+	if ( ContainsAccountName() )
+		g_PlayerAccountNames[player - players] = accountName;
 
 	// Build translation tables, always gotta do this!
 	R_BuildPlayerTranslation( player - players );
