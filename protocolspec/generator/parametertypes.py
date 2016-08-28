@@ -57,6 +57,7 @@ class SpecParameter:
 		self.specialization = specialization
 		self.attributes = attributes or set()
 		self.condition = condition and condition.strip()
+		self.inherited = False # was this inherited from another command?
 
 	def writeread(self, **args):
 		raise Exception('BUG: %s does not define writeread!' % type(self).__name__)

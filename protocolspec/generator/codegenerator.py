@@ -30,6 +30,12 @@
 #	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+def getVerifierForParameter(parameter):
+	'''
+		Returns the initializer name for a parameter (i.e. _valueInitialized for a parameter 'value')
+	'''
+	return '_%sInitialized' % parameter.name
+
 class SourceCodeWriter:
 	'''
 		Base class for SourceWriter and HeaderWriter. Provides useful methods for writing source code with.
@@ -150,18 +156,18 @@ class SourceWriter(SourceCodeWriter):
 			self.writesender(command)
 
 			# Write setter methods
-			for i, parameter in enumerate(command):
+			for parameter in command.ownedParameters:
 				self.writeline('')
 				self.writecontext('''
 					void ServerCommands::{commandname}::{setter}( {typename} value )
 					{{
 						this->{reference} = value;
-						this->_verifyTable[{i}] = true;
+						this->{verifier} = true;
 					}}'''.format(commandname = command.name,
 							     setter = parameter.setter,
 							     typename = parameter.constreference,
 							     reference = parameter.name,
-							     i = i))
+							     verifier = getVerifierForParameter(parameter)))
 
 			# Write the condition check methods. The items must be sorted first or the methods will be written in a
 			# different order each time, causing unnecessary writes.
@@ -287,16 +293,12 @@ class SourceWriter(SourceCodeWriter):
 
 		# Check that all the parameters were provided. If not, print a warning.
 		if command.parameters:
-			test = ' || '.join('_verifyTable[%d] == false' % i for i in range(len(command.parameters)))
-			self.writeline('if ( %s )' % test)
+			self.writeline('if ( AllParametersInitialized() == false )')
 			self.startscope()
 			self.writeline('Printf( "WARNING: {commandname}::sendCommandToClients: not all parameters were initialized:\\n" );'.format(**locals()))
 
 			# Be more specific about which parameters in particular were left out.
-			for i, parameter in enumerate(command.parameters.keys()):
-				line = 'if ( _verifyTable[{i}] == false ) Printf( "Missing: {name}\\n" );'
-				line = line.format(i = i, name = parameter)
-				self.writeline(line)
+			self.writeline('PrintMissingParameters();')
 			self.endscope()
 
 		self.writeline('NetCommand command ( {enumname} );'''.format(**locals()))
@@ -360,19 +362,41 @@ class HeaderWriter(SourceCodeWriter):
 			self.writeline('};')
 			self.writeline('')
 
+		# Write down a common base class
+		self.writecontext('''
+			class BaseServerCommand
+			{
+			public:
+				virtual void PrintMissingParameters() const = 0;
+				virtual bool AllParametersInitialized() const = 0;
+				virtual void sendCommandToClients( int playerExtra = MAXPLAYERS, ServerCommandFlags flags = 0 ) = 0;
+				virtual void Execute() = 0;
+			};
+		''')
+
 		# For each server command, create a class to represent it.
 		for command in self.getcommands('GameServerToClient'):
-			self.writeline('class %s' % command.name)
+			if command.parent is None:
+				self.writeline('class %s : public BaseServerCommand' % command.name)
+			else:
+				self.writeline('class %s : public %s' % (command.name, command.parent.name))
 			self.writeline('{')
 			self.writeline('public:')
 			self.indent()
 
-			# We need to initialize the verification table to zero, if there is one.
-			if command.parameters:
-				self.writeline('%s() { memset( _verifyTable, 0, sizeof _verifyTable ); }' % command.name)
+			# If this command has any members, we need to write a constructor to initialize their validity booleans
+			# to false.
+			if list(command.ownedParameters):
+				def makeParameterInitializer(parameter):
+					''' This makes initializers such as "_valueInitialized( false )" '''
+					return '\n' + self.tabs + '\t%s( false )' % getVerifierForParameter(parameter)
+				self.writeline('{commandName}() :{parameterInitializers} {{}}'.format(
+					commandName = command.name,
+					parameterInitializers = ','.join(makeParameterInitializer(parameter) for parameter in command.ownedParameters)
+				))
 
 			# Add setter methods for each parameter
-			for parameter in command:
+			for parameter in command.ownedParameters:
 				self.writeline('void %s( %s value );' % (parameter.setter, parameter.constreference))
 
 			# Add condition check methods. The values must be sorted first, or the order of the methods changes
@@ -393,18 +417,46 @@ class HeaderWriter(SourceCodeWriter):
 			else:
 				self.writeline('friend bool ::CLIENT_ParseServerCommand( SVC, BYTESTREAM_s * );')
 
-			# Fill in the parameters into a private section.
+			# This function returns true if all parameters are initialized.
+			self.writeline('bool AllParametersInitialized() const')
+			self.startscope()
+			# Note: we specifically use 'parameters' instead of 'ownedParameters' in this check, because if
+			# the command does not own any parameters and its parent does, we don't want this function to return true.
+			if command.parameters:
+				conditions = [getVerifierForParameter(parameter) for parameter in command.ownedParameters]
+				# If this command is the derivative of another, then the base command also has to be asked.
+				if command.parent:
+					conditions += ['%s::AllParametersInitialized()' % command.parent.name]
+				self.writeline('return {condition};'.format(
+					condition = ('\n' + self.tabs + '\t&& ').join(conditions)
+				))
+			else:
+				# If there are no parameters in this command, we just return true.
+				self.writeline('return true;')
+			self.endscope()
+
+			# This function prints which parameters are missing.
+			self.writeline('void PrintMissingParameters() const')
+			self.startscope()
+			for parameter in command.ownedParameters:
+				self.writeline('if ( %s == false )' % getVerifierForParameter(parameter))
+				self.writeline('\tPrintf( "Missing: %s\\n" );' % parameter.name)
+			if command.parent:
+				self.writeline('%s::PrintMissingParameters();' % command.parent.name)
+			self.endscope()
+
+			# Fill in the parameters into a protected section.
 			self.unindent()
 			self.writeline('')
-			self.writeline('private:')
+			self.writeline('protected:')
 			self.indent()
-			for parameter in command:
+			for parameter in command.ownedParameters:
 				self.define(parameter)
 
-			# Add an array of bools, so that we can checking whether all members are initialized when the command
-			# is launched. Unless the command has no parameters, of course.
-			if command.parameters:
-				self.writeline('bool _verifyTable[%d];' % len(command.parameters))
+			# Add booleans for each non-inherited parameter, to contain whether or not the value was initialized by
+			# the use of a write accessor.
+			for parameter in command.ownedParameters:
+				self.writeline('bool %s;' % getVerifierForParameter(parameter))
 
 			# Done with this structure, now close it.
 			self.unindent()

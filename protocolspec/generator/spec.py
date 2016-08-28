@@ -135,19 +135,28 @@ class NetworkSpec:
 				raise RuntimeError('Missing Protocol before command definition')
 
 			commandname = match.group(1)
-			basecommand = match.group(2)
+			baseCommandName = match.group(2)
 
 			if commandname in self.currentprotocol['commands']:
 				raise RuntimeError('Tried to define command %s twice' % commandname)
 
-			if basecommand:
-				if basecommand == commandname:
+			if baseCommandName:
+				# Handle command inheritance
+				if baseCommandName == commandname:
 					raise RuntimeError('Cannot inherit command %s from itself' % commandname)
-				if basecommand not in self.currentprotocol['commands']:
-					raise RuntimeError('Cannot inherit %s from non-existent command %s' % (commandname, basecommand))
+				if baseCommandName not in self.currentprotocol['commands']:
+					raise RuntimeError('Cannot inherit %s from non-existent command %s' % (commandname, baseCommandName))
+
+				# Deep-copy all attributes from the old command to this new one, so that the new command is independent.
 				from copy import deepcopy
-				self.currentcommand = deepcopy(self.currentprotocol['commands'][basecommand])
+				baseCommand = self.currentprotocol['commands'][baseCommandName]
+				self.currentcommand = deepcopy(baseCommand)
 				self.currentcommand.name = commandname
+				self.currentcommand.parent = baseCommand
+
+				# Mark all members of this new command as inherited.
+				for parameter in self.currentcommand:
+					parameter.inherited = True
 			else:
 				self.currentcommand = SpecCommand(commandname)
 
@@ -337,6 +346,14 @@ class SpecCommand:
 		self.conditions = defaultdict(list)
 		self.conditionchecknames = {} # condition string → method name
 		self.unreliable = False
+		self.parent = None
+
+	@property
+	def ownedParameters(self):
+		''' Returns all parameters that were not inherited. '''
+		for parameter in self.parameters.values():
+			if parameter.inherited == False:
+				yield parameter
 
 	@property
 	def enumname(self):

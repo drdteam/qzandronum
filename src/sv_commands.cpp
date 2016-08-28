@@ -2937,27 +2937,15 @@ void SERVERCOMMANDS_SoundActor( AActor *pActor, LONG lChannel, const char *pszSo
 		return;
 	}
 
-	// [TP] TODO: Make ServerCommands::SoundActorIfNotPlaying actually inherit from SoundActor to remove the code duplication.
-	if ( bRespectActorPlayingSomething )
-	{
-		ServerCommands::SoundActorIfNotPlaying command;
-		command.SetActor( pActor );
-		command.SetChannel( lChannel );
-		command.SetSound( pszSound );
-		command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
-		command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ));
-		command.sendCommandToClients( ulPlayerExtra, flags );
-	}
-	else
-	{
-		ServerCommands::SoundActor command;
-		command.SetActor( pActor );
-		command.SetChannel( lChannel );
-		command.SetSound( pszSound );
-		command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
-		command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ));
-		command.sendCommandToClients( ulPlayerExtra, flags );
-	}
+	ServerCommands::SoundActor normalCommand;
+	ServerCommands::SoundActorIfNotPlaying commandIfNotPlaying;
+	ServerCommands::SoundActor &command = bRespectActorPlayingSomething ? commandIfNotPlaying : normalCommand;
+	command.SetActor( pActor );
+	command.SetChannel( lChannel );
+	command.SetSound( pszSound );
+	command.SetVolume( LONG ( clamp( fVolume, 0.0f, 2.0f ) * 127 ) );
+	command.SetAttenuation( NETWORK_AttenuationFloatToInt ( fAttenuation ));
+	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 
 //*****************************************************************************
