@@ -3792,7 +3792,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				else
 					pos.Z = ONFLOORZ;
 
-				pNewActor = Spawn( pActor->GetClass( ), pos, NO_REPLACE );
+				pNewActor = AActor::StaticSpawn( pActor->GetClass( ), pos, NO_REPLACE, true );
 
 				// Adjust the Z position after it's spawned.
 				if ( pos.Z == ONFLOORZ )
@@ -3806,6 +3806,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				pNewActor->SpawnPoint[2] = pActor->SpawnPoint[2];
 				pNewActor->SpawnAngle = pActor->SpawnAngle;
 				pNewActor->SpawnFlags = pActor->SpawnFlags;
+				P_FindFloorCeiling ( pNewActor, FFCF_SAMESECTOR | FFCF_ONLY3DFLOORS | FFCF_3DRESTRICT );
 				pNewActor->Angles.Yaw = static_cast<double>(pActor->SpawnAngle);
 				pNewActor->tid = pActor->SavedTID;
 				pNewActor->SavedTID = pActor->SavedTID;
@@ -3822,6 +3823,12 @@ void GAME_ResetMap( bool bRunEnterScripts )
 
 				// Handle the spawn flags of the item.
 				pNewActor->HandleSpawnFlags( );
+
+				pNewActor->BeginPlay ();
+				if (!(pNewActor->ObjectFlags & OF_EuthanizeMe))
+				{
+					pNewActor->LevelSpawned ();
+				}
 
 				// Spawn the new actor.
 				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
@@ -3921,7 +3928,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 		else
 			pos.Z = ONFLOORZ;
 
-		pNewActor = Spawn( pActor->GetClass(), pos, NO_REPLACE );
+		pNewActor = AActor::StaticSpawn( pActor->GetClass(), pos, NO_REPLACE, true );
 
 		// [BB] This if fixes a server crash, if ambient sounds are currently playing
 		// at the end of a countdown (DUEL start countdown for example).
@@ -3938,12 +3945,7 @@ void GAME_ResetMap( bool bRunEnterScripts )
 			pNewActor->SpawnPoint[2] = pActor->SpawnPoint[2];
 			pNewActor->SpawnAngle = pActor->SpawnAngle;
 			pNewActor->SpawnFlags = pActor->SpawnFlags;
-			// [BB] Make sure that floorz and ceilingz are set properly, critical if something is
-			// spawned on a 3D floor. For some reason we can't use "true" as second argument like P_SpawnMapThing does
-			// if the actor is on a 3D floor: Using "true" causes clients to mispredict their height when teleported
-			// onto a 3D floor (see MAP07.wad). On the other hand, some maps like thing_z_misprediction_test_02.wad
-			// require this to be true.
-			P_FindFloorCeiling ( pNewActor, pNewActor->Sector ? !(pNewActor->Sector->e->XFloor.ffloors.Size()) : true );
+			P_FindFloorCeiling ( pNewActor, FFCF_SAMESECTOR | FFCF_ONLY3DFLOORS | FFCF_3DRESTRICT );
 			pNewActor->Angles.Yaw = static_cast<double> ( pActor->SpawnAngle );
 			pNewActor->tid = pActor->SavedTID;
 			pNewActor->SavedTID = pActor->SavedTID;
@@ -3976,6 +3978,12 @@ void GAME_ResetMap( bool bRunEnterScripts )
 
 			// Handle the spawn flags of the item.
 			pNewActor->HandleSpawnFlags( );
+
+			pNewActor->BeginPlay ();
+			if (!(pNewActor->ObjectFlags & OF_EuthanizeMe))
+			{
+				pNewActor->LevelSpawned ();
+			}
 
 			// [BB] Potentially adjust the default flags of this actor.
 			GAMEMODE_AdjustActorSpawnFlags ( pNewActor );
