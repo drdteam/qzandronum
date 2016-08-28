@@ -393,15 +393,17 @@ class SectorParameter(SpecParameter):
 		self.cxxtypename = 'sector_t *'
 		self.resolvingFunction = 'CLIENT_FindSectorByID'
 		self.arrayName = 'sectors'
+		self.indexLength = 'Short'
 
 	def writeread(self, writer, command, reference, **args):
 		# We first store a temporary variable containing the sector number, and then use CLIENT_FindSectorByID to
 		# get the sector parameter
 		indexVariable = next(writer.tempvar)
+		indexLength = self.indexLength
 		resolvingFunction = self.resolvingFunction
 		self.indexVariable = indexVariable
 		writer.declare('int', indexVariable)
-		writer.writeline('{indexVariable} = NETWORK_ReadShort( bytestream );'.format(**locals()))
+		writer.writeline('{indexVariable} = NETWORK_Read{indexLength}( bytestream );'.format(**locals()))
 		writer.writeline('command.{reference} = {resolvingFunction}( {indexVariable} );'.format(**locals()))
 
 	def writereadchecks(self, writer, command, reference, **args):
@@ -421,7 +423,8 @@ class SectorParameter(SpecParameter):
 
 	def writesend(self, writer, command, reference, **args):
 		arrayName = self.arrayName
-		writer.writeline('command.addShort( this->{reference} ? this->{reference} - {arrayName} : -1 );'.format(**locals()))
+		indexLength = self.indexLength
+		writer.writeline('command.add{indexLength}( this->{reference} ? this->{reference} - {arrayName} : -1 );'.format(**locals()))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -432,6 +435,18 @@ class LineParameter(SectorParameter):
 		self.cxxtypename = 'line_t *'
 		self.resolvingFunction = 'CLIENT_FindLineByID'
 		self.arrayName = 'lines'
+		self.indexLength = 'Short'
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+class SideParameter(SectorParameter):
+	# The side parameter is also similar.
+	def __init__(self, **args):
+		super().__init__(**args)
+		self.cxxtypename = 'side_t *'
+		self.resolvingFunction = 'CLIENT_FindSideByID'
+		self.arrayName = 'sides'
+		self.indexLength = 'Long'
 
 # ----------------------------------------------------------------------------------------------------------------------
 

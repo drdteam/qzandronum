@@ -198,9 +198,6 @@ static	void	client_SetTeamReturnTicks( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagReturned( BYTESTREAM_s *pByteStream );
 static	void	client_TeamFlagDropped( BYTESTREAM_s *pByteStream );
 
-// Side commands.
-static	void	client_SetSideFlags( BYTESTREAM_s *pByteStream );
-
 // Vote commands.
 static	void	client_CallVote( BYTESTREAM_s *pByteStream );
 static	void	client_PlayerVote( BYTESTREAM_s *pByteStream );
@@ -1533,10 +1530,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 		client_TeamFlagDropped( pByteStream );
 		break;
-	case SVC_SETSIDEFLAGS:
-
-		client_SetSideFlags( pByteStream );
-		break;
 	case SVC_CALLVOTE:
 
 		client_CallVote( pByteStream );
@@ -1773,13 +1766,13 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		{
 			const LONG lExtCommand = NETWORK_ReadByte( pByteStream );
 
-			if ( CLIENT_ParseExtendedServerCommand( static_cast<SVC2>( lExtCommand ), pByteStream ))
-				break;
-
 #ifdef _DEBUG
 			if ( cl_showcommands )
 				Printf( "%s\n", GetStringSVC2 ( static_cast<SVC2> ( lExtCommand ) ) );
 #endif
+
+			if ( CLIENT_ParseExtendedServerCommand( static_cast<SVC2>( lExtCommand ), pByteStream ))
+				break;
 
 			switch ( lExtCommand )
 			{
@@ -2739,6 +2732,16 @@ line_t *CLIENT_FindLineByID( ULONG lineID )
 		return ( NULL );
 
 	return ( &lines[lineID] );
+}
+
+//*****************************************************************************
+//
+side_t *CLIENT_FindSideByID( ULONG sideID )
+{
+	if ( sideID >= static_cast<ULONG>( numsides ) )
+		return ( NULL );
+
+	return ( &sides[sideID] );
 }
 
 //*****************************************************************************
@@ -6408,22 +6411,9 @@ void ServerCommands::SetSomeLineFlags::Execute()
 
 //*****************************************************************************
 //
-static void client_SetSideFlags( BYTESTREAM_s *pByteStream )
+void ServerCommands::SetSideFlags::Execute()
 {
-	LONG	lSide;
-	LONG	lFlags;
-
-	// Read in the side ID.
-	lSide = NETWORK_ReadLong( pByteStream );
-
-	// Read in the flags.
-	lFlags = NETWORK_ReadByte( pByteStream );
-
-	// Invalid line ID.
-	if (( lSide >= numsides ) || ( lSide < 0 ))
-		return;
-
-	sides[lSide].Flags = lFlags;
+	side->Flags = flags;
 }
 
 //*****************************************************************************

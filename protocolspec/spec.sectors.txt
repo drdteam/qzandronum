@@ -217,3 +217,8 @@ Command SetSomeLineFlags
 	Line line
 	Long blockFlags
 EndCommand
+
+Command SetSideFlags
+	Side side
+	Byte flags
+EndCommand

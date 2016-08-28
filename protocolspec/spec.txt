@@ -56,6 +56,7 @@
 # ║ Player             │   player_t*   │          1           │ a player index, sent as a player number       ║
 # ║ Sector             │   sector_t*   │          2           │ a sector, sent as a 2-byte sector number      ║
 # ║ Line               │    line_t*    │          2           │ a line, sent as a 2-byte line number          ║
+# ║ Side               │    side_t*    │          2           │ a side, sent as a 2-byte side number          ║
 # ║ Struct             │    struct     │          ∑           │ all members of the structure                  ║
 # ╚════════════════════╧═══════════════╧══════════════════════╧═══════════════════════════════════════════════╝
 #
