@@ -391,18 +391,21 @@ class SectorParameter(SpecParameter):
 	def __init__(self, **args):
 		super().__init__(**args)
 		self.cxxtypename = 'sector_t *'
+		self.resolvingFunction = 'CLIENT_FindSectorByID'
+		self.arrayName = 'sectors'
 
 	def writeread(self, writer, command, reference, **args):
 		# We first store a temporary variable containing the sector number, and then use CLIENT_FindSectorByID to
 		# get the sector parameter
-		sectorNum = next(writer.tempvar)
-		self.sectorNum = sectorNum
-		writer.declare('int', sectorNum)
-		writer.writeline('{sectorNum} = NETWORK_ReadShort( bytestream );'.format(**locals()))
-		writer.writeline('command.{reference} = CLIENT_FindSectorByID( {sectorNum} );'.format(**locals()))
+		indexVariable = next(writer.tempvar)
+		resolvingFunction = self.resolvingFunction
+		self.indexVariable = indexVariable
+		writer.declare('int', indexVariable)
+		writer.writeline('{indexVariable} = NETWORK_ReadShort( bytestream );'.format(**locals()))
+		writer.writeline('command.{reference} = {resolvingFunction}( {indexVariable} );'.format(**locals()))
 
 	def writereadchecks(self, writer, command, reference, **args):
-		sectorNum = self.sectorNum
+		indexVariable = self.indexVariable
 
 		# If we don't allow the parameter to be NULL, write code to check whether it is valid.
 		if 'nullallowed' not in self.attributes:
@@ -410,14 +413,25 @@ class SectorParameter(SpecParameter):
 			writer.writecontext('''
 				if ( command.{reference} == NULL )
 				{{
-					CLIENT_PrintWarning( "{commandname}: unknown sector number for {reference}: %d\\n", {sectorNum} );
+					CLIENT_PrintWarning( "{commandname}: couldn't find {reference}: %d\\n", {indexVariable} );
 					return true;
 				}}
 
 				'''.format(commandname = command.name, **locals()))
 
 	def writesend(self, writer, command, reference, **args):
-		writer.writeline('command.addShort( this->{reference} ? this->{reference} - sectors : -1 );'.format(**locals()))
+		arrayName = self.arrayName
+		writer.writeline('command.addShort( this->{reference} ? this->{reference} - {arrayName} : -1 );'.format(**locals()))
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+class LineParameter(SectorParameter):
+	# The line parameter acts exactly like the sector parameter, save for a few different identifiers.
+	def __init__(self, **args):
+		super().__init__(**args)
+		self.cxxtypename = 'line_t *'
+		self.resolvingFunction = 'CLIENT_FindLineByID'
+		self.arrayName = 'lines'
 
 # ----------------------------------------------------------------------------------------------------------------------
 

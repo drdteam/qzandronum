@@ -167,6 +167,7 @@ AInventory			*CLIENT_FindPlayerInventory( ULONG ulPlayer, PClassActor *pType );
 AInventory			*CLIENT_FindPlayerInventory( ULONG ulPlayer, const char *pszName );
 //void				CLIENT_RemoveMonsterCorpses( void );
 sector_t			*CLIENT_FindSectorByID( ULONG ulID );
+line_t				*CLIENT_FindLineByID( ULONG lineID );
 bool				CLIENT_IsParsingPacket( void );
 void				CLIENT_ResetConsolePlayerCamera( void );
 LONG				CLIENT_AdjustDoorDirection( LONG lDirection );
