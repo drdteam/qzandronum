@@ -165,14 +165,6 @@ void gl_LoadExtensions()
 
 	gl.version = strtod(version, NULL) + 0.01f;
 
-	bool iscore = false;
-	if (gl.version >= 3.2)
-	{
-		int v;
-		glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &v);
-		iscore = !!(v & GL_CONTEXT_CORE_PROFILE_BIT);
-	}
-
 	// Don't even start if it's lower than 2.0 or no framebuffers are available
 	if ((gl.version < 2.0 || !CheckExtension("GL_EXT_framebuffer_object")) && gl.version < 3.0)
 	{
@@ -195,10 +187,7 @@ void gl_LoadExtensions()
 	if (gl.version > 3.0f && (gl.version >= 3.3f || CheckExtension("GL_ARB_uniform_buffer_object")))
 	{
 		gl.lightmethod = LM_DEFERRED;
-		if (iscore)
-		{
-			gl.buffermethod = BM_DEFERRED;
-		}
+		gl.buffermethod = BM_DEFERRED;
 	}
 
 	if (CheckExtension("GL_ARB_texture_compression")) gl.flags |= RFL_TEXTURE_COMPRESSION;
@@ -213,8 +202,12 @@ void gl_LoadExtensions()
 	}
 	else if (gl.version < 3.0f)
 	{
-		//if (CheckExtension("GL_NV_GPU_shader4") || CheckExtension("GL_EXT_GPU_shader4")) gl.glslversion = 1.21f;	// for pre-3.0 drivers that support capable hardware. Needed for Apple.
-		//else gl.glslversion = 0;
+		if (CheckExtension("GL_NV_GPU_shader4") || CheckExtension("GL_EXT_GPU_shader4")) gl.glslversion = 1.21f;	// for pre-3.0 drivers that support capable hardware. Needed for Apple.
+		else
+		{
+			gl.buffermethod = BM_CLIENTARRAY;
+			gl.glslversion = 0;
+		}
 
 		if (!CheckExtension("GL_EXT_packed_float")) gl.flags |= RFL_NO_RGBA16F;
 		if (!CheckExtension("GL_EXT_packed_depth_stencil")) gl.flags |= RFL_NO_DEPTHSTENCIL;
