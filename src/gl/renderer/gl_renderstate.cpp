@@ -321,7 +321,7 @@ void FRenderState::Apply()
 		else mVertexBuffer->BindVBO();
 		mCurrentVertexBuffer = mVertexBuffer;
 	}
-	if (gl.glslversion > 0) 
+	if (!gl.legacyMode) 
 	{
 		ApplyShader();
 	}
@@ -358,7 +358,7 @@ void FRenderState::ApplyMatrices()
 
 void FRenderState::ApplyLightIndex(int index)
 {
-	if (gl.lightmethod != LM_SOFTWARE)
+	if (!gl.legacyMode)
 	{
 		if (index > -1 && GLRenderer->mLights->GetBufferType() == GL_UNIFORM_BUFFER)
 		{
