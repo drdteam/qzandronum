@@ -5015,6 +5015,7 @@ enum EACSFunctions
 	*/
 
 	ACSF_CheckClass = 200,
+	ACSF_DamageActor, // [arookas]
 
 	// [BB] Skulltag functions
 	ACSF_ResetMap = 100,
@@ -6664,6 +6665,15 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 		{
 			const char *clsname = FBehavior::StaticLookupString(args[0]);
 			return !!PClass::FindActor(clsname);
+		}
+		
+		case ACSF_DamageActor: // [arookas] wrapper around P_DamageMobj
+		{
+			// (target, ptr_select1, inflictor, ptr_select2, amount, damagetype)
+			AActor* target = COPY_AAPTR(SingleActorFromTID(args[0], activator), args[1]);
+			AActor* inflictor = COPY_AAPTR(SingleActorFromTID(args[2], activator), args[3]);
+			FName damagetype(FBehavior::StaticLookupString(args[5]));
+			return P_DamageMobj(target, inflictor, inflictor, args[4], damagetype);
 		}
 
 		// [BL] Skulltag function
