@@ -5014,6 +5014,8 @@ enum EACSFunctions
 	-106 : KickFromGame(2),
 	*/
 
+	ACSF_CheckClass = 200,
+
 	// [BB] Skulltag functions
 	ACSF_ResetMap = 100,
 	ACSF_PlayerIsSpectator,
@@ -6656,6 +6658,12 @@ doplaysound:			if (funcIndex == ACSF_PlayActorSound)
 				return (actor->GetClass()->FindStateByString(statename, exact) != nullptr);
 			}
 			return false;
+		}
+
+		case ACSF_CheckClass:
+		{
+			const char *clsname = FBehavior::StaticLookupString(args[0]);
+			return !!PClass::FindActor(clsname);
 		}
 
 		// [BL] Skulltag function
