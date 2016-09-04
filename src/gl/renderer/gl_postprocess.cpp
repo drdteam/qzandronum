@@ -257,7 +257,7 @@ void FGLRenderer::BindTonemapPalette(int texunit)
 			{
 				for (int b = 0; b < 64; b++)
 				{
-					PalEntry color = GPalette.BaseColors[ColorMatcher.Pick((r << 2) | (r >> 1), (g << 2) | (g >> 1), (b << 2) | (b >> 1))];
+					PalEntry color = GPalette.BaseColors[ColorMatcher.Pick((r << 2) | (r >> 4), (g << 2) | (g >> 4), (b << 2) | (b >> 4))];
 					int index = ((r * 64 + g) * 64 + b) * 4;
 					lut[index] = color.r;
 					lut[index + 1] = color.g;
@@ -444,6 +444,8 @@ void FGLRenderer::ClearBorders()
 
 	int clientWidth = framebuffer->GetClientWidth();
 	int clientHeight = framebuffer->GetClientHeight();
+	if (clientWidth == 0 || clientHeight == 0)
+		return;
 
 	glViewport(0, 0, clientWidth, clientHeight);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
