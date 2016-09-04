@@ -3646,12 +3646,12 @@ class CommandIfCVarInt : public SBarInfoNegatableFlowControl
 				}
 				else
 				{
-					sc.ScriptError("Type mismatch: console variable '%s' is not of type 'bool' or 'int'.", cvarname);
+					sc.ScriptError("Type mismatch: console variable '%s' is not of type 'bool' or 'int'.", cvarname.GetChars());
 				}
 			}
 			else
 			{
-				sc.ScriptError("Unknown console variable '%s'.", cvarname);
+				sc.ScriptError("Unknown console variable '%s'.", cvarname.GetChars());
 			}
 		}
 		void	Tick(const SBarInfoMainBlock *block, const DSBarInfo *statusBar, bool hudChanged)
