@@ -1018,7 +1018,15 @@ public:
 	void ScreenSizeChanged()
 	{
 		Super::ScreenSizeChanged();
-		V_CalcCleanFacs(script->resW, script->resH, SCREENWIDTH, SCREENHEIGHT, &script->cleanX, &script->cleanY);
+		if (uiscale > 0)
+		{
+			script->cleanX = uiscale;
+			script->cleanY = uiscale;
+		}
+		else
+		{
+			V_CalcCleanFacs(script->resW, script->resH, SCREENWIDTH, SCREENHEIGHT, &script->cleanX, &script->cleanY);
+		}
 	}
 
 	void Draw (EHudState state)

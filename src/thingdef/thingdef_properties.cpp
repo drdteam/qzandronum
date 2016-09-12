@@ -69,7 +69,8 @@
 #include "teaminfo.h"
 #include "v_video.h"
 #include "r_data/colormaps.h"
-
+// [BB] New #includes.
+#include "sv_commands.h"
 
 //==========================================================================
 //
@@ -160,6 +161,141 @@ void ModActorFlag(AActor *actor, FFlagDef *fd, bool set)
 		}
 	}
 #endif
+}
+
+//==========================================================================
+//
+// Finds a flag by name and sets or clears it
+//
+// Returns true if the flag was found for the actor; else returns false
+//
+//==========================================================================
+
+bool ModActorFlag(AActor *actor, FString &flagname, bool set, bool printerror)
+{
+	bool found = false;
+
+	if (actor != NULL)
+	{
+		const char *dot = strchr(flagname, '.');
+		FFlagDef *fd;
+		PClassActor *cls = actor->GetClass();
+
+		if (dot != NULL)
+		{
+			FString part1(flagname.GetChars(), dot - flagname);
+			fd = FindFlag(cls, part1, dot + 1);
+		}
+		else
+		{
+			fd = FindFlag(cls, flagname, NULL);
+		}
+
+		if (fd != NULL)
+		{
+			found = true;
+
+			if (actor->CountsAsKill() && actor->health > 0)
+			{
+				--level.total_monsters;
+
+				// [BB] If we're the server, tell clients the new number of total monsters.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalMonsters( );
+			}
+			if (actor->flags & MF_COUNTITEM)
+			{
+				--level.total_items;
+
+				// [BB] If we're the server, tell clients the new number of total items.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalItems( );
+			}
+			if (actor->flags5 & MF5_COUNTSECRET)
+			{
+				--level.total_secrets;
+
+				// [BB] If we're the server, tell clients the new number of total items.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalSecrets( );
+			}
+
+			if (fd->structoffset == -1)
+			{
+				HandleDeprecatedFlags(actor, cls, set, fd->flagbit);
+			}
+			else
+			{
+				// [BB] The server handles the flag change.
+				if ( NETWORK_InClientMode() )
+					return 0;
+
+				ActorFlags *flagp = (ActorFlags*)(((char*)actor) + fd->structoffset);
+
+				// [EP] Store the old value in order to save bandwidth
+				DWORD oldflag = flagp->GetValue();
+
+				// If these 2 flags get changed we need to update the blockmap and sector links.
+				bool linkchange = flagp == &actor->flags && (fd->flagbit == MF_NOBLOCKMAP || fd->flagbit == MF_NOSECTOR);
+
+				if (linkchange) actor->UnlinkFromWorld();
+				ModActorFlag(actor, fd, set);
+				if (linkchange) actor->LinkToWorld();
+
+				// [BB] Let the clients know about the flag change.
+				if ( ( NETWORK_GetState( ) == NETSTATE_SERVER ) && ( *flagp != oldflag ) ) {
+					FlagSet flagset = FLAGSET_UNKNOWN;
+					if ( flagp == (ActorFlags*) &actor->flags )
+						flagset = FLAGSET_FLAGS;
+					else if ( flagp == (ActorFlags*) &actor->flags2 )
+						flagset = FLAGSET_FLAGS2;
+					else if ( flagp == (ActorFlags*) &actor->flags3 )
+						flagset = FLAGSET_FLAGS3;
+					else if ( flagp == (ActorFlags*) &actor->flags4 )
+						flagset = FLAGSET_FLAGS4;
+					else if ( flagp == (ActorFlags*) &actor->flags5 )
+						flagset = FLAGSET_FLAGS5;
+					else if ( flagp == (ActorFlags*) &actor->flags6 )
+						flagset = FLAGSET_FLAGS6;
+					else if ( flagp == (ActorFlags*) &actor->flags7 )
+						flagset = FLAGSET_FLAGS7;
+
+					SERVERCOMMANDS_SetThingFlags( actor, flagset );
+				}
+			}
+
+			if (actor->CountsAsKill() && actor->health > 0)
+			{
+				++level.total_monsters;
+
+				// [BB] If we're the server, tell clients the new number of total monsters.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalMonsters( );
+			}
+			if (actor->flags & MF_COUNTITEM)
+			{
+				++level.total_items;
+
+				// [BB] If we're the server, tell clients the new number of total items.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalItems( );
+			}
+			if (actor->flags5 & MF5_COUNTSECRET)
+			{
+				++level.total_secrets;
+
+				// [BB] If we're the server, tell clients the new number of total items.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetMapNumTotalSecrets( );
+			}
+		}
+		else if (printerror)
+		{
+			DPrintf(DMSG_ERROR, "ACS/DECORATE: '%s' is not a flag in '%s'\n", flagname.GetChars(), cls->TypeName.GetChars());
+		}
+	}
+
+	return found;
 }
 
 //==========================================================================

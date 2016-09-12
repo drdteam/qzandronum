@@ -169,8 +169,14 @@ void AFastProjectile::Effect()
 		if (trail != NULL)
 		{
 			AActor *act = Spawn (trail, PosAtZ(hitz), ALLOW_REPLACE);
-			if (act != NULL)
+			if (act != nullptr)
 			{
+				if ((flags5 & MF5_GETOWNER) && (target != nullptr))
+					act->target = target;
+				else
+					act->target = this;
+				
+				act->Angles.Pitch = Angles.Pitch;
 				act->Angles.Yaw = Angles.Yaw;
 
 					// [BB] Assume that the trail is just for decorative purposes and let the
