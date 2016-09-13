@@ -50,6 +50,8 @@ extern int CleanWidth_1, CleanHeight_1, CleanXfac_1, CleanYfac_1;
 extern int DisplayWidth, DisplayHeight, DisplayBits;
 
 bool V_DoModeSetup (int width, int height, int bits);
+void V_UpdateModeSize (int width, int height);
+void V_OutputResized (int width, int height);
 void V_CalcCleanFacs (int designwidth, int designheight, int realwidth, int realheight, int *cleanx, int *cleany, int *cx1=NULL, int *cx2=NULL);
 
 class FTexture;
@@ -306,6 +308,8 @@ public:
 	void Unlock ();
 
 protected:
+	void Resize(int width, int height);
+
 	BYTE *MemBuffer;
 
 	DSimpleCanvas() {}
@@ -523,17 +527,17 @@ extern "C" void ASM_PatchPitch (void);
 
 int CheckRatio (int width, int height, int *trueratio=NULL);
 static inline int CheckRatio (double width, double height) { return CheckRatio(int(width), int(height)); }
-extern const int BaseRatioSizes[7][4];
+inline bool IsRatioWidescreen(int ratio) { return (ratio & 3) != 0; }
 
 extern int currentrenderer; // [BB]
 
-inline bool IsRatioWidescreen(int ratio) {
-    return (ratio & 3)!=0;
-}
+float ActiveRatio (int width, int height, float *trueratio = NULL);
+static inline double ActiveRatio (double width, double height) { return ActiveRatio(int(width), int(height)); }
 
-inline bool Is54Aspect(int ratio) {
-    return ratio == 4;
-}
+int AspectBaseWidth(float aspect);
+int AspectBaseHeight(float aspect);
+int AspectPspriteOffset(float aspect);
+int AspectMultiplier(float aspect);
 
 EXTERN_CVAR(Int, uiscale);
 

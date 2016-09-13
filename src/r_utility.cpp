@@ -140,7 +140,7 @@ angle_t			LocalViewAngle;
 int				LocalViewPitch;
 bool			LocalKeyboardTurner;
 
-int				WidescreenRatio;
+float			WidescreenRatio;
 int				setblocks;
 int				extralight;
 bool			setsizeneeded;
@@ -202,7 +202,7 @@ void R_SetViewSize (int blocks)
 
 void R_SetWindow (int windowSize, int fullWidth, int fullHeight, int stHeight)
 {
-	int trueratio;
+	float trueratio;
 
 	if (windowSize >= 11)
 	{
@@ -222,8 +222,7 @@ void R_SetWindow (int windowSize, int fullWidth, int fullHeight, int stHeight)
 		freelookviewheight = ((setblocks*fullHeight)/10)&~7;
 	}
 
-	// If the screen is approximately 16:9 or 16:10, consider it widescreen.
-	WidescreenRatio = CheckRatio (fullWidth, fullHeight, &trueratio);
+	WidescreenRatio = ActiveRatio (fullWidth, fullHeight, &trueratio);
 
 	DrawFSHUD = (windowSize == 11);
 	
@@ -232,13 +231,13 @@ void R_SetWindow (int windowSize, int fullWidth, int fullHeight, int stHeight)
 
 	centery = viewheight/2;
 	centerx = viewwidth/2;
-	if (Is54Aspect(WidescreenRatio))
+	if (WidescreenRatio < 1.3f)
 	{
 		centerxwide = centerx;
 	}
 	else
 	{
-		centerxwide = centerx * BaseRatioSizes[WidescreenRatio][3] / 48;
+		centerxwide = centerx * AspectMultiplier(WidescreenRatio) / 48;
 	}
 
 

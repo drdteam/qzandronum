@@ -49,7 +49,7 @@
 CVAR (Bool, cl_oldfreelooklimit, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
 class FArchive;
-void R_SWRSetWindow(int windowSize, int fullWidth, int fullHeight, int stHeight, int trueratio);
+void R_SWRSetWindow(int windowSize, int fullWidth, int fullHeight, int stHeight, float trueratio);
 void R_SetupColormap(player_t *);
 void R_SetupFreelook();
 void R_InitRenderer();
@@ -280,7 +280,7 @@ void FSoftwareRenderer::ClearBuffer(int color)
 //
 //===========================================================================
 
-void FSoftwareRenderer::SetWindow (int windowSize, int fullWidth, int fullHeight, int stHeight, int trueratio)
+void FSoftwareRenderer::SetWindow (int windowSize, int fullWidth, int fullHeight, int stHeight, float trueratio)
 {
 	R_SWRSetWindow(windowSize, fullWidth, fullHeight, stHeight, trueratio);
 }
