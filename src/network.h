@@ -51,6 +51,7 @@
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
+#include "dthinker.h"
 #include "p_setup.h"
 #include "networkshared.h"
 #include "tflags.h"
