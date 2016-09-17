@@ -8364,7 +8364,7 @@ static void client_SetPolyDoorSpeedRotation( BYTESTREAM_s *pByteStream )
 
 	lDeltaAngle = lAngle - pPoly->Angle.BAMs();
 
-	pPoly->RotatePolyobj( AngleToFloat ( lDeltaAngle ) );
+	pPoly->RotatePolyobj( AngleToFloat ( static_cast<angle_t> ( lDeltaAngle ) ) );
 
 	if ( pPoly->specialdata == NULL )
 		return;
@@ -8471,7 +8471,7 @@ static void client_SetPolyobjRotation( BYTESTREAM_s *pByteStream )
 	lDeltaAngle = lAngle - pPoly->Angle.BAMs();
 
 	// Finally, set the polyobject action.
-	pPoly->RotatePolyobj( AngleToFloat ( lDeltaAngle ) );
+	pPoly->RotatePolyobj( AngleToFloat ( static_cast<angle_t> ( lDeltaAngle ) ) );
 }
 
 //*****************************************************************************

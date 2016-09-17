@@ -903,7 +903,7 @@ int botcmd_LookForItemType( CSkullBot *pBot, const char *FunctionName )
 		I_Error( "%s: Illegal item index, %d!", FunctionName, static_cast<int> (lIdx) );
 
 	while (( BOTCMD_IgnoreItem( pBot, lIdx, bVisibilityCheck )) ||
-		( g_NetIDList.findPointerByID ( lIdx )->GetClass( )->IsDescendantOf( RUNTIME_CLASS( T )) == false ))
+		( g_NetIDList.findPointerByID ( lIdx )->GetClass( )->IsDescendantOf( RUNTIME_TEMPLATE_CLASS( T )) == false ))
 	{
 		if ( ++lIdx == IDList<AActor>::MAX_NETID )
 			break;
@@ -1221,7 +1221,7 @@ static void botcmd_CheckTerrain( CSkullBot *pBot )
 		lAngle = ANGLE_MAX - labs( lAngle );
 
 	angle = pBot->GetPlayer( )->mo->Angles.Yaw;
-	angle += AngleToFloat ( lAngle );
+	angle += AngleToFloat ( static_cast<angle_t> ( lAngle ) );
 
 	DestX = FLOAT2FIXED ( pBot->GetPlayer( )->mo->X() * angle.Cos() );
 	DestY = FLOAT2FIXED ( pBot->GetPlayer( )->mo->Y() * angle.Sin() );

@@ -3476,17 +3476,18 @@ void FSlide::OldSlideMove (AActor *mo)
 			goto stairstep;   // don't loop forever
 
 		// trace along the three leading corners
+		{
+			const fixed_t radius = FLOAT2FIXED ( mo->radius );
+			if (FLOAT2FIXED ( mo->Vel.X ) > 0)
+				leadx = FLOAT2FIXED ( mo->X() ) + radius, trailx = FLOAT2FIXED ( mo->X() ) - radius;
+			else
+				leadx = FLOAT2FIXED ( mo->X() ) - radius, trailx = FLOAT2FIXED ( mo->X() ) + radius;
 
-		const fixed_t radius = FLOAT2FIXED ( mo->radius );
-		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leadx = FLOAT2FIXED ( mo->X() ) + radius, trailx = FLOAT2FIXED ( mo->X() ) - radius;
-		else
-			leadx = FLOAT2FIXED ( mo->X() ) - radius, trailx = FLOAT2FIXED ( mo->X() ) + radius;
-
-		if (FLOAT2FIXED ( mo->Vel.X ) > 0)
-			leady = FLOAT2FIXED ( mo->Y() ) + radius, traily = FLOAT2FIXED ( mo->Y() ) - radius;
-		else
-			leady = FLOAT2FIXED ( mo->Y() ) - radius, traily = FLOAT2FIXED ( mo->Y() ) + radius;
+			if (FLOAT2FIXED ( mo->Vel.X ) > 0)
+				leady = FLOAT2FIXED ( mo->Y() ) + radius, traily = FLOAT2FIXED ( mo->Y() ) - radius;
+			else
+				leady = FLOAT2FIXED ( mo->Y() ) - radius, traily = FLOAT2FIXED ( mo->Y() ) + radius;
+		}
 
 		bestSlidefrac = FIXED2DBL ( FRACUNIT+1 );
 

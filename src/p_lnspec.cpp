@@ -3697,7 +3697,7 @@ FUNC(LS_Line_SetPortalTarget)
 // Normally this would be better placed in p_lnspec.cpp.
 // But I have accidentally overwritten that file several times
 // so I'd rather place it here.
-static int LS_Sector_SetPlaneReflection (line_t *ln, AActor *it, bool backSide,
+/*static*/ int LS_Sector_SetPlaneReflection (line_t *ln, AActor *it, bool backSide,
 	int arg0, int arg1, int arg2, int arg3, int arg4)
 {
 // Sector_SetPlaneReflection (tag, floor, ceiling)
