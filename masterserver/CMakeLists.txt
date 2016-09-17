@@ -26,6 +26,8 @@ add_executable( master-97
 
 add_dependencies( master-97 revision_check )
 
+set_property ( TARGET master-97 PROPERTY CXX_STANDARD 11 )
+
 if( WIN32 )
 	target_link_libraries( master-97 ws2_32 winmm )
 endif( WIN32 )
