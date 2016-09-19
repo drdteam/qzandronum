@@ -937,7 +937,7 @@ void GLSprite::Process(AActor* thing, sector_t * sector, int thruportal)
 		// This is a non-translucent sprite (i.e. STYLE_Normal or equivalent)
 		trans=1.f;
 		
-		if (!gl_sprite_blend || modelframe || (thing->renderflags & RF_SPRITETYPEMASK) == RF_WALLSPRITE)
+		if (!gl_sprite_blend || modelframe || (thing->renderflags & (RF_FLATSPRITE|RF_WALLSPRITE)) || gl_billboard_faces_camera)
 		{
 			RenderStyle.SrcAlpha = STYLEALPHA_One;
 			RenderStyle.DestAlpha = STYLEALPHA_Zero;
@@ -948,8 +948,6 @@ void GLSprite::Process(AActor* thing, sector_t * sector, int thruportal)
 			RenderStyle.SrcAlpha = STYLEALPHA_Src;
 			RenderStyle.DestAlpha = STYLEALPHA_InvSrc;
 		}
-
-
 	}
 	if ((gltexture && gltexture->GetTransparent()) || (RenderStyle.Flags & STYLEF_RedIsAlpha))
 	{
