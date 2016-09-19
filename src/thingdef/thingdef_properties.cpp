@@ -707,7 +707,8 @@ DEFINE_PROPERTY(threshold, I, Actor)
 //==========================================================================
 DEFINE_PROPERTY(damage, X, Actor)
 {
-	PROP_EXP_PARM(id, 0);
+	PROP_INT_PARM(dmgval, 0);
+	PROP_EXP_PARM(id, 1);
 
 	// Damage can either be a single number, in which case it is subject
 	// to the original damage calculation rules. Or, it can be an expression
@@ -717,13 +718,15 @@ DEFINE_PROPERTY(damage, X, Actor)
 
 	// Store this expression here for now. It will be converted to a function
 	// later once all actors have been processed.
-	if (id == NULL)
+	defaults->DamageVal = dmgval;
+
+	if (id == nullptr)
 	{
-		defaults->Damage = NULL;
+		defaults->DamageFunc = nullptr;
 	}
 	else
 	{
-		defaults->Damage = (VMFunction *)(uintptr_t)(ActorDamageFuncs.Push(id) + 1);
+		defaults->DamageFunc = (VMFunction *)(uintptr_t)(ActorDamageFuncs.Push(id) + 1);
 	}
 }
 

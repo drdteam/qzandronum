@@ -128,7 +128,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichAttack)
 				fire->target = baseFire->target;
 				fire->Angles.Yaw = baseFire->Angles.Yaw;
 				fire->Vel = baseFire->Vel;
-				fire->Damage = NULL;
+				fire->SetDamage(0);
 				fire->health = (i+1) * 2;
 
 				// [BB] If we're the server, tell the clients to spawn the fire as missle using SERVERCOMMANDS_SpawnMissile
@@ -241,7 +241,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LichFireGrow)
 
 	if (self->health == 0)
 	{
-		self->Damage = self->GetDefault()->Damage;
+		self->RestoreDamage();
 
 		// [BB] Update the thing's state on the clients.
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
