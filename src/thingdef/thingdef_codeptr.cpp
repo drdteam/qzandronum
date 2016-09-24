@@ -115,7 +115,7 @@ extern FState *g_CallingState; // [BB] For c/s jump handling.
 // the NETFL_CLIENTSIDEONLY property.
 //
 //==========================================================================
-bool shouldActorNotBeSpawned ( const AActor *pSpawner, const PClass *pSpawnType, const bool bForceClientSide = false )
+bool NETWORK_ShouldActorNotBeSpawned ( const AActor *pSpawner, const PClass *pSpawnType, const bool bForceClientSide )
 {
 	// [BB] Nothing to spawn.
 	if ( pSpawnType == NULL )
@@ -1839,7 +1839,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomMissile)
 	AActor * missile;
 
 	// [BB] Should the actor not be spawned, taking in account client side only actors?
-	if ( shouldActorNotBeSpawned ( self, ti ) )
+	if ( NETWORK_ShouldActorNotBeSpawned ( self, ti ) )
 		return 0;
 
 	if (ref != NULL || aimmode == 2)
@@ -2567,7 +2567,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_FireCustomMissile)
 	}
 
 	// [BB] Should the actor not be spawned, taking in account client side only actors?
-	if ( shouldActorNotBeSpawned ( self, ti ) )
+	if ( NETWORK_ShouldActorNotBeSpawned ( self, ti ) )
 		return 0;
 
 	if (ti) 
@@ -3461,7 +3461,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItem)
 	}
 
 	// [BB] Should the actor not be spawned, taking in account client side only actors?
-	if ( shouldActorNotBeSpawned ( self, missile ) )
+	if ( NETWORK_ShouldActorNotBeSpawned ( self, missile ) )
 		return 0;
 
 	AActor *mo = Spawn( missile, self->Vec3Angle(distance, self->Angles.Yaw, -self->Floorclip + self->GetBobOffset() + zheight), ALLOW_REPLACE);
@@ -3554,7 +3554,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnItemEx)
 	}
 
 	// [BB] Should the actor not be spawned, taking in account client side only actors?
-	if ( shouldActorNotBeSpawned ( self, missile, !!( flags & SIXF_CLIENTSIDE ) ) )
+	if ( NETWORK_ShouldActorNotBeSpawned ( self, missile, !!( flags & SIXF_CLIENTSIDE ) ) )
 		return 0;
 
 	AActor *mo = Spawn(missile, DVector3(pos, self->Z() - self->Floorclip + self->GetBobOffset() + zofs), ALLOW_REPLACE);
