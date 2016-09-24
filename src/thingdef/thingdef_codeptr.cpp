@@ -4673,6 +4673,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Respawn)
 	PARAM_ACTION_PROLOGUE;
 	PARAM_INT_OPT(flags) { flags = RSF_FOG; }
 
+	// [EP] Don't let the clients execute it.
+	if ( NETWORK_InClientModeAndActorNotClientHandled( self ) )
+		return 0;
+
 	bool oktorespawn = false;
 	DVector3 pos = self->Pos();
 
@@ -4729,6 +4733,7 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Respawn)
 		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
 		{
 			SERVERCOMMANDS_SpawnThing( self );
+			SERVERCOMMANDS_SetThingAngle( self );
 			// [BB] Since the clients just spawned this actor again, be sure to remove this flag.
 			self ->ulNetworkFlags &= ~NETFL_DESTROYED_ON_CLIENT;
 		}

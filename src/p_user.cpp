@@ -3029,6 +3029,11 @@ void P_MovePlayer (player_t *player, ticcmd_t *cmd)
 			// [BB] We may not play the sound while predicting, otherwise it'll stutter.
 			if ( CLIENT_PREDICT_IsPredicting( ) == false )
 				S_Sound (player->mo, CHAN_BODY, "*jump", 1, ATTN_NORM);
+
+			// [EP] Inform the other clients to play the sound.
+			if ( NETWORK_GetState() == NETSTATE_SERVER )
+				SERVERCOMMANDS_SoundActor( player->mo, CHAN_BODY, "*jump", 1, ATTN_NORM, player - players, SVCF_SKIPTHISCLIENT );
+
 			player->mo->flags2 &= ~MF2_ONMOBJ;
 
 			// [BC] Increase jump delay if the player has the high jump power.
