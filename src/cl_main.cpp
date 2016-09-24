@@ -159,12 +159,6 @@ CVAR( Bool, cl_showwarnings, false, CVAR_ARCHIVE )
 //*****************************************************************************
 //	PROTOTYPES
 
-// Protocol functions.
-static	void	client_Header( BYTESTREAM_s *pByteStream );
-static	void	client_Ping( BYTESTREAM_s *pByteStream );
-static	void	client_BeginSnapshot( BYTESTREAM_s *pByteStream );
-static	void	client_EndSnapshot( BYTESTREAM_s *pByteStream );
-
 // Player functions.
 // [BB] Does not work with the latest ZDoom changes. Check if it's still necessary.
 //static	void	client_SetPlayerPieces( BYTESTREAM_s *pByteStream );
@@ -5040,6 +5034,11 @@ static void client_SetThingFrame( AActor* pActor, PClassActor *stateOwner, int o
 {
 	// Not in a level; nothing to do (shouldn't happen!)
 	if ( gamestate != GS_LEVEL )
+		return;
+
+	// [BB] While skipping to the next map, DThinker::RunThinkers is not called, which seems to invalidate
+	// the arguments of this command. Since we don't need to update the actors anyway, just skip this.
+	if ( CLIENTDEMO_IsSkippingToNextMap() == true )
 		return;
 
 	if ( stateOwner == NULL )

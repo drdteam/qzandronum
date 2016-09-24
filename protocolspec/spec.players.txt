@@ -186,7 +186,7 @@ Command SetPlayerCheats
 EndCommand
 
 Command SetPlayerPendingWeapon
-	Player player
+	Player player with MoTest
 	Class<AWeapon> weaponType
 EndCommand
 
