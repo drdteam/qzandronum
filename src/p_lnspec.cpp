@@ -2078,7 +2078,7 @@ FUNC(LS_ACS_ExecuteWithResult)
 	if (( NETWORK_GetState( ) == NETSTATE_SERVER ) &&
 		( ACS_IsScriptClientSide( arg0 )))
 	{
-		SERVERCOMMANDS_ACSScriptExecute( arg0, it, LONG( ln - lines ), 0, backSide, arg2, arg3, arg4, true );
+		SERVERCOMMANDS_ACSScriptExecute( arg0, it, LONG( ln - lines ), 0, backSide, arg1, arg2, arg3, true );
 		return ( false );
 	}
 

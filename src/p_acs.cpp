@@ -11529,11 +11529,11 @@ bool ACS_IsCalledFromConsoleCommand( void )
 
 //*****************************************************************************
 //
-bool ACS_IsScriptClientSide( ULONG ulScript )
+bool ACS_IsScriptClientSide( int script )
 {
 	FBehavior		*pModule = NULL;
 
-	return ACS_IsScriptClientSide ( FBehavior::StaticFindScript( ulScript, pModule ) );
+	return ACS_IsScriptClientSide ( FBehavior::StaticFindScript( script, pModule ) );
 }
 
 //*****************************************************************************

@@ -1583,6 +1583,16 @@ CCMD( netstate )
 	}
 }
 
+//*****************************************************************************
+//
+#if BUILD_ID != BUILD_RELEASE
+CCMD( dumpnetclassids )
+{
+	for ( unsigned int i = 0; i < g_ActorNetworkIndexClassPointerMap.Size(); ++i )
+		Printf ( "%d - %s\n", i, g_ActorNetworkIndexClassPointerMap[i]->TypeName.GetChars() );
+}
+#endif
+
 #ifdef	_DEBUG
 // DEBUG FUNCTION!
 void NETWORK_FillBufferWithShit( BYTESTREAM_s *pByteStream, ULONG ulSize )

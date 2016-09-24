@@ -1089,7 +1089,7 @@ FArchive &operator<< (FArchive &arc, acsdefered_t *&defer);
 //	PROTOTYPES
 
 bool	ACS_IsCalledFromConsoleCommand( void );
-bool	ACS_IsScriptClientSide( ULONG ulScript );
+bool	ACS_IsScriptClientSide( int script );
 bool	ACS_IsScriptClientSide( const ScriptPtr *pScriptData );
 bool	ACS_IsScriptPukeable( ULONG ulScript );
 int		ACS_GetTranslationIndex( FRemapTable *pTranslation );
