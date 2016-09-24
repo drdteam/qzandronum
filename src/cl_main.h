@@ -148,9 +148,7 @@ void				CLIENT_CheckForMissingPackets( void );
 bool				CLIENT_ReadPacketHeader( BYTESTREAM_s *pByteStream );
 void				CLIENT_ParsePacket( BYTESTREAM_s *pByteStream, bool bSequencedPacket );
 void				CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream );
-#ifdef _DEBUG
 void				CLIENT_PrintCommand( LONG lCommand );
-#endif
 void				CLIENT_QuitNetworkGame( const char *pszError );
 void				CLIENT_SendCmd( void );
 void				CLIENT_WaitForServer( void );

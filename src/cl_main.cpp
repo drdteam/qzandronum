@@ -1199,11 +1199,9 @@ void CLIENT_ParsePacket( BYTESTREAM_s *pByteStream, bool bSequencedPacket )
 		if ( lCommand == -1 )
 			break;
 
-#ifdef _DEBUG
 		// Option to print commands for debugging purposes.
 		if ( cl_showcommands )
 			CLIENT_PrintCommand( lCommand );
-#endif
 
 		// Process this command.
 		CLIENT_ProcessCommand( lCommand, pByteStream );
@@ -1779,10 +1777,8 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 		{
 			const LONG lExtCommand = NETWORK_ReadByte( pByteStream );
 
-#ifdef _DEBUG
 			if ( cl_showcommands )
 				Printf( "%s\n", GetStringSVC2 ( static_cast<SVC2> ( lExtCommand ) ) );
-#endif
 
 			if ( CLIENT_ParseExtendedServerCommand( static_cast<SVC2>( lExtCommand ), pByteStream ))
 				break;
@@ -2128,7 +2124,6 @@ void CLIENT_ProcessCommand( LONG lCommand, BYTESTREAM_s *pByteStream )
 
 //*****************************************************************************
 //
-#ifdef _DEBUG
 void CLIENT_PrintCommand( LONG lCommand )
 {
 	const char	*pszString;
@@ -2178,7 +2173,6 @@ void CLIENT_PrintCommand( LONG lCommand )
 	if ( debugfile )
 		fprintf( debugfile, "%s\n", pszString );
 }
-#endif
 
 //*****************************************************************************
 //
@@ -2439,6 +2433,8 @@ AActor *CLIENT_SpawnThing( PClassActor *pType, fixed_t X, fixed_t Y, fixed_t Z, 
 		if ( invasion )
 			pActor->ulInvasionWave = INVASION_GetCurrentWave( );
 	}
+	else
+		CLIENT_PrintWarning( "CLIENT_SpawnThing: Failed to spawn actor %s with id %ld\n", lNetID, pType->TypeName.GetChars( ) );
 
 	return ( pActor );
 }
@@ -6845,10 +6841,14 @@ static void client_GiveInventory( BYTESTREAM_s *pByteStream )
 		}
 	}
 
-	// If he still doesn't have the object after trying to give it to him... then YIKES!
 	if ( pInventory == NULL )
 	{
-		CLIENT_PrintWarning( "client_GiveInventory: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
+		// If he still doesn't have the object after trying to give it to him... then YIKES!
+		if ( ( pType->IsDescendantOf( RUNTIME_CLASS( ABasicArmorPickup ) ) == false ) 
+			 && ( pType->IsDescendantOf( RUNTIME_CLASS( ABasicArmorBonus ) ) == false )
+			 && ( pType->IsDescendantOf( RUNTIME_CLASS( AHealth ) ) == false )
+			 && ( players[ulPlayer].mo->FindInventory( pType ) == NULL ) )
+			CLIENT_PrintWarning( "client_GiveInventory: Failed to give inventory type, %s!\n", NETWORK_GetClassNameFromIdentification( usActorNetworkIndex ));
 		return;
 	}
 
@@ -9063,7 +9063,7 @@ CVAR( Bool, cl_predict_players, true, CVAR_ARCHIVE )
 //CVAR( Int, cl_maxmonstercorpses, 0, CVAR_ARCHIVE )
 CVAR( Float, cl_motdtime, 5.0, CVAR_ARCHIVE )
 CVAR( Bool, cl_taunts, true, CVAR_ARCHIVE )
-CVAR( Int, cl_showcommands, 0, CVAR_ARCHIVE )
+CVAR( Int, cl_showcommands, 0, CVAR_ARCHIVE|CVAR_DEBUGONLY )
 CVAR( Int, cl_showspawnnames, 0, CVAR_ARCHIVE )
 CVAR( Int, cl_connect_flags, CCF_STARTASSPECTATOR, CVAR_ARCHIVE );
 CVAR( Flag, cl_startasspectator, cl_connect_flags, CCF_STARTASSPECTATOR );
