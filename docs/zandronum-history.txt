@@ -81,6 +81,7 @@
 !	- Changed the dmflags values to match the ZDoom values to resolve compatibility problems with the updated ZDoom base and future ZDoom updates. Launchers and config files need to be updated to account for this change. [Torr Samaho] 
 !	- Removed ping unlagged as gametic unlagged has superceded it. [Dusk]
 !	- sv_nodrop is now a dmflag. [Dusk]
+!	- sv_limitnumvotes renamed to sv_votecooldown and changed to integer that determines the time to wait before a player can revote. All vote limits and times are double this value. [Ru5tK1ng]
 !	- Merged sv_nokill and sv_disallowsuicide into one dmflag with two names. [Dusk]
 !	- The CVARINFO error message triggered when an existing CVAR in the ini conflicts with CVARINFO now instructs the user to clean the ini. [Torr Samaho]
 !	- The server now displays the IP address of the player upon connection and disconnection in log messages. [Dusk]
