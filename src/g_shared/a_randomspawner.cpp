@@ -59,6 +59,13 @@ class ARandomSpawner : public AActor
 				return;
 		}
 
+		// [BB] If the server handles the spawner, the client doesn't need know about it.
+		if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+		{
+			this->ulNetworkFlags |= NETFL_SERVERSIDEONLY;
+			this->FreeNetID();
+		}
+
 		drop = di = GetDropItems();
 		if (di != NULL)
 		{

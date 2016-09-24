@@ -194,6 +194,11 @@ void COOP_SpawnVoodooDollsForPlayerIfNecessary ( const ULONG ulPlayer, const boo
 		{
 			pDoll->ulSTFlags |= STFL_LEVELSPAWNED;
 
+			// [BB] The clients will not spawn the doll, so mark it accordingly and free it's network ID.
+			pDoll->ulNetworkFlags |= NETFL_SERVERSIDEONLY;
+			g_NetIDList.freeID ( pDoll->lNetID );
+			pDoll->lNetID = -1;
+
 			// [BB] If we would just set the player pointer to NULL, a lot of things wouldn't work
 			// at all for the voodoo dolls (e.g. floor scrollers), so we set it do a pointer to a
 			// dummy player to get past all the ( player != NULL ) checks. This will require special

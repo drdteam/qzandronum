@@ -4003,7 +4003,10 @@ void GAME_ResetMap( bool bRunEnterScripts )
 				level.total_items--;
 
 			// Remove the old actor.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+			if ( ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				// [BB] The server doesn't tell the clients about indefinitely hidden non-inventory actors during a full update.
+				&& ( ( pActor->IsKindOf( RUNTIME_CLASS( AInventory ) ) )
+					|| ( pActor->state != RUNTIME_CLASS( AInventory )->FindState ("HideIndefinitely") ) ) )
 				SERVERCOMMANDS_DestroyThing( pActor );
 
 			// [BB] A voodoo doll needs to stay assigned to the corresponding player.
