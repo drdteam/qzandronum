@@ -639,20 +639,17 @@ static void M_ExecuteIgnore()
 {
 	if ( PLAYER_IsValidPlayer( menu_ignoreplayer ) )
 	{
-		FString name = players[menu_ignoreplayer].userinfo.GetName();
 		FString command;
-		V_RemoveColorCodes( name );
-		V_EscapeBacklashes( name );
 
 		if ( menu_ignoreaction == 0 )
 		{
 			// Ignore a player
-			command.Format( "ignore \"%s\" %d", name.GetChars(), *menu_ignoreduration );
+			command.Format( "ignore_idx %d %d", *menu_ignoreplayer, *menu_ignoreduration );
 		}
 		else
 		{
 			// Unignore a player
-			command.Format( "unignore \"%s\"", name.GetChars() );
+			command.Format( "unignore_idx %d", *menu_ignoreplayer );
 		}
 
 		C_DoCommand( command );
