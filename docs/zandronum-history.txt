@@ -77,6 +77,8 @@
 -	- Fixed: When the server used ACS_ExecuteWithResult to start a CLIENTSIDE scripts, the clients were told the wrong arguments. [Torr Samaho]
 -	- Fixed: A_Mushroom did not work properly online. [Torr Samaho]
 -	- Fixed: The server didn't instruct clients to spawn missiles from A_CustomMissile if they exploded on spawn. [Torr Samaho]
+-	- Fixed: AFastProjectile ignored the CLIENTSIDEONLY flag of its MissileType. [Torr Samaho]
+-	- Fixed: A_SpawnDebris did not work properly online and ignored the CLIENTSIDEONLY flag. [Torr Samaho]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]

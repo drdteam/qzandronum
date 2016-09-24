@@ -4172,6 +4172,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnDebris)
 	if (debris == NULL)
 		return 0;
 
+	// [BB] Should the actor not be spawned, taking in account client side only actors?
+	if ( NETWORK_ShouldActorNotBeSpawned ( self, debris ) )
+		return 0;
+
 	// only positive values make sense here
 	if (mult_v <= 0) mult_v = 1;
 	if (mult_h <= 0) mult_h = 1;
@@ -4184,17 +4188,35 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_SpawnDebris)
 		mo = Spawn(debris, self->Vec3Offset(xo, yo, zo), ALLOW_REPLACE);
 		if (mo)
 		{
+			// [BB]
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_SpawnThing( mo );
+			else if ( NETWORK_InClientMode() )
+				mo->ulNetworkFlags |= NETFL_CLIENTSIDEONLY;
+
 			if (transfer_translation)
 			{
 				mo->Translation = self->Translation;
+
+				// [BB]
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetThingTranslation( mo );
 			}
 			if (i < mo->GetClass()->NumOwnedStates)
 			{
+				// [BB]
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SetThingFrame( mo, mo->GetClass()->OwnedStates + i );
+
 				mo->SetState (mo->GetClass()->OwnedStates + i);
 			}
 			mo->Vel.X = mult_h * pr_spawndebris.Random2() / 64.;
 			mo->Vel.Y = mult_h * pr_spawndebris.Random2() / 64.;
 			mo->Vel.Z = mult_v * ((pr_spawndebris() & 7) + 5);
+
+			// [BB]
+			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				SERVERCOMMANDS_MoveThing( self, CM_VELX|CM_VELY|CM_VELZ );
 		}
 	}
 	return 0;

@@ -166,7 +166,8 @@ void AFastProjectile::Effect()
 		hitz += GetClass()->MissileHeight;
 		
 		PClassActor *trail = PClass::FindActor(name);
-		if (trail != NULL)
+		// [BB] Check whether to spawn.
+		if ( (trail != NULL) && ( NETWORK_ShouldActorNotBeSpawned ( this, trail, true ) == false ) )
 		{
 			AActor *act = Spawn (trail, PosAtZ(hitz), ALLOW_REPLACE);
 			if (act != nullptr)
