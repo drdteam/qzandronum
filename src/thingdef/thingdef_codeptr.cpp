@@ -1946,16 +1946,11 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_CustomMissile)
 				// Needs to be done regardless of whether the spawn was successful.
 				if ( NETWORK_InClientMode() )
 					missile->ulNetworkFlags |= NETFL_CLIENTSIDEONLY;
+				// [BC] If we're the server, tell clients to spawn the missile.
+				else if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+					SERVERCOMMANDS_SpawnMissile( missile );
 
-				// [BB] Save whether the spawn was successfull.
-				bool bSucces = P_CheckMissileSpawn(missile, self->radius);
-
-				if ( bSucces )
-				{
-					// [BC] If we're the server, tell clients to spawn the missile.
-					if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-						SERVERCOMMANDS_SpawnMissile( missile );
-				}
+				P_CheckMissileSpawn(missile, self->radius);
 			}
 		}
 	}

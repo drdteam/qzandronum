@@ -147,6 +147,10 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Mushroom)
 
 	int i, j;
 
+	// [BB] The server will let the client know about the outcome.
+	if ( NETWORK_InClientModeAndActorNotClientHandled ( self ) )
+		return 0;
+
 	if (n == 0)
 	{
 		n = self->GetMissileDamage(0, 1);
@@ -185,6 +189,13 @@ DEFINE_ACTION_FUNCTION_PARAMS(AActor, A_Mushroom)
 			{	// Slow it down a bit
 				mo->Vel *= hrange;
 				mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
+
+				// [BB] If we're the server, tell clients to spawn the missile and set the flags.
+				if ( NETWORK_GetState( ) == NETSTATE_SERVER )
+				{
+					SERVERCOMMANDS_SpawnMissile( mo );
+					SERVERCOMMANDS_SetThingFlags( mo, FLAGSET_FLAGS );
+				}
 			}
 		}
 	}
