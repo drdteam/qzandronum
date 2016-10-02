@@ -24,7 +24,6 @@
 #define __G_GAME__
 
 struct event_t;
-struct PNGHandle;
 
 struct FMapThing;
 struct FPlayerStart;
@@ -75,6 +74,9 @@ USHORT	GAME_GetLevelIntroTicks( void );
 ULONG	GAME_CountLivingAndRespawnablePlayers( void );
 ULONG	GAME_CountActivePlayers( void );
 
+// [BB]
+FString GetEngineString ( );
+
 // [BC] End changes.
 
 struct FPlayerStart *G_PickPlayerStart (int playernum, int flags = 0);
@@ -113,8 +115,8 @@ void G_ScreenShot (char *filename);
 
 FString G_BuildSaveName (const char *prefix, int slot);
 
-struct PNGHandle;
-bool G_CheckSaveGameWads (PNGHandle *png, bool printwarn);
+class FSerializer;
+bool G_CheckSaveGameWads (FSerializer &arc, bool printwarn);
 
 enum EFinishLevelType
 {

@@ -27,7 +27,7 @@
 #include "po_man.h"
 #include "p_setup.h"
 #include "vectors.h"
-#include "farchive.h"
+#include "serializer.h"
 #include "p_blockmap.h"
 #include "p_maputl.h"
 #include "r_utility.h"
@@ -55,23 +55,6 @@ inline vertex_t *side_t::V2() const
 }
 
 
-FArchive &operator<< (FArchive &arc, FPolyObj *&poly)
-{
-	return arc.SerializePointer (polyobjs, (BYTE **)&poly, sizeof(FPolyObj));
-}
-
-FArchive &operator<< (FArchive &arc, const FPolyObj *&poly)
-{
-	return arc.SerializePointer (polyobjs, (BYTE **)&poly, sizeof(FPolyObj));
-}
-
-inline FArchive &operator<< (FArchive &arc, podoortype_t &type)
-{
-	BYTE val = (BYTE)type;
-	arc << val;
-	type = (podoortype_t)val;
-	return arc;
-}
 /* [BB] Moved to p_local.h
 class DRotatePoly : public DPolyAction
 {
@@ -93,7 +76,7 @@ class DMovePoly : public DPolyAction
 	DECLARE_CLASS (DMovePoly, DPolyAction)
 public:
 	DMovePoly (int polyNum);
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 	void UpdateToClient( ULONG ulClient );
 
@@ -118,7 +101,7 @@ class DMovePolyTo : public DPolyAction
 	DECLARE_CLASS(DMovePolyTo, DPolyAction)
 public:
 	DMovePolyTo(int polyNum);
-	void Serialize(FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick();
 protected:
 	DMovePolyTo();
@@ -134,7 +117,7 @@ class DPolyDoor : public DMovePoly
 	DECLARE_CLASS (DPolyDoor, DMovePoly)
 public:
 	DPolyDoor (int polyNum, podoortype_t type);
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 	void UpdateToClient( ULONG ulClient );
 
@@ -228,10 +211,13 @@ DPolyAction::DPolyAction ()
 {
 }
 
-void DPolyAction::Serialize (FArchive &arc)
+void DPolyAction::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << m_PolyObj << m_Speed << m_Dist << m_Interpolation;
+	arc("polyobj", m_PolyObj)
+		("speed", m_Speed)
+		("dist", m_Dist)
+		("interpolation", m_Interpolation);
 }
 
 DPolyAction::DPolyAction (int polyNum)
@@ -338,14 +324,12 @@ DMovePoly::DMovePoly ()
 {
 }
 
-void DMovePoly::Serialize (FArchive &arc)
+void DMovePoly::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << m_Angle << m_Speed;
-	if (SaveVersion >= 4548)
-	{
-		arc << m_Speedv;
-	}
+	arc("angle", m_Angle)
+		("speed", m_Speed);
+		("speedv", m_Speedv);
 }
 
 DMovePoly::DMovePoly (int polyNum)
@@ -393,10 +377,11 @@ DMovePolyTo::DMovePolyTo()
 {
 }
 
-void DMovePolyTo::Serialize(FArchive &arc)
+void DMovePolyTo::Serialize(FSerializer &arc)
 {
 	Super::Serialize(arc);
-	arc << m_Speedv << m_Target;
+	arc("speedv", m_Speedv)
+		("target", m_Target);
 }
 
 DMovePolyTo::DMovePolyTo(int polyNum)
@@ -417,10 +402,15 @@ DPolyDoor::DPolyDoor ()
 {
 }
 
-void DPolyDoor::Serialize (FArchive &arc)
+void DPolyDoor::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << m_Direction << m_TotalDist << m_Tics << m_WaitTics << m_Type << m_Close;
+	arc.Enum("type", m_Type)
+		("direction", m_Direction)
+		("totaldist", m_TotalDist)
+		("tics", m_Tics)
+		("waittics", m_WaitTics)
+		("close", m_Close);
 }
 
 DPolyDoor::DPolyDoor (int polyNum, podoortype_t type)

@@ -11,9 +11,9 @@
 #include "thingdef/thingdef.h"
 #include "g_level.h"
 #include "doomstat.h"
-#include "farchive.h"
 #include "a_pickups.h"
 #include "d_player.h"
+#include "serializer.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"
@@ -100,10 +100,10 @@ void AMinotaurFriend::BeginPlay ()
 	StartTime = -1;
 }
 
-void AMinotaurFriend::Serialize (FArchive &arc)
+void AMinotaurFriend::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << StartTime;
+	arc("starttime", StartTime);
 }
 
 void AMinotaurFriend::Die (AActor *source, AActor *inflictor, int dmgflags)

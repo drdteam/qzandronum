@@ -2,15 +2,15 @@
 #include "actor.h"
 #include "info.h"
 #include "d_player.h"
-#include "farchive.h"
+#include "serializer.h"
 
 IMPLEMENT_CLASS( AFloatyIcon )
 
-void AFloatyIcon::Serialize( FArchive &arc )
+void AFloatyIcon::Serialize( FSerializer &arc )
 {
 	Super::Serialize( arc );
 
-	arc << bTeamItemFloatyIcon;
+	arc ( "bTeamItemFloatyIcon", bTeamItemFloatyIcon );
 }
 
 void AFloatyIcon::BeginPlay( )

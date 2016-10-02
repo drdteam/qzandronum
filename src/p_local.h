@@ -507,7 +507,7 @@ class DMovePoly : public DPolyAction
 	DECLARE_CLASS (DMovePoly, DPolyAction)
 public:
 	DMovePoly (int polyNum);
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 	virtual void UpdateToClient( ULONG ulClient ); // [WS] This needs to be virtual.
 
@@ -529,7 +529,7 @@ class DMovePolyTo : public DPolyAction
 	DECLARE_CLASS(DMovePolyTo, DPolyAction)
 public:
 	DMovePolyTo(int polyNum);
-	void Serialize(FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick();
 protected:
 	DMovePolyTo();
@@ -545,7 +545,7 @@ class DPolyDoor : public DMovePoly
 	DECLARE_CLASS (DPolyDoor, DMovePoly)
 public:
 	DPolyDoor (int polyNum, podoortype_t type);
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 	void UpdateToClient( ULONG ulClient );
 

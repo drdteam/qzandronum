@@ -33,7 +33,8 @@ public:
 	void Tick ();
 	void SetWeapon (EMarineWeapon);
 	void SetSprite (PClassActor *source);
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 
 	int CurrentWeapon;
 

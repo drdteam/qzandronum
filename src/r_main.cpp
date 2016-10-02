@@ -61,7 +61,6 @@
 #include "st_start.h"
 #include "v_font.h"
 #include "r_data/colormaps.h"
-#include "farchive.h"
 #include "p_maputl.h"
 // [BC] New #includes.
 #include "sv_commands.h"

@@ -14,7 +14,7 @@ public:
 	DScroller (double dx, double dy, const line_t *l, int control, int accel, EScrollPos scrollpos = EScrollPos::scw_all);
 	void Destroy();
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	bool AffectsWall (int wallnum) const { return m_Type == EScroll::sc_side && m_Affectee == wallnum; }

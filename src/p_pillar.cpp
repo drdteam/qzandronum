@@ -37,7 +37,7 @@
 #include "p_spec.h"
 #include "g_level.h"
 #include "s_sndseq.h"
-#include "farchive.h"
+#include "serializer.h"
 #include "r_data/r_interpolate.h"
 // [BC] New #includes.
 #include "cl_demo.h"
@@ -48,14 +48,6 @@ IMPLEMENT_POINTY_CLASS (DPillar)
 	DECLARE_POINTER(m_Interp_Floor)
 	DECLARE_POINTER(m_Interp_Ceiling)
 END_POINTERS
-
-inline FArchive &operator<< (FArchive &arc, DPillar::EPillar &type)
-{
-	BYTE val = (BYTE)type;
-	arc << val;
-	type = (DPillar::EPillar)val;
-	return arc;
-}
 
 DPillar::DPillar ()
 {
@@ -88,20 +80,21 @@ void DPillar::Destroy()
 	Super::Destroy();
 }
 
-void DPillar::Serialize (FArchive &arc)
+void DPillar::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << m_Type
-		<< m_FloorSpeed
-		<< m_CeilingSpeed
-		<< m_FloorTarget
-		<< m_CeilingTarget
-		<< m_Crush
-		<< m_Hexencrush
-		<< m_Interp_Floor
-		<< m_Interp_Ceiling
-		// [BC]
-		<< m_lPillarID;
+	arc.Enum("type", m_Type)
+		("floorspeed", m_FloorSpeed)
+		("ceilingspeed", m_CeilingSpeed)
+		("floortarget", m_FloorTarget)
+		("ceilingtarget", m_CeilingTarget)
+		("crush", m_Crush)
+		("hexencrush", m_Hexencrush)
+		("interp_floor", m_Interp_Floor)
+		("interp_ceiling", m_Interp_Ceiling);
+
+	// [BC]
+	arc ("m_lPillarID", m_lPillarID );
 }
 
 // [BC]

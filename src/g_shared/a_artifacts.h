@@ -16,7 +16,8 @@ public:
 	virtual bool HandlePickup (AInventory *item);
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual AInventory *CreateTossable ();
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual void OwnerDied ();
 	virtual bool GetNoTeleportFreeze();
 	virtual PalEntry GetBlend ();
@@ -52,7 +53,8 @@ class APowerupGiver : public AInventory
 	DECLARE_CLASS_WITH_META (APowerupGiver, AInventory, PClassPowerupGiver)
 public:
 	virtual bool Use (bool pickup);
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 
 
 	// [TP] For runes
@@ -126,7 +128,8 @@ class APowerTorch : public APowerLightAmp
 {
 	DECLARE_CLASS (APowerTorch, APowerLightAmp)
 public:
-	void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 protected:
 	void DoEffect ();
 	int NewTorch, NewTorchDelta;
@@ -137,7 +140,8 @@ class APowerFlight : public APowerup
 	DECLARE_CLASS (APowerFlight, APowerup)
 public:
 	bool DrawPowerup (int x, int y);
-	void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 
 protected:
 	void InitEffect ();
@@ -160,7 +164,8 @@ class APowerSpeed : public APowerup
 	DECLARE_CLASS (APowerSpeed, APowerup)
 protected:
 	void DoEffect ();
-	void Serialize(FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	double GetSpeedFactor();
 public:
 	int SpeedFlags;
@@ -277,7 +282,8 @@ class APowerMorph : public APowerup
 {
 	DECLARE_CLASS( APowerMorph, APowerup )
 public:
-	void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	void SetNoCallUndoMorph() { bNoCallUndoMorph = true; }
 
 	FNameNoInit	PlayerClass, MorphFlash, UnMorphFlash;

@@ -4,7 +4,7 @@
 #include "actor.h"
 // [BB] New #includes.
 #include "network.h"
-#include "farchive.h"
+#include "serializer.h"
 
 class AInterpolationPoint : public AActor
 {
@@ -17,7 +17,8 @@ public:
 	AInterpolationPoint *ScanForLoop ();
 	void FormChain ();
 
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 
 	TObjPtr<AInterpolationPoint> Next;
 };
@@ -38,7 +39,8 @@ protected:
 	virtual bool Interpolate ();
 	virtual void NewNode ();
 
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 
 	bool bActive, bJustStepped;
 	TObjPtr<AInterpolationPoint> PrevNode, CurrNode;

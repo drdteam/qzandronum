@@ -50,7 +50,7 @@
 #include "d_netinf.h"
 #include "i_system.h"
 #include "d_player.h"
-#include "farchive.h"
+#include "serializer.h"
 // [BC] New #includes.
 #include "network.h"
 #include "cl_demo.h"
@@ -2121,7 +2121,8 @@ class AAmbientSound : public AActor
 {
 	DECLARE_CLASS (AAmbientSound, AActor)
 public:
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 
 	void MarkPrecacheSounds () const;
 	void BeginPlay ();
@@ -2146,10 +2147,11 @@ IMPLEMENT_CLASS (AAmbientSound)
 //
 //==========================================================================
 
-void AAmbientSound::Serialize (FArchive &arc)
+void AAmbientSound::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << bActive << NextCheck;
+	arc("active", bActive)
+		("nextcheck", NextCheck);
 }
 
 //==========================================================================
@@ -2195,7 +2197,7 @@ void AAmbientSound::Tick ()
 		loop = CHAN_LOOP;
 	}
 
-	if (ambient->sound != 0)
+	if (ambient->sound != FSoundID(0))
 	{
 		// The second argument scales the ambient sound's volume.
 		// 0 and 100 are normal volume. The maximum volume level

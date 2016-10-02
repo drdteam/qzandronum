@@ -934,10 +934,11 @@ void ASigil::BeginPlay()
 //
 //============================================================================
 
-void ASigil::Serialize (FArchive &arc)
+void ASigil::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << NumPieces << DownPieces;
+	arc("numpieces", NumPieces)
+		("downpieces", DownPieces);
 }
 
 //============================================================================

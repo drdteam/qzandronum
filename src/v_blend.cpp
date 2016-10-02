@@ -51,7 +51,6 @@
 #include "colormatcher.h"
 #include "v_palette.h"
 #include "d_player.h"
-#include "farchive.h"
 
 // [BB]
 CVAR( Float, blood_fade_scalar, 0.5f, CVAR_ARCHIVE )

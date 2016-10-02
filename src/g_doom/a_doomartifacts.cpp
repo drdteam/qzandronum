@@ -15,7 +15,7 @@
 #include "cl_demo.h"
 #include "a_doomglobal.h"
 #include "announcer.h"
-#include "farchive.h"
+#include "serializer.h"
 
 // [BC] Random Powerup ------------------------------------------------------
 
@@ -36,7 +36,7 @@ class ARandomPowerup : public AInventory
 	DECLARE_CLASS (ARandomPowerup, AInventory)
 public:
 	virtual bool	Use (bool pickup);
-	void			Serialize( FArchive &arc );
+	void			Serialize( FSerializer &arc );
 
 	void	PostBeginPlay( )
 	{
@@ -170,10 +170,11 @@ bool ARandomPowerup::Use (bool pickup)
 	return ( bReturnValue );
 }
 
-void ARandomPowerup::Serialize( FArchive &arc )
+void ARandomPowerup::Serialize( FSerializer &arc )
 {
 	Super::Serialize( arc );
-	arc << ulCurrentFrame << ulPowerupFlags;
+	arc ("ulCurrentFrame", ulCurrentFrame)
+		("ulPowerupFlags", ulPowerupFlags);
 }
 
 const char *ARandomPowerup::PickupMessage( )

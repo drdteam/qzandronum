@@ -19,7 +19,7 @@ public:
 
 	DPusher ();
 	DPusher (EPusher type, line_t *l, int magnitude, int angle, AActor *source, int affectee);
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	int CheckForSectorMatch (EPusher type, int tag);
 	void ChangeValues (int magnitude, int angle)
 	{

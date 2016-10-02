@@ -10,7 +10,7 @@ class DFireFlicker : public DLighting
 public:
 	DFireFlicker(sector_t *sector);
 	DFireFlicker(sector_t *sector, int upper, int lower);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -28,7 +28,7 @@ class DFlicker : public DLighting
 	DECLARE_CLASS(DFlicker, DLighting)
 public:
 	DFlicker(sector_t *sector, int upper, int lower);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -47,7 +47,7 @@ class DLightFlash : public DLighting
 public:
 	DLightFlash(sector_t *sector);
 	DLightFlash(sector_t *sector, int min, int max);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -71,7 +71,7 @@ class DStrobe : public DLighting
 public:
 	DStrobe(sector_t *sector, int utics, int ltics, bool inSync);
 	DStrobe(sector_t *sector, int upper, int lower, int utics, int ltics);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -94,7 +94,7 @@ class DGlow : public DLighting
 	DECLARE_CLASS(DGlow, DLighting)
 public:
 	DGlow(sector_t *sector);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -113,7 +113,7 @@ class DGlow2 : public DLighting
 	DECLARE_CLASS(DGlow2, DLighting)
 public:
 	DGlow2(sector_t *sector, int start, int end, int tics, bool oneshot);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.
@@ -138,7 +138,7 @@ class DPhased : public DLighting
 public:
 	DPhased(sector_t *sector);
 	DPhased(sector_t *sector, int baselevel, int phase);
-	void		Serialize(FArchive &arc);
+	void		Serialize(FSerializer &arc);
 	void		Tick();
 
 	// [BC] Create this object for this new client entering the game.

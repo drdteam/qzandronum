@@ -154,7 +154,8 @@ class AInventory : public AActor
 	HAS_OBJECT_POINTERS
 public:
 	virtual void Touch (AActor *toucher);
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 
 	virtual void MarkPrecacheSounds() const;
 	virtual void BeginPlay ();
@@ -188,7 +189,7 @@ public:
 	int RespawnTics;			// Tics from pickup time to respawn time
 	FTextureID Icon;			// Icon to show on status bar or HUD
 	int DropTime;				// Countdown after dropping
-	const PClass *SpawnPointClass;	// For respawning like Heretic's mace
+	PClassActor *SpawnPointClass;	// For respawning like Heretic's mace
 
 	DWORD ItemFlags;
 	PClassActor *PickupFlash;	// actor to spawn as pickup flash
@@ -260,7 +261,8 @@ class AAmmo : public AInventory
 {
 	DECLARE_CLASS_WITH_META(AAmmo, AInventory, PClassAmmo)
 public:
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 	AInventory *CreateCopy (AActor *other);
 	bool HandlePickup (AInventory *item);
 	PClassActor *GetParentAmmo () const;
@@ -321,7 +323,8 @@ public:
 	bool bAltFire;	// Set when this weapon's alternate fire is used.
 
 	virtual void MarkPrecacheSounds() const;
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual bool ShouldStay ();
 	virtual void AttachToOwner (AActor *other);
 	virtual bool HandlePickup (AInventory *item);
@@ -409,7 +412,8 @@ class AWeaponGiver : public AWeapon
 
 public:
 	bool TryPickup(AActor *&toucher);
-	void Serialize(FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 
 	double DropAmmoFactor;
 };
@@ -447,7 +451,8 @@ class AHealthPickup : public AInventory
 public:
 	int autousemode;
 
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual AInventory *CreateTossable ();
 	virtual bool HandlePickup (AInventory *item);
@@ -477,7 +482,8 @@ class ABasicArmor : public AArmor
 {
 	DECLARE_CLASS (ABasicArmor, AArmor)
 public:
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual void Tick ();
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual bool HandlePickup (AInventory *item);
@@ -497,7 +503,8 @@ class ABasicArmorPickup : public AArmor
 {
 	DECLARE_CLASS (ABasicArmorPickup, AArmor)
 public:
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual bool Use (bool pickup);
 
@@ -512,7 +519,8 @@ class ABasicArmorBonus : public AArmor
 {
 	DECLARE_CLASS (ABasicArmorBonus, AArmor)
 public:
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual bool Use (bool pickup);
 
@@ -531,7 +539,8 @@ class AHexenArmor : public AArmor
 {
 	DECLARE_CLASS (AHexenArmor, AArmor)
 public:
-	virtual void Serialize (FArchive &arc);
+	
+	virtual void Serialize(FSerializer &arc);
 	virtual AInventory *CreateCopy (AActor *other);
 	virtual AInventory *CreateTossable ();
 	virtual bool HandlePickup (AInventory *item);
@@ -559,7 +568,7 @@ class APuzzleItem : public AInventory
 {
 	DECLARE_CLASS_WITH_META(APuzzleItem, AInventory, PClassPuzzleItem)
 public:
-	void Serialize (FArchive &arc);
+	
 	bool ShouldStay ();
 	bool Use (bool pickup);
 	bool HandlePickup (AInventory *item);
@@ -581,7 +590,8 @@ class ABackpackItem : public AInventory
 {
 	DECLARE_CLASS (ABackpackItem, AInventory)
 public:
-	void Serialize (FArchive &arc);
+	
+	void Serialize(FSerializer &arc);
 	bool HandlePickup (AInventory *item);
 	AInventory *CreateCopy (AActor *other);
 	AInventory *CreateTossable ();

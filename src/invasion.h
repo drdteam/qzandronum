@@ -85,7 +85,7 @@ public:
 	virtual	void	Deactivate( AActor *pActivator );
 	
 	void		Tick( void );
-	void		Serialize( FArchive &arc );
+	void		Serialize( FSerializer &arc );
 
 	// [EP] TODO: remove the 'l' prefix from the name of the variables which aren't LONG anymore
 	int		lNextSpawnTick;
@@ -105,7 +105,7 @@ public:
 	virtual void	Destroy ();
 	
 	void		Tick( void );
-	void		Serialize( FArchive &arc );
+	void		Serialize( FSerializer &arc );
 	void		PickedUp( void );
 
 	// [EP] TODO: remove the 'l' prefix from the name of the variables which aren't LONG anymore
@@ -124,7 +124,7 @@ public:
 	virtual	void	Deactivate( AActor *pActivator );
 	
 	void		Tick( void );
-	void		Serialize( FArchive &arc );
+	void		Serialize( FSerializer &arc );
 
 	// [EP] TODO: remove the 'l' prefix from the name of the variable which isn't LONG anymore
 	int			lNextSpawnTick;
@@ -139,8 +139,7 @@ void	INVASION_StartFirstCountdown( ULONG ulTicks );
 void	INVASION_StartCountdown( ULONG ulTicks );
 void	INVASION_BeginWave( ULONG ulWave );
 void	INVASION_DoWaveComplete( void );
-void	INVASION_WriteSaveInfo( FILE *pFile );
-void	INVASION_ReadSaveInfo( PNGHandle *pPng );
+void	INVASION_Serialize( FSerializer &arc );
 void	INVASION_RemoveMonsterCorpse( );
 void	INVASION_ClearMonsterCorpsePointer( AActor *pActor );
 

@@ -36,8 +36,8 @@
 #include "a_sharedglobal.h"
 #include "p_local.h"
 #include "p_lnspec.h"
-#include "farchive.h"
 #include "r_sky.h"
+#include "r_state.h"
 #include "portal.h"
 // [BB] New #includes.
 #include "network.h"
@@ -177,7 +177,10 @@ void ASectorSilencer::BeginPlay ()
 
 void ASectorSilencer::Destroy ()
 {
-	Sector->Flags &= ~SECF_SILENT;
+	if (Sector != nullptr)
+	{
+		Sector->Flags &= ~SECF_SILENT;
+	}
 	Super::Destroy ();
 }
 

@@ -190,7 +190,7 @@ public:
 	// [BC] Make this constructor public to clients can create it.
 	DPlat (sector_t *sector);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	bool IsLift() const { return m_Type == platDownWaitUpStay || m_Type == platDownWaitUpStayStone; }
@@ -277,7 +277,7 @@ public:
 	// [BC] New constructor where we just pass in the sector.
 	DPillar (sector_t *sector);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 	void Destroy();
 
@@ -350,7 +350,7 @@ public:
 	// [BC] Added option to create doors soundlessly.
 	DDoor (sector_t *sec, EVlDoor type, double speed, int delay, int lightTag, int topcountdown, bool bNoSound = false);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	// [BC] Create this object for this new client entering the game.
@@ -419,7 +419,7 @@ public:
 	DAnimatedDoor (sector_t *sector);
 	DAnimatedDoor (sector_t *sec, line_t *line, int speed, int delay, FDoorAnimation *anim);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	bool StartClosing ();
@@ -499,7 +499,7 @@ public:
 	DCeiling (sector_t *sec);
 	DCeiling (sector_t *sec, double speed1, double speed2, int silent);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	// [BC] Create this object for this new client entering the game.
@@ -635,7 +635,7 @@ public:
 
 	DFloor (sector_t *sec);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	// [BC] Create this object for this new client entering the game.
@@ -748,7 +748,7 @@ public:
 	DElevator (sector_t *sec);
 
 	void Destroy();
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 	// [BC] Create this object for this new client entering the game.
@@ -794,7 +794,7 @@ class DWaggleBase : public DMover
 public:
 	DWaggleBase (sector_t *sec);
 
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 
 	// [BC] Create this object for this new client entering the game.
 	void	UpdateToClient( ULONG ulClient );
@@ -821,7 +821,6 @@ protected:
 	double m_ScaleDelta;
 	int m_Ticker;
 	int m_State;
-	TObjPtr<DInterpolation> m_Interpolation;
 
 	// [BC] This is the waggle's unique network ID.
 	// [EP] TODO: remove the 'l' prefix from this variable, it isn't LONG anymore

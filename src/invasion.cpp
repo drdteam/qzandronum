@@ -76,7 +76,7 @@
 #include "v_video.h"
 #include "survival.h"
 #include "gamemode.h"
-#include "farchive.h"
+#include "serializer.h"
 
 void	SERVERCONSOLE_UpdateScoreboard( );
 
@@ -213,10 +213,11 @@ void ABaseMonsterInvasionSpot::Tick( void )
 
 //*****************************************************************************
 //
-void ABaseMonsterInvasionSpot::Serialize( FArchive &arc )
+void ABaseMonsterInvasionSpot::Serialize( FSerializer &arc )
 {
 	Super::Serialize( arc );
-	arc << lNextSpawnTick << lNumLeftThisWave;
+	arc ("lNextSpawnTick", lNextSpawnTick)
+		("lNumLeftThisWave", lNumLeftThisWave);
 }
 
 //*****************************************************************************
@@ -382,10 +383,11 @@ void ABasePickupInvasionSpot::Tick( void )
 
 //*****************************************************************************
 //
-void ABasePickupInvasionSpot::Serialize( FArchive &arc )
+void ABasePickupInvasionSpot::Serialize( FSerializer &arc )
 {
 	Super::Serialize( arc );
-	arc << lNextSpawnTick << lNumLeftThisWave;
+	arc ("lNextSpawnTick", lNextSpawnTick)
+		("lNumLeftThisWave", lNumLeftThisWave);
 }
 
 //*****************************************************************************
@@ -550,10 +552,10 @@ void ABaseWeaponInvasionSpot::Tick( void )
 
 //*****************************************************************************
 //
-void ABaseWeaponInvasionSpot::Serialize( FArchive &arc )
+void ABaseWeaponInvasionSpot::Serialize( FSerializer &arc )
 {
 	Super::Serialize( arc );
-	arc << lNextSpawnTick;
+	arc ("lNextSpawnTick", lNextSpawnTick);
 }
 
 //*****************************************************************************
@@ -1343,29 +1345,17 @@ void INVASION_SetIncreaseNumMonstersOnSpawn( bool bIncrease )
 
 //*****************************************************************************
 //
-void INVASION_WriteSaveInfo( FILE *pFile )
+void INVASION_Serialize( FSerializer &arc )
 {
-	unsigned int				ulInvasionState;
-	FPNGChunkArchive	arc( pFile, MAKE_ID( 'i','n','V','s' ));
-
-	ulInvasionState = g_InvasionState;
-	arc << g_ulNumMonstersLeft << g_ulInvasionCountdownTicks << g_ulCurrentWave << ulInvasionState << g_ulNumBossMonsters << g_ulNumArchVilesLeft;
-}
-
-//*****************************************************************************
-//
-void INVASION_ReadSaveInfo( PNGHandle *pPng )
-{
-	size_t	Length;
-
-	Length = M_FindPNGChunk( pPng, MAKE_ID( 'i','n','V','s' ));
-	if ( Length != 0 )
+	if (arc.BeginObject("invasion"))
 	{
-		unsigned int		ulInvasionState;
-		FPNGChunkArchive	arc( pPng->File->GetFile( ), MAKE_ID( 'i','n','V','s' ), Length );
-
-		arc << g_ulNumMonstersLeft << g_ulInvasionCountdownTicks << g_ulCurrentWave << ulInvasionState << g_ulNumBossMonsters << g_ulNumArchVilesLeft;
-		g_InvasionState = (INVASIONSTATE_e)ulInvasionState;
+		arc("g_ulNumMonstersLeft", g_ulNumMonstersLeft)
+			("g_ulInvasionCountdownTicks", g_ulInvasionCountdownTicks)
+			("g_ulCurrentWave", g_ulCurrentWave)
+			.Enum("g_InvasionState", g_InvasionState)
+			("g_ulNumBossMonsters", g_ulNumBossMonsters )
+			("g_ulNumArchVilesLeft", g_ulNumArchVilesLeft )
+			.EndObject();
 	}
 }
 

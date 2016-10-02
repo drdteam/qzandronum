@@ -479,7 +479,7 @@ public:
 	~CSkullBot( );
 
 	// Used for saving the bot for savegames.
-	void		Serialize( FArchive &arc );
+	void		Serialize( FSerializer &arc );
 
 	// Tick's the bot's logic. This single function handles everything!
 	void		Tick( void );
@@ -682,12 +682,6 @@ void		BOTSPAWN_SetTeam( ULONG ulIdx, char *pszTeam );
 
 ULONG		BOTSPAWN_GetTicks( ULONG ulIdx );
 void		BOTSPAWN_SetTicks( ULONG ulIdx, ULONG usTicks );
-
-FArchive &operator<< ( FArchive &arc, fixedvec3 *pPos );
-FArchive &operator>> ( FArchive &arc, fixedvec3 *pPos );
-
-//FArchive &operator<< ( FArchive &arc, CSkullBot *bot );
-//FArchive &operator>> ( FArchive &arc, CSkullBot *bot );
 
 //*****************************************************************************
 //	EXTERNAL CONSOLE VARIABLES

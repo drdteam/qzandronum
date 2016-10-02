@@ -53,7 +53,7 @@
 #include "v_text.h"
 #include "d_net.h"
 #include "d_main.h"
-#include "farchive.h"
+#include "serializer.h"
 // [BC] new #includes.
 #include "p_local.h"
 #include "g_level.h"
@@ -70,7 +70,7 @@ class DWaitingCommand : public DThinker
 public:
 	DWaitingCommand (const char *cmd, int tics);
 	~DWaitingCommand ();
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	void Tick ();
 
 private:
@@ -203,10 +203,11 @@ static const char *KeyConfCommands[] =
 
 IMPLEMENT_CLASS (DWaitingCommand)
 
-void DWaitingCommand::Serialize (FArchive &arc)
+void DWaitingCommand::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << Command << TicsLeft;
+	arc("command", Command)
+		("ticsleft", TicsLeft);
 }
 
 DWaitingCommand::DWaitingCommand ()

@@ -69,7 +69,7 @@
 #include "i_system.h"
 #include "doomerrors.h"
 #include "p_effect.h"
-#include "farchive.h"
+#include "serializer.h"
 #include "vmbuilder.h"
 // [BC] New #includes.
 #include "cl_demo.h"
@@ -3240,8 +3240,8 @@ PClassActor *ADehackedPickup::DetermineType ()
 	return NULL;
 }
 
-void ADehackedPickup::Serialize(FArchive &arc)
+void ADehackedPickup::Serialize(FSerializer &arc)
 {
 	Super::Serialize(arc);
-	arc << droppedbymonster;
+	arc("droppedbymonster", droppedbymonster);
 }

@@ -1,7 +1,7 @@
 #include "a_pickups.h"
 #include "a_weaponpiece.h"
 #include "doomstat.h"
-#include "farchive.h"
+#include "serializer.h"
 // [BB] New #includes.
 #include "deathmatch.h"
 #include "network.h"
@@ -21,10 +21,11 @@ void PClassWeaponPiece::ReplaceClassRef(PClass *oldclass, PClass *newclass)
 }
 
 
-void AWeaponHolder::Serialize (FArchive &arc)
+void AWeaponHolder::Serialize(FSerializer &arc)
 {
 	Super::Serialize(arc);
-	arc << PieceMask << PieceWeapon;
+	arc("piecemask", PieceMask)
+		("pieceweapon", PieceWeapon);
 }
 
 
@@ -33,10 +34,13 @@ IMPLEMENT_POINTY_CLASS (AWeaponPiece)
 END_POINTERS
 
 
-void AWeaponPiece::Serialize (FArchive &arc)
+void AWeaponPiece::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
-	arc << WeaponClass << FullWeapon << PieceValue;
+	auto def = (AWeaponPiece*)GetDefault();
+	arc("weaponclass", WeaponClass, def->WeaponClass)
+		("fullweapon", FullWeapon)
+		("piecevalue", PieceValue, def->PieceValue);
 }
 
 //==========================================================================

@@ -11,7 +11,7 @@
 #include "p_enemy.h"
 #include "statnums.h"
 #include "templates.h"
-#include "farchive.h"
+#include "serializer.h"
 #include "r_data/r_translate.h"
 // [EP] New #includes.
 #include "network.h"
@@ -394,7 +394,7 @@ class DCorpsePointer : public DThinker
 public:
 	DCorpsePointer (AActor *ptr);
 	void Destroy ();
-	void Serialize (FArchive &arc);
+	void Serialize(FSerializer &arc);
 	TObjPtr<AActor> Corpse;
 	DWORD Count;	// Only the first corpse pointer's count is valid.
 private:
@@ -468,10 +468,11 @@ void DCorpsePointer::Destroy ()
 	Super::Destroy ();
 }
 
-void DCorpsePointer::Serialize (FArchive &arc)
+void DCorpsePointer::Serialize(FSerializer &arc)
 {
 	Super::Serialize(arc);
-	arc << Corpse << Count;
+	arc("corpse", Corpse)
+		("count", Count);
 }
 
 

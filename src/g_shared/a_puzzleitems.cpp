@@ -7,7 +7,6 @@
 #include "c_console.h"
 #include "doomstat.h"
 #include "v_font.h"
-#include "farchive.h"
 // [BB] New #includes.
 #include "cl_demo.h"
 #include "deathmatch.h"
@@ -24,12 +23,6 @@ void PClassPuzzleItem::DeriveData(PClass *newclass)
 }
 
 IMPLEMENT_CLASS(APuzzleItem)
-
-void APuzzleItem::Serialize (FArchive &arc)
-{
-	Super::Serialize (arc);
-	arc << PuzzleItemNumber;
-}
 
 bool APuzzleItem::HandlePickup (AInventory *item)
 {
