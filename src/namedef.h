@@ -342,6 +342,10 @@ xx(ReactionTime)
 xx(MeleeRange)
 xx(Speed)
 xx(Clamp)
+xx(VisibleStartAngle)
+xx(VisibleStartPitch)
+xx(VisibleEndAngle)
+xx(VisibleEndPitch)
 
 // Various actor names which are used internally
 xx(MapSpot)
