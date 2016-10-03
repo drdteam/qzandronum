@@ -861,6 +861,7 @@ sector_t * FGLRenderer::RenderViewpoint (AActor * camera, GL_IRECT * bounds, flo
 			TonemapScene();
 			ColormapScene();
 			LensDistortScene();
+			ApplyFXAA();
 
 			// This should be done after postprocessing, not before.
 			mBuffers->BindCurrentFB();

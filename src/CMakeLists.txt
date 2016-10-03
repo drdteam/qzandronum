@@ -953,6 +953,7 @@ if( NOT NO_GL )
 		gl/stereo3d/gl_anaglyph.cpp
 		gl/stereo3d/gl_quadstereo.cpp
 		gl/stereo3d/gl_sidebyside3d.cpp
+		gl/stereo3d/gl_interleaved3d.cpp
 		gl/dynlights/gl_dynlight.cpp
 		gl/dynlights/gl_glow.cpp
 		gl/dynlights/gl_dynlight1.cpp
@@ -961,11 +962,13 @@ if( NOT NO_GL )
 		gl/shaders/gl_texshader.cpp
 		gl/shaders/gl_shaderprogram.cpp
 		gl/shaders/gl_presentshader.cpp
+		gl/shaders/gl_present3dRowshader.cpp
 		gl/shaders/gl_bloomshader.cpp
 		gl/shaders/gl_blurshader.cpp
 		gl/shaders/gl_colormapshader.cpp
 		gl/shaders/gl_tonemapshader.cpp
 		gl/shaders/gl_lensshader.cpp
+		gl/shaders/gl_fxaashader.cpp
 		gl/system/gl_interface.cpp
 		gl/system/gl_framebuffer.cpp
 		gl/system/gl_debug.cpp
