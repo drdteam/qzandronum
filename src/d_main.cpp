@@ -3007,6 +3007,7 @@ void D_DoomMain (void)
 		// [BB] At the moment Skulltag still doesn't use the new ZDoom TeamLibrary class.
 		TEAMINFO_Init ();
 
+		R_ParseTrnslate();
 		PClassActor::StaticInit ();
 
 		// [GRB] Initialize player class list
