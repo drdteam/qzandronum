@@ -408,6 +408,7 @@ void GLSprite::Draw(int pass)
 			gl_RenderState.Apply();
 
 			FVector3 v[4];
+			gl_RenderState.SetNormal(0, 0, 0);
 			CalculateVertices(v);
 			
 			FQuadDrawer qd;
