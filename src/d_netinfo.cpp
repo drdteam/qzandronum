@@ -871,7 +871,16 @@ void D_UserInfoChanged (FBaseCVar *cvar)
 		{
 			// [BB] The name was not actually changed, so no need to do anything.
 			if ( strcmp ( g_oldPlayerName.GetChars(), val.String ) == 0 )
+			{
 				ulUpdateFlags &= ~USERINFO_NAME;
+				// [BB] The client insists on changing to a name already in use.
+				if ( stricmp ( val.String, players[consoleplayer].userinfo.GetName() ) != 0 )
+				{
+					Printf ( "The server already reported that this name is in use!\n" );
+					g_oldPlayerName = players[consoleplayer].userinfo.GetName();
+					return;
+				}
+			}
 			// [BB] The client recently changed its name, don't allow to change it again yet.
 			// [TP] Made conditional with sv_limitcommands
 			else if (( sv_limitcommands ) && ( g_ulLastNameChangeTime > 0 ) && ( (ULONG)gametic < ( g_ulLastNameChangeTime + ( TICRATE * 30 ))))

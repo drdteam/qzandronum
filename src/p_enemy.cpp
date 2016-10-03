@@ -3670,12 +3670,20 @@ void P_TossItem (AActor *item)
 	{
 		item->Vel.X += pr_dropitem.Random2(7);
 		item->Vel.Y += pr_dropitem.Random2(7);
+
+		// [EP] The server should inform the clients having enough bandwidth.
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+			SERVERCOMMANDS_MoveThing( item, CM_VELX|CM_VELY, MAXPLAYERS, SVCF_ONLY_CONNECTIONTYPE_1 );
 	}
 	else
 	{
 		item->Vel.X += pr_dropitem.Random2() / 256.;
 		item->Vel.Y += pr_dropitem.Random2() / 256.;
 		item->Vel.Z = 5. + pr_dropitem() / 64.;
+
+		// [EP] The server should inform the clients having enough bandwidth.
+		if ( NETWORK_GetState() == NETSTATE_SERVER )
+			SERVERCOMMANDS_MoveThing( item, CM_VELX|CM_VELY|CM_VELZ, MAXPLAYERS, SVCF_ONLY_CONNECTIONTYPE_1 );
 	}
 }
 

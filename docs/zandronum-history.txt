@@ -34,6 +34,7 @@
 +	- Chat can now tab complete player names. [Dusk]
 +	- Clients' account names are now visible in the output of CCMD "playerinfo", unless the player hides it with the new CVar cl_hideaccount. The server can always see the accountname from playerinfo. [Dusk]
 +	- Added a mechanism to safe login credentials under Windows using the Windows Credential Manager aka Windows Vault. The credentials can be stored using the new CCMD 'login_add'. A default user name can be specified with the new CVAR 'login_default_user'. [Torr Samaho]
++	- This server now prevents players to use a name already used by another player. If a player requests a duplicate name, the player is renamed to 'Player N' where N is a random number from 0 to 9999. [Torr Samaho]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]
@@ -83,6 +84,7 @@
 -	- Fixed: Indefinitely hidden non-inventory actors caused unnecessary network traffic during a map reset. [Torr Samaho]
 -	- Fixed: Clients were informed about RandomSpawners, even though they only needed to know about the outcome of the spawner, which wasted network traffic. [Torr Samaho]
 -	- Fixed: The server could instruct the client to spawn puffs without a netID even if the puff didn't have the NONETID flag. [Torr Samaho]
+-	- Fixed: Clients with high bandwidth weren't informed about the item dropping physics online. [Edward-san]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]
@@ -98,6 +100,7 @@
 !	- kickfromgame and kickfromgame_idx have been renamed to forcespec and forcespec_idx, respectively, though the old names still exist for compatibility with e.g. aliases. Same also with the ACS function KickFromGame, whose new name is ForceToSpectate.
 !	- A new non-fatal 'Script Error' message will be printed if in a MAPINFO episode definition it's present either 'botskillname' or 'botskillpicname' but not 'botepisode'.
 !	- The CVARs gl_render_things, gl_render_walls and gl_render_flats are now restricted to beta builds. [Torr Samaho]
+!	- Make newly connected clients wait before calling a vote. The wait time is controlled with the new CVAR 'sv_voteconnectwait'. [Ru5tK1ng]
 
 
 2.2

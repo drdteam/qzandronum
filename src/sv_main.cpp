@@ -2043,6 +2043,7 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 	// [BB] We may only kick the player after completely parsing the current message,
 	// otherwise we'll get network parsing errors.
 	bool		bKickPlayer = false;
+	bool		bOverriddenName = false;
 	FString kickReason;
 
 	pPlayer = &players[g_lCurrentClient];
@@ -2115,6 +2116,18 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 		{
 			bKickPlayer = true;
 			kickReason = "User name contains illegal characters." ;
+		}
+
+		// [BB] Check whether the requested name is already in use.
+		// If so, give the player a generic unused name and inform the client.
+		if ( PLAYER_NameUsed ( nameString, g_lCurrentClient ) )
+		{
+			FString message;
+			message.Format ( "The name '%s' is already in use. ", nameString.GetChars() );
+			nameString = PLAYER_GenerateUniqueName();
+			message.AppendFormat ( "You are renamed to '%s'.\n", nameString.GetChars() );
+			SERVERCOMMANDS_PrintMid( message, true, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+			bOverriddenName = true;
 		}
 
 		// [BB] It's extremely critical that we NEVER use the uncleaned player name!
@@ -2226,7 +2239,8 @@ bool SERVER_GetUserInfo( BYTESTREAM_s *pByteStream, bool bAllowKick )
 	SERVERCOMMANDS_SetPlayerUserInfo( g_lCurrentClient, ulFlags, g_lCurrentClient, SVCF_SKIPTHISCLIENT );
 
 	// [TP] Tell the player his account name though.
-	SERVERCOMMANDS_SetPlayerUserInfo( g_lCurrentClient, USERINFO_ACCOUNTNAME, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
+	// [BB] If his name was overridden, also tell him that.
+	SERVERCOMMANDS_SetPlayerUserInfo( g_lCurrentClient, (bOverriddenName ? USERINFO_NAME : 0 )|USERINFO_ACCOUNTNAME, g_lCurrentClient, SVCF_ONLYTHISCLIENT );
 
 	// Also, update the scoreboard.
 	SERVERCONSOLE_UpdatePlayerInfo( g_lCurrentClient, UDF_NAME );

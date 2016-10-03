@@ -3335,6 +3335,41 @@ void PLAYER_ClearEnemySoundFields( const ULONG ulPlayer )
 	}
 }
 
+//*****************************************************************************
+//
+bool PLAYER_NameUsed( const FString &Name, const ULONG ulIgnorePlayer )
+{
+	FString nameNoColor = Name;
+	V_RemoveColorCodes( nameNoColor );
+
+	for ( int i = 0; i < MAXPLAYERS; ++i )
+	{
+		if ( playeringame[i] == false )
+			continue;
+
+		if ( i == ulIgnorePlayer )
+			continue;
+
+		FString curName = players[i].userinfo.GetName();
+		V_RemoveColorCodes( curName );
+		if ( curName.CompareNoCase ( nameNoColor ) == 0 )
+		 return true;
+	}
+	return false;
+}
+
+//*****************************************************************************
+//
+FString	PLAYER_GenerateUniqueName( void )
+{
+	FString name;
+	do
+	{
+		name.Format ( "Player %d", M_Random( 10000 ) );
+	} while ( PLAYER_NameUsed ( name ) == true );
+	return name;
+}
+
 CCMD (kill)
 {
 	// Only allow it in a level.
