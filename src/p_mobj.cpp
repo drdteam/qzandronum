@@ -5135,6 +5135,21 @@ void IDList<T>::rebuild( void )
 
 //*****************************************************************************
 //
+template <typename T>
+void IDList<T>::useID ( const LONG lNetID, T *pActor )
+{
+	if ( isIndexValid ( lNetID ) )
+	{
+		if ( ( _entries[lNetID].bFree == false ) && ( _entries[lNetID].pActor != pActor ) )
+			SERVER_PrintWarning ( "IDList<T>::useID is using an already used ID.\n" );
+
+		_entries[lNetID].bFree = false;
+		_entries[lNetID].pActor = pActor;
+	}
+}
+
+//*****************************************************************************
+//
 void CountActors ( ); // [BB]
 
 template <typename T>
