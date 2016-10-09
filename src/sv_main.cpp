@@ -138,6 +138,7 @@ void SERVERCONSOLE_UpdatePlayerInfo( LONG lPlayer, ULONG ulUpdateFlags );
 void SERVERCONSOLE_ReListPlayers( void );
 
 EXTERN_CVAR( Bool, sv_cheats );
+EXTERN_CVAR( Bool, sv_showwarnings );
 
 //*****************************************************************************
 //	PROTOTYPES
@@ -4186,6 +4187,22 @@ void SERVER_KillCheat( const char* what )
 		C_StartCapture(); // Capture the output so we can print it to clients
 		Net_DoCommand( DEM_KILLCLASSCHEAT, &stream, 0 );
 		SERVER_Printf( "%s", C_EndCapture() );
+	}
+}
+
+//*****************************************************************************
+//
+void SERVER_PrintWarning( const char* format, ... )
+{
+	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+		return;
+
+	if ( sv_showwarnings )
+	{
+		va_list args;
+		va_start( args, format );
+		VPrintf( PRINT_HIGH, format, args );
+		va_end( args );
 	}
 }
 

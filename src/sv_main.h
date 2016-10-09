@@ -469,6 +469,7 @@ void		SERVER_UpdateThingVelocity( AActor *pActor, bool updateZ, bool updateXY = 
 void		SERVER_SyncSharedKeys( int playerToSync, bool withmessage );
 void		SERVER_SyncServerModCVars ( const int PlayerToSync );
 void		SERVER_KillCheat( const char* what );
+void		SERVER_PrintWarning( const char* format, ... );
 
 // From sv_master.cpp
 void		SERVER_MASTER_Construct( void );
