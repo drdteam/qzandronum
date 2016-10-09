@@ -611,7 +611,7 @@ bool CHAT_Input( event_t *pEvent )
 
 			return ( true );
 		}
-#ifdef unix
+#ifdef __unix__
 		else if (pEvent->subtype == EV_GUI_MButtonDown)
 		{
 			g_ChatBuffer.PasteChat( I_GetFromClipboard( true ));

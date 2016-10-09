@@ -51,7 +51,7 @@
 #include "networkheaders.h"
 
 // [BB] Special things necessary for NETWORK_GetLocalAddress() under Linux.
-#ifdef unix
+#ifdef __unix__
 #include <net/if.h>
 #define inaddrr(x) (*(struct in_addr *) &ifr->x[sizeof sa.sin_port])
 #define IFRSIZE   ((int)(size * sizeof (struct ifreq)))
@@ -451,7 +451,7 @@ void NETWORK_Construct( USHORT usPort, bool bAllocateLANSocket )
 	// [BB] Initialize the GeoIP database.
 	if( NETWORK_GetState() == NETSTATE_SERVER )
 	{
-#ifdef unix
+#ifdef __unix__
 		if ( FileExists ( "/usr/share/GeoIP/GeoIP.dat" ) )
 		  g_GeoIPDB = GeoIP_open ( "/usr/share/GeoIP/GeoIP.dat", GEOIP_STANDARD );
 		else if ( FileExists ( "/usr/local/share/GeoIP/GeoIP.dat" ) )
@@ -810,7 +810,7 @@ NETADDRESS_s NETWORK_GetLocalAddress( void )
 		Printf( "NETWORK_GetLocalAddress: Error getting socket name: %s", strerror( errno ));
 	}
 
-#ifdef unix
+#ifdef __unix__
 	// [BB] The "gethostname -> gethostbyname" trick didn't reveal the local IP.
 	// Now we need to resort to something more complicated.
 	if ( ok == false )
