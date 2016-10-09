@@ -296,7 +296,7 @@ Command TeleportThing
 	Angle angle
 	Bool sourcefog
 	Bool destfog
-	Bool telezoom
+	Bool teleportzoom
 EndCommand
 
 Command ThingActivate

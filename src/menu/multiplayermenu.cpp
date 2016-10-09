@@ -148,7 +148,7 @@ CVAR ( Int, menu_skirmishduellimit, 0, CVAR_ARCHIVE )
 CVAR ( Int, menu_skirmishwinlimit, 0, CVAR_ARCHIVE )
 CVAR ( Int, menu_skirmishwavelimit, 0, CVAR_ARCHIVE )
 
-CUSTOM_CVAR ( Int, menu_textsizescalar, 0, 0 )
+CUSTOM_CVAR ( Int, menu_textsizescalar, 0, CVAR_NOINITCALL )
 {
 	M_TextSizeScalarChanged();
 }
@@ -445,15 +445,18 @@ public:
 		int height;
 		bool letterBox;
 		int numModes = 0;
+		int textsizescalar = 0;
 
 		Video->StartModeIterator( 8, true );
 		while ( Video->NextMode( &width, &height, &letterBox ))
 		{
 			if (( width <= con_virtualwidth ) && ( height <= con_virtualheight ))
-				menu_textsizescalar = numModes;
+				textsizescalar = numModes;
 
 			numModes++;
 		}
+		// [BB] We may not invoke the callback of menu_textsizescalar above since it changes con_virtualwidth.
+		menu_textsizescalar = textsizescalar;
 
 		// [TP] Update the maximum of the menu_textsizescalar slider.
 		FOptionMenuItem* it = desc->GetItem( "menu_textsizescalar" );

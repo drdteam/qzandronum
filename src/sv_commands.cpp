@@ -1709,7 +1709,7 @@ void SERVERCOMMANDS_TeleportThing( AActor *pActor, bool bSourceFog, bool bDestFo
 	command.SetAngle( pActor->Angles.Yaw.BAMs() );
 	command.SetSourcefog( bSourceFog );
 	command.SetDestfog( bDestFog );
-	command.SetTelezoom( bTeleZoom );
+	command.SetTeleportzoom( bTeleZoom );
 	command.sendCommandToClients( ulPlayerExtra, flags );
 }
 

@@ -736,7 +736,7 @@ void userinfo_t::NameChanged(const char *name)
 // [BB]
 int userinfo_t::SwitchOnPickupChanged(int switchonpickup)
 {
-	switchonpickup = clamp ( switchonpickup, 0, 2 );
+	switchonpickup = clamp ( switchonpickup, 0, 3 );
 	*static_cast<FIntCVar *>((*this)[NAME_SwitchOnPickup]) = switchonpickup;
 	return switchonpickup;
 }
