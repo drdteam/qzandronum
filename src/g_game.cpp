@@ -4533,7 +4533,7 @@ void G_DoLoadGame ()
 	{
 		// delete the resource file if anything goes wrong in here.
 		if (resfile != nullptr) delete resfile;
-		return;
+		throw;
 	}
 }
 

@@ -989,25 +989,44 @@ bool AActor::TakeInventory(PClassActor *itemclass, int amount, bool fromdecorate
 
 void AActor::DestroyAllInventory ()
 {
-	while (Inventory != NULL)
+	AInventory *inv = Inventory;
+	if (inv != nullptr)
 	{
-		AInventory *item = Inventory;
-		// [BC] In certain modes, we may need to keep this item around.
-		if (( item->ulSTFlags & STFL_LEVELSPAWNED ) &&
-			( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ))
+		TArray<AInventory *> toDelete;
+
+		// Delete the list in a two stage approach.
+		// This is necessary because an item may destroy another item (e.g. sister weapons)
+		// which would break the list and leave parts of it undestroyed, maybe doing bad things later.
+		while (inv != nullptr)
 		{
-			item->HideIndefinitely( );
-
-			// And now, some code from AInventory::Destroy() to remove this object
-			// from the owner's inventory..
-			if ( item->Owner != NULL )
-				item->Owner->RemoveInventory( item );
-
-			item->Inventory = NULL;
+			toDelete.Push(inv);
+			AInventory *item = inv->Inventory;
+			inv->Inventory = nullptr;
+			inv->Owner = nullptr;
+			inv = item;
 		}
-		else
-			item->Destroy ();
-		assert (item != Inventory);
+		for (auto p : toDelete)
+		{
+			// the item may already have been deleted by another one, so check this here to avoid problems.
+			if (!(p->ObjectFlags & OF_EuthanizeMe))
+			{
+				// [BC] In certain modes, we may need to keep this item around.
+				if (( p->ulSTFlags & STFL_LEVELSPAWNED ) &&
+					( GAMEMODE_GetCurrentFlags() & GMF_MAPRESETS ))
+				{
+					p->HideIndefinitely( );
+
+					// And now, some code from AInventory::Destroy() to remove this object
+					// from the owner's inventory..
+					if ( p->Owner != NULL )
+						p->Owner->RemoveInventory( p );
+
+					p->Inventory = NULL;
+				}
+				else
+					p->Destroy();
+			}
+		}
 	}
 }
 
