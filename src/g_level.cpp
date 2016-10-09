@@ -2095,9 +2095,12 @@ void G_InitLevelLocals ()
 	level.NextSecretMap = info->NextSecretMap;
 
 	// [BC] Why do we need to do this? For now, just don't do it in server mode.
+	// [EP] Same for compatflags2. Don't make the server print twice.
 	if ( NETWORK_GetState( ) != NETSTATE_SERVER )
+	{
 		compatflags.Callback();
-	compatflags2.Callback();
+		compatflags2.Callback();
+	}
 
 	NormalLight.ChangeFade (level.fadeto);
 
