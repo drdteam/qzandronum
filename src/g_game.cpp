@@ -1556,8 +1556,15 @@ void G_Ticker ()
 	}
 
 	// If we're playing back a demo, read packets and ticcmds now.
-	if ( CLIENTDEMO_IsPlaying( ))
-		CLIENTDEMO_ReadPacket( );
+	if ( CLIENTDEMO_IsPlaying( ) )
+	{
+		// [BB] .. only if the demo is not currently paused.
+		if ( CLIENTDEMO_IsPaused( ) == false )
+			CLIENTDEMO_ReadPacket( );
+		// [BB] If the demo is paused, the tic offset increases.
+		else
+			CLIENTDEMO_SetGameticOffset ( CLIENTDEMO_GetGameticOffset() + 1 );
+	}
 
 	if ( NETWORK_GetState( ) == NETSTATE_CLIENT )
 	{

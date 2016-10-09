@@ -58,6 +58,10 @@ extern gamestate_t wipegamestate;
 
 bool P_CheckTickerPaused ()
 {
+	// [BB] A paused demo always pauses the ticker.
+	if ( CLIENTDEMO_IsPaused( ) )
+		return true;
+
 	// pause if in menu or console and at least one tic has been run
 	if (( NETWORK_GetState( ) != NETSTATE_CLIENT )
 		 && gamestate != GS_TITLELEVEL
@@ -108,6 +112,10 @@ void P_Ticker (void)
 	//		GSnd->SetSfxPaused(!!playerswiping, 2);
 		}
 
+		// [BB] Allow the free spectate player to move even if the demo is paused.
+		if ( CLIENTDEMO_IsPaused() && CLIENTDEMO_IsInFreeSpectateMode() )
+			CLIENTDEMO_FreeSpectatorPlayerThink( true );
+
 		// run the tic
 		if (paused || P_CheckTickerPaused())
 			return;
@@ -141,7 +149,9 @@ void P_Ticker (void)
 		// [BB] If the freeze command was executed from the console, the sound needs to
 		// be resumed. In this case, the music isn't paused. The other check is only meant
 		// not to resume the music.
-		if ( ( i == MAXPLAYERS ) || ( S_IsMusicPaused () == false ) )
+		// [BB] Don't resume the sound while we are skipping. This is important when skipping
+		// while the demo is paused.
+		if ( ( ( i == MAXPLAYERS ) || ( S_IsMusicPaused () == false ) ) && ( CLIENTDEMO_IsSkipping() == false ) )
 			S_ResumeSound (false);
 		P_ResetSightCounters (false);
 	R_ClearInterpolationPath();

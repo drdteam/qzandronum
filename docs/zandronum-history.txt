@@ -35,6 +35,7 @@
 +	- Clients' account names are now visible in the output of CCMD "playerinfo", unless the player hides it with the new CVar cl_hideaccount. The server can always see the accountname from playerinfo. [Dusk]
 +	- Added a mechanism to safe login credentials under Windows using the Windows Credential Manager aka Windows Vault. The credentials can be stored using the new CCMD 'login_add'. A default user name can be specified with the new CVAR 'login_default_user'. [Torr Samaho]
 +	- This server now prevents players to use a name already used by another player. If a player requests a duplicate name, the player is renamed to 'Player N' where N is a random number from 0 to 9999. [Torr Samaho]
++	- Added CCMD demo_pause that allows to pause/resume the currently played client side demo. In free spectate mode, the spectator can still move around while the demo is paused. [Torr Samaho]
 -	- Fixed: Newly connecting clients were not properly informed about the secrets that were already revealed. [Torr Samaho]
 -	- Fixed: Resurrect cheat didn't work online. [Dusk]
 -	- Fixed: Turbo cheat didn't work online. [Dusk]
