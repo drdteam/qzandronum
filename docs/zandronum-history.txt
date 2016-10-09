@@ -86,6 +86,7 @@
 -	- Fixed: Clients were informed about RandomSpawners, even though they only needed to know about the outcome of the spawner, which wasted network traffic. [Torr Samaho]
 -	- Fixed: The server could instruct the client to spawn puffs without a netID even if the puff didn't have the NONETID flag. [Torr Samaho]
 -	- Fixed: Clients with high bandwidth weren't informed about the item dropping physics online. [Edward-san]
+-	- When sv_nocallvote is 2, only consider votes of players joined in the game (addresses 2590). [Ru5tK1ng]
 !	- Changed: Spectators can now interact with gravity and use the fly/land commands. [Leonard]
 !	- Save games now contain information about the renderer used to create the save. This allows to print a proper error message when an incompatible save is tried to be loaded. [Torr Samaho]
 !	- Clients don't error out anymore when encountering a division by zero in a DECORATE expression. Instead, a one time warning is printed on the first occasion and the result is assumed to be zero. This is necessary since clients can encounter this in valid DECORATE code due to Zandronum's jump handling. [Torr Samaho]

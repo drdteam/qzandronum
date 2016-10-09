@@ -463,39 +463,18 @@ bool CALLVOTE_VoteNo( ULONG ulPlayer )
 ULONG CALLVOTE_CountNumEligibleVoters( void )
 {
 	ULONG	ulIdx;
-	ULONG	ulIdx2;
 	ULONG	ulNumVoters;
 
 	ulNumVoters = 0;
 	for ( ulIdx = 0; ulIdx < MAXPLAYERS; ulIdx++ )
 	{
 		// A voter is anyone in the game who isn't a bot.
-		if (( playeringame[ulIdx] ) &&
-			( players[ulIdx].bIsBot == false ))
-		{
-			// Go through and see if anyone has an IP that matches this person's.
-			if ( NETWORK_GetState( ) == NETSTATE_SERVER )
-			{
-				for ( ulIdx2 = ulIdx; ulIdx2 < MAXPLAYERS; ulIdx2++ )
-				{
-					if (( playeringame[ulIdx2] == false ) ||
-						( ulIdx == ulIdx2 ) ||
-						( SERVER_IsValidClient( ulIdx2 ) == false ))
-					{
-						continue;
-					}
+		if ( SERVER_IsValidClient ( ulIdx ) == false )
+			continue;
 
-					// If the two IP addresses match, break out.
-//					if ( SERVER_GetClient( ulIdx )->Address.CompareNoPort( SERVER_GetClient( ulIdx2 )->Address ))
-//						break;
-				}
-
-				if ( ulIdx2 == MAXPLAYERS )
-					ulNumVoters++;
-			}
-			else
-				ulNumVoters++;
-		}
+		// [RK] If spectators can't vote, ignore them as well.
+		if (( sv_nocallvote == 0 ) || (( players[ulIdx].bSpectating == false ) && ( sv_nocallvote == 2 )))
+			ulNumVoters++;
 	}
 
 	return ( ulNumVoters );
