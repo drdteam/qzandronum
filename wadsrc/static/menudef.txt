@@ -714,6 +714,8 @@ OptionMenu "VideoOptions"
 
 	Option "$DSPLYMNU_VSYNC",					"vid_vsync", "OnOff"
 	Option "$DSPLYMNU_CAPFPS",					"cl_capfps", "OffOn"
+	// [TP]
+	Slider "Blood brightness",			"blood_fade_scalar",			0.0, 1.0, 0.05
 
 	StaticText " "
 	Option "$DSPLYMNU_WIPETYPE",				"wipetype", "Wipes"
