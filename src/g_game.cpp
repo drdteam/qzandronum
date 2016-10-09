@@ -2676,6 +2676,7 @@ void G_CooperativeSpawnPlayer( ULONG ulPlayer, bool bClientUpdate, bool bTempPla
 		I_Error( "Could not find a valid deathmatch spot! (this should not happen)" );
 
 	AActor *mo = P_SpawnPlayer( pSpot, ulPlayer, ( bTempPlayer ? SPF_TEMPPLAYER : 0 ) | ( bClientUpdate ? SPF_CLIENTUPDATE : 0 ) );
+	if (mo != NULL) P_PlayerStartStomp(mo);
 }
 
 //
