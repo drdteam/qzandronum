@@ -7,7 +7,7 @@ uniform sampler2D RightEyeTexture;
 uniform float InvGamma;
 uniform float Contrast;
 uniform float Brightness;
-uniform int VerticalPixelOffset; // top-of-window might not be top-of-screen
+uniform int WindowPositionParity; // top-of-window might not be top-of-screen
 
 vec4 ApplyGamma(vec4 c)
 {
@@ -19,9 +19,9 @@ vec4 ApplyGamma(vec4 c)
 
 void main()
 {
-	int thisVerticalPixel = int(gl_FragCoord.y + 1.0); // Bottom row is typically the right eye, when WindowHeight is even
+	int thisVerticalPixel = int(gl_FragCoord.y); // Bottom row is typically the right eye, when WindowHeight is even
 	bool isLeftEye = (thisVerticalPixel // because we want to alternate eye view on each row
-		 + VerticalPixelOffset // because the window might not be aligned to the screen
+		 + WindowPositionParity // because the window might not be aligned to the screen
 		) % 2 == 0;
 	vec4 inputColor;
 	if (isLeftEye) {

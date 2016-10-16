@@ -62,6 +62,7 @@
 #include "r_3dfloors.h"
 #include "v_palette.h"
 #include "r_data/colormaps.h"
+#include "r_draw_rgba.h"
 // [BC] New #includes.
 #include "sv_commands.h"
 
@@ -233,12 +234,11 @@ void R_MapPlane (int y, int x1)
 	if (plane_shade)
 	{
 		// Determine lighting based on the span's distance from the viewer.
-		ds_colormap = basecolormap->Maps + (GETPALOOKUP (
-			GlobVis * fabs(CenterY - y), planeshade) << COLORMAPSHIFT);
+		R_SetDSColorMapLight(basecolormap, GlobVis * fabs(CenterY - y), planeshade);
 	}
 
 #ifdef X86_ASM
-	if (ds_colormap != ds_curcolormap)
+	if (!r_swtruecolor && ds_colormap != ds_curcolormap)
 		R_SetSpanColormap_ASM (ds_colormap);
 #endif
 
@@ -361,7 +361,7 @@ void R_CalcTiltedLighting (double lval, double lend, int width)
 //
 //==========================================================================
 
-void R_MapTiltedPlane (int y, int x1)
+void R_MapTiltedPlane_C (int y, int x1)
 {
 	int x2 = spanend[y];
 	int width = x2 - x1;
@@ -398,7 +398,7 @@ void R_MapTiltedPlane (int y, int x1)
 
 		u = SQWORD(uz*z) + pviewx;
 		v = SQWORD(vz*z) + pviewy;
-		ds_colormap = tiltlighting[i];
+		R_SetDSColorMapLight(tiltlighting[i], 0, 0);
 		fb[i++] = ds_colormap[ds_source[(v >> vshift) | ((u >> ushift) & umask)]];
 		iz += plane_sz[0];
 		uz += plane_su[0];
@@ -484,15 +484,25 @@ void R_MapTiltedPlane (int y, int x1)
 #endif
 }
 
+void R_MapTiltedPlane_rgba (int y, int x1)
+{
+	R_DrawTiltedSpan_rgba(y, x1, spanend[y], plane_sz, plane_su, plane_sv, plane_shade, planeshade, planelightfloat, pviewx, pviewy);
+}
+
 //==========================================================================
 //
 // R_MapColoredPlane
 //
 //==========================================================================
 
-void R_MapColoredPlane (int y, int x1)
+void R_MapColoredPlane_C (int y, int x1)
 {
 	memset (ylookup[y] + x1 + dc_destorg, ds_color, spanend[y] - x1 + 1);
+}
+
+void R_MapColoredPlane_rgba(int y, int x1)
+{
+	R_DrawColoredSpan_rgba(y, x1, spanend[y]);
 }
 
 //==========================================================================
@@ -847,65 +857,310 @@ extern FTexture *rw_pic;
 // Allow for layer skies up to 512 pixels tall. This is overkill,
 // since the most anyone can ever see of the sky is 500 pixels.
 // We need 4 skybufs because wallscan can draw up to 4 columns at a time.
+// Need two versions - one for true color and one for palette
+#define MAXSKYBUF 3072
 static BYTE skybuf[4][512];
+static uint32_t skybuf_bgra[MAXSKYBUF][512];
 static DWORD lastskycol[4];
+static DWORD lastskycol_bgra[MAXSKYBUF];
 static int skycolplace;
+static int skycolplace_bgra;
+
+CVAR(Bool, r_linearsky, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 
 // Get a column of sky when there is only one sky texture.
 static const BYTE *R_GetOneSkyColumn (FTexture *fronttex, int x)
 {
-	angle_t column = (skyangle + xtoviewangle[x]) ^ skyflip;
-	return fronttex->GetColumn((UMulScale16(column, frontcyl) + frontpos) >> FRACBITS, NULL);
+	int tx;
+	if (r_linearsky)
+	{
+		angle_t xangle = (angle_t)((0.5 - x / (double)viewwidth) * FocalTangent * ANGLE_90);
+		angle_t column = (skyangle + xangle) ^ skyflip;
+		tx = (UMulScale16(column, frontcyl) + frontpos) >> FRACBITS;
+	}
+	else
+	{
+		angle_t column = (skyangle + xtoviewangle[x]) ^ skyflip;
+		tx = (UMulScale16(column, frontcyl) + frontpos) >> FRACBITS;
+	}
+
+	if (!r_swtruecolor)
+		return fronttex->GetColumn(tx, NULL);
+	else
+	{
+		return (const BYTE *)fronttex->GetColumnBgra(tx, NULL);
+	}
 }
 
 // Get a column of sky when there are two overlapping sky textures
 static const BYTE *R_GetTwoSkyColumns (FTexture *fronttex, int x)
 {
-	DWORD ang = (skyangle + xtoviewangle[x]) ^ skyflip;
-	DWORD angle1 = (DWORD)((UMulScale16(ang, frontcyl) + frontpos) >> FRACBITS);
-	DWORD angle2 = (DWORD)((UMulScale16(ang, backcyl) + backpos) >> FRACBITS);
+	DWORD ang, angle1, angle2;
+
+	if (r_linearsky)
+	{
+		angle_t xangle = (angle_t)((0.5 - x / (double)viewwidth) * FocalTangent * ANGLE_90);
+		ang = (skyangle + xangle) ^ skyflip;
+	}
+	else
+	{
+		ang = (skyangle + xtoviewangle[x]) ^ skyflip;
+	}
+	angle1 = (DWORD)((UMulScale16(ang, frontcyl) + frontpos) >> FRACBITS);
+	angle2 = (DWORD)((UMulScale16(ang, backcyl) + backpos) >> FRACBITS);
 
 	// Check if this column has already been built. If so, there's
 	// no reason to waste time building it again.
 	DWORD skycol = (angle1 << 16) | angle2;
 	int i;
 
-	for (i = 0; i < 4; ++i)
+	if (!r_swtruecolor)
 	{
-		if (lastskycol[i] == skycol)
+		for (i = 0; i < 4; ++i)
 		{
-			return skybuf[i];
+			if (lastskycol[i] == skycol)
+			{
+				return skybuf[i];
+			}
 		}
-	}
 
-	lastskycol[skycolplace] = skycol;
-	BYTE *composite = skybuf[skycolplace];
-	skycolplace = (skycolplace + 1) & 3;
+		lastskycol[skycolplace] = skycol;
+		BYTE *composite = skybuf[skycolplace];
+		skycolplace = (skycolplace + 1) & 3;
 
-	// The ordering of the following code has been tuned to allow VC++ to optimize
-	// it well. In particular, this arrangement lets it keep count in a register
-	// instead of on the stack.
-	const BYTE *front = fronttex->GetColumn (angle1, NULL);
-	const BYTE *back = backskytex->GetColumn (angle2, NULL);
+		// The ordering of the following code has been tuned to allow VC++ to optimize
+		// it well. In particular, this arrangement lets it keep count in a register
+		// instead of on the stack.
+		const BYTE *front = fronttex->GetColumn(angle1, NULL);
+		const BYTE *back = backskytex->GetColumn(angle2, NULL);
 
-	int count = MIN<int> (512, MIN (backskytex->GetHeight(), fronttex->GetHeight()));
-	i = 0;
-	do
-	{
-		if (front[i])
+		int count = MIN<int>(512, MIN(backskytex->GetHeight(), fronttex->GetHeight()));
+		i = 0;
+		do
 		{
-			composite[i] = front[i];
+			if (front[i])
+			{
+				composite[i] = front[i];
+			}
+			else
+			{
+				composite[i] = back[i];
+			}
+		} while (++i, --count);
+		return composite;
+	}
+	else
+	{
+		//return R_GetOneSkyColumn(fronttex, x);
+		for (i = skycolplace_bgra - 4; i < skycolplace_bgra; ++i)
+		{
+			int ic = (i % MAXSKYBUF); // i "checker" - can wrap around the ends of the array
+			if (lastskycol_bgra[ic] == skycol)
+			{
+				return (BYTE*)(skybuf_bgra[ic]);
+			}
+		}
+
+		lastskycol_bgra[skycolplace_bgra] = skycol;
+		uint32_t *composite = skybuf_bgra[skycolplace_bgra];
+		skycolplace_bgra = (skycolplace_bgra + 1) % MAXSKYBUF;
+
+		// The ordering of the following code has been tuned to allow VC++ to optimize
+		// it well. In particular, this arrangement lets it keep count in a register
+		// instead of on the stack.
+		const uint32_t *front = (const uint32_t *)fronttex->GetColumnBgra(angle1, NULL);
+		const uint32_t *back = (const uint32_t *)backskytex->GetColumnBgra(angle2, NULL);
+
+		//[SP] Paletted version is used for comparison only
+		const BYTE *frontcompare = fronttex->GetColumn(angle1, NULL);
+
+		int count = MIN<int>(512, MIN(backskytex->GetHeight(), fronttex->GetHeight()));
+		i = 0;
+		do
+		{
+			if (frontcompare[i])
+			{
+				composite[i] = front[i];
+			}
+			else
+			{
+				composite[i] = back[i];
+			}
+		} while (++i, --count);
+		return (BYTE*)composite;
+	}
+}
+
+static void R_DrawSkyColumn(int start_x, int y1, int y2, int columns)
+{
+	uint32_t height = frontskytex->GetHeight();
+
+	for (int i = 0; i < columns; i++)
+	{
+		int x = start_x + i;
+
+		int uv_fracbits = 24 - frontskytex->HeightBits;
+		double uv_stepd = skyiscale * frontskytex->Scale.Y;
+		double v = (skymid * frontskytex->Scale.Y + uv_stepd * (y1 - CenterY + 0.5)) / height;
+		v = v + 1.0f;
+		v *= height;
+		v *= (1 << uv_fracbits);
+		uint32_t uv_pos = (uint32_t)v;
+		uint32_t uv_step = xs_ToFixed(uv_fracbits, uv_stepd);
+		if (uv_step == 0) // To prevent divide by zero elsewhere
+			uv_step = 1;
+
+		if (MirrorFlags & RF_XFLIP)
+			x = (viewwidth - x);
+
+		DWORD ang, angle1, angle2;
+
+		if (r_linearsky)
+		{
+			angle_t xangle = (angle_t)((0.5 - x / (double)viewwidth) * FocalTangent * ANGLE_90);
+			ang = (skyangle + xangle) ^ skyflip;
 		}
 		else
 		{
-			composite[i] = back[i];
+			ang = (skyangle + xtoviewangle[x]) ^ skyflip;
 		}
-	} while (++i, --count);
-	return composite;
+		angle1 = (DWORD)((UMulScale16(ang, frontcyl) + frontpos) >> FRACBITS);
+		angle2 = (DWORD)((UMulScale16(ang, backcyl) + backpos) >> FRACBITS);
+
+		bufplce[i] = (const BYTE *)frontskytex->GetColumnBgra(angle1, nullptr);
+		bufplce2[i] = backskytex ? (const BYTE *)backskytex->GetColumnBgra(angle2, nullptr) : nullptr;
+		buftexturefracx[i] = 0;
+		vince[i] = uv_step;
+		vplce[i] = uv_pos;
+	}
+
+	bufheight[0] = height;
+	bufheight[1] = backskytex ? backskytex->GetHeight() : height;
+	dc_dest = (ylookup[y1] + start_x) * 4 + dc_destorg;
+	dc_count = y2 - y1;
+
+	uint32_t solid_top = frontskytex->GetSkyCapColor(false);
+	uint32_t solid_bottom = frontskytex->GetSkyCapColor(true);
+
+	if (columns == 4)
+		if (!backskytex)
+			R_DrawSingleSkyCol4(solid_top, solid_bottom);
+		else
+			R_DrawDoubleSkyCol4(solid_top, solid_bottom);
+	else
+		if (!backskytex)
+			R_DrawSingleSkyCol1(solid_top, solid_bottom);
+		else
+			R_DrawDoubleSkyCol1(solid_top, solid_bottom);
+}
+
+static void R_DrawTruecolorSky(visplane_t *pl)
+{
+	R_SetColorMapLight(fixedcolormap, 0, 0);
+	palookupoffse[0] = dc_colormap;
+	palookupoffse[1] = dc_colormap;
+	palookupoffse[2] = dc_colormap;
+	palookupoffse[3] = dc_colormap;
+	palookuplight[0] = 0;
+	palookuplight[1] = 0;
+	palookuplight[2] = 0;
+	palookuplight[3] = 0;
+	setupvline(FRACBITS);
+
+	int x1 = pl->left;
+	int x2 = pl->right;
+	short *uwal = (short *)pl->top;
+	short *dwal = (short *)pl->bottom;
+
+	// Calculate where 4 column alignment begins and ends:
+	int aligned_x1 = clamp((x1 + 3) / 4 * 4, x1, x2);
+	int aligned_x2 = clamp(x2 / 4 * 4, x1, x2);
+
+	// First unaligned columns:
+	for (int x = x1; x < aligned_x1; x++)
+	{
+		int y1 = uwal[x];
+		int y2 = dwal[x];
+		if (y2 <= y1)
+			continue;
+
+		R_DrawSkyColumn(x, y1, y2, 1);
+	}
+
+	// The aligned columns
+	for (int x = aligned_x1; x < aligned_x2; x += 4)
+	{
+		// Find y1, y2, light and uv values for four columns:
+		int y1[4] = { uwal[x], uwal[x + 1], uwal[x + 2], uwal[x + 3] };
+		int y2[4] = { dwal[x], dwal[x + 1], dwal[x + 2], dwal[x + 3] };
+
+		// Figure out where we vertically can start and stop drawing 4 columns in one go
+		int middle_y1 = y1[0];
+		int middle_y2 = y2[0];
+		for (int i = 1; i < 4; i++)
+		{
+			middle_y1 = MAX(y1[i], middle_y1);
+			middle_y2 = MIN(y2[i], middle_y2);
+		}
+
+		// If we got an empty column in our set we cannot draw 4 columns in one go:
+		bool empty_column_in_set = false;
+		for (int i = 0; i < 4; i++)
+		{
+			if (y2[i] <= y1[i])
+				empty_column_in_set = true;
+		}
+
+		if (empty_column_in_set || middle_y2 <= middle_y1)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				if (y2[i] <= y1[i])
+					continue;
+
+				R_DrawSkyColumn(x + i, y1[i], y2[i], 1);
+			}
+			continue;
+		}
+
+		// Draw the first rows where not all 4 columns are active
+		for (int i = 0; i < 4; i++)
+		{
+			if (y1[i] < middle_y1)
+				R_DrawSkyColumn(x + i, y1[i], middle_y1, 1);
+		}
+
+		// Draw the area where all 4 columns are active
+		R_DrawSkyColumn(x, middle_y1, middle_y2, 4);
+
+		// Draw the last rows where not all 4 columns are active
+		for (int i = 0; i < 4; i++)
+		{
+			if (middle_y2 < y2[i])
+				R_DrawSkyColumn(x + i, middle_y2, y2[i], 1);
+		}
+	}
+
+	// The last unaligned columns:
+	for (int x = aligned_x2; x < x2; x++)
+	{
+		int y1 = uwal[x];
+		int y2 = dwal[x];
+		if (y2 <= y1)
+			continue;
+
+		R_DrawSkyColumn(x, y1, y2, 1);
+	}
 }
 
 static void R_DrawSky (visplane_t *pl)
 {
+	if (r_swtruecolor)
+	{
+		R_DrawTruecolorSky(pl);
+		return;
+	}
+
 	int x;
 	float swal;
 
@@ -936,6 +1191,7 @@ static void R_DrawSky (visplane_t *pl)
 	for (x = 0; x < 4; ++x)
 	{
 		lastskycol[x] = 0xffffffff;
+		lastskycol_bgra[x] = 0xffffffff;
 	}
 
 	rw_pic = frontskytex;
@@ -949,6 +1205,7 @@ static void R_DrawSky (visplane_t *pl)
 		for (x = 0; x < 4; ++x)
 		{
 			lastskycol[x] = 0xffffffff;
+			lastskycol_bgra[x] = 0xffffffff;
 		}
 		wallscan (pl->left, pl->right, (short *)pl->top, (short *)pl->bottom, swall, lwall,
 			frontyScale, backskytex == NULL ? R_GetOneSkyColumn : R_GetTwoSkyColumns);
@@ -986,6 +1243,7 @@ static void R_DrawSkyStriped (visplane_t *pl)
 		for (x = 0; x < 4; ++x)
 		{
 			lastskycol[x] = 0xffffffff;
+			lastskycol_bgra[x] = 0xffffffff;
 		}
 		wallscan (pl->left, pl->right, top, bot, swall, lwall, rw_pic->Scale.Y,
 			backskytex == NULL ? R_GetOneSkyColumn : R_GetTwoSkyColumns);
@@ -1104,7 +1362,7 @@ void R_DrawSinglePlane (visplane_t *pl, fixed_t alpha, bool additive, bool maske
 		R_SetupSpanBits(tex);
 		double xscale = pl->xform.xScale * tex->Scale.X;
 		double yscale = pl->xform.yScale * tex->Scale.Y;
-		ds_source = tex->GetPixels ();
+		R_SetSpanSource(tex);
 
 		basecolormap = pl->colormap;
 		planeshade = LIGHT2SHADE(pl->lightlevel);
@@ -1320,7 +1578,7 @@ void R_DrawPortals ()
 		vissprite_p = firstvissprite;
 
 		visplaneStack.Pop (pl);
-		if (pl->Alpha > 0)
+		if (pl->Alpha > 0 && pl->picnum != skyflatnum)
 		{
 			R_DrawSinglePlane (pl, pl->Alpha, pl->Additive, true);
 		}
@@ -1467,12 +1725,13 @@ void R_DrawSkyPlane (visplane_t *pl)
 	bool fakefixed = false;
 	if (fixedcolormap)
 	{
-		dc_colormap = fixedcolormap;
+		R_SetColorMapLight(fixedcolormap, 0, 0);
 	}
 	else
 	{
 		fakefixed = true;
-		fixedcolormap = dc_colormap = NormalLight.Maps;
+		fixedcolormap = &NormalLight;
+		R_SetColorMapLight(fixedcolormap, 0, 0);
 	}
 
 	R_DrawSky (pl);
@@ -1490,7 +1749,7 @@ void R_DrawSkyPlane (visplane_t *pl)
 void R_DrawNormalPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t alpha, bool additive, bool masked)
 {
 #ifdef X86_ASM
-	if (ds_source != ds_cursource)
+	if (!r_swtruecolor && ds_source != ds_cursource)
 	{
 		R_SetSpanSource_ASM (ds_source);
 	}
@@ -1553,12 +1812,21 @@ void R_DrawNormalPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t 
 	planeheight = fabs(pl->height.Zat0() - ViewPos.Z);
 
 	GlobVis = r_FloorVisibility / planeheight;
+	ds_light = 0;
 	if (fixedlightlev >= 0)
-		ds_colormap = basecolormap->Maps + fixedlightlev, plane_shade = false;
+	{
+		R_SetDSColorMapLight(basecolormap, 0, FIXEDLIGHT2SHADE(fixedlightlev));
+		plane_shade = false;
+	}
 	else if (fixedcolormap)
-		ds_colormap = fixedcolormap, plane_shade = false;
+	{
+		R_SetDSColorMapLight(fixedcolormap, 0, 0);
+		plane_shade = false;
+	}
 	else
+	{
 		plane_shade = true;
+	}
 
 	if (spanfunc != R_FillSpan)
 	{
@@ -1571,12 +1839,16 @@ void R_DrawNormalPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t 
 					spanfunc = R_DrawSpanMaskedTranslucent;
 					dc_srcblend = Col2RGB8[alpha>>10];
 					dc_destblend = Col2RGB8[(OPAQUE-alpha)>>10];
+					dc_srcalpha = alpha;
+					dc_destalpha = OPAQUE - alpha;
 				}
 				else
 				{
 					spanfunc = R_DrawSpanMaskedAddClamp;
 					dc_srcblend = Col2RGB8_LessPrecision[alpha>>10];
 					dc_destblend = Col2RGB8_LessPrecision[FRACUNIT>>10];
+					dc_srcalpha = alpha;
+					dc_destalpha = OPAQUE - alpha;
 				}
 			}
 			else
@@ -1593,12 +1865,16 @@ void R_DrawNormalPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t 
 					spanfunc = R_DrawSpanTranslucent;
 					dc_srcblend = Col2RGB8[alpha>>10];
 					dc_destblend = Col2RGB8[(OPAQUE-alpha)>>10];
+					dc_srcalpha = alpha;
+					dc_destalpha = OPAQUE - alpha;
 				}
 				else
 				{
 					spanfunc = R_DrawSpanAddClamp;
 					dc_srcblend = Col2RGB8_LessPrecision[alpha>>10];
 					dc_destblend = Col2RGB8_LessPrecision[FRACUNIT>>10];
+					dc_srcalpha = alpha;
+					dc_destalpha = OPAQUE - alpha;
 				}
 			}
 			else
@@ -1714,11 +1990,20 @@ void R_DrawTiltedPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t 
 		planelightfloat = -planelightfloat;
 
 	if (fixedlightlev >= 0)
-		ds_colormap = basecolormap->Maps + fixedlightlev, plane_shade = false;
+	{
+		R_SetDSColorMapLight(basecolormap, 0, FIXEDLIGHT2SHADE(fixedlightlev));
+		plane_shade = false;
+	}
 	else if (fixedcolormap)
-		ds_colormap = fixedcolormap, plane_shade = false;
+	{
+		R_SetDSColorMapLight(fixedcolormap, 0, 0);
+		plane_shade = false;
+	}
 	else
-		ds_colormap = basecolormap->Maps, plane_shade = true;
+	{
+		R_SetDSColorMapLight(basecolormap, 0, 0);
+		plane_shade = true;
+	}
 
 	if (!plane_shade)
 	{
@@ -1729,9 +2014,16 @@ void R_DrawTiltedPlane (visplane_t *pl, double _xscale, double _yscale, fixed_t 
 	}
 
 #if defined(X86_ASM)
-	if (ds_source != ds_curtiltedsource)
-		R_SetTiltedSpanSource_ASM (ds_source);
-	R_MapVisPlane (pl, R_DrawTiltedPlane_ASM);
+	if (!r_swtruecolor)
+	{
+		if (ds_source != ds_curtiltedsource)
+			R_SetTiltedSpanSource_ASM(ds_source);
+		R_MapVisPlane(pl, R_DrawTiltedPlane_ASM);
+	}
+	else
+	{
+		R_MapVisPlane(pl, R_MapTiltedPlane);
+	}
 #else
 	R_MapVisPlane (pl, R_MapTiltedPlane);
 #endif

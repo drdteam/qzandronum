@@ -313,21 +313,21 @@ void rt_Translate4cols(const BYTE *translation, int yl, int yh)
 }
 
 // Translates one span at hx to the screen at sx.
-void rt_tlate1col (int hx, int sx, int yl, int yh)
+void rt_tlate1col_c (int hx, int sx, int yl, int yh)
 {
 	rt_Translate1col(dc_translation, hx, yl, yh);
 	rt_map1col(hx, sx, yl, yh);
 }
 
 // Translates all four spans to the screen starting at sx.
-void rt_tlate4cols (int sx, int yl, int yh)
+void rt_tlate4cols_c (int sx, int yl, int yh)
 {
 	rt_Translate4cols(dc_translation, yl, yh);
 	rt_map4cols(sx, yl, yh);
 }
 
 // Adds one span at hx to the screen at sx without clamping.
-void rt_add1col (int hx, int sx, int yl, int yh)
+void rt_add1col_c (int hx, int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -417,21 +417,21 @@ void rt_add4cols_c (int sx, int yl, int yh)
 }
 
 // Translates and adds one span at hx to the screen at sx without clamping.
-void rt_tlateadd1col (int hx, int sx, int yl, int yh)
+void rt_tlateadd1col_c (int hx, int sx, int yl, int yh)
 {
 	rt_Translate1col(dc_translation, hx, yl, yh);
 	rt_add1col(hx, sx, yl, yh);
 }
 
 // Translates and adds all four spans to the screen starting at sx without clamping.
-void rt_tlateadd4cols (int sx, int yl, int yh)
+void rt_tlateadd4cols_c (int sx, int yl, int yh)
 {
 	rt_Translate4cols(dc_translation, yl, yh);
 	rt_add4cols(sx, yl, yh);
 }
 
 // Shades one span at hx to the screen at sx.
-void rt_shaded1col (int hx, int sx, int yl, int yh)
+void rt_shaded1col_c (int hx, int sx, int yl, int yh)
 {
 	DWORD *fgstart;
 	BYTE *colormap;
@@ -507,7 +507,7 @@ void rt_shaded4cols_c (int sx, int yl, int yh)
 }
 
 // Adds one span at hx to the screen at sx with clamping.
-void rt_addclamp1col (int hx, int sx, int yl, int yh)
+void rt_addclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -556,12 +556,13 @@ void rt_addclamp4cols_c (int sx, int yl, int yh)
 		return;
 	count++;
 
-	DWORD *fg2rgb = dc_srcblend;
-	DWORD *bg2rgb = dc_destblend;
 	dest = ylookup[yl] + sx + dc_destorg;
 	source = &dc_temp[yl*4];
 	pitch = dc_pitch;
 	colormap = dc_colormap;
+
+	DWORD *fg2rgb = dc_srcblend;
+	DWORD *bg2rgb = dc_destblend;
 
 	do {
 		DWORD a = fg2rgb[colormap[source[0]]] + bg2rgb[dest[0]];
@@ -607,21 +608,21 @@ void rt_addclamp4cols_c (int sx, int yl, int yh)
 }
 
 // Translates and adds one span at hx to the screen at sx with clamping.
-void rt_tlateaddclamp1col (int hx, int sx, int yl, int yh)
+void rt_tlateaddclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	rt_Translate1col(dc_translation, hx, yl, yh);
 	rt_addclamp1col(hx, sx, yl, yh);
 }
 
 // Translates and adds all four spans to the screen starting at sx with clamping.
-void rt_tlateaddclamp4cols (int sx, int yl, int yh)
+void rt_tlateaddclamp4cols_c (int sx, int yl, int yh)
 {
 	rt_Translate4cols(dc_translation, yl, yh);
 	rt_addclamp4cols(sx, yl, yh);
 }
 
 // Subtracts one span at hx to the screen at sx with clamping.
-void rt_subclamp1col (int hx, int sx, int yl, int yh)
+void rt_subclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -656,7 +657,7 @@ void rt_subclamp1col (int hx, int sx, int yl, int yh)
 }
 
 // Subtracts all four spans to the screen starting at sx with clamping.
-void rt_subclamp4cols (int sx, int yl, int yh)
+void rt_subclamp4cols_c (int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -716,21 +717,21 @@ void rt_subclamp4cols (int sx, int yl, int yh)
 }
 
 // Translates and subtracts one span at hx to the screen at sx with clamping.
-void rt_tlatesubclamp1col (int hx, int sx, int yl, int yh)
+void rt_tlatesubclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	rt_Translate1col(dc_translation, hx, yl, yh);
 	rt_subclamp1col(hx, sx, yl, yh);
 }
 
 // Translates and subtracts all four spans to the screen starting at sx with clamping.
-void rt_tlatesubclamp4cols (int sx, int yl, int yh)
+void rt_tlatesubclamp4cols_c (int sx, int yl, int yh)
 {
 	rt_Translate4cols(dc_translation, yl, yh);
 	rt_subclamp4cols(sx, yl, yh);
 }
 
 // Subtracts one span at hx from the screen at sx with clamping.
-void rt_revsubclamp1col (int hx, int sx, int yl, int yh)
+void rt_revsubclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -765,7 +766,7 @@ void rt_revsubclamp1col (int hx, int sx, int yl, int yh)
 }
 
 // Subtracts all four spans from the screen starting at sx with clamping.
-void rt_revsubclamp4cols (int sx, int yl, int yh)
+void rt_revsubclamp4cols_c (int sx, int yl, int yh)
 {
 	BYTE *colormap;
 	BYTE *source;
@@ -825,17 +826,32 @@ void rt_revsubclamp4cols (int sx, int yl, int yh)
 }
 
 // Translates and subtracts one span at hx from the screen at sx with clamping.
-void rt_tlaterevsubclamp1col (int hx, int sx, int yl, int yh)
+void rt_tlaterevsubclamp1col_c (int hx, int sx, int yl, int yh)
 {
 	rt_Translate1col(dc_translation, hx, yl, yh);
 	rt_revsubclamp1col(hx, sx, yl, yh);
 }
 
 // Translates and subtracts all four spans from the screen starting at sx with clamping.
-void rt_tlaterevsubclamp4cols (int sx, int yl, int yh)
+void rt_tlaterevsubclamp4cols_c (int sx, int yl, int yh)
 {
 	rt_Translate4cols(dc_translation, yl, yh);
 	rt_revsubclamp4cols(sx, yl, yh);
+}
+
+// Reorder the posts so that they get drawn top-to-bottom instead of bottom-to-top.
+void rt_flip_posts()
+{
+	unsigned int *front = horizspan[dc_x & 3];
+	unsigned int *back = dc_ctspan[dc_x & 3] - 2;
+
+	while (front < back)
+	{
+		swapvalues(front[0], back[0]);
+		swapvalues(front[1], back[1]);
+		front += 2;
+		back -= 2;
+	}
 }
 
 // Copies all spans in all four columns to the screen starting at sx.
@@ -855,18 +871,21 @@ void rt_draw4cols (int sx)
 	}
 
 #ifdef X86_ASM
-	// Setup assembly routines for changed colormaps or other parameters.
-	if (hcolfunc_post4 == rt_shaded4cols)
+	if (!r_swtruecolor)
 	{
-		R_SetupShadedCol();
-	}
-	else if (hcolfunc_post4 == rt_addclamp4cols || hcolfunc_post4 == rt_tlateaddclamp4cols)
-	{
-		R_SetupAddClampCol();
-	}
-	else if (hcolfunc_post4 == rt_add4cols || hcolfunc_post4 == rt_tlateadd4cols)
-	{
-		R_SetupAddCol();
+		// Setup assembly routines for changed colormaps or other parameters.
+		if (hcolfunc_post4 == rt_shaded4cols)
+		{
+			R_SetupShadedCol();
+		}
+		else if (hcolfunc_post4 == rt_addclamp4cols || hcolfunc_post4 == rt_tlateaddclamp4cols)
+		{
+			R_SetupAddClampCol();
+		}
+		else if (hcolfunc_post4 == rt_add4cols || hcolfunc_post4 == rt_tlateadd4cols)
+		{
+			R_SetupAddCol();
+		}
 	}
 #endif
 
@@ -1002,13 +1021,21 @@ void rt_draw4cols (int sx)
 
 // Before each pass through a rendering loop that uses these routines,
 // call this function to set up the span pointers.
-void rt_initcols (BYTE *buff)
+void rt_initcols_pal (BYTE *buff)
 {
 	int y;
 
 	dc_temp = buff == NULL ? dc_tempbuff : buff;
 	for (y = 3; y >= 0; y--)
 		horizspan[y] = dc_ctspan[y] = &dc_tspans[y][0];
+}
+
+void rt_span_coverage_pal(int x, int start, int stop)
+{
+	unsigned int **tspan = &dc_ctspan[x & 3];
+	(*tspan)[0] = start;
+	(*tspan)[1] = stop;
+	*tspan += 2;
 }
 
 // Stretches a column into a temporary buffer which is later
@@ -1073,7 +1100,7 @@ void R_DrawColumnHorizP_C (void)
 }
 
 // [RH] Just fills a column with a given color
-void R_FillColumnHorizP (void)
+void R_FillColumnHorizP_C (void)
 {
 	int count = dc_count;
 	BYTE color = dc_color;
@@ -1102,102 +1129,4 @@ void R_FillColumnHorizP (void)
 		dest[0] = color; dest[4] = color;
 		dest += 8;
 	} while (--count);
-}
-
-// Same as R_DrawMaskedColumn() except that it always uses R_DrawColumnHoriz().
-
-void R_DrawMaskedColumnHoriz (const BYTE *column, const FTexture::Span *span)
-{
-	const fixed_t texturemid = FLOAT2FIXED(dc_texturemid);
-	while (span->Length != 0)
-	{
-		const int length = span->Length;
-		const int top = span->TopOffset;
-
-		// calculate unclipped screen coordinates for post
-		dc_yl = xs_RoundToInt(sprtopscreen + spryscale * top);
-		dc_yh = xs_RoundToInt(sprtopscreen + spryscale * (top + length) - 1);
-
-		if (sprflipvert)
-		{
-			swapvalues (dc_yl, dc_yh);
-		}
-
-		if (dc_yh >= mfloorclip[dc_x])
-		{
-			dc_yh = mfloorclip[dc_x] - 1;
-		}
-		if (dc_yl < mceilingclip[dc_x])
-		{
-			dc_yl = mceilingclip[dc_x];
-		}
-
-		if (dc_yl <= dc_yh)
-		{
-			if (sprflipvert)
-			{
-				dc_texturefrac = (dc_yl*dc_iscale) - (top << FRACBITS)
-					- fixed_t(CenterY * dc_iscale) - texturemid;
-				const fixed_t maxfrac = length << FRACBITS;
-				while (dc_texturefrac >= maxfrac)
-				{
-					if (++dc_yl > dc_yh)
-						goto nextpost;
-					dc_texturefrac += dc_iscale;
-				}
-				fixed_t endfrac = dc_texturefrac + (dc_yh-dc_yl)*dc_iscale;
-				while (endfrac < 0)
-				{
-					if (--dc_yh < dc_yl)
-						goto nextpost;
-					endfrac -= dc_iscale;
-				}
-			}
-			else
-			{
-				dc_texturefrac = texturemid - (top << FRACBITS)
-					+ (dc_yl*dc_iscale) - fixed_t((CenterY-1) * dc_iscale);
-				while (dc_texturefrac < 0)
-				{
-					if (++dc_yl > dc_yh)
-						goto nextpost;
-					dc_texturefrac += dc_iscale;
-				}
-				fixed_t endfrac = dc_texturefrac + (dc_yh-dc_yl)*dc_iscale;
-				const fixed_t maxfrac = length << FRACBITS;
-				if (dc_yh < mfloorclip[dc_x]-1 && endfrac < maxfrac - dc_iscale)
-				{
-					dc_yh++;
-				}
-				else while (endfrac >= maxfrac)
-				{
-					if (--dc_yh < dc_yl)
-						goto nextpost;
-					endfrac -= dc_iscale;
-				}
-			}
-			dc_source = column + top;
-			dc_dest = ylookup[dc_yl] + dc_x + dc_destorg;
-			dc_count = dc_yh - dc_yl + 1;
-			hcolfunc_pre ();
-		}
-nextpost:
-		span++;
-	}
-
-	if (sprflipvert)
-	{
-		unsigned int *front = horizspan[dc_x&3];
-		unsigned int *back = dc_ctspan[dc_x&3] - 2;
-
-		// Reorder the posts so that they get drawn top-to-bottom
-		// instead of bottom-to-top.
-		while (front < back)
-		{
-			swapvalues (front[0], back[0]);
-			swapvalues (front[1], back[1]);
-			front += 2;
-			back -= 2;
-		}
-	}
 }

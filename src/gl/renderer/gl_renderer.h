@@ -19,6 +19,10 @@ class FLightBuffer;
 class FSamplerManager;
 class DPSprite;
 class FGLRenderBuffers;
+class FLinearDepthShader;
+class FDepthBlurShader;
+class FSSAOShader;
+class FSSAOCombineShader;
 class FBloomExtractShader;
 class FBloomCombineShader;
 class FExposureExtractShader;
@@ -31,6 +35,8 @@ class FLensShader;
 class FFXAALumaShader;
 class FFXAAShader;
 class FPresentShader;
+class FPresent3DCheckerShader;
+class FPresent3DColumnShader; 
 class FPresent3DRowShader;
 class F2DDrawer;
 class FHardwareTexture;
@@ -96,6 +102,10 @@ public:
 	int mOldFBID;
 
 	FGLRenderBuffers *mBuffers;
+	FLinearDepthShader *mLinearDepthShader;
+	FSSAOShader *mSSAOShader;
+	FDepthBlurShader *mDepthBlurShader;
+	FSSAOCombineShader *mSSAOCombineShader;
 	FBloomExtractShader *mBloomExtractShader;
 	FBloomCombineShader *mBloomCombineShader;
 	FExposureExtractShader *mExposureExtractShader;
@@ -109,6 +119,8 @@ public:
 	FFXAALumaShader *mFXAALumaShader;
 	FFXAAShader *mFXAAShader;
 	FPresentShader *mPresentShader;
+	FPresent3DCheckerShader *mPresent3dCheckerShader;
+	FPresent3DColumnShader *mPresent3dColumnShader;
 	FPresent3DRowShader *mPresent3dRowShader;
 
 	FTexture *gllight;
@@ -177,6 +189,8 @@ public:
 	void SetFixedColormap (player_t *player);
 	void WriteSavePic (player_t *player, FileWriter *file, int width, int height);
 	void EndDrawScene(sector_t * viewsector);
+	void PostProcessScene();
+	void AmbientOccludeScene();
 	void UpdateCameraExposure();
 	void BloomScene();
 	void TonemapScene();
@@ -205,6 +219,9 @@ public:
 		DAngle rotation, FDynamicColormap *colormap, int lightlevel);
 
 	int PTM_BestColor (const uint32 *pal_in, int r, int g, int b, int first, int num);
+
+	static float GetZNear() { return 5.f; }
+	static float GetZFar() { return 65536.f; }
 };
 
 // Global functions. Make them members of GLRenderer later?

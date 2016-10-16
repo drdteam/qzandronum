@@ -51,6 +51,7 @@
 #include "gl/data/gl_vertexbuffer.h"
 #include "gl/scene/gl_drawinfo.h"
 #include "gl/shaders/gl_shader.h"
+#include "gl/shaders/gl_ambientshader.h"
 #include "gl/shaders/gl_bloomshader.h"
 #include "gl/shaders/gl_blurshader.h"
 #include "gl/shaders/gl_tonemapshader.h"
@@ -105,6 +106,8 @@ FGLRenderer::FGLRenderer(OpenGLFrameBuffer *fb)
 	mTonemapPalette = nullptr;
 	mBuffers = nullptr;
 	mPresentShader = nullptr;
+	mPresent3dCheckerShader = nullptr;
+	mPresent3dColumnShader = nullptr;
 	mPresent3dRowShader = nullptr;
 	mBloomExtractShader = nullptr;
 	mBloomCombineShader = nullptr;
@@ -116,6 +119,10 @@ FGLRenderer::FGLRenderer(OpenGLFrameBuffer *fb)
 	mTonemapPalette = nullptr;
 	mColormapShader = nullptr;
 	mLensShader = nullptr;
+	mLinearDepthShader = nullptr;
+	mDepthBlurShader = nullptr;
+	mSSAOShader = nullptr;
+	mSSAOCombineShader = nullptr;
 	mFXAAShader = nullptr;
 	mFXAALumaShader = nullptr;
 }
@@ -126,6 +133,10 @@ void gl_FlushModels();
 void FGLRenderer::Initialize(int width, int height)
 {
 	mBuffers = new FGLRenderBuffers();
+	mLinearDepthShader = new FLinearDepthShader();
+	mDepthBlurShader = new FDepthBlurShader();
+	mSSAOShader = new FSSAOShader();
+	mSSAOCombineShader = new FSSAOCombineShader();
 	mBloomExtractShader = new FBloomExtractShader();
 	mBloomCombineShader = new FBloomCombineShader();
 	mExposureExtractShader = new FExposureExtractShader();
@@ -139,6 +150,8 @@ void FGLRenderer::Initialize(int width, int height)
 	mFXAAShader = new FFXAAShader;
 	mFXAALumaShader = new FFXAALumaShader;
 	mPresentShader = new FPresentShader();
+	mPresent3dCheckerShader = new FPresent3DCheckerShader();
+	mPresent3dColumnShader = new FPresent3DColumnShader();
 	mPresent3dRowShader = new FPresent3DRowShader();
 	m2DDrawer = new F2DDrawer;
 
@@ -192,6 +205,12 @@ FGLRenderer::~FGLRenderer()
 	}
 	if (mBuffers) delete mBuffers;
 	if (mPresentShader) delete mPresentShader;
+	if (mPresent3dCheckerShader) delete mPresent3dCheckerShader;
+	if (mPresent3dColumnShader) delete mPresent3dColumnShader;
+	if (mLinearDepthShader) delete mLinearDepthShader;
+	if (mDepthBlurShader) delete mDepthBlurShader;
+	if (mSSAOShader) delete mSSAOShader;
+	if (mSSAOCombineShader) delete mSSAOCombineShader;
 	if (mPresent3dRowShader) delete mPresent3dRowShader;
 	if (mBloomExtractShader) delete mBloomExtractShader;
 	if (mBloomCombineShader) delete mBloomCombineShader;
@@ -321,7 +340,7 @@ void FGLRenderer::Begin2D()
 	if (mBuffers->Setup(mScreenViewport.width, mScreenViewport.height, mSceneViewport.width, mSceneViewport.height))
 	{
 		if (mDrawingScene2D)
-			mBuffers->BindSceneFB();
+			mBuffers->BindSceneFB(false);
 		else
 			mBuffers->BindCurrentFB();
 	}

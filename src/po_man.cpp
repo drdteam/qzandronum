@@ -328,7 +328,6 @@ void DMovePoly::Serialize(FSerializer &arc)
 {
 	Super::Serialize (arc);
 	arc("angle", m_Angle)
-		("speed", m_Speed);
 		("speedv", m_Speedv);
 }
 

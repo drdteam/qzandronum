@@ -42,7 +42,10 @@
 #include "r_3dfloors.h"
 #include "textures/textures.h"
 #include "r_data/voxels.h"
+#include "r_draw_rgba.h"
+#include "r_compiler/llvmdrawers.h"
 
+EXTERN_CVAR(Bool, r_shadercolormaps)
 
 // [BB] Use ZDoom's freelook limit for the sotfware renderer.
 // Note: ZDoom's limit is chosen such that the sky is rendered properly.
@@ -53,6 +56,16 @@ void R_SetupColormap(player_t *);
 void R_SetupFreelook();
 void R_InitRenderer();
 
+FSoftwareRenderer::FSoftwareRenderer()
+{
+	LLVMDrawers::Create();
+}
+
+FSoftwareRenderer::~FSoftwareRenderer()
+{
+	LLVMDrawers::Destroy();
+}
+
 //==========================================================================
 //
 // DCanvas :: Init
@@ -61,6 +74,7 @@ void R_InitRenderer();
 
 void FSoftwareRenderer::Init()
 {
+	r_swtruecolor = screen->IsBgra();
 	R_InitRenderer();
 }
 
@@ -88,11 +102,17 @@ void FSoftwareRenderer::PrecacheTexture(FTexture *tex, int cache)
 		if (cache & FTextureManager::HIT_Columnmode)
 		{
 			const FTexture::Span *spanp;
-			tex->GetColumn(0, &spanp);
+			if (r_swtruecolor)
+				tex->GetColumnBgra(0, &spanp);
+			else
+				tex->GetColumn(0, &spanp);
 		}
 		else if (cache != 0)
 		{
-			tex->GetPixels ();
+			if (r_swtruecolor)
+				tex->GetPixelsBgra();
+			else
+				tex->GetPixels ();
 		}
 		else
 		{
@@ -158,9 +178,24 @@ void FSoftwareRenderer::Precache(BYTE *texhitlist, TMap<PClassActor*, bool> &act
 
 void FSoftwareRenderer::RenderView(player_t *player)
 {
+	if (r_swtruecolor != screen->IsBgra())
+	{
+		r_swtruecolor = screen->IsBgra();
+		R_InitColumnDrawers();
+	}
+
+	R_BeginDrawerCommands();
 	R_RenderActorView (player->mo);
 	// [RH] Let cameras draw onto textures that were visible this frame.
 	FCanvasTextureInfo::UpdateAll ();
+
+	// Apply special colormap if the target cannot do it
+	if (realfixedcolormap && r_swtruecolor && !(r_shadercolormaps && screen->Accel2D))
+	{
+		DrawerCommandQueue::QueueCommand<ApplySpecialColormapRGBACommand>(realfixedcolormap, screen);
+	}
+
+	R_EndDrawerCommands();
 }
 
 //==========================================================================
@@ -185,7 +220,7 @@ void FSoftwareRenderer::RemapVoxels()
 
 void FSoftwareRenderer::WriteSavePic (player_t *player, FileWriter *file, int width, int height)
 {
-	DCanvas *pic = new DSimpleCanvas (width, height);
+	DCanvas *pic = new DSimpleCanvas (width, height, false);
 	PalEntry palette[256];
 
 	// Take a snapshot of the player's view
@@ -270,7 +305,12 @@ void FSoftwareRenderer::ErrorCleanup ()
 
 void FSoftwareRenderer::ClearBuffer(int color)
 {
-	memset(RenderTarget->GetBuffer(), color, RenderTarget->GetPitch() * RenderTarget->GetHeight());
+	// [SP] For now, for truecolor, this just outputs black. We'll figure out how to get something more meaningful
+	// later when this actually matters more. This is just to clear HOMs for now.
+	if (!r_swtruecolor)
+		memset(RenderTarget->GetBuffer(), color, RenderTarget->GetPitch() * RenderTarget->GetHeight());
+	else
+		memset(RenderTarget->GetBuffer(), 0, RenderTarget->GetPitch() * RenderTarget->GetHeight() * 4);
 }
 
 //===========================================================================
@@ -315,27 +355,67 @@ void FSoftwareRenderer::CopyStackedViewParameters()
 
 void FSoftwareRenderer::RenderTextureView (FCanvasTexture *tex, AActor *viewpoint, int fov)
 {
-	BYTE *Pixels = const_cast<BYTE*>(tex->GetPixels());
-	DSimpleCanvas *Canvas = tex->GetCanvas();
+	BYTE *Pixels = r_swtruecolor ? (BYTE*)tex->GetPixelsBgra() : (BYTE*)tex->GetPixels();
+	DSimpleCanvas *Canvas = r_swtruecolor ? tex->GetCanvasBgra() : tex->GetCanvas();
 
 	// curse Doom's overuse of global variables in the renderer.
 	// These get clobbered by rendering to a camera texture but they need to be preserved so the final rendering can be done with the correct palette.
-	unsigned char *savecolormap = fixedcolormap;
+	FSWColormap *savecolormap = fixedcolormap;
 	FSpecialColormap *savecm = realfixedcolormap;
 
 	DAngle savedfov = FieldOfView;
 	R_SetFOV ((double)fov);
 	R_RenderViewToCanvas (viewpoint, Canvas, 0, 0, tex->GetWidth(), tex->GetHeight(), tex->bFirstUpdate);
 	R_SetFOV (savedfov);
-	if (Pixels == Canvas->GetBuffer())
+
+	if (Canvas->IsBgra())
 	{
-		FTexture::FlipSquareBlockRemap (Pixels, tex->GetWidth(), tex->GetHeight(), GPalette.Remap);
+		if (Pixels == Canvas->GetBuffer())
+		{
+			FTexture::FlipSquareBlockBgra((uint32_t*)Pixels, tex->GetWidth(), tex->GetHeight());
+		}
+		else
+		{
+			FTexture::FlipNonSquareBlockBgra((uint32_t*)Pixels, (const uint32_t*)Canvas->GetBuffer(), tex->GetWidth(), tex->GetHeight(), Canvas->GetPitch());
+		}
 	}
 	else
 	{
-		FTexture::FlipNonSquareBlockRemap (Pixels, Canvas->GetBuffer(), tex->GetWidth(), tex->GetHeight(), Canvas->GetPitch(), GPalette.Remap);
+		if (Pixels == Canvas->GetBuffer())
+		{
+			FTexture::FlipSquareBlockRemap(Pixels, tex->GetWidth(), tex->GetHeight(), GPalette.Remap);
+		}
+		else
+		{
+			FTexture::FlipNonSquareBlockRemap(Pixels, Canvas->GetBuffer(), tex->GetWidth(), tex->GetHeight(), Canvas->GetPitch(), GPalette.Remap);
+		}
 	}
+
+	if (r_swtruecolor)
+	{
+		// True color render still sometimes uses palette textures (for sprites, mostly).
+		// We need to make sure that both pixel buffers contain data:
+		int width = tex->GetWidth();
+		int height = tex->GetHeight();
+		BYTE *palbuffer = (BYTE *)tex->GetPixels();
+		uint32_t *bgrabuffer = (uint32_t*)tex->GetPixelsBgra();
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				uint32_t color = bgrabuffer[y];
+				int r = RPART(color);
+				int g = GPART(color);
+				int b = BPART(color);
+				palbuffer[y] = RGB32k.RGB[r >> 3][g >> 3][b >> 3];
+			}
+			palbuffer += height;
+			bgrabuffer += height;
+		}
+	}
+
 	tex->SetUpdated();
+
 	fixedcolormap = savecolormap;
 	realfixedcolormap = savecm;
 }

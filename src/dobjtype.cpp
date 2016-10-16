@@ -671,6 +671,20 @@ void PNamedType::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 	id2 = TypeName;
 }
 
+//==========================================================================
+//
+// PNamedType :: QualifiedName
+//
+//==========================================================================
+
+FString PNamedType::QualifiedName() const
+{
+	FString out;
+	if (Outer != nullptr) out = Outer->QualifiedName();
+	out << "::" << TypeName;
+	return out;
+}
+
 /* PInt *******************************************************************/
 
 IMPLEMENT_CLASS(PInt)
@@ -1753,7 +1767,7 @@ PEnum::PEnum()
 //
 //==========================================================================
 
-PEnum::PEnum(FName name, DObject *outer)
+PEnum::PEnum(FName name, PTypeBase *outer)
 : PNamedType(name, outer), ValueType(NULL)
 {
 }
@@ -1767,7 +1781,7 @@ PEnum::PEnum(FName name, DObject *outer)
 //
 //==========================================================================
 
-PEnum *NewEnum(FName name, DObject *outer)
+PEnum *NewEnum(FName name, PTypeBase *outer)
 {
 	size_t bucket;
 	PType *etype = TypeTable.FindType(RUNTIME_CLASS(PEnum), (intptr_t)outer, (intptr_t)name, &bucket);
@@ -2150,7 +2164,7 @@ PStruct::PStruct()
 //
 //==========================================================================
 
-PStruct::PStruct(FName name, DObject *outer)
+PStruct::PStruct(FName name, PTypeBase *outer)
 : PNamedType(name, outer)
 {
 }
@@ -2311,7 +2325,7 @@ size_t PStruct::PropagateMark()
 //
 //==========================================================================
 
-PStruct *NewStruct(FName name, DObject *outer)
+PStruct *NewStruct(FName name, PTypeBase *outer)
 {
 	size_t bucket;
 	PType *stype = TypeTable.FindType(RUNTIME_CLASS(PStruct), (intptr_t)outer, (intptr_t)name, &bucket);
@@ -2849,10 +2863,7 @@ void PClass::InsertIntoHash ()
 	found = TypeTable.FindType(RUNTIME_CLASS(PClass), (intptr_t)Outer, TypeName, &bucket);
 	if (found != NULL)
 	{ // This type has already been inserted
-	  // ... but there is no need whatsoever to make it a fatal error!
-		if (!strictdecorate) Printf (TEXTCOLOR_RED"Tried to register class '%s' more than once.\n", TypeName.GetChars());
-		else I_Error("Tried to register class '%s' more than once.\n", TypeName.GetChars());
-		TypeTable.ReplaceType(this, found, bucket);
+		I_Error("Tried to register class '%s' more than once.\n", TypeName.GetChars());
 	}
 	else
 	{
@@ -3017,15 +3028,23 @@ PClass *PClass::CreateDerivedClass(FName name, unsigned int size)
 	PClass *existclass = static_cast<PClass *>(TypeTable.FindType(RUNTIME_CLASS(PClass), /*FIXME:Outer*/0, name, &bucket));
 
 	// This is a placeholder so fill it in
-	if (existclass != NULL && (existclass->Size == TentativeClass))
+	if (existclass != nullptr)
 	{
-		type = const_cast<PClass*>(existclass);
-		if (!IsDescendantOf(type->ParentClass))
+		if (existclass->Size == TentativeClass)
 		{
-			I_Error("%s must inherit from %s but doesn't.", name.GetChars(), type->ParentClass->TypeName.GetChars());
+			type = const_cast<PClass*>(existclass);
+			if (!IsDescendantOf(type->ParentClass))
+			{
+				I_Error("%s must inherit from %s but doesn't.", name.GetChars(), type->ParentClass->TypeName.GetChars());
+			}
+			DPrintf(DMSG_SPAMMY, "Defining placeholder class %s\n", name.GetChars());
+			notnew = true;
 		}
-		DPrintf(DMSG_SPAMMY, "Defining placeholder class %s\n", name.GetChars());
-		notnew = true;
+		else
+		{
+			// a different class with the same name already exists. Let the calling code deal with this.
+			return nullptr;
+		}
 	}
 	else
 	{
@@ -3362,6 +3381,7 @@ CCMD(typetable)
 
 // Symbol tables ------------------------------------------------------------
 
+IMPLEMENT_ABSTRACT_CLASS(PTypeBase);
 IMPLEMENT_ABSTRACT_CLASS(PSymbol);
 IMPLEMENT_CLASS(PSymbolConst);
 IMPLEMENT_CLASS(PSymbolConstNumeric);

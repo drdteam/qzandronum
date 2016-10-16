@@ -116,15 +116,15 @@ unsigned int GetRevisionNumber();
 #define DYNLIGHT
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "ZANDRONUM"
-#define BASEWAD "zandronum.pk3"
+#define GAMESIG "QZANDRONUM"
+#define BASEWAD "qzandronum.pk3"
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Zandronum"
-#define GAMENAMELOWERCASE "zandronum"
-#define DOMAIN_NAME "zandronum.com"
-#define FORUM_URL "http://" DOMAIN_NAME "/forum/"
-#define BUGS_FORUM_URL	"http://" DOMAIN_NAME "/tracker/"
+#define GAMENAME "QZandronum"
+#define GAMENAMELOWERCASE "qzandronum"
+#define DOMAIN_NAME "drdteam.org"
+#define FORUM_URL "http://forum." DOMAIN_NAME "/"
+#define BUGS_FORUM_URL	"http://forum." DOMAIN_NAME "/"
 
 // [BC] This is what's displayed as the title for server windows.
 #define	SERVERCONSOLE_TITLESTRING	GAMENAME " v" DOTVERSIONSTR " Server"

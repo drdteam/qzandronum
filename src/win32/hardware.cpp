@@ -51,6 +51,7 @@
 
 EXTERN_CVAR (Bool, ticker)
 EXTERN_CVAR (Bool, fullscreen)
+EXTERN_CVAR (Bool, swtruecolor)
 EXTERN_CVAR (Float, vid_winscale)
 
 CVAR(Int, win_x, -1, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
@@ -68,7 +69,15 @@ FRenderer *gl_CreateInterface();
 
 void I_RestartRenderer();
 int currentrenderer = -1;
+int currentcanvas = -1;
 bool changerenderer;
+
+// Software OpenGL canvas
+CUSTOM_CVAR(Bool, vid_used3d, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
+{
+	if (self != currentcanvas)
+		Printf("You must restart " GAMENAME " for this change to take effect.\n");
+}
 
 // [ZDoomGL]
 CUSTOM_CVAR (Int, vid_renderer, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
@@ -140,10 +149,14 @@ void I_InitGraphics ()
 	val.Bool = !!Args->CheckParm ("-devparm");
 	ticker.SetGenericRepDefault (val, CVAR_Bool);
 
-	//currentrenderer = vid_renderer;
 #ifndef NO_GL
-	if (currentrenderer==1) Video = gl_CreateVideo();
-	else Video = new Win32Video (0);
+	if (currentcanvas == 1) // Software Canvas: 1 = D3D or DirectDraw, 0 = OpenGL
+		if (currentrenderer == 1)
+			Video = gl_CreateVideo();
+		else
+			Video = new Win32Video(0);
+	else
+		Video = gl_CreateVideo();
 #else
 	Video = new Win32Video (0);
 #endif
@@ -164,6 +177,7 @@ static void I_DeleteRenderer()
 void I_CreateRenderer()
 {
 	currentrenderer = vid_renderer;
+	currentcanvas = vid_used3d;
 	if (Renderer == NULL)
 	{
 		if (currentrenderer==1) Renderer = gl_CreateInterface();
@@ -198,7 +212,7 @@ DFrameBuffer *I_SetMode (int &width, int &height, DFrameBuffer *old)
 		}
 		break;
 	}
-	DFrameBuffer *res = Video->CreateFrameBuffer (width, height, fs, old);
+	DFrameBuffer *res = Video->CreateFrameBuffer (width, height, swtruecolor, fs, old);
 
 	//* Right now, CreateFrameBuffer cannot return NULL
 	if (res == NULL)
@@ -364,6 +378,16 @@ void I_RestoreWindowedPos ()
 }
 
 extern int NewWidth, NewHeight, NewBits, DisplayBits;
+
+CUSTOM_CVAR(Bool, swtruecolor, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
+{
+	// Strictly speaking this doesn't require a mode switch, but it is the easiest
+	// way to force a CreateFramebuffer call without a lot of refactoring.
+	NewWidth = screen->GetWidth();
+	NewHeight = screen->GetHeight();
+	NewBits = DisplayBits;
+	setmodeneeded = true;
+}
 
 CUSTOM_CVAR (Bool, fullscreen, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
 {

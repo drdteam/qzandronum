@@ -1870,9 +1870,13 @@ DSPLYMNU_CAPFPS					= "Rendering Interpolation";
 DSPLYMNU_COLUMNMETHOD			= "Column render mode";
 DSPLYMNU_WIPETYPE				= "Screen wipe style";
 DSPLYMNU_SHOWENDOOM				= "Show ENDOOM screen";
+DSPLYMNU_BLOODFADE				= "Blood Flash Intensity";
+DSPLYMNU_PICKUPFADE				= "Pickup Flash Intensity";
 DSPLYMNU_PALLETEHACK			= "DirectDraw palette hack"; // Not used
 DSPLYMNU_ATTACHEDSURFACES		= "Use attached surfaces"; // Not used
 DSPLYMNU_STRETCHSKY				= "Stretch short skies";
+DSPLYMNU_LINEARSKY				= "Linear skies";
+DSPLYMNU_GZDFULLBRIGHT			= "Emulate GZDoom FullBright";
 DSPLYMNU_DRAWFUZZ				= "Use fuzz effect";
 DSPLYMNU_TRANSSOUL				= "Lost Soul translucency";
 DSPLYMNU_FAKECONTRAST			= "Use fake contrast";
@@ -1891,7 +1895,6 @@ DSPLYMNU_DIMCOLOR				= "Dim color";
 DSPLYMNU_MOVEBOB 				= "View bob amount while moving";
 DSPLYMNU_STILLBOB 				= "View bob amount while not moving";
 DSPLYMNU_BOBSPEED				= "Weapon bob speed";
-DSPLYMNU_PIFLASH				= "Show pickup screen flash";
 
 // HUD Options
 HUDMNU_TITLE					= "HUD Options";
@@ -2231,6 +2234,12 @@ MODMNU_QUALITY			= "Quality";
 MODMNU_VOLUMERAMPING	= "Volume ramping";
 MODMNU_CHIPOMATIC		= "Chip-o-matic";
 
+// Renderer Options
+RNDMNU_TITLE			= "CHANGE RENDERER";
+RNDMNU_RENDERER			= "Hardware Acceleration";
+RNDMNU_TRUECOLOR		= "Software Truecolor Mode";
+RNDMNU_CANVAS			= "Software Canvas";
+
 // Video Options
 VIDMNU_TITLE			= "VIDEO MODE";
 VIDMNU_FULLSCREEN		= "Fullscreen";
@@ -2238,6 +2247,7 @@ VIDMNU_HIDPI			= "Retina/HiDPI support";
 VIDMNU_ASPECTRATIO		= "Aspect ratio";
 VIDMNU_FORCEASPECT		= "Force aspect ratio";
 VIDMNU_5X4ASPECTRATIO	= "Enable 5:4 aspect ratio";
+VIDMNU_CHANGERENDER		= "Change Rendering Output";
 VIDMNU_ENTERTEXT		= "Press ENTER to set mode";
 VIDMNU_TESTTEXT1		= "T to test mode for 5 seconds";
 VIDMNU_TESTTEXT2		= "Please wait 5 seconds...";
@@ -2386,6 +2396,11 @@ OPTVAL_WARNINGS				= "Warnings";
 OPTVAL_NOTIFICATIONS		= "Notifications";
 OPTVAL_EVERYTHING			= "Everything";
 OPTVAL_FULLSCREENONLY		= "Fullscreen only";
+OPTVAL_GL 					= "OpenGL";
+OPTVAL_D3D					= "Direct3D";
+OPTVAL_HWPOLY				= "OpenGL-Accelerated";
+OPTVAL_SWDOOM				= "Doom Software Renderer";
+
 // Colors
 C_BRICK					= "\cabrick";
 C_TAN					= "\cbtan";
@@ -2697,6 +2712,7 @@ GLLIGHTMNU_LIGHTDEFS		= "Enable light definitions";
 GLLIGHTMNU_CLIPLIGHTS 		= "Clip lights";
 GLLIGHTMNU_LIGHTSPRITES 	= "Lights affect sprites";
 GLLIGHTMNU_LIGHTPARTICLES 	= "Lights affect particles";
+GLLIGHTMNU_LIGHTMATH 		= "Light quality";
 
 // OpenGL Preferences
 GLPREFMNU_TITLE 				= "OPENGL PREFERENCES";
@@ -2722,6 +2738,8 @@ GLPREFMNU_MULTISAMPLE			= "Multisample";
 GLPREFMNU_TONEMAP				= "Tonemap Mode";
 GLPREFMNU_BLOOM					= "Bloom effect";
 GLPREFMNU_LENS					= "Lens distortion effect";
+GLPREFMNU_SSAO					= "Ambient occlusion quality";
+GLPREFMNU_SSAO_PORTALS			= "Portals with AO";
 GLPREFMNU_FXAA					= "FXAA Quality";
 
 // Option Values
@@ -2795,6 +2813,8 @@ OPTVAL_SBSFULL		    	= "Side-by-side Full";
 OPTVAL_SBSNARROW			= "Side-by-side Narrow";
 OPTVAL_TOPBOTTOM			= "Top/Bottom";
 OPTVAL_ROWINTERLEAVED		= "Row Interleaved";
+OPTVAL_COLUMNINTERLEAVED	= "Column Interleaved";
+OPTVAL_CHECKERBOARD			= "Checkerboard";
 OPTVAL_QUADBUFFERED 		= "Quad-buffered";
 OPTVAL_UNCHARTED2			= "Uncharted 2";
 OPTVAL_HEJLDAWSON			= "Hejl Dawson";
@@ -2804,3 +2824,17 @@ OPTVAL_LOW					= "Low";
 OPTVAL_MEDIUM				= "Medium";
 OPTVAL_HIGH					= "High";
 OPTVAL_EXTREME				= "Extreme";
+
+// QZDoom exclusive:
+
+DSPLYMNU_TCOPT		= "TrueColor Options";
+
+TCMNU_TITLE		= "TRUECOLOR OPTIONS";
+
+
+TCMNU_MULTITHREADED		= "Multithreaded Drawing";
+TCMNU_TRUECOLOR				= "True color output";
+TCMNU_MINFILTER				= "Linear filter when downscaling";
+TCMNU_MAGFILTER				= "Linear filter when upscaling";
+TCMNU_MIPMAP					= "Use mipmapped textures";
+
