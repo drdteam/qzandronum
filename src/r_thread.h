@@ -36,6 +36,9 @@ public:
 	uint32_t dc_temp_rgbabuff_rgba[MAXHEIGHT * 4];
 	uint32_t *dc_temp_rgba;
 
+	short triangle_clip_top[MAXWIDTH];
+	short triangle_clip_bottom[MAXWIDTH];
+
 	// Checks if a line is rendered by this thread
 	bool line_skipped_by_thread(int line)
 	{
@@ -71,6 +74,30 @@ class DrawerCommand
 {
 protected:
 	int _dest_y;
+
+	void DetectRangeError(uint32_t *&dest, int &dest_y, int &count)
+	{
+#if defined(_MSC_VER) && defined(_DEBUG)
+		if (dest_y < 0 || count < 0 || dest_y + count > dc_destheight)
+			__debugbreak(); // Buffer overrun detected!
+#endif
+
+		if (dest_y < 0)
+		{
+			count += dest_y;
+			dest_y = 0;
+			dest = (uint32_t*)dc_destorg;
+		}
+		else if (dest_y >= dc_destheight)
+		{
+			dest_y = 0;
+			count = 0;
+		}
+
+		if (count < 0 || count > MAXHEIGHT) count = 0;
+		if (dest_y + count >= dc_destheight)
+			count = dc_destheight - dest_y;
+	}
 
 public:
 	DrawerCommand()

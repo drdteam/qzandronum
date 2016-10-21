@@ -59,6 +59,7 @@ static bool R_CheckForFixedLights(const BYTE *colormaps);
 
 extern "C" {
 FDynamicColormap NormalLight;
+FDynamicColormap FullNormalLight; //[SP] Emulate GZDoom brightness
 }
 bool NormalLightHasFixedLights;
 
@@ -72,6 +73,7 @@ struct FakeCmap
 
 TArray<FakeCmap> fakecmaps;
 FSWColormap realcolormaps;
+FSWColormap realfbcolormaps; //[SP] For fullbright use
 size_t numfakecmaps;
 
 
@@ -460,6 +462,7 @@ void R_DeinitColormaps ()
 	SpecialColormaps.Clear();
 	fakecmaps.Clear();
 	delete[] realcolormaps.Maps;
+	delete[] realfbcolormaps.Maps;
 	FreeSpecialLights();
 }
 
@@ -549,9 +552,20 @@ void R_InitColormaps ()
 			}
 		}
 	}
+
+	// [SP] Create a copy of the colormap
+	if (!realfbcolormaps.Maps)
+	{
+		realfbcolormaps.Maps = new BYTE[256*NUMCOLORMAPS*fakecmaps.Size()];
+		memcpy(realfbcolormaps.Maps, realcolormaps.Maps, 256*NUMCOLORMAPS*fakecmaps.Size());
+	}
+
 	NormalLight.Color = PalEntry (255, 255, 255);
 	NormalLight.Fade = 0;
 	NormalLight.Maps = realcolormaps.Maps;
+	FullNormalLight.Color = PalEntry (255, 255, 255);
+	FullNormalLight.Fade = 0;
+	FullNormalLight.Maps = realfbcolormaps.Maps;
 	NormalLightHasFixedLights = R_CheckForFixedLights(realcolormaps.Maps);
 	numfakecmaps = fakecmaps.Size();
 

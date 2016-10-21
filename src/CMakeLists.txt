@@ -312,15 +312,16 @@ if( NOT NO_OPENAL )
 	endif()
 endif()
 
-set( LLVM_COMPONENTS core support asmparser asmprinter bitreader codegen passes ipo
-	irreader transformutils instrumentation profiledata debuginfocodeview runtimedyld
-	object instcombine linker analysis selectiondag scalaropts vectorize executionengine
-	mc mcdisassembler mcparser mcjit target x86asmprinter x86info x86desc x86utils x86codegen )
 
 # Path where it looks for the LLVM compiled files on Windows
 set( LLVM_PRECOMPILED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../llvm" )
 
 if( NOT WIN32 )
+	set( LLVM_COMPONENTS core support asmparser asmprinter bitreader codegen ipo
+		irreader transformutils instrumentation profiledata runtimedyld
+		object instcombine linker analysis selectiondag scalaropts vectorize executionengine
+		mc mcdisassembler mcparser mcjit target x86asmprinter x86info x86desc x86utils x86codegen )
+
 	# Example LLVM_DIR folder: C:/Development/Environment/Src/llvm-3.9.0/build/lib/cmake/llvm
 	find_package(LLVM REQUIRED CONFIG)
 	message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -329,6 +330,11 @@ if( NOT WIN32 )
 	include_directories( ${LLVM_INCLUDE_DIRS} )
 	set( ZDOOM_LIBS ${ZDOOM_LIBS} ${llvm_libs} )
 else()
+	set( LLVM_COMPONENTS core support asmparser asmprinter bitreader codegen passes ipo
+		irreader transformutils instrumentation profiledata debuginfocodeview runtimedyld
+		object instcombine linker analysis selectiondag scalaropts vectorize executionengine
+		mc mcdisassembler mcparser mcjit target x86asmprinter x86info x86desc x86utils x86codegen )
+
 	include_directories( "${LLVM_PRECOMPILED_DIR}/include" )
 	if( X64 )
 		include_directories( "${LLVM_PRECOMPILED_DIR}/64bit-include" )
@@ -649,6 +655,11 @@ if( ZD_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 		set( CMAKE_CXX_FLAGS "-stdlib=libc++ ${CMAKE_CXX_FLAGS}" )
 		set( CMAKE_EXE_LINKER_FLAGS "-stdlib=libc++ ${CMAKE_EXE_LINKER_FLAGS}" )
 	endif ()
+
+	# Linux - add these flags for LLVM compatibility to prevent crashing
+	if ( UNIX AND NOT APPLE )
+		set( CMAKE_EXE_LINKER_FLAGS "-Wl,--exclude-libs,ALL ${CMAKE_EXE_LINKER_FLAGS}" )
+	endif()
 
 	# Remove extra warnings when using the official DirectX headers.
 	# Also, TDM-GCC 4.4.0 no longer accepts glibc-style printf formats as valid,

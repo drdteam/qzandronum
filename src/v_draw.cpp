@@ -175,13 +175,19 @@ void DCanvas::DrawTextureParms(FTexture *img, DrawParms &parms)
 			parms.colorOverlay = PalEntry(parms.colorOverlay).InverseColor();
 		}
 		// Note that this overrides DTA_Translation in software, but not in hardware.
-		FDynamicColormap *colormap = GetSpecialLights(MAKERGB(255,255,255),
-			parms.colorOverlay & MAKEARGB(0,255,255,255), 0);
-		translation = &colormap->Maps[(APART(parms.colorOverlay)*NUMCOLORMAPS/255)*256];
+		if (!r_swtruecolor)
+		{
+			FDynamicColormap *colormap = GetSpecialLights(MAKERGB(255, 255, 255),
+				parms.colorOverlay & MAKEARGB(0, 255, 255, 255), 0);
+			translation = &colormap->Maps[(APART(parms.colorOverlay)*NUMCOLORMAPS / 255) * 256];
+		}
 	}
 	else if (parms.remap != NULL)
 	{
-		translation = parms.remap->Remap;
+		if (r_swtruecolor)
+			translation = (const BYTE*)parms.remap->Palette;
+		else
+			translation = parms.remap->Remap;
 	}
 
 	if (translation != NULL)
@@ -190,14 +196,23 @@ void DCanvas::DrawTextureParms(FTexture *img, DrawParms &parms)
 	}
 	else
 	{
-		R_SetTranslationMap(identitymap);
+		if (r_swtruecolor)
+			R_SetTranslationMap(nullptr);
+		else
+			R_SetTranslationMap(identitymap);
 	}
 
 	fixedcolormap = dc_fcolormap;
-	ESPSResult mode = R_SetPatchStyle (parms.style, parms.Alpha, 0, parms.fillcolor);
+	ESPSResult mode;
+	if (r_swtruecolor)
+		mode = R_SetPatchStyle(parms.style, parms.Alpha, -1, parms.fillcolor);
+	else
+		mode = R_SetPatchStyle(parms.style, parms.Alpha, 0, parms.fillcolor);
 
 	BYTE *destorgsave = dc_destorg;
+	int destheightsave = dc_destheight;
 	dc_destorg = screen->GetBuffer();
+	dc_destheight = screen->GetHeight();
 	if (dc_destorg == NULL)
 	{
 		I_FatalError("Attempt to write to buffer of hardware canvas");
@@ -355,6 +370,7 @@ void DCanvas::DrawTextureParms(FTexture *img, DrawParms &parms)
 	R_FinishSetPatchStyle ();
 
 	dc_destorg = destorgsave;
+	dc_destheight = destheightsave;
 
 	if (ticdup != 0 && menuactive == MENU_Off)
 	{

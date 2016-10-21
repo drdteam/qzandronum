@@ -161,6 +161,16 @@ FAnimDef *FTextureManager::AddComplexAnim (FTextureID picnum, const TArray<FAnim
 // [RH] Rewritten to support BOOM ANIMATED lump but also make absolutely
 //		no assumptions about how the compiler packs the animdefs array.
 //
+// Since animdef_t no longer exists in ZDoom, here is some documentation
+// of the format:
+//
+//   This is an array of <n> entries, terminated by a 0xFF byte. Each entry
+//   is 23 bytes long and consists of the following fields:
+//     Byte      0: Bit 1 set for wall texture, clear for flat texture.
+//     Bytes   1-9: '\0'-terminated name of first texture.
+//     Bytes 10-18: '\0'-terminated name of last texture.
+//     Bytes 19-22: Tics per frame (stored in little endian order).
+//
 //==========================================================================
 
 CVAR(Bool, debuganimated, false, 0)
@@ -992,7 +1002,7 @@ void FTextureManager::UpdateAnimations (DWORD mstime)
 
 template<> FSerializer &Serialize(FSerializer &arc, const char *key, FDoorAnimation *&p, FDoorAnimation **def)
 {
-	FTextureID tex = p->BaseTexture;
+	FTextureID tex = p? p->BaseTexture : FNullTextureID();
 	Serialize(arc, key, tex, def ? &(*def)->BaseTexture : nullptr);
 	if (arc.isReading())
 	{

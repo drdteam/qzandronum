@@ -263,7 +263,7 @@ void LLVMDrawersImpl::CodegenDrawColumn(const char *name, DrawColumnVariant vari
 	builder.CreateRetVoid();
 
 	if (llvm::verifyFunction(*function.func))
-		I_FatalError("verifyFunction failed for " __FUNCTION__);
+		I_FatalError("verifyFunction failed for CodegenDrawColumn()");
 }
 
 void LLVMDrawersImpl::CodegenDrawSpan(const char *name, DrawSpanVariant variant)
@@ -281,7 +281,7 @@ void LLVMDrawersImpl::CodegenDrawSpan(const char *name, DrawSpanVariant variant)
 	builder.CreateRetVoid();
 
 	if (llvm::verifyFunction(*function.func))
-		I_FatalError("verifyFunction failed for " __FUNCTION__);
+		I_FatalError("verifyFunction failed for CodegenDrawSpan()");
 }
 
 void LLVMDrawersImpl::CodegenDrawWall(const char *name, DrawWallVariant variant, int columns)
@@ -300,7 +300,7 @@ void LLVMDrawersImpl::CodegenDrawWall(const char *name, DrawWallVariant variant,
 	builder.CreateRetVoid();
 
 	if (llvm::verifyFunction(*function.func))
-		I_FatalError("verifyFunction failed for " __FUNCTION__);
+		I_FatalError("verifyFunction failed for CodegenDrawWall()");
 }
 
 void LLVMDrawersImpl::CodegenDrawSky(const char *name, DrawSkyVariant variant, int columns)
@@ -319,7 +319,7 @@ void LLVMDrawersImpl::CodegenDrawSky(const char *name, DrawSkyVariant variant, i
 	builder.CreateRetVoid();
 
 	if (llvm::verifyFunction(*function.func))
-		I_FatalError("verifyFunction failed for " __FUNCTION__);
+		I_FatalError("verifyFunction failed for CodegenDrawSky()");
 }
 
 llvm::Type *LLVMDrawersImpl::GetDrawColumnArgsStruct(llvm::LLVMContext &context)
@@ -446,10 +446,18 @@ LLVMProgram::LLVMProgram()
 	InitializeNativeTarget();
 	InitializeNativeTargetAsmPrinter();
 
+	mContext = std::make_unique<LLVMContext>();
+	mModule = std::make_unique<Module>("render", context());
+}
+
+void LLVMProgram::CreateEE()
+{
+	using namespace llvm;
+
 	std::string errorstring;
 
+#if 0
 	std::string targetTriple = sys::getProcessTriple();
-	std::string cpuName = sys::getHostCPUName();
 	StringMap<bool> cpuFeatures;
 	sys::getHostCPUFeatures(cpuFeatures);
 	std::string cpuFeaturesStr;
@@ -461,36 +469,38 @@ LLVMProgram::LLVMProgram()
 		cpuFeaturesStr += it.getKey();
 	}
 
-	DPrintf(DMSG_SPAMMY, "LLVM target triple: %s\n", targetTriple.c_str());
-	DPrintf(DMSG_SPAMMY, "LLVM CPU and features: %s, %s\n", cpuName.c_str(), cpuFeaturesStr.c_str());
+	Printf("LLVM CPU features: %s\n", cpuFeaturesStr.c_str());
+#endif
 
-	const Target *target = TargetRegistry::lookupTarget(targetTriple, errorstring);
-	if (!target)
-		I_FatalError("Could not find LLVM target: %s", errorstring.c_str());
-
-	TargetOptions opt;
-	auto relocModel = Optional<Reloc::Model>();
-	machine = target->createTargetMachine(targetTriple, cpuName, cpuFeaturesStr, opt, relocModel, CodeModel::JITDefault, CodeGenOpt::Aggressive);
+	llvm::Module *module = mModule.get();
+	EngineBuilder engineBuilder(std::move(mModule));
+	engineBuilder.setErrorStr(&errorstring);
+	engineBuilder.setOptLevel(CodeGenOpt::Aggressive);
+	engineBuilder.setEngineKind(EngineKind::JIT);
+	engineBuilder.setMCPU(sys::getHostCPUName());
+	machine = engineBuilder.selectTarget();
 	if (!machine)
 		I_FatalError("Could not create LLVM target machine");
 
-	mContext = std::make_unique<LLVMContext>();
+	std::string targetTriple = machine->getTargetTriple().getTriple();
+	std::string cpuName = machine->getTargetCPU();
+	Printf("LLVM target triple: %s\n", targetTriple.c_str());
+	Printf("LLVM target CPU: %s\n", cpuName.c_str());
 
-	mModule = std::make_unique<Module>("render", context());
-	mModule->setTargetTriple(targetTriple);
-	mModule->setDataLayout(machine->createDataLayout());
+	module->setTargetTriple(targetTriple);
+#if LLVM_VERSION_MAJOR < 3 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR < 8)
+	module->setDataLayout(new DataLayout(*machine->getSubtargetImpl()->getDataLayout()));
+#else
+	module->setDataLayout(machine->createDataLayout());
+#endif
 
-}
-
-void LLVMProgram::CreateEE()
-{
-	using namespace llvm;
-
-	legacy::FunctionPassManager PerFunctionPasses(mModule.get());
+	legacy::FunctionPassManager PerFunctionPasses(module);
 	legacy::PassManager PerModulePasses;
 
+#if LLVM_VERSION_MAJOR > 3 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8)
 	PerFunctionPasses.add(createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
 	PerModulePasses.add(createTargetTransformInfoWrapperPass(machine->getTargetIRAnalysis()));
+#endif
 
 	PassManagerBuilder passManagerBuilder;
 	passManagerBuilder.OptLevel = 3;
@@ -504,7 +514,7 @@ void LLVMProgram::CreateEE()
 
 	// Run function passes:
 	PerFunctionPasses.doInitialization();
-	for (llvm::Function &func : *mModule.get())
+	for (llvm::Function &func : *module)
 	{
 		if (!func.isDeclaration())
 			PerFunctionPasses.run(func);
@@ -512,15 +522,9 @@ void LLVMProgram::CreateEE()
 	PerFunctionPasses.doFinalization();
 
 	// Run module passes:
-	PerModulePasses.run(*mModule.get());
+	PerModulePasses.run(*module);
 
-	std::string errorstring;
-
-	EngineBuilder engineBuilder(std::move(mModule));
-	engineBuilder.setErrorStr(&errorstring);
-	engineBuilder.setOptLevel(CodeGenOpt::Aggressive);
-	engineBuilder.setRelocationModel(Reloc::Static);
-	engineBuilder.setEngineKind(EngineKind::JIT);
+	// Create execution engine and generate machine code
 	mEngine.reset(engineBuilder.create(machine));
 	if (!mEngine)
 		I_FatalError("Could not create LLVM execution engine: %s", errorstring.c_str());
@@ -532,13 +536,17 @@ std::string LLVMProgram::DumpModule()
 {
 	std::string str;
 	llvm::raw_string_ostream stream(str);
+#if LLVM_VERSION_MAJOR < 3 || (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR < 8)
+	mModule->print(stream, nullptr);
+#else
 	mModule->print(stream, nullptr, false, true);
+#endif
 	return stream.str();
 }
 
 void *LLVMProgram::PointerToFunction(const char *name)
 {
-	return reinterpret_cast<void(*)()>(mEngine->getFunctionAddress(name));
+	return reinterpret_cast<void*>(mEngine->getFunctionAddress(name));
 }
 
 void LLVMProgram::StopLogFatalErrors()

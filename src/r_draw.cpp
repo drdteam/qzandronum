@@ -67,6 +67,7 @@ BYTE*			viewimage;
 extern "C" {
 int				ylookup[MAXHEIGHT];
 BYTE			*dc_destorg;
+int				dc_destheight;
 }
 int 			scaledviewwidth;
 
@@ -2237,6 +2238,246 @@ void tmvline4_revsubclamp_C ()
 	} while (--count);
 }
 
+void R_DrawSingleSkyCol1(uint32_t solid_top, uint32_t solid_bottom)
+{
+	uint8_t *dest = dc_dest;
+	int count = dc_count;
+	int pitch = dc_pitch;
+	const uint8_t *source0 = bufplce[0];
+	int textureheight0 = bufheight[0];
+
+	int32_t frac = vplce[0];
+	int32_t fracstep = vince[0];
+
+	int start_fade = 2; // How fast it should fade out
+
+	int solid_top_r = RPART(solid_top);
+	int solid_top_g = GPART(solid_top);
+	int solid_top_b = BPART(solid_top);
+	int solid_bottom_r = RPART(solid_bottom);
+	int solid_bottom_g = GPART(solid_bottom);
+	int solid_bottom_b = BPART(solid_bottom);
+
+	for (int index = 0; index < count; index++)
+	{
+		uint32_t sample_index = (((((uint32_t)frac) << 8) >> FRACBITS) * textureheight0) >> FRACBITS;
+		uint8_t fg = source0[sample_index];
+
+		int alpha_top = MAX(MIN(frac >> (16 - start_fade), 256), 0);
+		int alpha_bottom = MAX(MIN(((2 << 24) - frac) >> (16 - start_fade), 256), 0);
+
+		if (alpha_top == 256 && alpha_bottom == 256)
+		{
+			*dest = fg;
+		}
+		else
+		{
+			int inv_alpha_top = 256 - alpha_top;
+			int inv_alpha_bottom = 256 - alpha_bottom;
+
+			const auto &c = GPalette.BaseColors[fg];
+			int c_red = c.r;
+			int c_green = c.g;
+			int c_blue = c.b;
+			c_red = (c_red * alpha_top + solid_top_r * inv_alpha_top) >> 8;
+			c_green = (c_green * alpha_top + solid_top_g * inv_alpha_top) >> 8;
+			c_blue = (c_blue * alpha_top + solid_top_b * inv_alpha_top) >> 8;
+			c_red = (c_red * alpha_bottom + solid_bottom_r * inv_alpha_bottom) >> 8;
+			c_green = (c_green * alpha_bottom + solid_bottom_g * inv_alpha_bottom) >> 8;
+			c_blue = (c_blue * alpha_bottom + solid_bottom_b * inv_alpha_bottom) >> 8;
+			*dest = RGB32k.RGB[(c_red >> 3)][(c_green >> 3)][(c_blue >> 3)];
+		}
+
+		frac += fracstep;
+		dest += pitch;
+	}
+}
+
+void R_DrawSingleSkyCol4(uint32_t solid_top, uint32_t solid_bottom)
+{
+	for (int col = 0; col < 4; col++)
+	{
+		uint8_t *dest = dc_dest + col;
+		int count = dc_count;
+		int pitch = dc_pitch;
+		const uint8_t *source0 = bufplce[col];
+		int textureheight0 = bufheight[0];
+
+		int32_t frac = vplce[col];
+		int32_t fracstep = vince[col];
+
+		int start_fade = 2; // How fast it should fade out
+
+		int solid_top_r = RPART(solid_top);
+		int solid_top_g = GPART(solid_top);
+		int solid_top_b = BPART(solid_top);
+		int solid_bottom_r = RPART(solid_bottom);
+		int solid_bottom_g = GPART(solid_bottom);
+		int solid_bottom_b = BPART(solid_bottom);
+
+		for (int index = 0; index < count; index++)
+		{
+			uint32_t sample_index = (((((uint32_t)frac) << 8) >> FRACBITS) * textureheight0) >> FRACBITS;
+			uint8_t fg = source0[sample_index];
+
+			int alpha_top = MAX(MIN(frac >> (16 - start_fade), 256), 0);
+			int alpha_bottom = MAX(MIN(((2 << 24) - frac) >> (16 - start_fade), 256), 0);
+
+			if (alpha_top == 256 && alpha_bottom == 256)
+			{
+				*dest = fg;
+			}
+			else
+			{
+				int inv_alpha_top = 256 - alpha_top;
+				int inv_alpha_bottom = 256 - alpha_bottom;
+
+				const auto &c = GPalette.BaseColors[fg];
+				int c_red = c.r;
+				int c_green = c.g;
+				int c_blue = c.b;
+				c_red = (c_red * alpha_top + solid_top_r * inv_alpha_top) >> 8;
+				c_green = (c_green * alpha_top + solid_top_g * inv_alpha_top) >> 8;
+				c_blue = (c_blue * alpha_top + solid_top_b * inv_alpha_top) >> 8;
+				c_red = (c_red * alpha_bottom + solid_bottom_r * inv_alpha_bottom) >> 8;
+				c_green = (c_green * alpha_bottom + solid_bottom_g * inv_alpha_bottom) >> 8;
+				c_blue = (c_blue * alpha_bottom + solid_bottom_b * inv_alpha_bottom) >> 8;
+				*dest = RGB32k.RGB[(c_red >> 3)][(c_green >> 3)][(c_blue >> 3)];
+			}
+
+			frac += fracstep;
+			dest += pitch;
+		}
+	}
+}
+
+void R_DrawDoubleSkyCol1(uint32_t solid_top, uint32_t solid_bottom)
+{
+	uint8_t *dest = dc_dest;
+	int count = dc_count;
+	int pitch = dc_pitch;
+	const uint8_t *source0 = bufplce[0];
+	const uint8_t *source1 = bufplce2[0];
+	int textureheight0 = bufheight[0];
+	uint32_t maxtextureheight1 = bufheight[1] - 1;
+
+	int32_t frac = vplce[0];
+	int32_t fracstep = vince[0];
+
+	int start_fade = 2; // How fast it should fade out
+
+	int solid_top_r = RPART(solid_top);
+	int solid_top_g = GPART(solid_top);
+	int solid_top_b = BPART(solid_top);
+	int solid_bottom_r = RPART(solid_bottom);
+	int solid_bottom_g = GPART(solid_bottom);
+	int solid_bottom_b = BPART(solid_bottom);
+
+	for (int index = 0; index < count; index++)
+	{
+		uint32_t sample_index = (((((uint32_t)frac) << 8) >> FRACBITS) * textureheight0) >> FRACBITS;
+		uint8_t fg = source0[sample_index];
+		if (fg == 0)
+		{
+			uint32_t sample_index2 = MIN(sample_index, maxtextureheight1);
+			fg = source1[sample_index2];
+		}
+
+		int alpha_top = MAX(MIN(frac >> (16 - start_fade), 256), 0);
+		int alpha_bottom = MAX(MIN(((2 << 24) - frac) >> (16 - start_fade), 256), 0);
+
+		if (alpha_top == 256 && alpha_bottom == 256)
+		{
+			*dest = fg;
+		}
+		else
+		{
+			int inv_alpha_top = 256 - alpha_top;
+			int inv_alpha_bottom = 256 - alpha_bottom;
+
+			const auto &c = GPalette.BaseColors[fg];
+			int c_red = c.r;
+			int c_green = c.g;
+			int c_blue = c.b;
+			c_red = (c_red * alpha_top + solid_top_r * inv_alpha_top) >> 8;
+			c_green = (c_green * alpha_top + solid_top_g * inv_alpha_top) >> 8;
+			c_blue = (c_blue * alpha_top + solid_top_b * inv_alpha_top) >> 8;
+			c_red = (c_red * alpha_bottom + solid_bottom_r * inv_alpha_bottom) >> 8;
+			c_green = (c_green * alpha_bottom + solid_bottom_g * inv_alpha_bottom) >> 8;
+			c_blue = (c_blue * alpha_bottom + solid_bottom_b * inv_alpha_bottom) >> 8;
+			*dest = RGB32k.RGB[(c_red >> 3)][(c_green >> 3)][(c_blue >> 3)];
+		}
+
+		frac += fracstep;
+		dest += pitch;
+	}
+}
+
+void R_DrawDoubleSkyCol4(uint32_t solid_top, uint32_t solid_bottom)
+{
+	for (int col = 0; col < 4; col++)
+	{
+		uint8_t *dest = dc_dest + col;
+		int count = dc_count;
+		int pitch = dc_pitch;
+		const uint8_t *source0 = bufplce[col];
+		const uint8_t *source1 = bufplce2[col];
+		int textureheight0 = bufheight[0];
+		uint32_t maxtextureheight1 = bufheight[1] - 1;
+
+		int32_t frac = vplce[col];
+		int32_t fracstep = vince[col];
+
+		int start_fade = 2; // How fast it should fade out
+
+		int solid_top_r = RPART(solid_top);
+		int solid_top_g = GPART(solid_top);
+		int solid_top_b = BPART(solid_top);
+		int solid_bottom_r = RPART(solid_bottom);
+		int solid_bottom_g = GPART(solid_bottom);
+		int solid_bottom_b = BPART(solid_bottom);
+
+		for (int index = 0; index < count; index++)
+		{
+			uint32_t sample_index = (((((uint32_t)frac) << 8) >> FRACBITS) * textureheight0) >> FRACBITS;
+			uint8_t fg = source0[sample_index];
+			if (fg == 0)
+			{
+				uint32_t sample_index2 = MIN(sample_index, maxtextureheight1);
+				fg = source1[sample_index2];
+			}
+
+			int alpha_top = MAX(MIN(frac >> (16 - start_fade), 256), 0);
+			int alpha_bottom = MAX(MIN(((2 << 24) - frac) >> (16 - start_fade), 256), 0);
+
+			if (alpha_top == 256 && alpha_bottom == 256)
+			{
+				*dest = fg;
+			}
+			else
+			{
+				int inv_alpha_top = 256 - alpha_top;
+				int inv_alpha_bottom = 256 - alpha_bottom;
+
+				const auto &c = GPalette.BaseColors[fg];
+				int c_red = c.r;
+				int c_green = c.g;
+				int c_blue = c.b;
+				c_red = (c_red * alpha_top + solid_top_r * inv_alpha_top) >> 8;
+				c_green = (c_green * alpha_top + solid_top_g * inv_alpha_top) >> 8;
+				c_blue = (c_blue * alpha_top + solid_top_b * inv_alpha_top) >> 8;
+				c_red = (c_red * alpha_bottom + solid_bottom_r * inv_alpha_bottom) >> 8;
+				c_green = (c_green * alpha_bottom + solid_bottom_g * inv_alpha_bottom) >> 8;
+				c_blue = (c_blue * alpha_bottom + solid_bottom_b * inv_alpha_bottom) >> 8;
+				*dest = RGB32k.RGB[(c_red >> 3)][(c_green >> 3)][(c_blue >> 3)];
+			}
+
+			frac += fracstep;
+			dest += pitch;
+		}
+	}
+}
+
 //==========================================================================
 //
 // R_GetColumn
@@ -2693,16 +2934,19 @@ ESPSResult R_SetPatchStyle (FRenderStyle style, fixed_t alpha, int translation, 
 		alpha = clamp<fixed_t> (alpha, 0, OPAQUE);
 	}
 
-	dc_translation = NULL;
-	if (translation != 0)
+	if (translation != -1)
 	{
-		FRemapTable *table = TranslationToTable(translation);
-		if (table != NULL && !table->Inactive)
+		dc_translation = NULL;
+		if (translation != 0)
 		{
-			if (r_swtruecolor)
-				dc_translation = (BYTE*)table->Palette;
-			else
-				dc_translation = table->Remap;
+			FRemapTable *table = TranslationToTable(translation);
+			if (table != NULL && !table->Inactive)
+			{
+				if (r_swtruecolor)
+					dc_translation = (BYTE*)table->Palette;
+				else
+					dc_translation = table->Remap;
+			}
 		}
 	}
 	basecolormapsave = basecolormap;
@@ -2805,10 +3049,11 @@ bool R_GetTransMaskDrawers (fixed_t (**tmvline1)(), void (**tmvline4)())
 
 void R_SetTranslationMap(lighttable_t *translation)
 {
-	dc_fcolormap = nullptr;
-	dc_colormap = translation;
 	if (r_swtruecolor)
 	{
+		dc_fcolormap = nullptr;
+		dc_colormap = nullptr;
+		dc_translation = translation;
 		dc_shade_constants.light_red = 256;
 		dc_shade_constants.light_green = 256;
 		dc_shade_constants.light_blue = 256;
@@ -2820,6 +3065,11 @@ void R_SetTranslationMap(lighttable_t *translation)
 		dc_shade_constants.desaturate = 0;
 		dc_shade_constants.simple_shade = true;
 		dc_light = 0;
+	}
+	else
+	{
+		dc_fcolormap = nullptr;
+		dc_colormap = translation;
 	}
 }
 

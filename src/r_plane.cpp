@@ -63,12 +63,16 @@
 #include "v_palette.h"
 #include "r_data/colormaps.h"
 #include "r_draw_rgba.h"
+#include "gl/data/gl_matrix.h"
 // [BC] New #includes.
 #include "sv_commands.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244)
 #endif
+
+EXTERN_CVAR(Int, r_skymode)
+CVAR(Bool, r_cubesky, false, 0)
 
 //EXTERN_CVAR (Int, tx)
 //EXTERN_CVAR (Int, ty)
@@ -991,25 +995,110 @@ static const BYTE *R_GetTwoSkyColumns (FTexture *fronttex, int x)
 	}
 }
 
-static void R_DrawSkyColumn(int start_x, int y1, int y2, int columns)
+static void R_DrawCubeSky(visplane_t *pl)
+{
+	int x1 = pl->left;
+	int x2 = pl->right;
+	short *uwal = (short *)pl->top;
+	short *dwal = (short *)pl->bottom;
+
+	static TriVertex cube[6 * 6] =
+	{
+		{ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+
+		{ 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ -1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+
+		{ 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+
+		{ -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+
+		{ 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ 1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+
+		{ -1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+
+		{ -1.0f, -1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+		{ -1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f }
+	};
+
+	static bool first_time = true;
+	if (first_time)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			cube[i * 6 + 0].varying[0] = 1.0f;
+			cube[i * 6 + 1].varying[1] = 1.0f;
+			cube[i * 6 + 2].varying[2] = 1.0f;
+			cube[i * 6 + 3].varying[2] = 1.0f;
+			cube[i * 6 + 4].varying[0] = 1.0f;
+			cube[i * 6 + 4].varying[1] = 1.0f;
+			cube[i * 6 + 4].varying[2] = 1.0f;
+			cube[i * 6 + 5].varying[0] = 1.0f;
+		}
+		first_time = false;
+	}
+
+	//static float angle = 0.0f;
+	//angle = fmod(angle + 0.5f, 360.0f);
+	VSMatrix objectToWorld(0);
+	objectToWorld.translate((float)ViewPos.X, (float)ViewPos.Y, (float)ViewPos.Z);
+	//objectToWorld.rotate(angle, 0.57735f, 0.57735f, 0.57735f);
+	objectToWorld.scale(100.0f, 100.0f, 100.0f);
+
+	R_DrawTriangles(objectToWorld, cube, 6 * 6, x1, x2 - 1, uwal, dwal);
+}
+
+static void R_DrawSkyColumnStripe(int start_x, int y1, int y2, int columns, double scale, double texturemid, double yrepeat)
 {
 	uint32_t height = frontskytex->GetHeight();
 
 	for (int i = 0; i < columns; i++)
 	{
+		double uv_stepd = skyiscale * yrepeat;
+		double v = (texturemid + uv_stepd * (y1 - CenterY + 0.5)) / height;
+		double v_step = uv_stepd / height;
+
+		uint32_t uv_pos = (uint32_t)(v * 0x01000000);
+		uint32_t uv_step = (uint32_t)(v_step * 0x01000000);
+
 		int x = start_x + i;
-
-		int uv_fracbits = 24 - frontskytex->HeightBits;
-		double uv_stepd = skyiscale * frontskytex->Scale.Y;
-		double v = (skymid * frontskytex->Scale.Y + uv_stepd * (y1 - CenterY + 0.5)) / height;
-		v = v + 1.0f;
-		v *= height;
-		v *= (1 << uv_fracbits);
-		uint32_t uv_pos = (uint32_t)v;
-		uint32_t uv_step = xs_ToFixed(uv_fracbits, uv_stepd);
-		if (uv_step == 0) // To prevent divide by zero elsewhere
-			uv_step = 1;
-
 		if (MirrorFlags & RF_XFLIP)
 			x = (viewwidth - x);
 
@@ -1027,46 +1116,80 @@ static void R_DrawSkyColumn(int start_x, int y1, int y2, int columns)
 		angle1 = (DWORD)((UMulScale16(ang, frontcyl) + frontpos) >> FRACBITS);
 		angle2 = (DWORD)((UMulScale16(ang, backcyl) + backpos) >> FRACBITS);
 
-		bufplce[i] = (const BYTE *)frontskytex->GetColumnBgra(angle1, nullptr);
-		bufplce2[i] = backskytex ? (const BYTE *)backskytex->GetColumnBgra(angle2, nullptr) : nullptr;
-		buftexturefracx[i] = 0;
+		if (r_swtruecolor)
+		{
+			bufplce[i] = (const BYTE *)frontskytex->GetColumnBgra(angle1, nullptr);
+			bufplce2[i] = backskytex ? (const BYTE *)backskytex->GetColumnBgra(angle2, nullptr) : nullptr;
+		}
+		else
+		{
+			bufplce[i] = (const BYTE *)frontskytex->GetColumn(angle1, nullptr);
+			bufplce2[i] = backskytex ? (const BYTE *)backskytex->GetColumn(angle2, nullptr) : nullptr;
+		}
+
 		vince[i] = uv_step;
 		vplce[i] = uv_pos;
 	}
 
 	bufheight[0] = height;
 	bufheight[1] = backskytex ? backskytex->GetHeight() : height;
-	dc_dest = (ylookup[y1] + start_x) * 4 + dc_destorg;
+	int pixelsize = r_swtruecolor ? 4 : 1;
+	dc_dest = (ylookup[y1] + start_x) * pixelsize + dc_destorg;
 	dc_count = y2 - y1;
 
 	uint32_t solid_top = frontskytex->GetSkyCapColor(false);
 	uint32_t solid_bottom = frontskytex->GetSkyCapColor(true);
 
-	if (columns == 4)
-		if (!backskytex)
-			R_DrawSingleSkyCol4(solid_top, solid_bottom);
+	if (r_swtruecolor)
+	{
+		if (columns == 4)
+			if (!backskytex)
+				R_DrawSingleSkyCol4_rgba(solid_top, solid_bottom);
+			else
+				R_DrawDoubleSkyCol4_rgba(solid_top, solid_bottom);
 		else
-			R_DrawDoubleSkyCol4(solid_top, solid_bottom);
+			if (!backskytex)
+				R_DrawSingleSkyCol1_rgba(solid_top, solid_bottom);
+			else
+				R_DrawDoubleSkyCol1_rgba(solid_top, solid_bottom);
+	}
 	else
-		if (!backskytex)
-			R_DrawSingleSkyCol1(solid_top, solid_bottom);
+	{
+		if (columns == 4)
+			if (!backskytex)
+				R_DrawSingleSkyCol4(solid_top, solid_bottom);
+			else
+				R_DrawDoubleSkyCol4(solid_top, solid_bottom);
 		else
-			R_DrawDoubleSkyCol1(solid_top, solid_bottom);
+			if (!backskytex)
+				R_DrawSingleSkyCol1(solid_top, solid_bottom);
+			else
+				R_DrawDoubleSkyCol1(solid_top, solid_bottom);
+	}
 }
 
-static void R_DrawTruecolorSky(visplane_t *pl)
+static void R_DrawSkyColumn(int start_x, int y1, int y2, int columns)
 {
-	R_SetColorMapLight(fixedcolormap, 0, 0);
-	palookupoffse[0] = dc_colormap;
-	palookupoffse[1] = dc_colormap;
-	palookupoffse[2] = dc_colormap;
-	palookupoffse[3] = dc_colormap;
-	palookuplight[0] = 0;
-	palookuplight[1] = 0;
-	palookuplight[2] = 0;
-	palookuplight[3] = 0;
-	setupvline(FRACBITS);
+	if (1 << frontskytex->HeightBits == frontskytex->GetHeight())
+	{
+		double texturemid = skymid * frontskytex->Scale.Y + frontskytex->GetHeight();
+		R_DrawSkyColumnStripe(start_x, y1, y2, columns, frontskytex->Scale.Y, texturemid, frontskytex->Scale.Y);
+	}
+	else
+	{
+		double yrepeat = frontskytex->Scale.Y;
+		double scale = frontskytex->Scale.Y * skyscale;
+		double iscale = 1 / scale;
+		short drawheight = short(frontskytex->GetHeight() * scale);
+		double topfrac = fmod(skymid + iscale * (1 - CenterY), frontskytex->GetHeight());
+		if (topfrac < 0) topfrac += frontskytex->GetHeight();
+		double texturemid = topfrac - iscale * (1 - CenterY);
+		R_DrawSkyColumnStripe(start_x, y1, y2, columns, scale, texturemid, yrepeat);
+	}
+}
 
+static void R_DrawCapSky(visplane_t *pl)
+{
 	int x1 = pl->left;
 	int x2 = pl->right;
 	short *uwal = (short *)pl->top;
@@ -1110,7 +1233,6 @@ static void R_DrawTruecolorSky(visplane_t *pl)
 			if (y2[i] <= y1[i])
 				empty_column_in_set = true;
 		}
-
 		if (empty_column_in_set || middle_y2 <= middle_y1)
 		{
 			for (int i = 0; i < 4; i++)
@@ -1155,9 +1277,14 @@ static void R_DrawTruecolorSky(visplane_t *pl)
 
 static void R_DrawSky (visplane_t *pl)
 {
-	if (r_swtruecolor)
+	if (r_swtruecolor && r_cubesky)
 	{
-		R_DrawTruecolorSky(pl);
+		R_DrawCubeSky(pl);
+		return;
+	}
+	else if (r_skymode == 2)
+	{
+		R_DrawCapSky(pl);
 		return;
 	}
 

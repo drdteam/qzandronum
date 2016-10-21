@@ -4810,6 +4810,8 @@ void AActor::Tick ()
 		else if (Z() <= floorz)
 		{
 			Crash();
+			if (ObjectFlags & OF_EuthanizeMe)
+				return;		// actor was destroyed
 		}
 
 		CheckPortalTransition(true);

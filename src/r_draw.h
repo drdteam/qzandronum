@@ -76,6 +76,7 @@ extern "C" const BYTE*	dc_source2;
 extern "C" uint32_t		dc_texturefracx;
 
 extern "C" BYTE			*dc_dest, *dc_destorg;
+extern "C" int			dc_destheight;
 extern "C" int			dc_count;
 
 extern "C" DWORD		vplce[4];
@@ -385,6 +386,24 @@ void R_DrawSingleSkyCol1(uint32_t solid_top, uint32_t solid_bottom);
 void R_DrawSingleSkyCol4(uint32_t solid_top, uint32_t solid_bottom);
 void R_DrawDoubleSkyCol1(uint32_t solid_top, uint32_t solid_bottom);
 void R_DrawDoubleSkyCol4(uint32_t solid_top, uint32_t solid_bottom);
+
+void R_DrawSingleSkyCol1_rgba(uint32_t solid_top, uint32_t solid_bottom);
+void R_DrawSingleSkyCol4_rgba(uint32_t solid_top, uint32_t solid_bottom);
+void R_DrawDoubleSkyCol1_rgba(uint32_t solid_top, uint32_t solid_bottom);
+void R_DrawDoubleSkyCol4_rgba(uint32_t solid_top, uint32_t solid_bottom);
+
+struct TriVertex
+{
+	TriVertex() { }
+	TriVertex(float x, float y, float z, float w, float u, float v, float light) : x(x), y(y), z(z), w(w) { varying[0] = u; varying[1] = v; varying[2] = light; }
+
+	enum { NumVarying = 3 };
+	float x, y, z, w;
+	float varying[NumVarying];
+};
+
+class VSMatrix;
+void R_DrawTriangles(const VSMatrix &objectToWorld, const TriVertex *vertices, int count, int clipleft, int clipright, const short *cliptop, const short *clipbottom);
 
 extern bool r_swtruecolor;
 
